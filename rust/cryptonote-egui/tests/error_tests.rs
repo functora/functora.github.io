@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
-use cryptonote_egui::{AppError, Language, I18N, SUPPORTED_LANGUAGES};
+use cryptonote_egui::{AppError, I18N, Language, SUPPORTED_LANGUAGES};
 
 #[test]
 fn supported_languages_contains_known() {

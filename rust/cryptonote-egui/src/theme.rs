@@ -1,5 +1,5 @@
-use functora_egui::theme::{shadcn_theme_dark, shadcn_theme_light};
 use functora_egui::ShadcnThemeExt;
+use functora_egui::theme::{shadcn_theme_dark, shadcn_theme_light};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Theme {

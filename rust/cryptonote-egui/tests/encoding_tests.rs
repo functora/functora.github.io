@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
-use cryptonote_egui::crypto::{encrypt_symmetric, CipherType};
+use cryptonote_egui::crypto::{CipherType, encrypt_symmetric};
 use cryptonote_egui::encoding::{
-    build_url, decode_note, encode_note, extract_note_param, generate_qr, NoteData,
+    NoteData, build_url, decode_note, encode_note, extract_note_param, generate_qr,
 };
 
 #[test]

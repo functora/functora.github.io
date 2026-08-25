@@ -90,6 +90,10 @@ pub enum Preview {
 
 #[must_use]
 pub fn preview(name: &str, data: &[u8]) -> Preview {
+    const PREVIEW_LIMIT: usize = 5 * 1024 * 1024;
+    if data.len() > PREVIEW_LIMIT {
+        return Preview::Download;
+    }
     let url = |mime: &str| {
         format!(
             "data:{mime};base64,{}",

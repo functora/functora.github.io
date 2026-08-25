@@ -1,6 +1,6 @@
+use functora_core::Error as CoreError;
 use functora_core::error::JsonError;
 use functora_core::i18n::I18N;
-use functora_core::Error as CoreError;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
 use thiserror::Error;

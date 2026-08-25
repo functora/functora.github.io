@@ -124,6 +124,10 @@ pub enum Error {
     Archive(ZipErr),
     #[error("Background task error: {0}")]
     Worker(WorkerStopped),
+    #[error("File too large ({name}: {size} bytes, limit {limit} bytes)")]
+    FileTooLarge { name: String, size: u64, limit: u64 },
+    #[error("Operation cancelled")]
+    Cancelled,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
@@ -200,6 +204,10 @@ impl I18N for Error {
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::Worker(e) => format!("Background task error: {e}"),
+            Self::FileTooLarge { name, size, limit } => {
+                format!("File too large ({name}: {size} bytes, limit {limit} bytes)")
+            }
+            Self::Cancelled => "Operation cancelled".into(),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("JNI error: {e}"),
         }
@@ -235,6 +243,10 @@ impl I18N for Error {
             Self::Worker(e) => {
                 format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})")
             }
+            Self::FileTooLarge { name, size, limit } => {
+                format!("Archivo demasiado grande ({name}: {size} bytes, límite {limit} bytes)")
+            }
+            Self::Cancelled => "Operación cancelada".into(),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
         }
@@ -266,6 +278,10 @@ impl I18N for Error {
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),
+            Self::FileTooLarge { name, size, limit } => {
+                format!("Файл слишком большой ({name}: {size} байт, лимит {limit} байт)")
+            }
+            Self::Cancelled => "Операция отменена".into(),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Ошибка JNI: {e}"),
         }

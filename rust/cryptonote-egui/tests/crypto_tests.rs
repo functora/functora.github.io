@@ -1,8 +1,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
 use cryptonote_egui::crypto::{
-    decrypt_symmetric, derive_key, encrypt_symmetric, stream_decrypt_symmetric,
-    stream_encrypt_symmetric, CipherType, EncryptedNote, Kdf, KEY_SIZE,
+    CipherType, EncryptedNote, KEY_SIZE, Kdf, decrypt_symmetric, derive_key, encrypt_symmetric,
+    stream_decrypt_symmetric, stream_encrypt_symmetric,
 };
 
 #[test]
@@ -139,10 +139,12 @@ fn test_ciphertext_contains_no_plaintext() {
     let plaintext = b"top-secret-plaintext-marker";
     let encrypted =
         encrypt_symmetric(plaintext, "pw", CipherType::Aes256Gcm).expect("Encryption failed");
-    assert!(!encrypted
-        .ciphertext
-        .windows(plaintext.len())
-        .any(|w| w == plaintext));
+    assert!(
+        !encrypted
+            .ciphertext
+            .windows(plaintext.len())
+            .any(|w| w == plaintext)
+    );
 }
 
 #[test]

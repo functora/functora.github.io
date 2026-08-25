@@ -1,7 +1,7 @@
 use egui::{CentralPanel, Context, Panel, Pos2, RawInput, Rect, Vec2};
 use functora_egui::{
-    theme::shadcn_theme_dark, Button, ButtonVariant, Card, ComponentSize, Input, LucideIcon,
-    Progress, SelectValue, ShadcnThemeExt, Textarea, ToggleGroup,
+    Button, ButtonVariant, Card, ComponentSize, Input, LucideIcon, Progress, SelectValue,
+    ShadcnThemeExt, Textarea, ToggleGroup, theme::shadcn_theme_dark,
 };
 
 const CONTENT_MAX_WIDTH: f32 = 960.0;

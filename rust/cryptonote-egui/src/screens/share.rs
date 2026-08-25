@@ -73,10 +73,9 @@ impl CryptonoteApp {
             if row
                 .add(Button::new(&download_label).icon(LucideIcon::Download))
                 .clicked()
+                && let Some(bytes) = app.external.archive_bytes()
             {
-                if let Some(bytes) = app.external.archive_bytes() {
-                    app.download("archive.cryptonote".to_string(), bytes);
-                }
+                app.download("archive.cryptonote".to_string(), bytes);
             }
             if row
                 .add(
@@ -183,16 +182,15 @@ impl CryptonoteApp {
     }
 
     fn qr_texture(&mut self, url: &str) -> Option<&egui::TextureHandle> {
-        if self.qr_texture.is_none() {
-            if let Some((w, h, rgba)) = functora_core::qr::qr_rgba(url, 512) {
-                let image =
-                    egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &rgba);
-                self.qr_texture = Some(self.ctx.load_texture(
-                    "note-qr",
-                    image,
-                    egui::TextureOptions::NEAREST,
-                ));
-            }
+        if self.qr_texture.is_none()
+            && let Some((w, h, rgba)) = functora_core::qr::qr_rgba(url, 512)
+        {
+            let image = egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &rgba);
+            self.qr_texture = Some(self.ctx.load_texture(
+                "note-qr",
+                image,
+                egui::TextureOptions::NEAREST,
+            ));
         }
         self.qr_texture.as_ref()
     }

@@ -3,7 +3,7 @@ use functora_core::package::aad;
 use tap::prelude::*;
 
 pub use functora_core::crypto::{
-    CipherType, EncryptedNote, Kdf, KEY_SIZE, STREAM_CHUNK, STREAM_TAG,
+    CipherType, EncryptedNote, KEY_SIZE, Kdf, STREAM_CHUNK, STREAM_TAG,
 };
 
 const AAD_PREFIX: &[u8] = b"cryptonote.v1";

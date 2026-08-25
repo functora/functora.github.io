@@ -1,13 +1,13 @@
 #![cfg(not(target_arch = "wasm32"))]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 mod common;
+use cryptonote_egui::AppError;
 use cryptonote_egui::archive::{
-    create_archive_package, extract_archive_package, read_archive_metadata, ArchiveMetadata,
-    ArchiveSource,
+    ArchiveMetadata, ArchiveSource, create_archive_package, extract_archive_package,
+    read_archive_metadata,
 };
 use cryptonote_egui::crypto::CipherType;
 use cryptonote_egui::task::Reporter;
-use cryptonote_egui::AppError;
 use functora_core::files::Attachment;
 use std::sync::Arc;
 
@@ -104,12 +104,14 @@ fn test_archive_wrong_password() {
         .expect("Archive roundtrip failed");
     let (text, _files) = result;
     assert_eq!(text, "note");
-    assert!(futures_executor::block_on(extract_archive_package(
-        ArchiveSource::Bytes(vec![1, 2, 3]),
-        "wrong",
-        &mut progress(),
-    ))
-    .is_err());
+    assert!(
+        futures_executor::block_on(extract_archive_package(
+            ArchiveSource::Bytes(vec![1, 2, 3]),
+            "wrong",
+            &mut progress(),
+        ))
+        .is_err()
+    );
 }
 
 #[test]

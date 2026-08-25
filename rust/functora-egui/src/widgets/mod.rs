@@ -7,6 +7,7 @@ pub mod area_chart;
 pub mod aspect_ratio;
 pub mod avatar;
 pub mod badge;
+pub mod blocking_overlay;
 pub mod breadcrumb;
 pub mod button;
 pub mod button_group;

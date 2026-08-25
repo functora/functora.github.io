@@ -1,6 +1,6 @@
 use crate::archive::{create_archive_package, extract_archive_package};
-use crate::crypto::{decrypt_symmetric, encrypt_symmetric, CipherType};
-use crate::encoding::{build_url, NoteData};
+use crate::crypto::{CipherType, decrypt_symmetric, encrypt_symmetric};
+use crate::encoding::{NoteData, build_url};
 use crate::error::{AppError, MsgError};
 use crate::messages::Msg;
 use crate::progress::{Job, Stage};

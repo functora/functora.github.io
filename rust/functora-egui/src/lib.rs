@@ -94,6 +94,7 @@ pub use widgets::area_chart::widget::AreaSeries;
 pub use widgets::aspect_ratio::widget::AspectRatio;
 pub use widgets::avatar::widget::Avatar;
 pub use widgets::badge::widget::Badge;
+pub use widgets::blocking_overlay::widget::BlockingOverlay;
 pub use widgets::breadcrumb::widget::Breadcrumb;
 pub use widgets::button::widget::Button;
 pub use widgets::button_group::widget::ButtonGroup;

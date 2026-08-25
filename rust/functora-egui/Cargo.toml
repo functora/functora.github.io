@@ -63,6 +63,10 @@ features = [
   "MediaStream",
   "Clipboard",
   "ShareData",
+  "Event",
+  "EventTarget",
+  "AddEventListenerOptions",
+  "HtmlElement",
 ]
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.gloo-timers]

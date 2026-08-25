@@ -1,26 +1,26 @@
 use crate::crypto::CipherType;
 use crate::deep_link::initial_url;
-use crate::encoding::{decode_note, extract_note_param, NoteData};
+use crate::encoding::{NoteData, decode_note, extract_note_param};
 use crate::error::AppError;
-use crate::i18n::{detect_browser_language, Language, I18N, SUPPORTED_LANGUAGES};
+use crate::i18n::{I18N, Language, SUPPORTED_LANGUAGES, detect_browser_language};
 use crate::messages::Msg;
 use crate::progress::Job;
 use crate::screens::Screen;
 use crate::state::{ActionMode, External, ExternalNote, PasteTarget, PickKind};
-use crate::task::{build_external, decrypt_external, extract_archive, Event};
+use crate::task::{Event, build_external, decrypt_external, extract_archive};
 use crate::theme::Theme;
+use functora_core::FUNCTORA_CORE_YEAR;
 use functora_core::encoding::extract_query_param;
 use functora_core::files::Attachment;
 use functora_core::messages::Msg as BaseMsg;
 use functora_core::white_label::AppAttrs;
-use functora_core::FUNCTORA_CORE_YEAR;
 use functora_egui::{
     Button, ButtonVariant, ComponentSize, DropdownMenu, Label, LucideIcon, MenuItem, Progress,
     Separator, Sheet, SheetSide, ToastState, ToastVariant, ToggleGroup,
 };
 use functora_tagged::InfallibleInto;
-use std::sync::mpsc::{channel, Receiver, Sender};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, Sender, channel};
 
 pub const APP_ATTRS: AppAttrs = AppAttrs {
     app: env!("CARGO_PKG_NAME"),
@@ -64,6 +64,9 @@ pub struct CryptonoteApp {
     pub(crate) job: Option<Job>,
     pub(crate) paste_target: Option<PasteTarget>,
     pub(crate) pick_kind: Option<PickKind>,
+    pub(crate) pick_cancel: Option<crate::platform::CancelToken>,
+    pub(crate) pick_progress:
+        Option<std::sync::Arc<std::sync::Mutex<Option<crate::progress::Job>>>>,
     pub(crate) pending_cipher: Option<CipherType>,
     pub(crate) qr_texture: Option<egui::TextureHandle>,
     pub(crate) tx: Sender<Event>,
@@ -106,6 +109,8 @@ impl CryptonoteApp {
             job: None,
             paste_target: None,
             pick_kind: None,
+            pick_cancel: None,
+            pick_progress: None,
             pending_cipher: None,
             qr_texture: None,
             tx,
@@ -184,6 +189,10 @@ impl CryptonoteApp {
         self.job = None;
         self.paste_target = None;
         self.pick_kind = None;
+        if let Some(token) = self.pick_cancel.take() {
+            token.store(true, std::sync::atomic::Ordering::Relaxed);
+        }
+        self.pick_progress = None;
         self.pending_cipher = None;
         self.qr_texture = None;
         self.history.clear();
@@ -299,20 +308,29 @@ impl CryptonoteApp {
         if self.busy() {
             return;
         }
-        self.job = Some(Job {
+        let initial = Job {
             stage: crate::progress::Stage::Attach,
             done: 0,
             total: 1,
             name: None,
-        });
+        };
+        self.job = Some(initial.clone());
         self.pick_kind = Some(kind);
+        let cancel = crate::platform::new_cancel_token();
+        let progress = std::sync::Arc::new(std::sync::Mutex::new(Some(initial)));
+        self.pick_cancel = Some(std::sync::Arc::clone(&cancel));
+        self.pick_progress = Some(std::sync::Arc::clone(&progress));
         let multiple = matches!(kind, PickKind::Attach);
         let tx = self.tx.clone();
         let ctx = self.ctx.clone();
         crate::task::spawn_async(async move {
-            let result = crate::platform::pick_files(multiple)
-                .await
-                .map_err(AppError::Platform);
+            let result = crate::platform::pick_files_with_shared_progress(
+                multiple,
+                Some(progress),
+                Some(&cancel),
+            )
+            .await
+            .map_err(AppError::Platform);
             crate::task::send(&tx, &ctx, Event::Picked(result));
         });
     }
@@ -452,14 +470,25 @@ impl CryptonoteApp {
                     self.message = Some(Msg::Error(e.into()));
                 }
             },
-            Event::Picked(result) => match result {
-                Ok(files) => self.handle_picked(files),
-                Err(e) => {
-                    self.pick_kind = None;
-                    self.job = None;
-                    self.message = Some(Msg::Error(e.into()));
+            Event::Picked(result) => {
+                self.pick_cancel = None;
+                self.pick_progress = None;
+                match result {
+                    Ok(files) => self.handle_picked(files),
+                    Err(e) => {
+                        self.pick_kind = None;
+                        self.job = None;
+                        let msg = e.to_string();
+                        if msg.contains("Cancelled") || msg.contains("cancelled") {
+                            self.message = Some(Msg::Error(
+                                crate::error::AppError::Platform("Cancelled".to_string()).into(),
+                            ));
+                        } else {
+                            self.message = Some(Msg::Error(e.into()));
+                        }
+                    }
                 }
-            },
+            }
             Event::Scanned(result) => {
                 self.job = None;
                 match result {
@@ -481,6 +510,8 @@ impl CryptonoteApp {
 
     fn handle_picked(&mut self, files: Vec<(String, Vec<u8>)>) {
         self.job = None;
+        self.pick_cancel = None;
+        self.pick_progress = None;
         match self.pick_kind.take() {
             Some(PickKind::Attach) => {
                 for (name, data) in files {
@@ -823,6 +854,21 @@ impl eframe::App for CryptonoteApp {
                 });
             });
         });
+        if self.pick_cancel.is_some() {
+            let mut open = true;
+            let cancel = self
+                .pick_cancel
+                .clone()
+                .unwrap_or_else(crate::platform::new_cancel_token);
+            let job_from_progress = self
+                .pick_progress
+                .as_ref()
+                .and_then(|p| p.lock().ok().and_then(|g| g.clone()));
+            let job_ref = job_from_progress.as_ref().or(self.job.as_ref());
+            functora_egui::BlockingOverlay::new("Uploading...")
+                .description("Reading files, please wait. You can cancel if needed.")
+                .show(ui.ctx(), &mut open, job_ref, &cancel);
+        }
         self.render_toasts(ui.ctx());
     }
 }

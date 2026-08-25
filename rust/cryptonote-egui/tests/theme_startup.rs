@@ -1,8 +1,8 @@
 use cryptonote_egui::theme::Theme;
 use egui::{CentralPanel, Color32, Context, Panel, Pos2, RawInput, Rect, Shape, Vec2};
 use functora_egui::{
-    theme::{shadcn_theme_dark, shadcn_theme_light},
     Card, ShadcnThemeExt, Textarea,
+    theme::{shadcn_theme_dark, shadcn_theme_light},
 };
 
 #[test]

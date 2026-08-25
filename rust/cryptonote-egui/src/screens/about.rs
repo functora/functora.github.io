@@ -1,4 +1,4 @@
-use crate::app::{CryptonoteApp, APP_ATTRS};
+use crate::app::{APP_ATTRS, CryptonoteApp};
 use crate::messages::Msg;
 use crate::screens::Screen;
 use functora_core::messages::Msg as BaseMsg;

@@ -1,6 +1,6 @@
 use functora_egui::{
-    Badge, Button, ButtonVariant, Card, Flex, Input, Label, Progress, Separator, Textarea,
-    Typography,
+    Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress, Separator,
+    Textarea, Typography,
 };
 use std::sync::mpsc;
 
@@ -34,6 +34,11 @@ where
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn poll_platform_promises(&mut self, ctx: &egui::Context) {
+        if let Some(shared) = self.platform.pick_progress.clone()
+            && let Ok(guard) = shared.lock()
+        {
+            self.platform.pick_job.clone_from(&guard);
+        }
         if self.platform.clipboard_rx.is_some()
             || self.platform.clipboard_write_rx.is_some()
             || self.platform.share_rx.is_some()
@@ -78,14 +83,43 @@ impl crate::app::ShowcaseApp {
             if let Some(res) = taken {
                 match res {
                     Ok(files) => {
-                        self.platform.pick_status = format!("Picked {} file(s)", files.len());
-                        self.platform.picked = files;
+                        let incoming = files.len();
+                        for (name, data) in files {
+                            if let Some(pos) =
+                                self.platform.picked.iter().position(|(n, _)| n == &name)
+                            {
+                                drop(self.platform.picked.remove(pos));
+                            }
+                            self.platform.picked.push((name, data));
+                        }
+                        self.platform.pick_status =
+                            format!("Picked {} file(s) total", self.platform.picked.len());
+                        if incoming > 1 {
+                            self.platform.pick_status = format!(
+                                "Picked {} file(s) ({} new)",
+                                self.platform.picked.len(),
+                                incoming
+                            );
+                        }
                     }
-                    Err(e) => self.platform.pick_status = format!("Pick failed: {e}"),
+                    Err(e) => {
+                        if e == "Cancelled" || e.contains("cancelled") || e.contains("Cancelled") {
+                            self.platform.pick_status = "Pick cancelled".to_string();
+                        } else {
+                            self.platform.pick_status = format!("Pick failed: {e}");
+                        }
+                    }
                 }
+                self.platform.pick_cancel = None;
+                self.platform.pick_overlay_open = false;
+                self.platform.pick_job = None;
+                self.platform.pick_progress = None;
             } else {
                 self.platform.pick_rx = Some(rx);
             }
+        }
+        if self.platform.pick_rx.is_none() {
+            self.platform.pick_overlay_open = false;
         }
         if let Some(rx) = self.platform.download_rx.take() {
             match rx.try_recv() {
@@ -390,6 +424,18 @@ impl crate::app::ShowcaseApp {
 
     pub(crate) fn demo_files(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
+        if let Some(cancel) = self.platform.pick_cancel.clone() {
+            let mut open = self.platform.pick_overlay_open;
+            BlockingOverlay::new("Uploading...")
+                .description("Reading files, please wait. You can cancel if needed.")
+                .show(
+                    ui.ctx(),
+                    &mut open,
+                    self.platform.pick_job.as_ref(),
+                    &cancel,
+                );
+            self.platform.pick_overlay_open = open;
+        }
         _ = Typography::muted(
             "Files: `pick_files` via rfd (desktop) / Intent (Android) / input (web). Preview via `preview`/`preview_blob`, mime via `mime_for`.",
         )
@@ -405,17 +451,47 @@ impl crate::app::ShowcaseApp {
             .inner
             .clicked()
             {
+                let cancel = functora_egui::files::new_cancel_token();
+                let progress = std::sync::Arc::new(std::sync::Mutex::new(None));
+                self.platform.pick_cancel = Some(std::sync::Arc::clone(&cancel));
+                self.platform.pick_progress = Some(std::sync::Arc::clone(&progress));
+                self.platform.pick_overlay_open = true;
+                self.platform.pick_job = None;
                 #[cfg(target_arch = "wasm32")]
                 {
-                    self.platform.pick_rx = Some(functora_egui::files::pick_files_sync_web(true));
+                    let rx = std::sync::Arc::new(std::sync::Mutex::new(None));
+                    let rx_clone = std::sync::Arc::clone(&rx);
+                    let progress_clone = std::sync::Arc::clone(&progress);
+                    let cancel_clone = std::sync::Arc::clone(&cancel);
+                    wasm_bindgen_futures::spawn_local(async move {
+                        let res = functora_egui::files::pick_files_with_shared_progress(
+                            true,
+                            Some(progress_clone),
+                            Some(&cancel_clone),
+                        )
+                        .await
+                        .map_err(|e| e.to_string());
+                        if let Ok(mut guard) = rx_clone.lock() {
+                            *guard = Some(res);
+                        }
+                    });
+                    self.platform.pick_rx = Some(rx);
                 }
                 #[cfg(not(target_arch = "wasm32"))]
                 {
                     let rx = std::sync::Arc::new(std::sync::Mutex::new(None));
                     let rx_clone = std::sync::Arc::clone(&rx);
+                    let progress_clone = std::sync::Arc::clone(&progress);
+                    let cancel_clone = std::sync::Arc::clone(&cancel);
                     drop(std::thread::spawn(move || {
-                        let res = pollster::block_on(functora_egui::files::pick_files(true))
-                            .map_err(|e| e.to_string());
+                        let res = pollster::block_on(
+                            functora_egui::files::pick_files_with_shared_progress(
+                                true,
+                                Some(progress_clone),
+                                Some(&cancel_clone),
+                            ),
+                        )
+                        .map_err(|e| e.to_string());
                         if let Ok(mut guard) = rx_clone.lock() {
                             *guard = Some(res);
                         }

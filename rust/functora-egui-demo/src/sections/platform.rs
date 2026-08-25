@@ -1,6 +1,6 @@
 use functora_egui::{
-    Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress, Separator,
-    Textarea, Typography,
+    Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress,
+    ResponsiveExt, Separator, ShadcnThemeExt, Textarea, Typography,
 };
 use std::sync::mpsc;
 
@@ -46,6 +46,11 @@ impl crate::app::ShowcaseApp {
             || self.platform.download_rx.is_some()
             || self.platform.print_rx.is_some()
             || self.platform.pwa_rx.is_some()
+            || self.platform.camera_rx.is_some()
+            || self.platform.qr_rx.is_some()
+            || self.platform.thumbnail_rx.is_some()
+            || self.platform.zip_rx.is_some()
+            || self.platform.worker_rx.is_some()
         {
             ctx.request_repaint();
         }
@@ -145,6 +150,46 @@ impl crate::app::ShowcaseApp {
                 Err(_) => "PWA disconnected".clone_into(&mut self.platform.pwa_status),
             }
         }
+        if let Some(rx) = self.platform.camera_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.camera_status = msg,
+                Ok(Err(e)) => self.platform.camera_status = format!("Camera error: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.camera_rx = Some(rx),
+                Err(_) => "Camera disconnected".clone_into(&mut self.platform.camera_status),
+            }
+        }
+        if let Some(rx) = self.platform.qr_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.qr_status = msg,
+                Ok(Err(e)) => self.platform.qr_status = format!("QR error: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.qr_rx = Some(rx),
+                Err(_) => "QR disconnected".clone_into(&mut self.platform.qr_status),
+            }
+        }
+        if let Some(rx) = self.platform.thumbnail_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.thumbnail_status = msg,
+                Ok(Err(e)) => self.platform.thumbnail_status = format!("Thumbnail error: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.thumbnail_rx = Some(rx),
+                Err(_) => "Thumbnail disconnected".clone_into(&mut self.platform.thumbnail_status),
+            }
+        }
+        if let Some(rx) = self.platform.zip_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.zip_status = msg,
+                Ok(Err(e)) => self.platform.zip_status = format!("Zip error: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.zip_rx = Some(rx),
+                Err(_) => "Zip disconnected".clone_into(&mut self.platform.zip_status),
+            }
+        }
+        if let Some(rx) = self.platform.worker_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.worker_status = msg,
+                Ok(Err(e)) => self.platform.worker_status = format!("Worker error: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.worker_rx = Some(rx),
+                Err(_) => "Worker disconnected".clone_into(&mut self.platform.worker_status),
+            }
+        }
         if self.platform.clipboard_rx.is_some()
             || self.platform.clipboard_write_rx.is_some()
             || self.platform.share_rx.is_some()
@@ -152,6 +197,11 @@ impl crate::app::ShowcaseApp {
             || self.platform.download_rx.is_some()
             || self.platform.print_rx.is_some()
             || self.platform.pwa_rx.is_some()
+            || self.platform.camera_rx.is_some()
+            || self.platform.qr_rx.is_some()
+            || self.platform.thumbnail_rx.is_some()
+            || self.platform.zip_rx.is_some()
+            || self.platform.worker_rx.is_some()
         {
             ctx.request_repaint();
         }
@@ -997,5 +1047,467 @@ impl crate::app::ShowcaseApp {
             ui.add_space(8.0);
             _ = ui.add(Badge::new(&self.platform.in_flight_status));
         }
+    }
+
+    pub(crate) fn demo_camera(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "Camera: check_camera/start_camera/capture_frame/stop_camera + begin/stop session. Web via getUserMedia/canvas, Android via Camera2 (stub), desktop via file-picker fallback.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            if f.add(Button::new("Check").icon(functora_egui::LucideIcon::Camera))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_rx = Some(spawn_async(async move {
+                    functora_egui::camera::check_camera()
+                        .await
+                        .map(|()| "Camera available".to_string())
+                        .map_err(|e| e.to_string())
+                }));
+            }
+            if f.add(Button::new("Start").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_rx = Some(spawn_async(async move {
+                    functora_egui::camera::start_camera()
+                        .await
+                        .map(|()| "Camera started".to_string())
+                        .map_err(|e| e.to_string())
+                }));
+            }
+            if f.add(Button::new("Capture").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_rx = Some(spawn_async(async move {
+                    let frame = functora_egui::camera::capture_frame()
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(format!(
+                        "Frame {}x{} luma {} bytes",
+                        frame.width,
+                        frame.height,
+                        frame.data.len()
+                    ))
+                }));
+            }
+            if f.add(Button::new("Stop").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_rx = Some(spawn_async(async move {
+                    functora_egui::camera::stop_camera()
+                        .await
+                        .map(|()| "Camera stopped".to_string())
+                        .map_err(|e| e.to_string())
+                }));
+            }
+        });
+        if !self.platform.camera_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.camera_status));
+        }
+        ui.add_space(8.0);
+        _ = Typography::small("On desktop this will report 'not available – use file picker' (expected). On web, use QrScanner below for live preview.").show(ui);
+    }
+
+    pub(crate) fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "QrScanner widget: stateful live preview (TextureHandle) + decode_qr_luma/rgba (rxing). Web live via canvas, Android Camera2, desktop file-picker fallback. Opt-in features `camera` + `qr`.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = ui.add(Input::new(&mut self.platform.qr_input).placeholder("https://example.com"));
+        ui.add_space(4.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            if f.add(Button::new("Generate QR").icon(functora_egui::LucideIcon::QrCode))
+                .inner
+                .clicked()
+            {
+                let input = self.platform.qr_input.clone();
+                self.platform.qr_rx = Some(spawn_async(async move {
+                    if let Some((w, h, rgba)) = functora_egui::qr::qr_rgba(&input, 128) {
+                        let _ = (w, h, rgba);
+                        Ok(format!("QR generated {w}x{h}"))
+                    } else {
+                        Err("QR generation failed".to_string())
+                    }
+                }));
+            }
+            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.qr_status.clear();
+                self.platform.qr_state.clear_decoded();
+                self.platform.qr_state.clear_error();
+            }
+        });
+        if !self.platform.qr_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.qr_status));
+        }
+        ui.add_space(12.0);
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small("Live scanner (web: camera, desktop: pick image fallback)")
+                .show(ui2);
+            ui2.add_space(8.0);
+            let _ = functora_egui::QrScanner::new().show(ui2, &mut self.platform.qr_state);
+            if let Some(txt) = self.platform.qr_state.decoded() {
+                ui2.add_space(8.0);
+                _ = ui2.add(Badge::new(format!("Decoded: {txt}")));
+            }
+            if let Some(err) = self.platform.qr_state.error() {
+                ui2.add_space(8.0);
+                _ = ui2.label(
+                    egui::RichText::new(format!("Error: {err}"))
+                        .color(ui2.ctx().shadcn_theme().destructive)
+                        .size(12.0),
+                );
+            }
+        });
+        ui.add_space(8.0);
+        _ = Typography::small("Tip: Use Pick Image inside the scanner for file fallback (desktop) or Start Camera for live (web/android).").show(ui);
+    }
+
+    pub(crate) fn demo_thumbnail(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "Thumbnail: video_thumbnail (mp4→jpeg) + jpeg_data_url + cache. Web via canvas, native via mp4+rust_h264.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = ui.add(
+            Input::new(&mut self.platform.thumbnail_input)
+                .placeholder("data:video/mp4;base64,... or data:image/..."),
+        );
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            if f.add(Button::new("Generate thumbnail").icon(functora_egui::LucideIcon::Image))
+                .inner
+                .clicked()
+            {
+                let url = self.platform.thumbnail_input.clone();
+                self.platform.thumbnail_rx = Some(spawn_async(async move {
+                    Ok(format!("Thumbnail placeholder for len {}", url.len()))
+                }));
+            }
+            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.thumbnail_status.clear();
+                self.platform.thumbnail_texture = None;
+            }
+        });
+        if !self.platform.thumbnail_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.thumbnail_status));
+        }
+        if let Some(tex) = &self.platform.thumbnail_texture {
+            ui.add_space(8.0);
+            let _ = ui.add(egui::Image::new((tex.id(), egui::vec2(220.0, 140.0))).corner_radius(8));
+        }
+        ui.add_space(8.0);
+        _ = Typography::small(
+            "Tip: pick a video file in Files demo, then paste its data URL here.",
+        )
+        .show(ui);
+    }
+
+    pub(crate) fn demo_zip(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "Zip: create_zip_async / unzip_async via worker::run with progress Job<Stage>. Uses picked files from Files demo.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = Typography::small(format!(
+            "Picked files for zip: {} (from Files)",
+            self.platform.picked.len()
+        ))
+        .show(ui);
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            let busy = self.platform.zip_rx.is_some();
+            if f.add(Button::new(if busy { "Zipping..." } else { "Create zip" }).enabled(!busy))
+                .inner
+                .clicked()
+            {
+                let count = self.platform.picked.len();
+                if count == 0 {
+                    self.platform.zip_status = "No files picked (go to Files)".to_string();
+                } else {
+                    self.platform.zip_status =
+                        format!("Zip would include {count} files (demo placeholder)");
+                }
+            }
+            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.zip_status.clear();
+            }
+        });
+        if !self.platform.zip_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.zip_status));
+        }
+    }
+
+    pub(crate) fn demo_crypto(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Crypto: functora_core::crypto encrypt_symmetric / decrypt_symmetric (ChaCha20Poly1305/AES-GCM) + KDF.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = ui.add(Input::new(&mut self.platform.crypto_input).placeholder("plain text"));
+        ui.add_space(4.0);
+        _ = ui.add(Input::new(&mut self.platform.crypto_password).placeholder("password"));
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            if f.add(Button::new("Encrypt").icon(functora_egui::LucideIcon::Lock))
+                .inner
+                .clicked()
+            {
+                let input = self.platform.crypto_input.clone();
+                self.platform.crypto_output = format!("Encrypted placeholder for '{input}'");
+                self.platform.crypto_status =
+                    "Crypto demo placeholder (no real encrypt) ".to_string();
+            }
+            if f.add(Button::new("Decrypt").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.platform.crypto_output = "Decrypted placeholder".to_string();
+                self.platform.crypto_status = "Decrypt placeholder".to_string();
+            }
+            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.crypto_output.clear();
+                self.platform.crypto_status.clear();
+            }
+        });
+        if !self.platform.crypto_output.is_empty() {
+            ui.add_space(8.0);
+            _ = Card::new().show(ui, |ui2| {
+                _ = Typography::small(&self.platform.crypto_output).show(ui2);
+            });
+        }
+        if !self.platform.crypto_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.crypto_status));
+        }
+    }
+
+    pub(crate) fn demo_worker(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "Worker: worker::run – runs future on thread (desktop) or inline (wasm) with Reporter<Stage> progress.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            let busy = self.platform.worker_rx.is_some();
+            if f.add(Button::new(if busy { "Working..." } else { "Start worker" }).enabled(!busy))
+                .inner
+                .clicked()
+            {
+                self.platform.worker_rx = Some(spawn_async(async move {
+                    functora_egui::worker::run(
+                        42u32,
+                        |_| {},
+                        |val, mut reporter| async move {
+                            reporter(functora_egui::progress::Job {
+                                stage: functora_egui::progress::Stage::Download,
+                                done: 1,
+                                total: 1,
+                                name: None,
+                            });
+                            Ok::<String, functora_egui::error::Error>(format!("Worker done: {val}"))
+                        },
+                    )
+                    .await
+                    .map_err(|e| e.to_string())
+                }));
+            }
+            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+                .inner
+                .clicked()
+            {
+                self.platform.worker_status.clear();
+            }
+        });
+        if !self.platform.worker_status.is_empty() {
+            ui.add_space(8.0);
+            _ = ui.add(Badge::new(&self.platform.worker_status));
+        }
+        ui.add_space(8.0);
+        _ = Typography::small("Check ProgressWorker demo for Job<Stage> progress details.")
+            .show(ui);
+        if let Some(rx) = self.platform.worker_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(msg)) => self.platform.worker_status = msg,
+                Ok(Err(e)) => self.platform.worker_status = format!("Worker err: {e}"),
+                Err(mpsc::TryRecvError::Empty) => self.platform.worker_rx = Some(rx),
+                Err(_) => self.platform.worker_status = "Worker disconnected".to_string(),
+            }
+        }
+    }
+
+    pub(crate) fn demo_platform_info(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Platform info: is_mobile_hint (web innerWidth), location_href/hash, storage files_dir, theme, breakpoint.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        let is_mobile = ui.ctx().on_mobile();
+        let spacing = ui.ctx().responsive_spacing();
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(format!("on_mobile: {is_mobile}")).show(ui2);
+            _ = Typography::small(format!("breakpoint: {:?}", ui2.ctx().breakpoint())).show(ui2);
+            _ = Typography::small(format!(
+                "spacing content_max_width: {}",
+                spacing.content_max_width
+            ))
+            .show(ui2);
+            _ = Typography::small(format!("spacing page_padding: {}", spacing.page_padding))
+                .show(ui2);
+            _ = Typography::small(format!(
+                "current_theme: {}",
+                functora_egui::current_theme(ui2.ctx())
+            ))
+            .show(ui2);
+            #[cfg(target_arch = "wasm32")]
+            {
+                if let Some(hint) = functora_egui::platform::web::is_mobile_hint() {
+                    _ = Typography::small(format!("is_mobile_hint: {hint}")).show(ui2);
+                }
+                if let Some(href) = functora_egui::platform::web::location_href() {
+                    _ = Typography::small(format!("location_href: {href}")).show(ui2);
+                }
+                if let Some(hash) = functora_egui::platform::web::location_hash() {
+                    _ = Typography::small(format!("location_hash: {hash}")).show(ui2);
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                _ = Typography::small("location_href/hash only on web").show(ui2);
+            }
+            match functora_egui::storage::files_dir() {
+                Ok(p) => _ = Typography::small(format!("files_dir: {}", p.display())).show(ui2),
+                Err(e) => _ = Typography::small(format!("files_dir err: {e}")).show(ui2),
+            }
+            if let Some(v) = functora_egui::storage::load_state::<String>("demo_persistent") {
+                _ = Typography::small(format!("demo_persistent: {v}")).show(ui2);
+            }
+        });
+        ui.add_space(8.0);
+        _ = ui.add(Input::new(&mut self.platform.platform_info).placeholder("info note"));
+        ui.add_space(4.0);
+        if ui
+            .add(Button::new("Save to platform_info").size(functora_egui::ComponentSize::Sm))
+            .clicked()
+        {
+            functora_egui::storage::persist_value("platform_info", &self.platform.platform_info);
+            self.platform.platform_info = "Saved".to_string();
+        }
+    }
+
+    pub(crate) fn demo_messages(ui: &mut egui::Ui) {
+        use functora_egui::i18n::I18N;
+        _ = Typography::muted(
+            "Messages / I18N: functora_core::messages + i18n Language (Eng/Spa/Rus). Error::render_* etc.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        let err = functora_egui::error::Error::JS("demo error".into());
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(format!("EN: {}", err.render_eng())).show(ui2);
+            _ = Typography::small(format!("SPA: {}", err.render_spa())).show(ui2);
+            _ = Typography::small(format!("RU: {}", err.render_rus())).show(ui2);
+        });
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).show(ui, |f| {
+            for lang in [
+                functora_egui::i18n::Language::Eng,
+                functora_egui::i18n::Language::Spa,
+                functora_egui::i18n::Language::Rus,
+            ] {
+                let _ = f.add(Badge::new(lang.to_string()));
+            }
+        });
+    }
+
+    pub(crate) fn demo_markdown(ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Markdown: functora_core::markdown::render (pulldown-cmark + ammonia) → egui rich text.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        let md = "# Hello\n\nThis is **bold** and *italic*.\n\n- item 1\n- item 2\n\n[link](https://example.com)";
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(md).show(ui2);
+        });
+        ui.add_space(8.0);
+        _ = Typography::small(
+            "Rendered via Label::new(markdown) – see actual app content for full render.",
+        )
+        .show(ui);
+    }
+
+    pub(crate) fn demo_package(ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Package: FUNCTORA_CORE_DATE/YEAR + Cargo.toml metadata (theme_color, title) + build info.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(format!(
+                "FUNCTORA_CORE_DATE: {}",
+                functora_egui::FUNCTORA_CORE_DATE
+            ))
+            .show(ui2);
+            _ = Typography::small(format!(
+                "FUNCTORA_CORE_YEAR: {}",
+                functora_egui::FUNCTORA_CORE_YEAR
+            ))
+            .show(ui2);
+            _ = Typography::small(format!(
+                "FUNCTORA_CORE version: {}",
+                env!("CARGO_PKG_VERSION")
+            ))
+            .show(ui2);
+            _ = Typography::small("Package metadata via include_str! for theme_color etc.")
+                .show(ui2);
+        });
+    }
+
+    pub(crate) fn demo_white_label(ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "WhiteLabel: functora_core::white_label – branding, theme overrides, per-app config.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(format!("white_label available: {}", true)).show(ui2);
+            _ = Typography::small(
+                "Configure via Cargo.toml [package.metadata.functora-egui-*] + WhiteLabel::load",
+            )
+            .show(ui2);
+            _ = Typography::small("WhiteLabel: default (no custom branding)").show(ui2);
+            _ = Typography::small(format!(
+                "white_label donate_blocks: {:?}",
+                functora_egui::white_label::donate_blocks().len()
+            ))
+            .show(ui2);
+        });
     }
 }

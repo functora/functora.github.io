@@ -133,6 +133,8 @@ pub use widgets::popover::widget::Popover;
 pub use widgets::progress::widget::Progress;
 pub use widgets::property_grid::property_row::PropertyRow;
 pub use widgets::property_grid::widget::PropertyGrid;
+pub use widgets::qr_scanner::qr_scanner_state::QrScannerState;
+pub use widgets::qr_scanner::widget::QrScanner;
 pub use widgets::radio::widget::Radio;
 pub use widgets::radio_group::widget::RadioGroup;
 pub use widgets::resizable::widget::Resizable;

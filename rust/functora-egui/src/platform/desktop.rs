@@ -1,3 +1,4 @@
+use crate::camera::FrameData;
 use crate::error::Error;
 
 pub async fn clipboard_read() -> Result<String, Error> {
@@ -62,5 +63,35 @@ pub fn storage_get(_key: &str) -> Option<String> {
 }
 
 pub fn storage_set(_key: &str, _value: &str) -> Result<(), Error> {
+    Ok(())
+}
+
+pub async fn check_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    Err(Error::CameraNotAvailable(
+        "Camera not available on desktop – use file picker".into(),
+    ))
+}
+
+pub async fn start_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    Err(Error::CameraNotAvailable(
+        "Camera not available on desktop – use file picker".into(),
+    ))
+}
+
+pub async fn capture_frame() -> Result<FrameData, Error> {
+    std::future::ready(()).await;
+    Err(Error::CameraNotAvailable(
+        "Camera not available on desktop – use file picker".into(),
+    ))
+}
+
+pub fn begin_capture_session() {}
+
+pub fn stop_capture_worker() {}
+
+pub async fn stop_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
     Ok(())
 }

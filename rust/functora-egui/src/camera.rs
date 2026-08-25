@@ -5,53 +5,123 @@ pub struct FrameData {
     pub data: Vec<u8>,
     pub width: u32,
     pub height: u32,
+    pub preview_rgba: Option<Vec<u8>>,
+}
+
+#[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
+fn camera_error(msg: String) -> Error {
+    if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
+        Error::CameraPermissionDenied(msg)
+    } else {
+        Error::CameraNotAvailable(msg)
+    }
 }
 
 pub async fn check_camera() -> Result<(), Error> {
-    std::future::ready(()).await;
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
     {
-        #[cfg(feature = "web")]
-        {
-            let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-            let navigator = window.navigator();
-            let media = navigator
-                .media_devices()
-                .map_err(|e| Error::JS(format!("{e:?}")))?;
-            let _ = media;
-            return Ok(());
-        }
-        #[cfg(not(feature = "web"))]
-        {
-            return Err(Error::CameraNotAvailable("Web feature disabled".into()));
-        }
+        return crate::platform::web::check_camera().await;
     }
-    #[cfg(not(target_arch = "wasm32"))]
+    #[cfg(target_os = "android")]
     {
-        return Err(Error::CameraNotAvailable(
-            "Camera not available on desktop".into(),
-        ));
+        return crate::platform::android::check_camera().await;
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        return crate::platform::desktop::check_camera().await;
     }
     #[allow(unreachable_code)]
     Err(Error::CameraNotAvailable("Camera not available".into()))
 }
 
 pub async fn start_camera() -> Result<(), Error> {
-    std::future::ready(()).await;
-    Err(Error::CameraNotAvailable("Use check_camera first".into()))
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
+    {
+        return crate::platform::web::start_camera()
+            .await
+            .map_err(|e| match &e {
+                Error::JS(msg) => camera_error(msg.clone()),
+                _ => e,
+            });
+    }
+    #[cfg(target_os = "android")]
+    {
+        return crate::platform::android::start_camera()
+            .await
+            .map_err(|e| match &e {
+                Error::JS(msg) => camera_error(msg.clone()),
+                _ => e,
+            });
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        return crate::platform::desktop::start_camera().await;
+    }
+    #[allow(unreachable_code)]
+    Err(Error::CameraNotAvailable("Camera not available".into()))
 }
 
 pub async fn capture_frame() -> Result<FrameData, Error> {
-    std::future::ready(()).await;
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
+    {
+        return crate::platform::web::capture_frame().await;
+    }
+    #[cfg(target_os = "android")]
+    {
+        return crate::platform::android::capture_frame().await;
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        return crate::platform::desktop::capture_frame().await;
+    }
+    #[allow(unreachable_code)]
     Err(Error::CameraNotAvailable("Not implemented".into()))
 }
 
-pub fn begin_capture_session() {}
+pub fn begin_capture_session() {
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
+    {
+        crate::platform::web::begin_capture_session();
+    }
+    #[cfg(target_os = "android")]
+    {
+        crate::platform::android::begin_capture_session();
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        crate::platform::desktop::begin_capture_session();
+    }
+}
 
-pub fn stop_capture_worker() {}
+pub fn stop_capture_worker() {
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
+    {
+        crate::platform::web::stop_capture_worker();
+    }
+    #[cfg(target_os = "android")]
+    {
+        crate::platform::android::stop_capture_worker();
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        crate::platform::desktop::stop_capture_worker();
+    }
+}
 
 pub async fn stop_camera() -> Result<(), Error> {
-    std::future::ready(()).await;
+    #[cfg(all(target_arch = "wasm32", feature = "web"))]
+    {
+        return crate::platform::web::stop_camera().await;
+    }
+    #[cfg(target_os = "android")]
+    {
+        return crate::platform::android::stop_camera().await;
+    }
+    #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
+    {
+        return crate::platform::desktop::stop_camera().await;
+    }
+    #[allow(unreachable_code)]
     Ok(())
 }
 

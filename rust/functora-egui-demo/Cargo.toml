@@ -20,7 +20,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-functora-egui = { path = "../functora-egui", features = ["web", "android", "qr"] }
+functora-egui = { path = "../functora-egui", features = ["web", "android", "qr", "camera"] }
 log = "0.4"
 poll-promise = "0.3"
 pollster = "0.3"

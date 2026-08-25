@@ -1,3 +1,4 @@
+use crate::camera::FrameData;
 use crate::error::Error;
 
 pub async fn clipboard_read() -> Result<String, Error> {
@@ -141,6 +142,213 @@ pub fn is_mobile_hint() -> Option<bool> {
 
 pub async fn sleep(millis: u64) {
     gloo_timers::future::TimeoutFuture::new(u32::try_from(millis).unwrap_or(u32::MAX)).await;
+}
+
+fn camera_error_msg(msg: String) -> Error {
+    if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
+        Error::CameraPermissionDenied(msg)
+    } else {
+        Error::CameraNotAvailable(msg)
+    }
+}
+
+thread_local! {
+    static STREAM: std::cell::RefCell<Option<web_sys::MediaStream>> = const { std::cell::RefCell::new(None) };
+    static VIDEO: std::cell::RefCell<Option<web_sys::HtmlVideoElement>> = const { std::cell::RefCell::new(None) };
+}
+
+static CAPTURE_SESSION: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+thread_local! {
+    static CAPTURE_ARMED: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+pub fn begin_capture_session() {
+    let session = CAPTURE_SESSION.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1;
+    let _ = session;
+    CAPTURE_ARMED.with(|c| c.set(false));
+}
+
+pub fn stop_capture_worker() {
+    CAPTURE_ARMED.with(|c| c.set(false));
+}
+
+pub async fn check_camera() -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let navigator = window.navigator();
+    let _ = navigator
+        .media_devices()
+        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    Ok(())
+}
+
+pub async fn start_camera() -> Result<(), Error> {
+    use wasm_bindgen::JsCast as _;
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let navigator = window.navigator();
+    let media = navigator
+        .media_devices()
+        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    let constraints = web_sys::MediaStreamConstraints::new();
+    let video_constraints = js_sys::Object::new();
+    let _ = js_sys::Reflect::set(
+        &video_constraints,
+        &wasm_bindgen::JsValue::from_str("facingMode"),
+        &wasm_bindgen::JsValue::from_str("environment"),
+    )
+    .map_err(|e| Error::JS(format!("{e:?}")))?;
+    constraints.set_video(&video_constraints);
+    let promise = media
+        .get_user_media_with_constraints(&constraints)
+        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
+    let stream_js = wasm_bindgen_futures::JsFuture::from(promise)
+        .await
+        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
+    let stream: web_sys::MediaStream = stream_js.unchecked_into();
+    let document = window
+        .document()
+        .ok_or_else(|| Error::JS("No document".into()))?;
+    let video: web_sys::HtmlVideoElement = document
+        .get_element_by_id("qr-video")
+        .and_then(|el| el.dyn_into::<web_sys::HtmlVideoElement>().ok())
+        .or_else(|| {
+            document.create_element("video").ok().and_then(|el| {
+                let _ = el.set_attribute("id", "qr-video");
+                let _ = el.set_attribute("autoplay", "true");
+                let _ = el.set_attribute("playsinline", "true");
+                let _ = el.set_attribute("muted", "true");
+                let _ = el.set_attribute("style", "display:none");
+                let _ = document.body()?.append_child(&el).ok()?;
+                el.dyn_into::<web_sys::HtmlVideoElement>().ok()
+            })
+        })
+        .ok_or_else(|| Error::JS("No video element".into()))?;
+    video.set_src_object(Some(&stream));
+    let play_promise = video
+        .play()
+        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
+    let _ = wasm_bindgen_futures::JsFuture::from(play_promise)
+        .await
+        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
+    STREAM.with(|s| *s.borrow_mut() = Some(stream));
+    VIDEO.with(|v| *v.borrow_mut() = Some(video));
+    begin_capture_session();
+    Ok(())
+}
+
+pub async fn capture_frame() -> Result<FrameData, Error> {
+    use wasm_bindgen::JsCast as _;
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let document = window
+        .document()
+        .ok_or_else(|| Error::JS("No document".into()))?;
+    let video: web_sys::HtmlVideoElement = VIDEO
+        .with(|v| v.borrow().clone())
+        .or_else(|| {
+            document
+                .get_element_by_id("qr-video")
+                .and_then(|el| el.dyn_into::<web_sys::HtmlVideoElement>().ok())
+        })
+        .ok_or_else(|| Error::JS("No video element".into()))?;
+    let mut waited: u64 = 0;
+    while video.video_width() == 0 || video.video_height() == 0 {
+        if waited > 5000 {
+            return Err(Error::CameraStalled);
+        }
+        gloo_timers::future::TimeoutFuture::new(100).await;
+        waited += 100;
+    }
+    let w0 = video.video_width();
+    let h0 = video.video_height();
+    if w0 == 0 || h0 == 0 {
+        return Err(Error::CameraStalled);
+    }
+    let max: u32 = 360;
+    let k = f32::min(1.0, max as f32 / u32::max(w0, h0) as f32);
+    let w = (w0 as f32 * k).round() as u32;
+    let h = (h0 as f32 * k).round() as u32;
+    let w = w.max(1);
+    let h = h.max(1);
+    let canvas: web_sys::HtmlCanvasElement = document
+        .get_element_by_id("qr-canvas")
+        .and_then(|el| el.dyn_into::<web_sys::HtmlCanvasElement>().ok())
+        .or_else(|| {
+            document.create_element("canvas").ok().and_then(|el| {
+                let _ = el.set_attribute("id", "qr-canvas");
+                let _ = el.set_attribute("style", "display:none");
+                let _ = document.body()?.append_child(&el).ok()?;
+                el.dyn_into::<web_sys::HtmlCanvasElement>().ok()
+            })
+        })
+        .ok_or_else(|| Error::JS("No canvas".into()))?;
+    canvas.set_width(w);
+    canvas.set_height(h);
+    let ctx: web_sys::CanvasRenderingContext2d = canvas
+        .get_context("2d")
+        .map_err(|e| Error::JS(format!("{e:?}")))?
+        .ok_or_else(|| Error::JS("No 2d context".into()))?
+        .dyn_into::<web_sys::CanvasRenderingContext2d>()
+        .map_err(|_| Error::JS("Not 2d context".into()))?;
+    ctx.draw_image_with_html_video_element_and_dw_and_dh(
+        &video,
+        0.0,
+        0.0,
+        f64::from(w),
+        f64::from(h),
+    )
+    .map_err(|e| Error::JS(format!("{e:?}")))?;
+    let image_data = ctx
+        .get_image_data(0.0, 0.0, f64::from(w), f64::from(h))
+        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    let data = image_data.data();
+    let rgba = data.to_vec();
+    let luma: Vec<u8> = rgba
+        .chunks_exact(4)
+        .map(|px| {
+            let r = u32::from(px[0]);
+            let g = u32::from(px[1]);
+            let b = u32::from(px[2]);
+            ((r * 299 + g * 587 + b * 114 + 500) / 1000) as u8
+        })
+        .collect();
+    CAPTURE_ARMED.with(|c| c.set(true));
+    Ok(FrameData {
+        data: luma,
+        width: w,
+        height: h,
+        preview_rgba: Some(rgba),
+    })
+}
+
+pub async fn stop_camera() -> Result<(), Error> {
+    use wasm_bindgen::JsCast as _;
+    let stream_opt = STREAM.with(|s| s.borrow_mut().take());
+    if let Some(stream) = stream_opt {
+        for track in stream.get_tracks() {
+            if let Ok(t) = track.dyn_into::<web_sys::MediaStreamTrack>() {
+                t.stop();
+            }
+        }
+    }
+    let video_opt = VIDEO.with(|v| v.borrow_mut().take());
+    if let Some(video) = video_opt {
+        video.set_src_object(None);
+    }
+    if let Some(window) = web_sys::window()
+        && let Some(document) = window.document()
+    {
+        if let Some(el) = document.get_element_by_id("qr-video")
+            && let Some(body) = document.body()
+        {
+            let _ = body.remove_child(&el);
+        }
+        if let Some(el) = document.get_element_by_id("qr-canvas")
+            && let Some(body) = document.body()
+        {
+            let _ = body.remove_child(&el);
+        }
+    }
+    stop_capture_worker();
+    Ok(())
 }
 
 #[must_use]

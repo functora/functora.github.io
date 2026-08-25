@@ -1,3 +1,4 @@
+use crate::camera::FrameData;
 use crate::error::Error;
 use jni::{
     JavaVM,
@@ -332,4 +333,60 @@ pub fn get_data_string() -> Option<String> {
 
 pub async fn sleep(millis: u64) {
     std::thread::sleep(std::time::Duration::from_millis(millis));
+}
+
+pub fn begin_capture_session() {}
+
+pub fn stop_capture_worker() {}
+
+pub async fn check_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    let has_camera = with_app(|env, activity| {
+        let pm = env
+            .call_method(
+                activity,
+                "getPackageManager",
+                "()Landroid/content/pm/PackageManager;",
+                &[],
+            )?
+            .l()?;
+        let feat = env.new_string("android.hardware.camera.any")?;
+        let has = env
+            .call_method(
+                &pm,
+                "hasSystemFeature",
+                "(Ljava/lang/String;)Z",
+                &[(&feat).into()],
+            )?
+            .z()?;
+        Ok(has)
+    })
+    .unwrap_or(false);
+    if has_camera {
+        Ok(())
+    } else {
+        Err(Error::CameraNotAvailable(
+            "No camera hardware on this Android device".into(),
+        ))
+    }
+}
+
+pub async fn start_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    check_camera().await?;
+    Err(Error::CameraNotAvailable(
+        "Android live camera not yet implemented – use file picker fallback".into(),
+    ))
+}
+
+pub async fn capture_frame() -> Result<FrameData, Error> {
+    std::future::ready(()).await;
+    Err(Error::CameraNotAvailable(
+        "Android live camera not yet implemented – use file picker fallback".into(),
+    ))
+}
+
+pub async fn stop_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    Ok(())
 }

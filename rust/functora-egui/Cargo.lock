@@ -1352,6 +1352,7 @@ dependencies = [
  "egui_flex",
  "functora-core",
  "gloo-timers",
+ "image",
  "jni 0.21.1",
  "js-sys",
  "log",

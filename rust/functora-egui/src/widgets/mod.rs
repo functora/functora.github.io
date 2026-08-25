@@ -40,6 +40,7 @@ pub mod pagination;
 pub mod popover;
 pub mod progress;
 pub mod property_grid;
+pub mod qr_scanner;
 pub mod radio;
 pub mod radio_group;
 pub mod resizable;

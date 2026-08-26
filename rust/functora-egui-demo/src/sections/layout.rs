@@ -7,6 +7,8 @@ use functora_egui::{
     ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography, TypographyVariant,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_flex(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
@@ -150,6 +152,11 @@ impl crate::app::ShowcaseApp {
                     });
                 });
             });
+
+        super::code::snippet(
+            ui,
+            "Flex::row().gap(8.0).show(ui, |f| { f.add(btn); });\nFlex::column().gap(8.0).show(ui, |f| { ... });\nf.grow(1.0, Input::new(&mut text));\nFlex::row().justify_between().w_full().show(ui, |f| { ... });\nf.spacer(); // pushes items apart",
+        );
     }
 
     pub(crate) fn demo_aspect_ratio(ui: &mut egui::Ui) {
@@ -200,6 +207,8 @@ impl crate::app::ShowcaseApp {
                 theme.muted_foreground,
             );
         });
+
+        snippet(ui, "AspectRatio::new(16.0 / 9.0).show(ui, |ui| { ... });");
     }
 
     pub(crate) fn demo_card(ui: &mut egui::Ui) {
@@ -240,6 +249,8 @@ impl crate::app::ShowcaseApp {
                 });
             });
         });
+
+        snippet(ui, "Card::new().show(ui, |card| { ... });");
     }
 
     pub(crate) fn demo_collapsible(&mut self, ui: &mut egui::Ui) {
@@ -257,6 +268,11 @@ impl crate::app::ShowcaseApp {
                     .size(ComponentSize::Sm)
                     .show(ui55);
             },
+        );
+
+        super::code::snippet(
+            ui,
+            "Collapsible::new(\"Toggle\").show(ui, &mut open, |body| { ... });",
         );
     }
 
@@ -279,6 +295,11 @@ impl crate::app::ShowcaseApp {
         );
         ui.add_space(4.0);
         _ = Typography::small(format!("Fraction: {:.2}", self.resizable_fraction)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "Resizable::new().height(160.0).show(ui, &mut frac, |l, r| { ... });",
+        );
     }
 
     pub(crate) fn demo_scroll_area(ui: &mut egui::Ui) {
@@ -289,6 +310,8 @@ impl crate::app::ShowcaseApp {
                 _ = ui60.label(format!("Scrollable item {i}"));
             }
         });
+
+        snippet(ui, "ScrollArea::new(160.0).show(ui, |scroll| { ... });");
     }
 
     pub(crate) fn demo_separator(ui: &mut egui::Ui) {
@@ -306,6 +329,11 @@ impl crate::app::ShowcaseApp {
             _ = Separator::vertical().show(ui61);
             _ = ui61.label("Right");
         });
+
+        super::code::snippet(
+            ui,
+            "Separator::horizontal().show(ui);\nSeparator::horizontal().text(\"Label\").show(ui);\nSeparator::vertical().show(ui);",
+        );
     }
 
     pub(crate) fn demo_status_bar(ui: &mut egui::Ui) {
@@ -333,6 +361,11 @@ impl crate::app::ShowcaseApp {
                 .variant(BadgeVariant::Outline)
                 .show(ui63);
         });
+
+        super::code::snippet(
+            ui,
+            "StatusBar::new().show(ui, |bar| { ... });\nStatusBar::new().dense().show(ui, |bar| { ... });",
+        );
     }
 
     pub(crate) fn demo_tabs(&mut self, ui: &mut egui::Ui) {
@@ -354,6 +387,11 @@ impl crate::app::ShowcaseApp {
                 _ = ui76.label("Configure application settings.");
             }
         });
+
+        super::code::snippet(
+            ui,
+            "Tabs::new(titles).show(ui, &mut active, |content, idx| { ... });",
+        );
     }
 
     pub(crate) fn demo_icon_tabs(&mut self, ui: &mut egui::Ui) {
@@ -391,6 +429,11 @@ impl crate::app::ShowcaseApp {
                 _ = ui77.label("Notifications content");
             }
         });
+
+        super::code::snippet(
+            ui,
+            "IconTabs::new(vec![TabEntry::Icon { icon, tooltip }])\n    .show(ui, &mut active, |content, idx| { ... });",
+        );
     }
 
     pub(crate) fn demo_toolbar(&mut self, ui: &mut egui::Ui) {
@@ -454,6 +497,11 @@ impl crate::app::ShowcaseApp {
                 .size(ComponentSize::Sm)
                 .show(ui67);
         });
+
+        super::code::snippet(
+            ui,
+            "Toolbar::new().show(ui, |bar| { ... });\nToolbar::new().dense().wrap(false).show(ui, |bar| { ... });",
+        );
     }
 
     pub(crate) fn demo_accordion(&mut self, ui: &mut egui::Ui) {
@@ -475,5 +523,10 @@ impl crate::app::ShowcaseApp {
         ])
         .multiple()
         .show(ui, &mut self.accordion_open);
+
+        super::code::snippet(
+            ui,
+            "Accordion::new(vec![(\"Q\", \"A\".to_owned())])\n    .multiple()\n    .show(ui, &mut open_indices);",
+        );
     }
 }

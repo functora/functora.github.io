@@ -6,6 +6,8 @@ use functora_egui::{
     Flex, LucideIcon, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_avatar(ui: &mut egui::Ui) {
         _ = Typography::muted("Initials-based avatars with adjustable sizes.").show(ui);
@@ -18,6 +20,11 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Typography::small("Colors come from the theme's primary palette.").show(ui);
+
+        snippet(
+            ui,
+            "Avatar::new(\"AL\").size(24.0).show(ui);\nAvatar::new(\"CM\").size(32.0).show(ui);",
+        );
     }
 
     pub(crate) fn demo_breadcrumb(&mut self, ui: &mut egui::Ui) {
@@ -42,6 +49,11 @@ impl crate::app::ShowcaseApp {
         _ = Breadcrumb::new(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()])
             .separator("/")
             .show(ui);
+
+        snippet(
+            ui,
+            "let clicked = Breadcrumb::new(items).show(ui);\nBreadcrumb::new(items).separator(\"/\").show(ui);",
+        );
     }
 
     pub(crate) fn demo_calendar(&mut self, ui: &mut egui::Ui) {
@@ -67,6 +79,11 @@ impl crate::app::ShowcaseApp {
             self.calendar_year, self.calendar_month, self.calendar_day
         ))
         .show(ui);
+
+        snippet(
+            ui,
+            "let clicked = Calendar::new().show(ui, &mut year, &mut month, &mut day);",
+        );
     }
 
     pub(crate) fn demo_carousel(&mut self, ui: &mut egui::Ui) {
@@ -105,6 +122,11 @@ impl crate::app::ShowcaseApp {
                 },
             );
         });
+
+        snippet(
+            ui,
+            "Carousel::new(count).show(ui, &mut index, |slide, idx| { ... });",
+        );
     }
 
     pub(crate) fn demo_pagination(&mut self, ui: &mut egui::Ui) {
@@ -116,6 +138,11 @@ impl crate::app::ShowcaseApp {
             .show(ui, &mut self.pagination_page);
         ui.add_space(4.0);
         _ = Typography::small(format!("Page {} of 20", self.pagination_page + 1)).show(ui);
+
+        snippet(
+            ui,
+            "Pagination::new(20).max_visible(7).show(ui, &mut page);",
+        );
     }
 
     pub(crate) fn demo_sidebar(&mut self, ui: &mut egui::Ui) {
@@ -159,6 +186,11 @@ impl crate::app::ShowcaseApp {
                     );
                 }
             },
+        );
+
+        snippet(
+            ui,
+            "Sidebar::new().width(228.0).collapsible().show(ui, &mut collapsed, |nav| { ... });",
         );
     }
 
@@ -211,6 +243,11 @@ impl crate::app::ShowcaseApp {
         ])
         .col_weights(vec![0.4, 0.4, 0.2])
         .show(ui);
+
+        snippet(
+            ui,
+            "Table::new(headers).rows(rows).striped().show(ui);\nTable::new(headers).rows(rows).col_weights(vec![0.4, 0.4, 0.2]).show(ui);",
+        );
     }
 
     pub(crate) fn demo_area_chart(ui: &mut egui::Ui) {
@@ -255,5 +292,10 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Badge::new("Primary"));
             _ = f.add(Badge::new("Secondary"));
         });
+
+        snippet(
+            ui,
+            "AreaChart::new(months)\n    .series(AreaSeries { values, color })\n    .stacked()\n    .height(260.0)\n    .show(ui);",
+        );
     }
 }

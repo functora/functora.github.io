@@ -5,6 +5,8 @@ use functora_egui::{
     Label, NumberInput, PropertyGrid, PropertyRow, Select, Typography,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_field_group(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Groups related fields with a legend and description.").show(ui);
@@ -44,6 +46,8 @@ impl crate::app::ShowcaseApp {
                 _ = f.add(Input::new(&mut self.form.form_cvv).placeholder("123"));
             });
         });
+
+        snippet(ui, "FieldGroup::show(ui, |group| { ... });");
     }
 
     pub(crate) fn demo_field_set(&mut self, ui: &mut egui::Ui) {
@@ -61,6 +65,11 @@ impl crate::app::ShowcaseApp {
                 _ = f.add(Input::new(&mut self.flex_email).placeholder("ada@example.com"));
             });
         });
+
+        super::code::snippet(
+            ui,
+            "FieldSet::show(ui, \"Shipping address\", |body| { ... });",
+        );
     }
 
     pub(crate) fn demo_field_legend(ui: &mut egui::Ui) {
@@ -73,6 +82,11 @@ impl crate::app::ShowcaseApp {
         FieldLegend::show(ui, "Billing address");
         ui.add_space(4.0);
         FieldDescription::show(ui, "Used only for invoices and receipts.");
+
+        super::code::snippet(
+            ui,
+            "FieldLegend::show(ui, \"Payment details\");\nFieldDescription::show(ui, \"All transactions are secure.\");",
+        );
     }
 
     pub(crate) fn demo_field_description(&mut self, ui: &mut egui::Ui) {
@@ -87,6 +101,11 @@ impl crate::app::ShowcaseApp {
                 FieldDescription::show(ui64, "Use at least 8 characters with numbers and symbols.");
             });
         });
+
+        super::code::snippet(
+            ui,
+            "FieldDescription::show(ui, \"Use at least 8 characters.\");",
+        );
     }
 
     pub(crate) fn demo_property_grid(&mut self, ui: &mut egui::Ui) {
@@ -141,6 +160,11 @@ impl crate::app::ShowcaseApp {
                     );
                 });
             });
+
+        super::code::snippet(
+            ui,
+            "PropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"X\").show(grid, |row| { ... });\n});",
+        );
     }
 
     pub(crate) fn demo_property_row(&mut self, ui: &mut egui::Ui) {
@@ -182,5 +206,7 @@ impl crate::app::ShowcaseApp {
                 });
             });
         });
+
+        snippet(ui, "PropertyRow::new(\"Mode\").show(grid, |row| { ... });");
     }
 }

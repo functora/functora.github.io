@@ -7,6 +7,8 @@ use functora_egui::{
     SelectValue, Slider, Switch, Textarea, Toggle, ToggleGroup, ToggleVariant, Typography,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_button(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Clickable buttons with variant styles and sizes.").show(ui);
@@ -134,6 +136,11 @@ impl crate::app::ShowcaseApp {
                 .variant(ButtonVariant::Outline)
                 .show(ui46);
         });
+
+        super::code::snippet(
+            ui,
+            "Button::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").show(ui);\nButton::new(\"Disabled\").enabled(false).show(ui);",
+        );
     }
 
     pub(crate) fn demo_checkbox(&mut self, ui: &mut egui::Ui) {
@@ -143,6 +150,11 @@ impl crate::app::ShowcaseApp {
             .add(Checkbox::new(&mut self.checks.checkbox_val).label("Accept terms and conditions"));
         ui.add_space(4.0);
         _ = Typography::small(format!("Checked: {}", self.checks.checkbox_val)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "ui.add(Checkbox::new(&mut checked).label(\"Accept terms\"));",
+        );
     }
 
     pub(crate) fn demo_switch(&mut self, ui: &mut egui::Ui) {
@@ -151,6 +163,11 @@ impl crate::app::ShowcaseApp {
         _ = ui.add(Switch::new(&mut self.checks.switch_val).label("Airplane mode"));
         ui.add_space(4.0);
         _ = Typography::small(format!("Enabled: {}", self.checks.switch_val)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "ui.add(Switch::new(&mut enabled).label(\"Airplane mode\"));",
+        );
     }
 
     pub(crate) fn demo_radio(&mut self, ui: &mut egui::Ui) {
@@ -177,6 +194,8 @@ impl crate::app::ShowcaseApp {
             self.radios.radio_a = false;
             self.radios.radio_b = false;
         }
+
+        snippet(ui, "ui.add(Radio::new(&mut option_a).label(\"Option A\"));");
     }
 
     pub(crate) fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
@@ -190,6 +209,8 @@ impl crate::app::ShowcaseApp {
         _ = RadioGroup::new(&mut self.radio_group_val, &options).show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected: {}", self.radio_group_val)).show(ui);
+
+        snippet(ui, "RadioGroup::new(&mut selected, &options).show(ui);");
     }
 
     pub(crate) fn demo_toggle(&mut self, ui: &mut egui::Ui) {
@@ -214,6 +235,11 @@ impl crate::app::ShowcaseApp {
             self.text_style.toggle_underline
         ))
         .show(ui);
+
+        super::code::snippet(
+            ui,
+            "Toggle::new(&mut bold, \"B\").show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);",
+        );
     }
 
     pub(crate) fn demo_toggle_group(&mut self, ui: &mut egui::Ui) {
@@ -227,6 +253,8 @@ impl crate::app::ShowcaseApp {
         .show(ui, &mut self.toggle_group_idx);
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected index: {}", self.toggle_group_idx)).show(ui);
+
+        snippet(ui, "ToggleGroup::new(items).show(ui, &mut selected_idx);");
     }
 
     pub(crate) fn demo_slider(&mut self, ui: &mut egui::Ui) {
@@ -249,6 +277,11 @@ impl crate::app::ShowcaseApp {
             .show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!("Budget: ${:.0}", self.slider_price)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "Slider::new(&mut value, 0.0..=100.0).step(1.0).show(ui);\nSlider::new(&mut price, 0.0..=1000.0).suffix(\" USD\").show(ui);",
+        );
     }
 
     pub(crate) fn demo_input(&mut self, ui: &mut egui::Ui) {
@@ -269,6 +302,11 @@ impl crate::app::ShowcaseApp {
             .placeholder("secret")
             .desired_width(ui.available_width())
             .show(ui);
+
+        super::code::snippet(
+            ui,
+            "Input::new(&mut text).placeholder(\"...\").show(ui);\nInput::new(&mut secret).password().show(ui);",
+        );
     }
 
     pub(crate) fn demo_number_input(&mut self, ui: &mut egui::Ui) {
@@ -318,6 +356,11 @@ impl crate::app::ShowcaseApp {
                 _ = Typography::small(format!("{}", self.number_i32)).show(ui67);
             });
         });
+
+        super::code::snippet(
+            ui,
+            "NumberInput::new(&mut px).range(0.0..=100.0).suffix(\"px\").show(ui);\nNumberInput::f32(&mut price).decimals(2).prefix(\"$\").show(ui);\nNumberInput::i32(&mut count).range(0.0..=50.0).show(ui);",
+        );
     }
 
     pub(crate) fn demo_input_group(&mut self, ui: &mut egui::Ui) {
@@ -349,6 +392,11 @@ impl crate::app::ShowcaseApp {
                     .show(ui68);
             }),
         );
+
+        super::code::snippet(
+            ui,
+            "InputGroup::show(ui, &mut url, \"example.com\", Some(\"https://\"), None);",
+        );
     }
 
     pub(crate) fn demo_textarea(&mut self, ui: &mut egui::Ui) {
@@ -359,6 +407,11 @@ impl crate::app::ShowcaseApp {
             .desired_width(ui.available_width().min(420.0))
             .min_height(80.0)
             .show(ui);
+
+        super::code::snippet(
+            ui,
+            "Textarea::new(&mut msg).placeholder(\"Write...\").min_height(80.0).show(ui);",
+        );
     }
 
     pub(crate) fn demo_select(&mut self, ui: &mut egui::Ui) {
@@ -376,6 +429,11 @@ impl crate::app::ShowcaseApp {
             .show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected: {:?}", self.select_val)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "Select::new(&mut fruit, &fruits).placeholder(\"Pick a fruit...\").show(ui);",
+        );
     }
 
     pub(crate) fn demo_select_value(&mut self, ui: &mut egui::Ui) {
@@ -390,6 +448,11 @@ impl crate::app::ShowcaseApp {
         _ = SelectValue::new(&mut self.select_blend, &blend_modes).show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!("Blend mode: {}", self.select_blend)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "SelectValue::new(&mut blend_mode, &blend_modes).show(ui);",
+        );
     }
 
     pub(crate) fn demo_combobox(&mut self, ui: &mut egui::Ui) {
@@ -407,6 +470,11 @@ impl crate::app::ShowcaseApp {
             .show(ui, &mut self.combobox_selected, &mut self.combobox_search);
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected index: {:?}", self.combobox_selected)).show(ui);
+
+        super::code::snippet(
+            ui,
+            "Combobox::new(items).placeholder(\"Search...\")\n    .show(ui, &mut selected_idx, &mut search);",
+        );
     }
 
     pub(crate) fn demo_input_otp(&mut self, ui: &mut egui::Ui) {
@@ -415,6 +483,8 @@ impl crate::app::ShowcaseApp {
         _ = InputOtp::new(6).show(ui, &mut self.otp_value);
         ui.add_space(4.0);
         _ = Typography::small(format!("OTP: \"{}\"", self.otp_value)).show(ui);
+
+        snippet(ui, "InputOtp::new(6).show(ui, &mut code);");
     }
 
     pub(crate) fn demo_date_picker(&mut self, ui: &mut egui::Ui) {
@@ -429,6 +499,11 @@ impl crate::app::ShowcaseApp {
         } else {
             _ = Typography::small("No date selected.").show(ui);
         }
+
+        super::code::snippet(
+            ui,
+            "DatePicker::new().placeholder(\"Pick a date\").show(ui, &mut state);",
+        );
     }
 
     pub(crate) fn demo_color_swatch(&mut self, ui: &mut egui::Ui) {
@@ -474,5 +549,10 @@ impl crate::app::ShowcaseApp {
                     .show_hex(),
             );
         });
+
+        super::code::snippet(
+            ui,
+            "ColorSwatch::new(color).label(\"Signal\").selected(true).show_hex();",
+        );
     }
 }

@@ -5,6 +5,8 @@ use functora_egui::{
     TypographyVariant,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_typography(ui: &mut egui::Ui) {
         _ = Typography::muted("Text styles: headings, lead, muted, and small.").show(ui);
@@ -40,6 +42,11 @@ impl crate::app::ShowcaseApp {
         _ = Typography::new("Plain paragraph style with a custom variant.")
             .variant(TypographyVariant::Large)
             .show(ui);
+
+        super::code::snippet(
+            ui,
+            "Typography::h1(\"Title\").show(ui);\nTypography::small(\"fine print\").show(ui);\nTypography::lead(\"Lead paragraph\").show(ui);\nTypography::muted(\"Muted text\").show(ui);",
+        );
     }
 
     pub(crate) fn demo_label(&mut self, ui: &mut egui::Ui) {
@@ -64,6 +71,11 @@ impl crate::app::ShowcaseApp {
                 _ = Label::new("Muted label").muted().show(ui54);
             });
         });
+
+        super::code::snippet(
+            ui,
+            "Label::new(\"Email\").show(ui);\nLabel::new(\"Muted\").muted().show(ui);",
+        );
     }
 
     pub(crate) fn demo_kbd(ui: &mut egui::Ui) {
@@ -90,6 +102,8 @@ impl crate::app::ShowcaseApp {
                 _ = ui58.label("cycles focus");
             });
         });
+
+        snippet(ui, "Kbd::new(\"Ctrl\").show(ui);");
     }
 
     pub(crate) fn demo_item(&mut self, ui: &mut egui::Ui) {
@@ -140,6 +154,11 @@ impl crate::app::ShowcaseApp {
                 ui.ctx().input(|i| i.time),
             );
         }
+
+        super::code::snippet(
+            ui,
+            "Item::new().show(ui, |item| { ... });\nItem::new().variant(ItemVariant::Outline).show(ui, |item| { ... });",
+        );
     }
 
     pub(crate) fn demo_icons(&mut self, ui: &mut egui::Ui) {
@@ -184,5 +203,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small("Icons render from built-in SVG paths; no external font needed.")
             .show(ui);
+
+        snippet(ui, "Button::icon_only(LucideIcon::Settings).show(ui);");
     }
 }

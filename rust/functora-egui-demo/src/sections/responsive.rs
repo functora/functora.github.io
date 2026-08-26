@@ -6,6 +6,8 @@ use functora_egui::{
     Typography, TypographyVariant,
 };
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_breakpoint(ui: &mut egui::Ui) {
         _ = Typography::muted("The viewport breakpoint switches at 800px: mobile vs desktop.")
@@ -30,6 +32,16 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(12.0);
         _ = Typography::small("Resize the window below 800px to flip the breakpoint.").show(ui);
+
+        super::code::snippet(
+            ui,
+            "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
+        );
+
+        super::code::snippet(
+            ui,
+            "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
+        );
     }
 
     pub(crate) fn demo_spacing(ui: &mut egui::Ui) {
@@ -65,6 +77,10 @@ impl crate::app::ShowcaseApp {
         } else {
             _ = Typography::small("Desktop spacing is active.").show(ui);
         }
+
+        snippet(ui, "let spacing = ui.responsive_spacing();");
+
+        snippet(ui, "let spacing = ui.responsive_spacing();");
     }
 
     pub(crate) fn demo_flex_wrap(ui: &mut egui::Ui) {
@@ -88,6 +104,16 @@ impl crate::app::ShowcaseApp {
                 _ = f.add(Button::new(format!("Item {i}")).variant(ButtonVariant::Outline));
             }
         });
+
+        super::code::snippet(
+            ui,
+            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
+        );
+
+        super::code::snippet(
+            ui,
+            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
+        );
     }
 
     pub(crate) fn demo_touch_target(&mut self, ui: &mut egui::Ui) {
@@ -126,6 +152,10 @@ impl crate::app::ShowcaseApp {
             .step(1.0)
             .width(ui.available_width().min(360.0))
             .show(ui);
+
+        snippet(ui, "let spacing = ui.responsive_spacing();");
+
+        snippet(ui, "let spacing = ui.responsive_spacing();");
     }
 
     pub(crate) fn demo_mobile_dialog(&mut self, ui: &mut egui::Ui) {

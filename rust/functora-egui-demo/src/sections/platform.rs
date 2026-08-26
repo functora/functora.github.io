@@ -32,6 +32,8 @@ where
     rx
 }
 
+use super::code::snippet;
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn poll_platform_promises(&mut self, ctx: &egui::Context) {
         if let Some(shared) = self.platform.pick_progress.clone()
@@ -285,6 +287,11 @@ impl crate::app::ShowcaseApp {
             Ok(p) => _ = Typography::small(format!("files_dir: {}", p.display())).show(ui),
             Err(e) => _ = Typography::small(format!("files_dir error: {e}")).show(ui),
         }
+
+        super::code::snippet(
+            ui,
+            "functora_egui::storage::persist_value(&key, &val);\nlet loaded: Option<String> = functora_egui::storage::load_state(&key);\nfunctora_egui::storage::files_dir()",
+        );
     }
 
     pub(crate) fn demo_clipboard(&mut self, ui: &mut egui::Ui) {
@@ -352,6 +359,11 @@ impl crate::app::ShowcaseApp {
                     .desired_width(w),
             );
         });
+
+        super::code::snippet(
+            ui,
+            "functora_egui::clipboard::write(text).await?;\nlet text = functora_egui::clipboard::read().await?;",
+        );
     }
 
     pub(crate) fn demo_share(&mut self, ui: &mut egui::Ui) {
@@ -391,6 +403,11 @@ impl crate::app::ShowcaseApp {
                 });
             }
         });
+
+        super::code::snippet(
+            ui,
+            "functora_egui::share::share(ShareData { title, text, url }).await?;",
+        );
     }
 
     pub(crate) fn demo_deep_link(&mut self, ui: &mut egui::Ui) {
@@ -470,6 +487,11 @@ impl crate::app::ShowcaseApp {
                 _ = Typography::small(format!("location.href: {href}")).show(ui);
             }
         }
+
+        super::code::snippet(
+            ui,
+            "functora_egui::deep_link::store_url(url);\nlet url = functora_egui::deep_link::take_url();\nlet route = functora_egui::deep_link::url_to_route(&url);",
+        );
     }
 
     pub(crate) fn demo_files(&mut self, ui: &mut egui::Ui) {
@@ -630,6 +652,11 @@ impl crate::app::ShowcaseApp {
             let preview = functora_egui::files::preview_blob("hello.txt", b"hello blob");
             self.platform.pick_status = format!("blob preview: {preview:?}");
         }
+
+        super::code::snippet(
+            ui,
+            "let files = functora_egui::files::pick_files(true).await?;\nlet preview = functora_egui::files::preview(name, &data);\nlet mime = functora_egui::files::mime_for_name(name);",
+        );
     }
 
     pub(crate) fn demo_download(&mut self, ui: &mut egui::Ui) {
@@ -672,6 +699,11 @@ impl crate::app::ShowcaseApp {
             ui.add_space(8.0);
             _ = ui.add(Badge::new(&self.platform.download_status));
         }
+
+        super::code::snippet(
+            ui,
+            "functora_egui::download::download(data, &filename).await?;",
+        );
     }
 
     pub(crate) fn demo_print(&mut self, ui: &mut egui::Ui) {
@@ -707,6 +739,8 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = Typography::small("On desktop this will show 'Print not supported' - expected.")
             .show(ui);
+
+        snippet(ui, "functora_egui::print::print_page().await?;");
     }
 
     pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
@@ -781,6 +815,11 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Typography::small(format!("Stack: {:?}", self.platform.nav.stack())).show(ui);
+
+        super::code::snippet(
+            ui,
+            "nav.push(route);\nnav.go_back();\nlet route = nav.current();",
+        );
     }
 
     pub(crate) fn demo_progress_worker(&mut self, ui: &mut egui::Ui) {
@@ -869,6 +908,11 @@ impl crate::app::ShowcaseApp {
                 }
             }
         });
+
+        super::code::snippet(
+            ui,
+            "functora_egui::progress::claim_job(&mut slot, Stage::Zip);",
+        );
     }
 
     pub(crate) fn demo_pwa(&mut self, ui: &mut egui::Ui) {
@@ -926,6 +970,11 @@ impl crate::app::ShowcaseApp {
             "On desktop this will be NotAvailable - expected. On web with beforeinstallprompt it may be Accepted/Rejected.",
         )
         .show(ui);
+
+        super::code::snippet(
+            ui,
+            "let hint = functora_egui::camera::install_hint().await?;\nlet res = functora_egui::camera::trigger_pwa_install().await?;",
+        );
     }
 
     pub(crate) fn demo_encoding(&mut self, ui: &mut egui::Ui) {
@@ -993,6 +1042,11 @@ impl crate::app::ShowcaseApp {
             functora_egui::encoding::append_query_param("https://example.com", "k", "v")
         ))
         .show(ui);
+
+        super::code::snippet(
+            ui,
+            "let encoded = functora_egui::encoding::encode_payload(&payload)?;\nlet decoded = functora_egui::encoding::decode_payload::<T>(&encoded)?;\nlet svg = functora_egui::encoding::generate_qr_code(&text)?;",
+        );
     }
 
     pub(crate) fn demo_in_flight(&mut self, ui: &mut egui::Ui) {
@@ -1047,6 +1101,11 @@ impl crate::app::ShowcaseApp {
             ui.add_space(8.0);
             _ = ui.add(Badge::new(&self.platform.in_flight_status));
         }
+
+        super::code::snippet(
+            ui,
+            "if let Some(_guard) = self.platform.in_flight.claim() {\n    // exclusive access for the duration of the guard\n}",
+        );
     }
 
     pub(crate) fn demo_camera(&mut self, ui: &mut egui::Ui) {
@@ -1113,6 +1172,11 @@ impl crate::app::ShowcaseApp {
         }
         ui.add_space(8.0);
         _ = Typography::small("On desktop this will report 'not available – use file picker' (expected). On web, use QrScanner below for live preview.").show(ui);
+
+        super::code::snippet(
+            ui,
+            "functora_egui::camera::check_camera().await?;\nfunctora_egui::camera::start_camera().await?;\nlet frame = functora_egui::camera::capture_frame().await?;\nfunctora_egui::camera::stop_camera().await?;",
+        );
     }
 
     pub(crate) fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
@@ -1197,6 +1261,11 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Typography::small("Tip: Use Pick Image inside the scanner for file fallback (desktop) or Start Camera for live (web/android).").show(ui);
+
+        super::code::snippet(
+            ui,
+            "// Stateful widget with auto-start + live preview + auto-scan.\nQrScanner::new().continuous(true).on_scan(|text| { ... })\n    .show(ui, &mut qr_state);",
+        );
     }
 
     pub(crate) fn demo_thumbnail(&mut self, ui: &mut egui::Ui) {
@@ -1242,6 +1311,11 @@ impl crate::app::ShowcaseApp {
             "Tip: pick a video file in Files demo, then paste its data URL here.",
         )
         .show(ui);
+
+        super::code::snippet(
+            ui,
+            "let thumb = functora_egui::thumbnail::video_thumbnail(bytes);",
+        );
     }
 
     pub(crate) fn demo_zip(&mut self, ui: &mut egui::Ui) {
@@ -1282,6 +1356,11 @@ impl crate::app::ShowcaseApp {
             ui.add_space(8.0);
             _ = ui.add(Badge::new(&self.platform.zip_status));
         }
+
+        super::code::snippet(
+            ui,
+            "let zip = functora_egui::zip::create_zip_async(&files, progress, stage).await?;\nlet files = functora_egui::zip::unzip_async(bytes, progress, stage).await?;",
+        );
     }
 
     pub(crate) fn demo_crypto(&mut self, ui: &mut egui::Ui) {
@@ -1329,6 +1408,11 @@ impl crate::app::ShowcaseApp {
             ui.add_space(8.0);
             _ = ui.add(Badge::new(&self.platform.crypto_status));
         }
+
+        super::code::snippet(
+            ui,
+            "let enc = functora_egui::crypto::encrypt_symmetric(data, password)?;\nlet plain = functora_egui::crypto::decrypt_symmetric(&enc, password)?;",
+        );
     }
 
     pub(crate) fn demo_worker(&mut self, ui: &mut egui::Ui) {
@@ -1384,6 +1468,11 @@ impl crate::app::ShowcaseApp {
                 Err(_) => self.platform.worker_status = "Worker disconnected".to_string(),
             }
         }
+
+        super::code::snippet(
+            ui,
+            "let result = functora_egui::worker::run(input, |job| { ... }, |val, reporter| async {\n    reporter(Job { stage, done, total, name });\n    Ok(output)\n}).await?;",
+        );
     }
 
     pub(crate) fn demo_platform_info(&mut self, ui: &mut egui::Ui) {

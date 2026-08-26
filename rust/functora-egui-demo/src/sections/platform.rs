@@ -1,6 +1,6 @@
 use functora_egui::{
     Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress,
-    ResponsiveExt, Separator, ShadcnThemeExt, Textarea, Typography,
+    ResponsiveExt, Separator, ShadcnThemeExt, Switch, Textarea, Typography,
 };
 use std::sync::mpsc;
 
@@ -1154,10 +1154,34 @@ impl crate::app::ShowcaseApp {
         }
         ui.add_space(12.0);
         _ = Card::new().show(ui, |ui2| {
-            _ = Typography::small("Live scanner (web: camera, desktop: pick image fallback)")
-                .show(ui2);
+            _ = Typography::small(
+                "Auto-starts and scans automatically (15 fps preview, 5 fps decode).",
+            )
+            .show(ui2);
+            ui2.add_space(4.0);
+            _ = Flex::row().gap(8.0).show(ui2, |f2| {
+                _ = f2.add(Switch::new(&mut self.platform.qr_continuous).label("Continuous"));
+            });
+            ui2.add_space(4.0);
+            if ui2
+                .add(
+                    Button::new("Restart scanner")
+                        .variant(ButtonVariant::Outline)
+                        .size(functora_egui::ComponentSize::Sm),
+                )
+                .clicked()
+            {
+                self.platform.qr_state.stop();
+                self.platform.qr_state.clear_decoded();
+                self.platform.qr_state.clear_error();
+                let ctx = ui2.ctx().clone();
+                let _ = self.platform.qr_state.start(&ctx);
+            }
             ui2.add_space(8.0);
-            let _ = functora_egui::QrScanner::new().show(ui2, &mut self.platform.qr_state);
+            let _ = functora_egui::QrScanner::new()
+                .continuous(self.platform.qr_continuous)
+                .on_scan(|text| log::info!("QR scanned: {text}"))
+                .show(ui2, &mut self.platform.qr_state);
             if let Some(txt) = self.platform.qr_state.decoded() {
                 ui2.add_space(8.0);
                 _ = ui2.add(Badge::new(format!("Decoded: {txt}")));

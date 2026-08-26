@@ -12,6 +12,7 @@ pub mod breadcrumb;
 pub mod button;
 pub mod button_group;
 pub mod calendar;
+pub mod camera_view;
 pub mod card;
 pub mod carousel;
 pub mod checkbox;

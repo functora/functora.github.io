@@ -99,6 +99,8 @@ pub use widgets::breadcrumb::widget::Breadcrumb;
 pub use widgets::button::widget::Button;
 pub use widgets::button_group::widget::ButtonGroup;
 pub use widgets::calendar::widget::Calendar;
+pub use widgets::camera_view::camera_view_state::CameraViewState;
+pub use widgets::camera_view::widget::CameraView;
 pub use widgets::card::widget::Card;
 pub use widgets::carousel::widget::Carousel;
 pub use widgets::checkbox::widget::Checkbox;

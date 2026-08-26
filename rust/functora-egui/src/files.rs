@@ -91,7 +91,7 @@ pub fn preview_blob(name: &str, data: &[u8]) -> Preview {
                     let parts = js_sys::Array::new();
                     let _ = parts.push(&array.buffer());
                     let bag = web_sys::BlobPropertyBag::new();
-                    let _ = bag.set_type(mime);
+                    bag.set_type(mime);
                     web_sys::Blob::new_with_u8_array_sequence_and_options(&parts, &bag)
                         .ok()
                         .and_then(|blob| web_sys::Url::create_object_url_with_blob(&blob).ok())
@@ -226,33 +226,28 @@ pub async fn pick_files_with_shared_progress(
 }
 
 #[cfg(target_arch = "wasm32")]
+#[must_use]
 pub fn pick_files_sync_web(multiple: bool) -> Arc<Mutex<Option<PickResult>>> {
-    pick_files_sync_web_with_cancel(multiple, new_cancel_token())
+    pick_files_sync_web_with_cancel(multiple, &new_cancel_token())
 }
 
 #[cfg(target_arch = "wasm32")]
 pub fn pick_files_sync_web_with_cancel(
     multiple: bool,
-    cancel: CancelToken,
+    cancel: &CancelToken,
 ) -> Arc<Mutex<Option<PickResult>>> {
     let result: Arc<Mutex<Option<PickResult>>> = Arc::new(Mutex::new(None));
-    let window = match web_sys::window() {
-        Some(w) => w,
-        None => {
-            if let Ok(mut guard) = result.lock() {
-                *guard = Some(Err("No window".to_owned()));
-            }
-            return result;
+    let Some(window) = web_sys::window() else {
+        if let Ok(mut guard) = result.lock() {
+            *guard = Some(Err("No window".to_owned()));
         }
+        return result;
     };
-    let document = match window.document() {
-        Some(d) => d,
-        None => {
-            if let Ok(mut guard) = result.lock() {
-                *guard = Some(Err("No document".into()));
-            }
-            return result;
+    let Some(document) = window.document() else {
+        if let Ok(mut guard) = result.lock() {
+            *guard = Some(Err("No document".into()));
         }
+        return result;
     };
     let input: web_sys::HtmlInputElement = match document
         .create_element("input")
@@ -281,7 +276,7 @@ pub fn pick_files_sync_web_with_cancel(
     let result_clone = Arc::clone(&result);
     let input_clone = input.clone();
     let document_clone = document.clone();
-    let cancel_clone = Arc::clone(&cancel);
+    let cancel_onchange = Arc::clone(cancel);
     {
         use wasm_bindgen::JsCast;
         use wasm_bindgen::closure::Closure;
@@ -290,7 +285,7 @@ pub fn pick_files_sync_web_with_cancel(
             let result2 = Arc::clone(&result_clone);
             let input2 = input_clone.clone();
             let document2 = document_clone.clone();
-            let cancel_inner = Arc::clone(&cancel_clone);
+            let cancel_inner = Arc::clone(&cancel_onchange);
             wasm_bindgen_futures::spawn_local(async move {
                 if cancel_inner.load(Ordering::Relaxed) {
                     if let Ok(mut guard) = result2.lock() {
@@ -324,12 +319,12 @@ pub fn pick_files_sync_web_with_cancel(
         let result_cancel = Arc::clone(&result);
         let input_cancel = input.clone();
         let document_cancel = document.clone();
-        let cancel_cancel = Arc::clone(&cancel);
+        let cancel_snapshot = Arc::clone(cancel);
         let closure_cancel = Closure::once(move |_event: web_sys::Event| {
             if let Ok(mut guard) = result_cancel.lock()
                 && guard.is_none()
             {
-                if cancel_cancel.load(Ordering::Relaxed) {
+                if cancel_snapshot.load(Ordering::Relaxed) {
                     *guard = Some(Err("Cancelled".to_owned()));
                 } else {
                     *guard = Some(Ok(Vec::new()));
@@ -347,11 +342,10 @@ pub fn pick_files_sync_web_with_cancel(
         );
         closure_cancel.forget();
     }
-    if document
+    let appended = document
         .body()
-        .map(|body| body.append_child(&input).is_ok())
-        .unwrap_or(false)
-    {
+        .is_some_and(|body| body.append_child(&input).is_ok());
+    if appended {
         input.click();
     } else if let Ok(mut guard) = result.lock() {
         *guard = Some(Err("No body".into()));
@@ -384,7 +378,7 @@ async fn collect_files_chunked_web(
             .get(i)
             .ok_or_else(|| Error::JS("No file".into()))?;
         let blob: &web_sys::Blob = file.unchecked_ref();
-        let size = blob.size() as u64;
+        let size = crate::utils::f64_to_u64_clamped(blob.size());
         total = total.saturating_add(size);
     }
     if let Some(slot) = progress.as_deref_mut() {
@@ -436,7 +430,7 @@ async fn read_single_file_chunked(
 ) -> Result<Vec<u8>, Error> {
     use wasm_bindgen::JsCast;
     let blob: &web_sys::Blob = file.unchecked_ref();
-    let size = blob.size() as u64;
+    let size = crate::utils::f64_to_u64_clamped(blob.size());
     yield_to_paint().await;
     if size == 0 {
         return Ok(Vec::new());
@@ -451,9 +445,14 @@ async fn read_single_file_chunked(
         {
             return Err(Error::Cancelled);
         }
-        let end = (offset + PICK_CHUNK as u64).min(size);
+        let end = offset
+            .saturating_add(u64::from(u32::try_from(PICK_CHUNK).unwrap_or(u32::MAX)))
+            .min(size);
         let chunk_blob = blob
-            .slice_with_f64_and_f64(offset as f64, end as f64)
+            .slice_with_f64_and_f64(
+                crate::utils::u64_to_f64_js(offset),
+                crate::utils::u64_to_f64_js(end),
+            )
             .map_err(|e| Error::JS(format!("{e:?}")))?;
         let promise = chunk_blob.array_buffer();
         let buffer = wasm_bindgen_futures::JsFuture::from(promise)
@@ -708,7 +707,7 @@ async fn collect_files_chunked_web_shared(
             .get(i)
             .ok_or_else(|| Error::JS("No file".into()))?;
         let blob: &web_sys::Blob = file.unchecked_ref();
-        let size = blob.size() as u64;
+        let size = crate::utils::f64_to_u64_clamped(blob.size());
         total = total.saturating_add(size);
     }
     if let Some(shared) = progress.as_ref()
@@ -764,7 +763,7 @@ async fn read_single_file_chunked_shared(
 ) -> Result<Vec<u8>, Error> {
     use wasm_bindgen::JsCast;
     let blob: &web_sys::Blob = file.unchecked_ref();
-    let size = blob.size() as u64;
+    let size = crate::utils::f64_to_u64_clamped(blob.size());
     yield_to_paint().await;
     if size == 0 {
         return Ok(Vec::new());
@@ -779,9 +778,14 @@ async fn read_single_file_chunked_shared(
         {
             return Err(Error::Cancelled);
         }
-        let end = (offset + PICK_CHUNK as u64).min(size);
+        let end = offset
+            .saturating_add(u64::from(u32::try_from(PICK_CHUNK).unwrap_or(u32::MAX)))
+            .min(size);
         let chunk_blob = blob
-            .slice_with_f64_and_f64(offset as f64, end as f64)
+            .slice_with_f64_and_f64(
+                crate::utils::u64_to_f64_js(offset),
+                crate::utils::u64_to_f64_js(end),
+            )
             .map_err(|e| Error::JS(format!("{e:?}")))?;
         let promise = chunk_blob.array_buffer();
         let buffer = wasm_bindgen_futures::JsFuture::from(promise)

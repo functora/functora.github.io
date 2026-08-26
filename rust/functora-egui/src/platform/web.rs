@@ -173,6 +173,7 @@ pub fn stop_capture_worker() {
 }
 
 pub async fn check_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let navigator = window.navigator();
     let _ = navigator
@@ -212,11 +213,11 @@ pub async fn start_camera() -> Result<(), Error> {
         .and_then(|el| el.dyn_into::<web_sys::HtmlVideoElement>().ok())
         .or_else(|| {
             document.create_element("video").ok().and_then(|el| {
-                let _ = el.set_attribute("id", "qr-video");
-                let _ = el.set_attribute("autoplay", "true");
-                let _ = el.set_attribute("playsinline", "true");
-                let _ = el.set_attribute("muted", "true");
-                let _ = el.set_attribute("style", "display:none");
+                drop(el.set_attribute("id", "qr-video"));
+                drop(el.set_attribute("autoplay", "true"));
+                drop(el.set_attribute("playsinline", "true"));
+                drop(el.set_attribute("muted", "true"));
+                drop(el.set_attribute("style", "display:none"));
                 let _ = document.body()?.append_child(&el).ok()?;
                 el.dyn_into::<web_sys::HtmlVideoElement>().ok()
             })
@@ -237,6 +238,7 @@ pub async fn start_camera() -> Result<(), Error> {
 
 pub async fn capture_frame() -> Result<FrameData, Error> {
     use wasm_bindgen::JsCast as _;
+    const MAX_DIM: f32 = 360.0;
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let document = window
         .document()
@@ -257,31 +259,31 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
         gloo_timers::future::TimeoutFuture::new(100).await;
         waited += 100;
     }
-    let w0 = video.video_width();
-    let h0 = video.video_height();
-    if w0 == 0 || h0 == 0 {
+    let raw_width = video.video_width();
+    let raw_height = video.video_height();
+    if raw_width == 0 || raw_height == 0 {
         return Err(Error::CameraStalled);
     }
-    let max: u32 = 360;
-    let k = f32::min(1.0, max as f32 / u32::max(w0, h0) as f32);
-    let w = (w0 as f32 * k).round() as u32;
-    let h = (h0 as f32 * k).round() as u32;
-    let w = w.max(1);
-    let h = h.max(1);
+    let scale = f32::min(
+        1.0,
+        MAX_DIM / crate::utils::u32_to_f32(u32::max(raw_width, raw_height)),
+    );
+    let scaled_w = crate::utils::scaled_px(raw_width, scale);
+    let scaled_h = crate::utils::scaled_px(raw_height, scale);
     let canvas: web_sys::HtmlCanvasElement = document
         .get_element_by_id("qr-canvas")
         .and_then(|el| el.dyn_into::<web_sys::HtmlCanvasElement>().ok())
         .or_else(|| {
             document.create_element("canvas").ok().and_then(|el| {
-                let _ = el.set_attribute("id", "qr-canvas");
-                let _ = el.set_attribute("style", "display:none");
+                drop(el.set_attribute("id", "qr-canvas"));
+                drop(el.set_attribute("style", "display:none"));
                 let _ = document.body()?.append_child(&el).ok()?;
                 el.dyn_into::<web_sys::HtmlCanvasElement>().ok()
             })
         })
         .ok_or_else(|| Error::JS("No canvas".into()))?;
-    canvas.set_width(w);
-    canvas.set_height(h);
+    canvas.set_width(scaled_w);
+    canvas.set_height(scaled_h);
     let ctx: web_sys::CanvasRenderingContext2d = canvas
         .get_context("2d")
         .map_err(|e| Error::JS(format!("{e:?}")))?
@@ -292,12 +294,12 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
         &video,
         0.0,
         0.0,
-        f64::from(w),
-        f64::from(h),
+        f64::from(scaled_w),
+        f64::from(scaled_h),
     )
     .map_err(|e| Error::JS(format!("{e:?}")))?;
     let image_data = ctx
-        .get_image_data(0.0, 0.0, f64::from(w), f64::from(h))
+        .get_image_data(0.0, 0.0, f64::from(scaled_w), f64::from(scaled_h))
         .map_err(|e| Error::JS(format!("{e:?}")))?;
     let data = image_data.data();
     let rgba = data.to_vec();
@@ -307,20 +309,21 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
             let r = u32::from(px[0]);
             let g = u32::from(px[1]);
             let b = u32::from(px[2]);
-            ((r * 299 + g * 587 + b * 114 + 500) / 1000) as u8
+            u8::try_from((r * 299 + g * 587 + b * 114 + 500) / 1000).unwrap_or(u8::MAX)
         })
         .collect();
     CAPTURE_ARMED.with(|c| c.set(true));
     Ok(FrameData {
         data: luma,
-        width: w,
-        height: h,
+        width: scaled_w,
+        height: scaled_h,
         preview_rgba: Some(rgba),
     })
 }
 
 pub async fn stop_camera() -> Result<(), Error> {
     use wasm_bindgen::JsCast as _;
+    std::future::ready(()).await;
     let stream_opt = STREAM.with(|s| s.borrow_mut().take());
     if let Some(stream) = stream_opt {
         for track in stream.get_tracks() {
@@ -339,12 +342,12 @@ pub async fn stop_camera() -> Result<(), Error> {
         if let Some(el) = document.get_element_by_id("qr-video")
             && let Some(body) = document.body()
         {
-            let _ = body.remove_child(&el);
+            drop(body.remove_child(&el));
         }
         if let Some(el) = document.get_element_by_id("qr-canvas")
             && let Some(body) = document.body()
         {
-            let _ = body.remove_child(&el);
+            drop(body.remove_child(&el));
         }
     }
     stop_capture_worker();

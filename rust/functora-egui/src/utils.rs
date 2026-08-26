@@ -78,6 +78,48 @@ pub fn nv21_to_rgba(nv21: &[u8], width: u32, height: u32) -> Vec<u8> {
         .collect()
 }
 
+/// Converts a frames-per-second rate into a millisecond capture interval,
+/// clamped to the 1..=60 fps range with a 16 ms floor.
+#[must_use]
+pub fn fps_to_interval_ms(fps: f32) -> u64 {
+    use num_traits::ToPrimitive as _;
+    let clamped = fps.clamp(1.0, 60.0);
+    let millis = (1000.0 / clamped).round().max(16.0);
+    millis.to_u64().unwrap_or(66)
+}
+
+/// Saturating `f64` -> `u64` conversion used for JS `double` sizes.
+#[must_use]
+pub fn f64_to_u64_clamped(value: f64) -> u64 {
+    use num_traits::ToPrimitive as _;
+    value.max(0.0).to_u64().unwrap_or(u64::MAX)
+}
+
+/// Loss-of-precision-tolerant `u64` -> `f64` for JS interop boundaries.
+#[must_use]
+pub fn u64_to_f64_js(value: u64) -> f64 {
+    use num_traits::ToPrimitive as _;
+    value.to_f64().unwrap_or(f64::NAN)
+}
+
+/// `u32` -> `f32` for scaling maths at JS/egui boundaries.
+#[must_use]
+pub fn u32_to_f32(value: u32) -> f32 {
+    use num_traits::ToPrimitive as _;
+    value.to_f32().unwrap_or(0.0)
+}
+
+/// Scales a pixel dimension by `scale`, rounded and saturated to `u32`.
+#[must_use]
+pub fn scaled_px(value_px: u32, scale: f32) -> u32 {
+    use num_traits::ToPrimitive as _;
+    (u32_to_f32(value_px) * scale)
+        .round()
+        .to_u32()
+        .unwrap_or(1)
+        .max(1)
+}
+
 #[cfg(test)]
 mod tests {
     #[test]
@@ -127,5 +169,12 @@ mod tests {
         let rgba = super::nv21_to_rgba(&nv21, 4, 4);
         assert_eq!(rgba.len(), 4 * 4 * 4);
         assert!(rgba.chunks_exact(4).all(|px| px[3] == 255));
+    }
+
+    #[test]
+    fn fps_interval_floor_and_clamp() {
+        assert_eq!(super::fps_to_interval_ms(15.0), 67);
+        assert_eq!(super::fps_to_interval_ms(120.0), 17); // 1000/60 rounded
+        assert_eq!(super::fps_to_interval_ms(0.0), 1000);
     }
 }

@@ -5,7 +5,7 @@ use functora_egui::{
     TypographyVariant,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_typography(ui: &mut egui::Ui) {
@@ -43,7 +43,7 @@ impl crate::app::ShowcaseApp {
             .variant(TypographyVariant::Large)
             .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Typography::h1(\"Title\").show(ui);\nTypography::small(\"fine print\").show(ui);\nTypography::lead(\"Lead paragraph\").show(ui);\nTypography::muted(\"Muted text\").show(ui);",
         );
@@ -72,7 +72,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Label::new(\"Email\").show(ui);\nLabel::new(\"Muted\").muted().show(ui);",
         );
@@ -103,7 +103,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "Kbd::new(\"Ctrl\").show(ui);");
+        snippet(ui, "Kbd::new(\"Ctrl\").show(ui, false);");
     }
 
     pub(crate) fn demo_item(&mut self, ui: &mut egui::Ui) {
@@ -155,7 +155,7 @@ impl crate::app::ShowcaseApp {
             );
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "Item::new().show(ui, |item| { ... });\nItem::new().variant(ItemVariant::Outline).show(ui, |item| { ... });",
         );

@@ -32,7 +32,7 @@ where
     rx
 }
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn poll_platform_promises(&mut self, ctx: &egui::Context) {
@@ -288,7 +288,7 @@ impl crate::app::ShowcaseApp {
             Err(e) => _ = Typography::small(format!("files_dir error: {e}")).show(ui),
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::storage::persist_value(&key, &val);\nlet loaded: Option<String> = functora_egui::storage::load_state(&key);\nfunctora_egui::storage::files_dir()",
         );
@@ -360,7 +360,7 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::clipboard::write(text).await?;\nlet text = functora_egui::clipboard::read().await?;",
         );
@@ -404,7 +404,7 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::share::share(ShareData { title, text, url }).await?;",
         );
@@ -488,7 +488,7 @@ impl crate::app::ShowcaseApp {
             }
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::deep_link::store_url(url);\nlet url = functora_egui::deep_link::take_url();\nlet route = functora_egui::deep_link::url_to_route(&url);",
         );
@@ -653,7 +653,7 @@ impl crate::app::ShowcaseApp {
             self.platform.pick_status = format!("blob preview: {preview:?}");
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "let files = functora_egui::files::pick_files(true).await?;\nlet preview = functora_egui::files::preview(name, &data);\nlet mime = functora_egui::files::mime_for_name(name);",
         );
@@ -700,7 +700,7 @@ impl crate::app::ShowcaseApp {
             _ = ui.add(Badge::new(&self.platform.download_status));
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::download::download(data, &filename).await?;",
         );
@@ -740,7 +740,7 @@ impl crate::app::ShowcaseApp {
         _ = Typography::small("On desktop this will show 'Print not supported' - expected.")
             .show(ui);
 
-        snippet(ui, "functora_egui::print::print_page().await?;");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
@@ -816,7 +816,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = Typography::small(format!("Stack: {:?}", self.platform.nav.stack())).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "nav.push(route);\nnav.go_back();\nlet route = nav.current();",
         );
@@ -909,7 +909,7 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::progress::claim_job(&mut slot, Stage::Zip);",
         );
@@ -971,7 +971,7 @@ impl crate::app::ShowcaseApp {
         )
         .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "let hint = functora_egui::camera::install_hint().await?;\nlet res = functora_egui::camera::trigger_pwa_install().await?;",
         );
@@ -1043,7 +1043,7 @@ impl crate::app::ShowcaseApp {
         ))
         .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "let encoded = functora_egui::encoding::encode_payload(&payload)?;\nlet decoded = functora_egui::encoding::decode_payload::<T>(&encoded)?;\nlet svg = functora_egui::encoding::generate_qr_code(&text)?;",
         );
@@ -1102,7 +1102,7 @@ impl crate::app::ShowcaseApp {
             _ = ui.add(Badge::new(&self.platform.in_flight_status));
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "if let Some(_guard) = self.platform.in_flight.claim() {\n    // exclusive access for the duration of the guard\n}",
         );
@@ -1173,7 +1173,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = Typography::small("On desktop this will report 'not available – use file picker' (expected). On web, use QrScanner below for live preview.").show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "functora_egui::camera::check_camera().await?;\nfunctora_egui::camera::start_camera().await?;\nlet frame = functora_egui::camera::capture_frame().await?;\nfunctora_egui::camera::stop_camera().await?;",
         );
@@ -1262,7 +1262,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = Typography::small("Tip: Use Pick Image inside the scanner for file fallback (desktop) or Start Camera for live (web/android).").show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "// Stateful widget with auto-start + live preview + auto-scan.\nQrScanner::new().continuous(true).on_scan(|text| { ... })\n    .show(ui, &mut qr_state);",
         );
@@ -1312,7 +1312,7 @@ impl crate::app::ShowcaseApp {
         )
         .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "let thumb = functora_egui::thumbnail::video_thumbnail(bytes);",
         );
@@ -1357,7 +1357,7 @@ impl crate::app::ShowcaseApp {
             _ = ui.add(Badge::new(&self.platform.zip_status));
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "let zip = functora_egui::zip::create_zip_async(&files, progress, stage).await?;\nlet files = functora_egui::zip::unzip_async(bytes, progress, stage).await?;",
         );
@@ -1409,7 +1409,7 @@ impl crate::app::ShowcaseApp {
             _ = ui.add(Badge::new(&self.platform.crypto_status));
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "let enc = functora_egui::crypto::encrypt_symmetric(data, password)?;\nlet plain = functora_egui::crypto::decrypt_symmetric(&enc, password)?;",
         );
@@ -1469,7 +1469,7 @@ impl crate::app::ShowcaseApp {
             }
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "let result = functora_egui::worker::run(input, |job| { ... }, |val, reporter| async {\n    reporter(Job { stage, done, total, name });\n    Ok(output)\n}).await?;",
         );

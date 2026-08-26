@@ -6,7 +6,7 @@ use functora_egui::{
     Flex, LucideIcon, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_avatar(ui: &mut egui::Ui) {

@@ -16,6 +16,7 @@ pub mod camera_view;
 pub mod card;
 pub mod carousel;
 pub mod checkbox;
+pub mod code_snippet;
 pub mod collapsible;
 pub mod color_swatch;
 pub mod combobox;

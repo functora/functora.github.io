@@ -1,6 +1,5 @@
 //! Per-component demo sections rendered inside the showcase content area.
 
-mod code;
 mod data;
 mod display;
 mod feedback;

@@ -6,7 +6,7 @@ use functora_egui::{
     NavigationMenu, Popover, Tooltip, Typography,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_dialog(&mut self, ui: &mut egui::Ui) {
@@ -20,7 +20,7 @@ impl crate::app::ShowcaseApp {
             self.dialogs.dialog_open = true;
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "Dialog::new().title(\"Title\").show(ctx, &mut open, |ui| { ... });",
         );
@@ -38,7 +38,7 @@ impl crate::app::ShowcaseApp {
             self.dialogs.alert_dialog_open = true;
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "AlertDialog::new(\"Are you sure?\", \"Cannot be undone.\")\n    .destructive()\n    .show(ctx, &mut open);",
         );
@@ -58,7 +58,7 @@ impl crate::app::ShowcaseApp {
             self.drawers.sheet_open = true;
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "Sheet::new().side(SheetSide::Right).show(ctx, &mut open, |ui| { ... });",
         );
@@ -111,7 +111,7 @@ impl crate::app::ShowcaseApp {
             _ = Label::new("Learn more about functora-egui").show(ui78);
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "HoverCard::new().width(260.0).show(&response, |ui| { ... });",
         );
@@ -135,7 +135,7 @@ impl crate::app::ShowcaseApp {
             Tooltip::new("Notifications").show(&notifications.response);
         });
 
-        snippet(ui, "Tooltip::new(\"Settings\").show(&response);");
+        snippet(ui, "Tooltip::new(\"Settings\").show(&response, false);");
     }
 
     pub(crate) fn demo_context_menu(&mut self, ui: &mut egui::Ui) {
@@ -154,7 +154,7 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "ContextMenu::show(&response, &[\"Cut\", \"Copy\"], |idx| { ... });",
         );
@@ -177,7 +177,7 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "DropdownMenu::show(ui, &response, &items, |idx| { ... });",
         );
@@ -199,7 +199,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small("Type to filter components and press Enter to jump.").show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Command::new(items).placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search);",
         );
@@ -247,7 +247,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Menubar::new().show(ui, |bar| {\n    Menubar::menu(bar, \"Edit\", &[\"Undo\", \"Redo\"], |idx| { ... });\n});",
         );

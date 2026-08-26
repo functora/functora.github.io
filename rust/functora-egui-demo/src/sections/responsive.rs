@@ -6,7 +6,7 @@ use functora_egui::{
     Typography, TypographyVariant,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_breakpoint(ui: &mut egui::Ui) {
@@ -33,12 +33,12 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Typography::small("Resize the window below 800px to flip the breakpoint.").show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
         );
 
-        super::code::snippet(
+        snippet(
             ui,
             "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
         );
@@ -78,9 +78,9 @@ impl crate::app::ShowcaseApp {
             _ = Typography::small("Desktop spacing is active.").show(ui);
         }
 
-        snippet(ui, "let spacing = ui.responsive_spacing();");
+        snippet(ui, "false");
 
-        snippet(ui, "let spacing = ui.responsive_spacing();");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_flex_wrap(ui: &mut egui::Ui) {
@@ -105,12 +105,12 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
         );
 
-        super::code::snippet(
+        snippet(
             ui,
             "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
         );
@@ -153,9 +153,9 @@ impl crate::app::ShowcaseApp {
             .width(ui.available_width().min(360.0))
             .show(ui);
 
-        snippet(ui, "let spacing = ui.responsive_spacing();");
+        snippet(ui, "false");
 
-        snippet(ui, "let spacing = ui.responsive_spacing();");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_mobile_dialog(&mut self, ui: &mut egui::Ui) {

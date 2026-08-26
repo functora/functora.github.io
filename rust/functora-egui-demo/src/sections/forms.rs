@@ -5,7 +5,7 @@ use functora_egui::{
     Label, NumberInput, PropertyGrid, PropertyRow, Select, Typography,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_field_group(&mut self, ui: &mut egui::Ui) {
@@ -47,7 +47,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "FieldGroup::show(ui, |group| { ... });");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_field_set(&mut self, ui: &mut egui::Ui) {
@@ -66,7 +66,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "FieldSet::show(ui, \"Shipping address\", |body| { ... });",
         );
@@ -83,7 +83,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         FieldDescription::show(ui, "Used only for invoices and receipts.");
 
-        super::code::snippet(
+        snippet(
             ui,
             "FieldLegend::show(ui, \"Payment details\");\nFieldDescription::show(ui, \"All transactions are secure.\");",
         );
@@ -102,7 +102,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "FieldDescription::show(ui, \"Use at least 8 characters.\");",
         );
@@ -161,7 +161,7 @@ impl crate::app::ShowcaseApp {
                 });
             });
 
-        super::code::snippet(
+        snippet(
             ui,
             "PropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"X\").show(grid, |row| { ... });\n});",
         );
@@ -207,6 +207,9 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "PropertyRow::new(\"Mode\").show(grid, |row| { ... });");
+        snippet(
+            ui,
+            "PropertyRow::new(\"Mode\").show(grid, |row| { ... }, false);",
+        );
     }
 }

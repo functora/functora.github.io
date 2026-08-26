@@ -7,7 +7,7 @@ use functora_egui::{
     SelectValue, Slider, Switch, Textarea, Toggle, ToggleGroup, ToggleVariant, Typography,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_button(&mut self, ui: &mut egui::Ui) {
@@ -137,7 +137,7 @@ impl crate::app::ShowcaseApp {
                 .show(ui46);
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Button::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").show(ui);\nButton::new(\"Disabled\").enabled(false).show(ui);",
         );
@@ -151,7 +151,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Checked: {}", self.checks.checkbox_val)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "ui.add(Checkbox::new(&mut checked).label(\"Accept terms\"));",
         );
@@ -164,7 +164,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Enabled: {}", self.checks.switch_val)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "ui.add(Switch::new(&mut enabled).label(\"Airplane mode\"));",
         );
@@ -195,7 +195,10 @@ impl crate::app::ShowcaseApp {
             self.radios.radio_b = false;
         }
 
-        snippet(ui, "ui.add(Radio::new(&mut option_a).label(\"Option A\"));");
+        snippet(
+            ui,
+            "ui.add(Radio::new(&mut option_a).label(\"Option A\"), false);",
+        );
     }
 
     pub(crate) fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
@@ -236,7 +239,7 @@ impl crate::app::ShowcaseApp {
         ))
         .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Toggle::new(&mut bold, \"B\").show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);",
         );
@@ -278,7 +281,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Budget: ${:.0}", self.slider_price)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Slider::new(&mut value, 0.0..=100.0).step(1.0).show(ui);\nSlider::new(&mut price, 0.0..=1000.0).suffix(\" USD\").show(ui);",
         );
@@ -303,7 +306,7 @@ impl crate::app::ShowcaseApp {
             .desired_width(ui.available_width())
             .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Input::new(&mut text).placeholder(\"...\").show(ui);\nInput::new(&mut secret).password().show(ui);",
         );
@@ -357,7 +360,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "NumberInput::new(&mut px).range(0.0..=100.0).suffix(\"px\").show(ui);\nNumberInput::f32(&mut price).decimals(2).prefix(\"$\").show(ui);\nNumberInput::i32(&mut count).range(0.0..=50.0).show(ui);",
         );
@@ -393,7 +396,7 @@ impl crate::app::ShowcaseApp {
             }),
         );
 
-        super::code::snippet(
+        snippet(
             ui,
             "InputGroup::show(ui, &mut url, \"example.com\", Some(\"https://\"), None);",
         );
@@ -408,7 +411,7 @@ impl crate::app::ShowcaseApp {
             .min_height(80.0)
             .show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Textarea::new(&mut msg).placeholder(\"Write...\").min_height(80.0).show(ui);",
         );
@@ -430,7 +433,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected: {:?}", self.select_val)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Select::new(&mut fruit, &fruits).placeholder(\"Pick a fruit...\").show(ui);",
         );
@@ -449,7 +452,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Blend mode: {}", self.select_blend)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "SelectValue::new(&mut blend_mode, &blend_modes).show(ui);",
         );
@@ -471,7 +474,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected index: {:?}", self.combobox_selected)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Combobox::new(items).placeholder(\"Search...\")\n    .show(ui, &mut selected_idx, &mut search);",
         );
@@ -484,7 +487,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("OTP: \"{}\"", self.otp_value)).show(ui);
 
-        snippet(ui, "InputOtp::new(6).show(ui, &mut code);");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_date_picker(&mut self, ui: &mut egui::Ui) {
@@ -500,7 +503,7 @@ impl crate::app::ShowcaseApp {
             _ = Typography::small("No date selected.").show(ui);
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "DatePicker::new().placeholder(\"Pick a date\").show(ui, &mut state);",
         );
@@ -550,7 +553,7 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "ColorSwatch::new(color).label(\"Signal\").selected(true).show_hex();",
         );

@@ -5,7 +5,7 @@ use functora_egui::{
     Progress, Skeleton, Spinner, Typography,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_alert(ui: &mut egui::Ui) {
@@ -25,7 +25,7 @@ impl crate::app::ShowcaseApp {
                 _ = ui24.label("Your session has expired. Please log in again.");
             });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Alert::new().title(\"Heads up!\").show(ui, |ui| { ... });\nAlert::new().title(\"Error\").variant(AlertVariant::Destructive).show(ui, |ui| { ... });",
         );
@@ -44,7 +44,7 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(12.0);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Badge::new(\"Default\").show(ui);\nBadge::new(\"Secondary\").variant(BadgeVariant::Secondary).show(ui);",
         );
@@ -57,7 +57,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("{:.0}%", self.progress_val * 100.0)).show(ui);
 
-        snippet(ui, "Progress::new(0.66).show(ui);");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_skeleton(ui: &mut egui::Ui) {
@@ -72,7 +72,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Skeleton::new(48.0, 48.0).circle().show(ui);\nSkeleton::new(200.0, 16.0).show(ui);",
         );
@@ -106,7 +106,7 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        snippet(ui, "Spinner::new().size(24.0).show(ui);");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_toast(&mut self, ui: &mut egui::Ui) {
@@ -159,7 +159,7 @@ impl crate::app::ShowcaseApp {
             );
         }
 
-        super::code::snippet(
+        snippet(
             ui,
             "toast.add(\"Saved\", ToastVariant::Success, now);\ntoast.add_with_description(\"Title\", \"Body\", ToastVariant::Default, now);",
         );
@@ -187,7 +187,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Empty::show(ui, |ui| { Card::new().show(ui, |card| { ... }); });",
         );

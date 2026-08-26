@@ -7,7 +7,7 @@ use functora_egui::{
     ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography, TypographyVariant,
 };
 
-use super::code::snippet;
+use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_flex(&mut self, ui: &mut egui::Ui) {
@@ -153,7 +153,7 @@ impl crate::app::ShowcaseApp {
                 });
             });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Flex::row().gap(8.0).show(ui, |f| { f.add(btn); });\nFlex::column().gap(8.0).show(ui, |f| { ... });\nf.grow(1.0, Input::new(&mut text));\nFlex::row().justify_between().w_full().show(ui, |f| { ... });\nf.spacer(); // pushes items apart",
         );
@@ -250,7 +250,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "Card::new().show(ui, |card| { ... });");
+        snippet(ui, "false");
     }
 
     pub(crate) fn demo_collapsible(&mut self, ui: &mut egui::Ui) {
@@ -270,7 +270,7 @@ impl crate::app::ShowcaseApp {
             },
         );
 
-        super::code::snippet(
+        snippet(
             ui,
             "Collapsible::new(\"Toggle\").show(ui, &mut open, |body| { ... });",
         );
@@ -296,7 +296,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Fraction: {:.2}", self.resizable_fraction)).show(ui);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Resizable::new().height(160.0).show(ui, &mut frac, |l, r| { ... });",
         );
@@ -330,7 +330,7 @@ impl crate::app::ShowcaseApp {
             _ = ui61.label("Right");
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Separator::horizontal().show(ui);\nSeparator::horizontal().text(\"Label\").show(ui);\nSeparator::vertical().show(ui);",
         );
@@ -362,7 +362,7 @@ impl crate::app::ShowcaseApp {
                 .show(ui63);
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "StatusBar::new().show(ui, |bar| { ... });\nStatusBar::new().dense().show(ui, |bar| { ... });",
         );
@@ -388,7 +388,7 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Tabs::new(titles).show(ui, &mut active, |content, idx| { ... });",
         );
@@ -430,7 +430,7 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "IconTabs::new(vec![TabEntry::Icon { icon, tooltip }])\n    .show(ui, &mut active, |content, idx| { ... });",
         );
@@ -498,7 +498,7 @@ impl crate::app::ShowcaseApp {
                 .show(ui67);
         });
 
-        super::code::snippet(
+        snippet(
             ui,
             "Toolbar::new().show(ui, |bar| { ... });\nToolbar::new().dense().wrap(false).show(ui, |bar| { ... });",
         );
@@ -524,7 +524,7 @@ impl crate::app::ShowcaseApp {
         .multiple()
         .show(ui, &mut self.accordion_open);
 
-        super::code::snippet(
+        snippet(
             ui,
             "Accordion::new(vec![(\"Q\", \"A\".to_owned())])\n    .multiple()\n    .show(ui, &mut open_indices);",
         );

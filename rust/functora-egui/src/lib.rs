@@ -104,6 +104,7 @@ pub use widgets::camera_view::widget::CameraView;
 pub use widgets::card::widget::Card;
 pub use widgets::carousel::widget::Carousel;
 pub use widgets::checkbox::widget::Checkbox;
+pub use widgets::code_snippet::{snippet, snippet_break_long_words};
 pub use widgets::collapsible::widget::Collapsible;
 pub use widgets::color_swatch::widget::ColorSwatch;
 pub use widgets::combobox::widget::Combobox;

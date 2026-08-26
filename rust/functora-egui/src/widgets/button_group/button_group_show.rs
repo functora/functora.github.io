@@ -1,7 +1,4 @@
-//! Show method for `ButtonGroup` — renders buttons in a connected strip.
-//!
-//! Buttons are placed directly in the parent layout (no nested horizontal)
-//! to preserve baseline alignment with sibling widgets.
+//! Show method for `ButtonGroup` — renders buttons in a connected horizontal strip.
 
 impl super::widget::ButtonGroup {
     /// The egui temp data key for the active button group context.
@@ -13,10 +10,6 @@ impl super::widget::ButtonGroup {
     /// Renders a connected button group. Pass buttons inside the closure.
     /// Buttons detect the active context and render with per-corner radii:
     /// first button gets left rounding, last button gets right rounding.
-    ///
-    /// Buttons are placed directly in the parent UI (no nested layout scope)
-    /// so they share the same vertical alignment context as siblings,
-    /// matching how web shadcn/ui works with CSS flexbox.
     pub fn show(ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::InnerResponse<()> {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = theme.radius;
@@ -44,11 +37,13 @@ impl super::widget::ButtonGroup {
             );
         });
 
-        // Place buttons directly in the parent UI — set spacing to 0 temporarily
+        // Use horizontal layout for buttons
         let old_spacing_x = ui.spacing().item_spacing.x;
         ui.spacing_mut().item_spacing.x = 0.0;
 
-        content(ui);
+        let _ = ui.horizontal(|ui_h| {
+            content(ui_h);
+        });
 
         ui.spacing_mut().item_spacing.x = old_spacing_x;
 

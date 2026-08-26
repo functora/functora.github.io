@@ -19,7 +19,7 @@ impl egui::Widget for super::widget::Textarea<'_> {
         let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(corner_radius));
 
         let desired = egui::vec2(width, self.min_height);
-        let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::click());
         let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
         // Background and border
@@ -65,6 +65,10 @@ impl egui::Widget for super::widget::Textarea<'_> {
             });
 
         let response = scroll_resp.inner;
+
+        if outer_response.clicked() && !response.has_focus() {
+            response.request_focus();
+        }
 
         // Focus ring
         if response.has_focus() {

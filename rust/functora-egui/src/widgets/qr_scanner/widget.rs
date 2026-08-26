@@ -187,6 +187,7 @@ fn spawn_stop() {
     }
     #[cfg(target_os = "android")]
     {
+        crate::platform::android::stop_camera_blocking();
         crate::camera::stop_capture_worker();
     }
     #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
@@ -290,11 +291,119 @@ fn spawn_camera_loop(
             ctx.request_repaint();
         });
     }
-    #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+    #[cfg(all(target_os = "android", feature = "qr"))]
+    {
+        let ctx_a = (*ctx).clone();
+        let inner_a = std::sync::Arc::clone(inner);
+        let (guard_tx, guard_rx) = std::sync::mpsc::channel();
+        let spawn_result = std::thread::Builder::new()
+            .name("functora-qr-scan".into())
+            .spawn(move || {
+                let Ok(scan_guard) = guard_rx.recv() else {
+                    return;
+                };
+                android_scan_loop(&ctx_a, &inner_a, epoch);
+                drop(scan_guard);
+            });
+        match spawn_result {
+            Ok(_handle) => {
+                // On send failure the guard comes back and is dropped at the
+                // end of this scope, releasing the in-flight slot.
+                let _send_failed = guard_tx.send(guard).is_err();
+            }
+            Err(e) => {
+                drop(guard);
+                tracing::error!("QR scan thread spawn failed: {e}");
+                if let Ok(mut g) = inner.lock() {
+                    g.scanning = false;
+                    g.error = Some(std::sync::Arc::new(crate::error::Error::JS(format!(
+                        "Scanner thread failed to start: {e}"
+                    ))));
+                }
+                ctx.request_repaint();
+            }
+        }
+    }
+    #[cfg(not(any(
+        all(target_arch = "wasm32", feature = "web"),
+        all(target_os = "android", feature = "qr")
+    )))]
     {
         let _ = (ctx, inner, epoch);
         drop(guard);
     }
+}
+
+/// Synchronous capture/decode loop for Android; owns one scan session.
+#[cfg(all(target_os = "android", feature = "qr"))]
+fn android_scan_loop(
+    ctx: &egui::Context,
+    inner: &std::sync::Arc<std::sync::Mutex<crate::widgets::qr_scanner::qr_scanner_state::QrInner>>,
+    epoch: u64,
+) {
+    let fail = |err: crate::error::Error| {
+        if crate::widgets::qr_scanner::qr_scanner_state::camera_epoch() == epoch
+            && let Ok(mut g) = inner.lock()
+            && g.epoch == epoch
+        {
+            g.error = Some(std::sync::Arc::new(map_camera_error(&err)));
+            g.scanning = false;
+        }
+        ctx.request_repaint();
+    };
+    if let Err(e) = crate::platform::android::check_camera_blocking() {
+        fail(e);
+        return;
+    }
+    if inner.lock().ok().is_none_or(|g| g.epoch != epoch) {
+        return;
+    }
+    if let Err(e) = crate::platform::android::start_camera_blocking() {
+        fail(e);
+        return;
+    }
+    crate::camera::begin_capture_session();
+    loop {
+        let Ok(session) = inner.lock() else { break };
+        let scanning = session.scanning && session.decoded.is_none() && session.epoch == epoch;
+        drop(session);
+        if !scanning || crate::widgets::qr_scanner::qr_scanner_state::camera_epoch() != epoch {
+            break;
+        }
+        match crate::platform::android::capture_frame_blocking() {
+            Ok(frame) => {
+                if let Some(rgba) = frame.preview_rgba.clone()
+                    && let Ok(mut slot) = inner.lock()
+                    && slot.epoch == epoch
+                {
+                    slot.latest_rgba = Some((rgba, frame.width, frame.height));
+                }
+                ctx.request_repaint();
+                if let Some(text) =
+                    crate::qr::decode_qr_luma(&frame.data, frame.width, frame.height)
+                    && let Ok(mut slot) = inner.lock()
+                    && slot.epoch == epoch
+                {
+                    slot.decoded = Some(text);
+                    slot.scanning = false;
+                }
+                ctx.request_repaint();
+                if inner.lock().ok().is_some_and(|s| s.decoded.is_some()) {
+                    break;
+                }
+            }
+            Err(e) => {
+                fail(e);
+                break;
+            }
+        }
+        std::thread::sleep(std::time::Duration::from_millis(300));
+    }
+    if crate::widgets::qr_scanner::qr_scanner_state::camera_epoch() == epoch {
+        crate::platform::android::stop_camera_blocking();
+    }
+    crate::camera::stop_capture_worker();
+    ctx.request_repaint();
 }
 
 fn spawn_pick_image(
@@ -386,7 +495,10 @@ fn decode_with_image(data: &[u8]) -> Option<String> {
     crate::qr::decode_qr_rgba(&raw, w, h)
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "web"))]
+#[cfg(any(
+    all(target_arch = "wasm32", feature = "web"),
+    all(target_os = "android", feature = "qr")
+))]
 fn map_camera_error(e: &crate::error::Error) -> crate::error::Error {
     match e {
         crate::error::Error::JS(msg) => {

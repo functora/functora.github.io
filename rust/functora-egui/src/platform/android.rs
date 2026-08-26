@@ -2,7 +2,7 @@ use crate::camera::FrameData;
 use crate::error::Error;
 use jni::{
     JavaVM,
-    objects::{JObject, JString},
+    objects::{JByteArray, JObject, JString, JValue},
     signature::ReturnType,
 };
 use std::sync::{Mutex, PoisonError};
@@ -35,9 +35,9 @@ where
 pub fn files_dir() -> Result<std::path::PathBuf, Error> {
     with_app(|env, activity| {
         env.call_method(activity, "getFilesDir", "()Ljava/io/File;", &[])
-            .and_then(|v| v.l())
+            .and_then(jni::objects::JValueGen::l)
             .and_then(|f| env.call_method(f, "getAbsolutePath", "()Ljava/lang/String;", &[]))
-            .and_then(|v| v.l())
+            .and_then(jni::objects::JValueGen::l)
             .map(JString::from)
             .and_then(|s| env.get_string(&s).map(String::from))
             .map(std::path::PathBuf::from)
@@ -45,6 +45,7 @@ pub fn files_dir() -> Result<std::path::PathBuf, Error> {
 }
 
 pub async fn clipboard_read() -> Result<String, Error> {
+    std::future::ready(()).await;
     with_app(|env, activity| {
         let svc_name: JString = env.new_string("clipboard")?;
         let clipboard_svc = env
@@ -76,11 +77,12 @@ pub async fn clipboard_read() -> Result<String, Error> {
             .call_method(&item, "getText", "()Ljava/lang/CharSequence;", &[])?
             .l()?;
         let s = JString::from(text_obj);
-        Ok(env.get_string(&s).map(String::from)?)
+        env.get_string(&s).map(String::from)
     })
 }
 
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
+    std::future::ready(()).await;
     with_app(move |env, activity| {
         let label: JString = env.new_string("Cryptonote")?;
         let jtext: JString = env.new_string(&text)?;
@@ -120,17 +122,18 @@ pub struct ShareData {
 }
 
 pub async fn share(data: ShareData) -> Result<(), Error> {
+    std::future::ready(()).await;
     with_app(move |env, activity| {
         let intent_class = env.find_class("android/content/Intent")?;
         let action_send = env
             .get_static_field(&intent_class, "ACTION_SEND", "Ljava/lang/String;")?
             .l()?;
-        let intent = env.new_object(
+        let intent_local = env.new_object(
             &intent_class,
             "(Ljava/lang/String;)V",
             &[(&action_send).into()],
         )?;
-        let intent = env.new_global_ref(intent)?;
+        let intent = env.new_global_ref(intent_local)?;
         let text_type = env.new_string("text/plain")?;
         let _ = env.call_method(
             intent.as_obj(),
@@ -159,13 +162,13 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
             &[(&extra_subject).into(), (&title).into()],
         )?;
         let chooser_title = env.new_string("Share via")?;
-        let chooser = env.call_static_method(
+        let chooser_value = env.call_static_method(
             "android/content/Intent",
             "createChooser",
             "(Landroid/content/Intent;Ljava/lang/CharSequence;)Landroid/content/Intent;",
             &[(&intent.as_obj()).into(), (&chooser_title).into()],
         )?;
-        let chooser = chooser.l()?;
+        let chooser = chooser_value.l()?;
         let flags = env
             .get_static_field(&intent_class, "FLAG_ACTIVITY_NEW_TASK", "I")?
             .i()?;
@@ -186,19 +189,22 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
 }
 
 pub async fn print_page() -> Result<(), Error> {
+    std::future::ready(()).await;
     Err(Error::JS(
         "Print not supported on Android without WebView".into(),
     ))
 }
 
+#[allow(clippy::needless_pass_by_value)]
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
-    save_to_downloads(&data, filename.to_string(), |_, _| {})?;
+    std::future::ready(()).await;
+    save_to_downloads(&data, filename, |_, _| {})?;
     Ok(filename.to_string())
 }
 
 pub fn save_to_downloads(
     data: &[u8],
-    name: String,
+    name: &str,
     mut report: impl FnMut(u64, u64),
 ) -> Result<(), Error> {
     const CHUNK: usize = 4 * 1024 * 1024;
@@ -215,7 +221,7 @@ pub fn save_to_downloads(
             .l()?;
         let cv = env.new_object("android/content/ContentValues", "()V", &[])?;
         let nk = env.new_string("_display_name")?;
-        let jn = env.new_string(&name)?;
+        let jn = env.new_string(name)?;
         let _ = env.call_method(
             &cv,
             "put",
@@ -223,7 +229,7 @@ pub fn save_to_downloads(
             &[(&nk).into(), (&jn).into()],
         )?;
         let mk = env.new_string("mime_type")?;
-        let mv = mime_for(env, &name)?;
+        let mv = mime_for(env, name)?;
         let _ = env.call_method(
             &cv,
             "put",
@@ -331,6 +337,7 @@ pub fn get_data_string() -> Option<String> {
     Some(String::from(url))
 }
 
+#[allow(clippy::unused_async)]
 pub async fn sleep(millis: u64) {
     std::thread::sleep(std::time::Duration::from_millis(millis));
 }
@@ -339,8 +346,27 @@ pub fn begin_capture_session() {}
 
 pub fn stop_capture_worker() {}
 
-pub async fn check_camera() -> Result<(), Error> {
-    std::future::ready(()).await;
+const CAMERA_MAX_DIM: i32 = 1024;
+const PERMISSION_POLL_MS: u64 = 200;
+const PERMISSION_TIMEOUT_MS: u64 = 30_000;
+const FRAME_TIMEOUT_MS: u64 = 2_000;
+
+static CAMERA_SIZE: Mutex<Option<(u32, u32)>> = Mutex::new(None);
+
+fn helper_call<T>(
+    f: impl FnOnce(&mut jni::JNIEnv<'_>, &JObject<'_>) -> Result<T, jni::errors::Error>,
+) -> Result<T, Error> {
+    with_app(|env, activity| f(env, activity).inspect_err(|_| drop(env.exception_clear())))
+}
+
+fn permission_granted() -> Result<bool, Error> {
+    helper_call(|env, activity| {
+        let value = env.call_method(activity, "cameraPermissionState", "()I", &[])?;
+        Ok(value.i()? == 1)
+    })
+}
+
+pub(crate) fn check_camera_blocking() -> Result<(), Error> {
     let has_camera = with_app(|env, activity| {
         let pm = env
             .call_method(
@@ -351,15 +377,13 @@ pub async fn check_camera() -> Result<(), Error> {
             )?
             .l()?;
         let feat = env.new_string("android.hardware.camera.any")?;
-        let has = env
-            .call_method(
-                &pm,
-                "hasSystemFeature",
-                "(Ljava/lang/String;)Z",
-                &[(&feat).into()],
-            )?
-            .z()?;
-        Ok(has)
+        env.call_method(
+            &pm,
+            "hasSystemFeature",
+            "(Ljava/lang/String;)Z",
+            &[(&feat).into()],
+        )?
+        .z()
     })
     .unwrap_or(false);
     if has_camera {
@@ -371,22 +395,130 @@ pub async fn check_camera() -> Result<(), Error> {
     }
 }
 
+/// Blocking camera start shared by the async facade and the android loop.
+///
+/// Polls while the runtime permission dialog is on screen and fails with a
+/// precise error once it is dismissed without granting.
+pub(crate) fn start_camera_blocking() -> Result<(), Error> {
+    check_camera_blocking()?;
+    let deadline =
+        std::time::Instant::now() + std::time::Duration::from_millis(PERMISSION_TIMEOUT_MS);
+    loop {
+        let status = helper_call(|env, activity| {
+            let value = env.call_method(
+                activity,
+                "cameraStart",
+                "(I)I",
+                &[JValue::Int(CAMERA_MAX_DIM)],
+            )?;
+            value.i()
+        })?;
+        match status {
+            1 => break,
+            -1 => {
+                return Err(Error::CameraNotAvailable(
+                    "Android camera failed to start".into(),
+                ));
+            }
+            _ => {
+                if std::time::Instant::now() > deadline {
+                    if !permission_granted()? {
+                        return Err(Error::CameraPermissionDenied(
+                            "CAMERA permission was not granted".into(),
+                        ));
+                    }
+                    return Err(Error::CameraNotAvailable(
+                        "Android camera did not start in time".into(),
+                    ));
+                }
+                std::thread::sleep(std::time::Duration::from_millis(PERMISSION_POLL_MS));
+            }
+        }
+    }
+    let code = helper_call(|env, activity| {
+        let value = env.call_method(activity, "cameraSizeCode", "()J", &[])?;
+        value.j()
+    })?;
+    if code != 0 {
+        let width = u32::try_from(code >> 32).unwrap_or(640).max(1);
+        let height = u32::try_from(code & 0xFFFF_FFFF).unwrap_or(480).max(1);
+        let _ = CAMERA_SIZE
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .replace((width, height));
+    }
+    Ok(())
+}
+
+/// Blocking single-frame capture used by the android scan loop.
+#[allow(clippy::similar_names)]
+pub(crate) fn capture_frame_blocking() -> Result<FrameData, Error> {
+    let Some((width, height)) = *CAMERA_SIZE.lock().unwrap_or_else(PoisonError::into_inner) else {
+        return Err(Error::CameraNotAvailable(
+            "Android camera not started".into(),
+        ));
+    };
+    let deadline = std::time::Instant::now() + std::time::Duration::from_millis(FRAME_TIMEOUT_MS);
+    let nv21: Vec<u8> = loop {
+        let frame: Option<Vec<u8>> = helper_call(|env, activity| {
+            let value = env.call_method(activity, "cameraPollFrame", "()[B", &[])?;
+            let obj = value.l()?;
+            if obj.is_null() {
+                return Ok(None);
+            }
+            let array = JByteArray::from(obj);
+            Ok(Some(env.convert_byte_array(array)?))
+        })?;
+        if let Some(bytes) = frame {
+            break bytes;
+        }
+        if std::time::Instant::now() > deadline {
+            return Err(Error::CameraStalled);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    };
+    Ok(FrameData {
+        data: crate::utils::nv21_luma(&nv21, width, height),
+        width,
+        height,
+        preview_rgba: Some(crate::utils::nv21_to_rgba(&nv21, width, height)),
+    })
+}
+
+pub(crate) fn stop_camera_blocking() {
+    if let Err(e) = helper_call(|env, activity| {
+        let _stopped = env.call_method(activity, "cameraStop", "()V", &[])?;
+        Ok(())
+    }) {
+        tracing::warn!("Android camera stop failed: {e}");
+    }
+    let _ = CAMERA_SIZE
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .take();
+}
+
+#[allow(clippy::unused_async)]
+pub async fn check_camera() -> Result<(), Error> {
+    std::future::ready(()).await;
+    check_camera_blocking()
+}
+
+#[allow(clippy::unused_async)]
 pub async fn start_camera() -> Result<(), Error> {
     std::future::ready(()).await;
-    check_camera().await?;
-    Err(Error::CameraNotAvailable(
-        "Android live camera not yet implemented – use file picker fallback".into(),
-    ))
+    start_camera_blocking()
 }
 
+#[allow(clippy::unused_async)]
 pub async fn capture_frame() -> Result<FrameData, Error> {
     std::future::ready(()).await;
-    Err(Error::CameraNotAvailable(
-        "Android live camera not yet implemented – use file picker fallback".into(),
-    ))
+    capture_frame_blocking()
 }
 
+#[allow(clippy::unused_async)]
 pub async fn stop_camera() -> Result<(), Error> {
     std::future::ready(()).await;
+    stop_camera_blocking();
     Ok(())
 }

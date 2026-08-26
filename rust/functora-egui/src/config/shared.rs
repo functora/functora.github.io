@@ -98,3 +98,18 @@ pub fn metadata_str(manifest_path: &str, table: &str, key: &str) -> Option<Strin
         })
         .map(ToOwned::to_owned)
 }
+
+#[must_use]
+pub fn metadata_bool(manifest_path: &str, table: &str, key: &str) -> bool {
+    parse_toml(manifest_path)
+        .as_ref()
+        .and_then(|value| {
+            value
+                .get("package")
+                .and_then(|pkg| pkg.get("metadata"))
+                .and_then(|meta| meta.get(table))
+                .and_then(|t| t.get(key))
+                .and_then(toml::Value::as_bool)
+        })
+        .unwrap_or(false)
+}

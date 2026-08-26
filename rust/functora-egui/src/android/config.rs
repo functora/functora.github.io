@@ -1,5 +1,6 @@
 use crate::config::shared::{
-    capitalize_words, derive_lib_name as shared_derive_lib_name, metadata_str, parse_toml, pkg_name,
+    capitalize_words, derive_lib_name as shared_derive_lib_name, metadata_bool, metadata_str,
+    parse_toml, pkg_name,
 };
 
 #[derive(Debug, Clone)]
@@ -15,6 +16,7 @@ pub struct AndroidConfig {
     pub path_prefix: String,
     pub extra_intent_filters: String,
     pub app_name: String,
+    pub camera: bool,
 }
 
 fn derive_namespace(manifest_path: &str) -> String {
@@ -121,6 +123,7 @@ pub fn load_android_config(manifest_path: &str) -> AndroidConfig {
         .as_ref()
         .and_then(pkg_name)
         .unwrap_or_else(|| "app".to_owned());
+    let camera = metadata_bool(manifest_path, "functora-egui-android", "camera");
     AndroidConfig {
         namespace: namespace.clone(),
         application_id: namespace,
@@ -133,5 +136,6 @@ pub fn load_android_config(manifest_path: &str) -> AndroidConfig {
         path_prefix,
         extra_intent_filters,
         app_name,
+        camera,
     }
 }

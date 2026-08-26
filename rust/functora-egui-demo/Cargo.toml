@@ -49,6 +49,7 @@ theme_color = "#0a0a0a"
 [package.metadata.functora-egui-android]
 host = "functora.github.io"
 path_prefix = "/apps/functora-egui-demo/"
+camera = true
 
 [build-dependencies]
 askama = "0.12"

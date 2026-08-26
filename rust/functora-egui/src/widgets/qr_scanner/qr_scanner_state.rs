@@ -120,7 +120,10 @@ impl QrScannerState {
     }
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "web"))]
+#[cfg(any(
+    all(target_arch = "wasm32", feature = "web"),
+    all(target_os = "android", feature = "qr")
+))]
 pub(crate) fn camera_epoch() -> u64 {
     CAMERA_EPOCH.load(Ordering::SeqCst)
 }

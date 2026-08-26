@@ -99,10 +99,10 @@ fn android_load<T: DeserializeOwned>(key: &str) -> Option<T> {
 
 #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
 fn android_persist<T: Serialize>(key: &str, value: &T) {
-    if let Ok(path) = files_dir().map(|p| p.join("storage.json")) {
-        if let Err(e) = update_key(&path, key, value) {
-            tracing::error!("Storage persist error: {e}");
-        }
+    if let Ok(path) = files_dir().map(|p| p.join("storage.json"))
+        && let Err(e) = update_key(&path, key, value)
+    {
+        tracing::error!("Storage persist error: {e}");
     }
 }
 

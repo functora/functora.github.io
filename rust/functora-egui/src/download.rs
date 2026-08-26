@@ -1,9 +1,11 @@
 use crate::error::Error;
 
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
+    std::future::ready(()).await;
     download_with_progress(data, filename, |_, _| {}).await
 }
 
+#[allow(clippy::unused_async)]
 pub async fn download_with_progress(
     data: Vec<u8>,
     filename: &str,
@@ -12,7 +14,7 @@ pub async fn download_with_progress(
     #[cfg(target_os = "android")]
     {
         let name = filename.to_string();
-        crate::platform::android::save_to_downloads(&data, name.clone(), on_progress)?;
+        crate::platform::android::save_to_downloads(&data, &name, on_progress)?;
         return Ok(name);
     }
     #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]

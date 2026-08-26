@@ -43,6 +43,7 @@ fn main() {
         host: &android_cfg.host,
         path_prefix: &android_cfg.path_prefix,
         extra_intent_filters: &android_cfg.extra_intent_filters,
+        camera: android_cfg.camera,
     }
     .render()
     .expect("askama manifest");
@@ -79,6 +80,14 @@ fn main() {
     );
     std::fs::create_dir_all(&java_dir).unwrap();
     std::fs::write(format!("{java_dir}/MainActivity.java"), java).unwrap();
+    if android_cfg.camera {
+        // Stale helper from earlier builds must not linger in the gradle src tree.
+        if let Err(e) = std::fs::remove_dir_all("android/app/src/main/java/functora")
+            && e.kind() != std::io::ErrorKind::NotFound
+        {
+            eprintln!("failed to remove stale camera helper: {e}");
+        }
+    }
 
     if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default() != "wasm32" {
         return;

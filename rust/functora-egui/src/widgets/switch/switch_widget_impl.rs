@@ -10,11 +10,17 @@ impl egui::Widget for super::widget::Switch<'_> {
         let thumb_margin: f32 = 2.0;
         let spacing: f32 = 8.0;
 
+        let disabled = !ui.is_enabled();
+        let label_color = if disabled {
+            theme.muted_foreground
+        } else {
+            theme.foreground
+        };
         let label_galley = self.label.map(|l| {
             ui.painter().layout_no_wrap(
                 l.text().to_owned(),
                 egui::FontId::proportional(14.0),
-                theme.foreground,
+                label_color,
             )
         });
 
@@ -36,7 +42,8 @@ impl egui::Widget for super::widget::Switch<'_> {
         let anim_t = ui.ctx().animate_bool_responsive(response.id, *self.on);
 
         if ui.is_rect_visible(rect) {
-            let style = super::switch_style::resolve_switch_style(&theme, *self.on, anim_t);
+            let style =
+                super::switch_style::resolve_switch_style(&theme, *self.on, anim_t, disabled);
             let painter = ui.painter();
 
             // Track
@@ -45,7 +52,9 @@ impl egui::Widget for super::widget::Switch<'_> {
                 egui::vec2(track_w, track_h),
             );
             let track_cr = crate::utils::f32_to_u8_clamped(track_h / 2.0);
-            let track_color = if response.is_pointer_button_down_on() {
+            let track_color = if disabled {
+                style.track_color
+            } else if response.is_pointer_button_down_on() {
                 crate::paint::interpolate_color::interpolate_color(
                     style.track_color,
                     theme.accent,
@@ -62,7 +71,9 @@ impl egui::Widget for super::widget::Switch<'_> {
             };
             let _ =
                 painter.rect_filled(track_rect, egui::CornerRadius::same(track_cr), track_color);
-            let track_border = if response.hovered() || response.is_pointer_button_down_on() {
+            let track_border = if disabled {
+                style.track_border
+            } else if response.hovered() || response.is_pointer_button_down_on() {
                 Some(theme.ring)
             } else {
                 style.track_border
@@ -76,11 +87,18 @@ impl egui::Widget for super::widget::Switch<'_> {
                 );
             }
 
-            // Thumb - slides from left to right
+            // Thumb - slides from left to right (iOS style: white thumb with subtle shadow)
             let thumb_min_x = track_rect.min.x + thumb_margin;
             let thumb_max_x = track_rect.max.x - thumb_margin - thumb_size;
             let thumb_x = thumb_min_x + (thumb_max_x - thumb_min_x) * anim_t;
             let thumb_center = egui::pos2(thumb_x + thumb_size / 2.0, track_rect.center().y);
+            if !disabled {
+                let _ = painter.circle_filled(
+                    thumb_center + egui::vec2(0.0, 1.0),
+                    thumb_size / 2.0,
+                    egui::Color32::from_rgba_unmultiplied(0, 0, 0, 20),
+                );
+            }
             let _ = painter.circle_filled(thumb_center, thumb_size / 2.0, style.thumb_color);
 
             // Label
@@ -89,11 +107,11 @@ impl egui::Widget for super::widget::Switch<'_> {
                     track_rect.max.x + spacing,
                     rect.center().y - galley.size().y / 2.0,
                 );
-                painter.galley(text_pos, galley, theme.foreground);
+                painter.galley(text_pos, galley, label_color);
             }
 
             // Focus ring
-            if response.has_focus() {
+            if response.has_focus() && !disabled {
                 crate::paint::paint_focus_ring::paint_focus_ring(
                     painter,
                     track_rect,
@@ -103,7 +121,7 @@ impl egui::Widget for super::widget::Switch<'_> {
             }
         }
 
-        if response.hovered() {
+        if response.hovered() && !disabled {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
 

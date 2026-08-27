@@ -18,7 +18,7 @@ pub fn store_app(app: AndroidApp) {
         .replace(app);
 }
 
-fn with_app<F, T>(f: F) -> Result<T, Error>
+pub(crate) fn with_app<F, T>(f: F) -> Result<T, Error>
 where
     F: FnOnce(&mut jni::JNIEnv, &JObject) -> Result<T, jni::errors::Error>,
 {

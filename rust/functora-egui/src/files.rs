@@ -4,7 +4,6 @@ pub use functora_core::files::{
 };
 
 use crate::error::Error;
-#[cfg(not(target_os = "android"))]
 use crate::progress::yield_to_paint;
 use crate::progress::{Job, Stage};
 #[cfg(target_arch = "wasm32")]
@@ -182,8 +181,8 @@ pub async fn pick_files_with_cancel(
     }
     #[cfg(target_os = "android")]
     {
-        let _ = (multiple, progress, cancel);
-        Err(Error::JS("File picker not supported on Android".into()))
+        let files = pick_via_android(multiple, progress, cancel).await?;
+        Ok(files)
     }
     #[cfg(target_arch = "wasm32")]
     {
@@ -210,8 +209,8 @@ pub async fn pick_files_with_shared_progress(
     }
     #[cfg(target_os = "android")]
     {
-        let _ = (multiple, progress, cancel);
-        Err(Error::JS("File picker not supported on Android".into()))
+        let files = pick_via_android_shared(multiple, progress, cancel).await?;
+        Ok(files)
     }
     #[cfg(target_arch = "wasm32")]
     {
@@ -223,6 +222,190 @@ pub async fn pick_files_with_shared_progress(
         let files = pick_via_rfd_shared(multiple, progress, cancel).await?;
         Ok(files)
     }
+}
+
+#[cfg(target_os = "android")]
+async fn pick_via_android(
+    multiple: bool,
+    mut progress: Option<&mut Option<Job<Stage>>>,
+    cancel: Option<&CancelToken>,
+) -> Result<Vec<(String, Vec<u8>)>, Error> {
+    if let Some(slot) = progress.as_deref_mut() {
+        *slot = Some(Job {
+            stage: Stage::Attach,
+            done: 0,
+            total: 1,
+            name: None,
+        });
+    }
+    yield_to_paint().await;
+    let files = android_pick_files(multiple, cancel).await?;
+    let total: u64 = files.iter().map(|(_, data)| data.len() as u64).sum();
+    if let Some(slot) = progress.as_deref_mut() {
+        *slot = Some(Job {
+            stage: Stage::Attach,
+            done: total,
+            total: total.max(1),
+            name: None,
+        });
+    }
+    yield_to_paint().await;
+    if let Some(slot) = progress {
+        *slot = None;
+    }
+    Ok(files)
+}
+
+#[cfg(target_os = "android")]
+async fn pick_via_android_shared(
+    multiple: bool,
+    progress: Option<Arc<Mutex<Option<Job<Stage>>>>>,
+    cancel: Option<&CancelToken>,
+) -> Result<Vec<(String, Vec<u8>)>, Error> {
+    if let Some(shared) = progress.as_ref()
+        && let Ok(mut guard) = shared.lock()
+    {
+        *guard = Some(Job {
+            stage: Stage::Attach,
+            done: 0,
+            total: 1,
+            name: None,
+        });
+    }
+    yield_to_paint().await;
+    let files = android_pick_files(multiple, cancel).await?;
+    let total: u64 = files.iter().map(|(_, data)| data.len() as u64).sum();
+    if let Some(shared) = progress.as_ref()
+        && let Ok(mut guard) = shared.lock()
+    {
+        *guard = Some(Job {
+            stage: Stage::Attach,
+            done: total,
+            total: total.max(1),
+            name: None,
+        });
+    }
+    yield_to_paint().await;
+    if let Some(shared) = progress
+        && let Ok(mut guard) = shared.lock()
+    {
+        *guard = None;
+    }
+    Ok(files)
+}
+
+#[cfg(target_os = "android")]
+async fn android_pick_files(
+    multiple: bool,
+    cancel: Option<&CancelToken>,
+) -> Result<Vec<(String, Vec<u8>)>, Error> {
+    use jni::objects::{JByteArray, JObjectArray, JString, JValue};
+    use std::time::Duration;
+    if let Some(token) = cancel
+        && token.load(Ordering::Relaxed)
+    {
+        return Err(Error::Cancelled);
+    }
+    crate::platform::android::with_app(|env, activity| {
+        let _ = env.call_method(
+            activity,
+            "filePickerStart",
+            "(Z)V",
+            &[JValue::Bool(multiple as u8)],
+        )?;
+        Ok(())
+    })?;
+    loop {
+        if let Some(token) = cancel
+            && token.load(Ordering::Relaxed)
+        {
+            let _ = crate::platform::android::with_app(|env, activity| {
+                let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+                Ok(())
+            });
+            return Err(Error::Cancelled);
+        }
+        let state = crate::platform::android::with_app(|env, activity| {
+            let v = env
+                .call_method(activity, "filePickerState", "()I", &[])?
+                .i()?;
+            Ok(v)
+        })?;
+        match state {
+            0 => {
+                yield_to_paint().await;
+                std::thread::sleep(Duration::from_millis(80));
+            }
+            1 => break,
+            -1 => {
+                let _ = crate::platform::android::with_app(|env, activity| {
+                    let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+                    Ok(())
+                });
+                return Err(Error::Cancelled);
+            }
+            _ => {
+                let _ = crate::platform::android::with_app(|env, activity| {
+                    let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+                    Ok(())
+                });
+                return Err(Error::JS("File picker failed".into()));
+            }
+        }
+    }
+    let names: Vec<String> = crate::platform::android::with_app(|env, activity| {
+        let obj = env
+            .call_method(activity, "filePickerNames", "()[Ljava/lang/String;", &[])?
+            .l()?;
+        if obj.is_null() {
+            return Ok(Vec::new());
+        }
+        let arr = JObjectArray::from(obj);
+        let len = env.get_array_length(&arr)? as usize;
+        let mut out = Vec::with_capacity(len);
+        for i in 0..len {
+            let jobj = env.get_object_array_element(&arr, i as i32)?;
+            if jobj.is_null() {
+                out.push("file".to_owned());
+                continue;
+            }
+            let jstr = JString::from(jobj);
+            let s: String = env.get_string(&jstr)?.into();
+            out.push(s);
+        }
+        Ok(out)
+    })?;
+    let datas: Vec<Vec<u8>> = crate::platform::android::with_app(|env, activity| {
+        let obj = env
+            .call_method(activity, "filePickerBytes", "()[[B", &[])?
+            .l()?;
+        if obj.is_null() {
+            return Ok(Vec::new());
+        }
+        let outer = JObjectArray::from(obj);
+        let len = env.get_array_length(&outer)? as usize;
+        let mut out = Vec::with_capacity(len);
+        for i in 0..len {
+            let inner_obj = env.get_object_array_element(&outer, i as i32)?;
+            if inner_obj.is_null() {
+                out.push(Vec::new());
+                continue;
+            }
+            let arr = JByteArray::from(inner_obj);
+            let bytes = env.convert_byte_array(arr)?;
+            out.push(bytes);
+        }
+        Ok(out)
+    })?;
+    let _ = crate::platform::android::with_app(|env, activity| {
+        let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+        Ok(())
+    });
+    let mut out = Vec::with_capacity(names.len().min(datas.len()));
+    for (n, d) in names.into_iter().zip(datas) {
+        out.push((n, d));
+    }
+    Ok(out)
 }
 
 #[cfg(target_arch = "wasm32")]

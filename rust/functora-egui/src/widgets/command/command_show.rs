@@ -184,9 +184,9 @@ impl super::widget::Command {
                                             .size(12.0)
                                             .strong();
                                         let _ = inner_ui4.horizontal(|ui_h| {
-                                            let icon_rect = egui::Rect::from_min_size(
-                                                ui_h.cursor().min,
+                                            let (icon_rect, _) = ui_h.allocate_exact_size(
                                                 egui::vec2(group_icon_size, group_icon_size),
+                                                egui::Sense::hover(),
                                             );
                                             crate::icons::paint_icon::paint_icon(
                                                 ui_h.painter(),
@@ -194,7 +194,6 @@ impl super::widget::Command {
                                                 &item.group_icon,
                                                 theme.muted_foreground,
                                             );
-                                            ui_h.add_space(4.0);
                                             let _ = ui_h.label(group_text);
                                         });
                                         inner_ui4.add_space(2.0);

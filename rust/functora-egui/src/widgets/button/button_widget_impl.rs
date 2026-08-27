@@ -294,7 +294,11 @@ impl egui::Widget for super::widget::Button<'_> {
             }
         }
 
-        response
+        if ui.is_enabled() {
+            response.on_hover_cursor(egui::CursorIcon::PointingHand)
+        } else {
+            response
+        }
     }
 }
 

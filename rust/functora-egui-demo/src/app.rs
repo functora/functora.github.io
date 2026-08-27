@@ -431,12 +431,24 @@ pub struct NavState {
     pub sidebar_demo_collapsed: bool,
 }
 
+impl Default for NavState {
+    fn default() -> Self {
+        Self {
+            dark: true,
+            sidebar_collapsed: false,
+            sidebar_demo_collapsed: false,
+        }
+    }
+}
+
+#[derive(Default)]
 pub struct DialogState {
     pub command_open: bool,
     pub dialog_open: bool,
     pub alert_dialog_open: bool,
 }
 
+#[derive(Default)]
 pub struct DrawerState {
     pub sheet_open: bool,
     pub drawer_open: bool,
@@ -448,12 +460,33 @@ pub struct CheckState {
     pub collapsible_open: bool,
 }
 
+impl Default for CheckState {
+    fn default() -> Self {
+        Self {
+            checkbox_val: false,
+            switch_val: false,
+            collapsible_open: true,
+        }
+    }
+}
+
 pub struct RadioState {
     pub radio_a: bool,
     pub radio_b: bool,
     pub radio_c: bool,
 }
 
+impl Default for RadioState {
+    fn default() -> Self {
+        Self {
+            radio_a: true,
+            radio_b: false,
+            radio_c: false,
+        }
+    }
+}
+
+#[derive(Default)]
 pub struct TextStyleState {
     pub toggle_bold: bool,
     pub toggle_italic: bool,
@@ -465,6 +498,15 @@ pub struct ToolbarState {
     pub toolbar_snap: bool,
 }
 
+impl Default for ToolbarState {
+    fn default() -> Self {
+        Self {
+            toolbar_tool_idx: 1,
+            toolbar_snap: true,
+        }
+    }
+}
+
 pub struct FormState {
     pub form_name: String,
     pub form_card: String,
@@ -473,6 +515,20 @@ pub struct FormState {
     pub form_year: Option<String>,
     pub form_comments: String,
     pub form_billing: bool,
+}
+
+impl Default for FormState {
+    fn default() -> Self {
+        Self {
+            form_name: String::new(),
+            form_card: String::new(),
+            form_cvv: String::new(),
+            form_month: None,
+            form_year: None,
+            form_comments: String::new(),
+            form_billing: true,
+        }
+    }
 }
 
 /// All state for the showcase demos, one field per interactive demo.
@@ -537,63 +593,20 @@ pub struct ShowcaseApp {
     pub platform: PlatformState,
 }
 
-impl ShowcaseApp {
-    #[must_use]
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        functora_egui::setup_fonts(&cc.egui_ctx);
-        let theme = dark();
-        ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
-        let startup_width = {
-            #[cfg(target_arch = "wasm32")]
-            {
-                functora_egui::web::startup::startup_width(cc)
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                functora_egui::web::startup::startup_width(&cc.egui_ctx)
-            }
-        };
-        let initial_collapsed = if startup_width == 0.0 {
-            true
-        } else {
-            startup_width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
-        };
-        let sidebar_init_done = startup_width != 0.0;
+impl Default for ShowcaseApp {
+    fn default() -> Self {
         Self {
-            nav: NavState {
-                dark: true,
-                sidebar_collapsed: initial_collapsed,
-                sidebar_demo_collapsed: false,
-            },
-            sidebar_init_done,
-            selected: initial_selected(),
-            dialogs: DialogState {
-                command_open: false,
-                dialog_open: false,
-                alert_dialog_open: false,
-            },
+            nav: NavState::default(),
+            sidebar_init_done: true,
+            selected: 0,
+            dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
-            drawers: DrawerState {
-                sheet_open: false,
-                drawer_open: false,
-            },
-            checks: CheckState {
-                checkbox_val: false,
-                switch_val: false,
-                collapsible_open: true,
-            },
-            radios: RadioState {
-                radio_a: true,
-                radio_b: false,
-                radio_c: false,
-            },
+            drawers: DrawerState::default(),
+            checks: CheckState::default(),
+            radios: RadioState::default(),
             radio_group_val: "Option A".to_owned(),
-            text_style: TextStyleState {
-                toggle_bold: false,
-                toggle_italic: false,
-                toggle_underline: false,
-            },
+            text_style: TextStyleState::default(),
             toggle_group_idx: 0,
             slider_val: 50.0,
             slider_price: 200.0,
@@ -620,10 +633,7 @@ impl ShowcaseApp {
             flex_last: String::new(),
             flex_email: String::new(),
             flex_phone: String::new(),
-            toolbar: ToolbarState {
-                toolbar_tool_idx: 1,
-                toolbar_snap: true,
-            },
+            toolbar: ToolbarState::default(),
             progress_val: 0.66,
             carousel_idx: 0,
             calendar_year: 2026,
@@ -636,17 +646,39 @@ impl ShowcaseApp {
             prop_height: 180.0,
             prop_rotation: -8.0,
             prop_opacity: 92.0,
-            form: FormState {
-                form_name: String::new(),
-                form_card: String::new(),
-                form_cvv: String::new(),
-                form_month: None,
-                form_year: None,
-                form_comments: String::new(),
-                form_billing: true,
-            },
+            form: FormState::default(),
             platform: PlatformState::default(),
         }
+    }
+}
+
+impl ShowcaseApp {
+    #[must_use]
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        functora_egui::setup_fonts(&cc.egui_ctx);
+        let theme = dark();
+        ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
+        let startup_width = {
+            #[cfg(target_arch = "wasm32")]
+            {
+                functora_egui::web::startup::startup_width(cc)
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                functora_egui::web::startup::startup_width(&cc.egui_ctx)
+            }
+        };
+        let initial_collapsed = if startup_width == 0.0 {
+            true
+        } else {
+            startup_width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
+        };
+        let sidebar_init_done = startup_width != 0.0;
+        let mut this = Self::default();
+        this.nav.sidebar_collapsed = initial_collapsed;
+        this.sidebar_init_done = sidebar_init_done;
+        this.selected = initial_selected();
+        this
     }
 
     fn toggle_theme(&mut self, ctx: &egui::Context) {
@@ -657,6 +689,13 @@ impl ShowcaseApp {
     fn apply_theme(&self, ctx: &egui::Context) {
         let theme = if self.nav.dark { dark() } else { light() };
         ShadcnThemeExt::set_shadcn_theme(ctx, theme);
+    }
+
+    fn reset_to_home(&mut self, ctx: &egui::Context) {
+        *self = Self::default();
+        self.nav.sidebar_collapsed = ctx.on_mobile();
+        self.apply_theme(ctx);
+        ctx.request_repaint();
     }
 
     fn handle_shortcuts(&mut self, ctx: &egui::Context) {
@@ -704,7 +743,23 @@ impl ShowcaseApp {
                     .show(ui2, |f| {
                         _ = f.ui(|ui_left| {
                             _ = ui_left.horizontal(|ui_inner| {
-                                _ = Typography::h4("functora-egui").show(ui_inner);
+                                let ctx = ui_inner.ctx().clone();
+                                let theme = ShadcnThemeExt::shadcn_theme(&ctx);
+                                let resp = ui_inner
+                                    .add(
+                                        egui::Label::new(
+                                            egui::RichText::new("functora-egui")
+                                                .size(20.0)
+                                                .strong()
+                                                .color(theme.foreground),
+                                        )
+                                        .selectable(false)
+                                        .sense(egui::Sense::click()),
+                                    )
+                                    .on_hover_cursor(egui::CursorIcon::PointingHand);
+                                if resp.clicked() {
+                                    self.reset_to_home(&ctx);
+                                }
                             });
                         });
                         _ = f.ui(|ui_right| {
@@ -925,7 +980,7 @@ impl ShowcaseApp {
         _ = Typography::h3(name).show(ui);
         ui.add_space(4.0);
         match name {
-            "Overview" => Self::demo_overview(ui),
+            "Overview" => self.demo_overview(ui),
             "Button" => self.demo_button(ui),
             "Checkbox" => self.demo_checkbox(ui),
             "Switch" => self.demo_switch(ui),

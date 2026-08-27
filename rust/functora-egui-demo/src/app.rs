@@ -435,7 +435,7 @@ impl Default for NavState {
     fn default() -> Self {
         Self {
             dark: true,
-            sidebar_collapsed: false,
+            sidebar_collapsed: true,
             sidebar_demo_collapsed: false,
         }
     }
@@ -597,7 +597,7 @@ impl Default for ShowcaseApp {
     fn default() -> Self {
         Self {
             nav: NavState::default(),
-            sidebar_init_done: true,
+            sidebar_init_done: false,
             selected: 0,
             dialogs: DialogState::default(),
             command_search: String::new(),
@@ -673,10 +673,9 @@ impl ShowcaseApp {
         } else {
             startup_width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
         };
-        let sidebar_init_done = startup_width != 0.0;
         let mut this = Self::default();
         this.nav.sidebar_collapsed = initial_collapsed;
-        this.sidebar_init_done = sidebar_init_done;
+        this.sidebar_init_done = false;
         this.selected = initial_selected();
         this
     }
@@ -694,6 +693,7 @@ impl ShowcaseApp {
     fn reset_to_home(&mut self, ctx: &egui::Context) {
         *self = Self::default();
         self.nav.sidebar_collapsed = ctx.on_mobile();
+        self.sidebar_init_done = true;
         self.apply_theme(ctx);
         ctx.request_repaint();
     }

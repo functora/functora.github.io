@@ -33,6 +33,28 @@
         outline: none;
         touch-action: none;
       }
+      @media print {
+        @page {
+          margin: 0;
+          size: auto;
+        }
+        html, body {
+          overflow: visible !important;
+          height: auto !important;
+          width: auto !important;
+          background: white !important;
+        }
+        #the_canvas_id {
+          position: static !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 100vh !important;
+          object-fit: contain !important;
+          display: block !important;
+          margin: 0 auto !important;
+        }
+      }
     </style>
   </head>
   <body>

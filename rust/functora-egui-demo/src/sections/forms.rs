@@ -47,7 +47,10 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// FieldGroup: groups related fields with legend/description\nuse functora_egui::{FieldGroup, FieldSet, FieldLegend, FieldDescription, Label, Input, Flex, Button, ComponentSize};\n\nFieldGroup::show(ui, |group| {\n    group.add(FieldSet::show(ui, \"Payment\", |body| {\n        Flex::column().gap(8.0).show(body, |f| {\n            f.ui(|ui| Label::new(\"Card number\").show(ui));\n            f.add(Input::new(&mut card).placeholder(\"4242 4242 4242 4242\"));\n            f.ui(|ui| Label::new(\"Expiry\").show(ui));\n            f.add(Input::new(&mut expiry).placeholder(\"MM/YY\"));\n            f.ui(|ui| Label::new(\"CVV\").show(ui));\n            f.add(Input::new(&mut cvv).placeholder(\"123\"));\n        });\n    }));\n    group.add(FieldDescription::show(ui, \"All transactions are secure and encrypted.\"));\n});",
+        );
     }
 
     pub(crate) fn demo_field_set(&mut self, ui: &mut egui::Ui) {
@@ -68,7 +71,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "FieldSet::show(ui, \"Shipping address\", |body| { ... });",
+            "// FieldSet: bordered container for grouped controls\nuse functora_egui::{FieldSet, Label, Input, Flex};\n\nFieldSet::show(ui, \"Shipping address\", |body| {\n    Flex::column().gap(8.0).show(body, |f| {\n        f.ui(|ui| Label::new(\"Full name\").show(ui));\n        f.add(Input::new(&mut name).placeholder(\"Ada Lovelace\"));\n        f.ui(|ui| Label::new(\"Email\").show(ui));\n        f.add(Input::new(&mut email).placeholder(\"ada@example.com\"));\n    });\n});",
         );
     }
 
@@ -85,7 +88,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "FieldLegend::show(ui, \"Payment details\");\nFieldDescription::show(ui, \"All transactions are secure.\");",
+            "// FieldLegend + FieldDescription\nuse functora_egui::{FieldLegend, FieldDescription};\n\nFieldLegend::show(ui, \"Payment details\");\nFieldDescription::show(ui, \"All transactions are secure and encrypted.\");\n\nFieldLegend::show(ui, \"Billing address\");\nFieldDescription::show(ui, \"Used only for invoices and receipts.\");",
         );
     }
 
@@ -104,7 +107,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "FieldDescription::show(ui, \"Use at least 8 characters.\");",
+            "// FieldDescription: helper text under a field\nuse functora_egui::{FieldDescription, Label, Input, Flex};\n\nFlex::column().gap(8.0).show(ui, |f| {\n    f.ui(|ui| Label::new(\"Password\").show(ui));\n    f.add(Input::new(&mut password).password());\n    f.ui(|ui| FieldDescription::show(ui, \"Use at least 8 characters with numbers and symbols.\"));\n});",
         );
     }
 
@@ -163,7 +166,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "PropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"X\").show(grid, |row| { ... });\n});",
+            "// PropertyGrid: label/value grid for inspectors\nuse functora_egui::{PropertyGrid, PropertyRow, NumberInput};\n\nPropertyGrid::new()\n    .label_width(96.0)\n    .row_gap(4.0)\n    .show(ui, |grid| {\n        PropertyRow::new(\"X\").show(grid, |row| {\n            row.add(NumberInput::new(&mut x).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Y\").show(grid, |row| {\n            row.add(NumberInput::new(&mut y).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Width\").show(grid, |row| {\n            row.add(NumberInput::new(&mut w).range(0.0..=2000.0).width(110.0));\n        });\n    });",
         );
     }
 
@@ -209,7 +212,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "PropertyRow::new(\"Mode\").show(grid, |row| { ... }, false);",
+            "// PropertyRow: single labeled row (text, badges, inputs, switches)\nuse functora_egui::{PropertyGrid, PropertyRow, Badge, BadgeVariant, SelectValue, Switch, Flex, Button, ButtonVariant, LucideIcon, ComponentSize};\n\nPropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"Mode\").show(grid, |row| {\n        Badge::new(\"Auto\").variant(BadgeVariant::Secondary).show(row);\n    });\n    PropertyRow::new(\"Blend\").show(grid, |row| {\n        SelectValue::new(&mut blend, &modes).show(row);\n    });\n    PropertyRow::new(\"Visible\").show(grid, |row| {\n        Switch::new(&mut show).label(\"Show\").show(row);\n    });\n    PropertyRow::new(\"Actions\").show(grid, |row| {\n        Flex::row().gap(8.0).show(row, |f| {\n            f.add(Button::new(\"Reset\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            f.add(Button::new(\"Apply\").size(ComponentSize::Sm).icon(LucideIcon::Check));\n        });\n    });\n});",
         );
     }
 }

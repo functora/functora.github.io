@@ -273,7 +273,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::storage::persist_value(&key, &val);\nlet loaded: Option<String> = functora_egui::storage::load_state(&key);\nfunctora_egui::storage::files_dir()",
+            "// Storage: persist + load + files_dir\nuse functora_egui::storage::{persist_value, load_state, files_dir};\n\nlet key = \"my_key\";\nlet val = \"hello world\";\npersist_value(key, val);\nlet loaded: Option<String> = load_state(key);\nlet dir = files_dir()?;\neprintln!(\"files dir: {}\", dir.display());",
         );
     }
 
@@ -345,7 +345,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::clipboard::write(text).await?;\nlet text = functora_egui::clipboard::read().await?;",
+            "// Clipboard: write + read\nuse functora_egui::clipboard::{write, read};\n\n// Write\nlet text = \"hello clipboard\";\nwrite(text).await?;\n\n// Read\nlet text = read().await?;\neprintln!(\"pasted: {text}\");",
         );
     }
 
@@ -389,7 +389,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::share::share(ShareData { title, text, url }).await?;",
+            "// Share: title + text + url\nuse functora_egui::share::{share, ShareData};\n\nlet data = ShareData {\n    title: \"My App\".to_owned(),\n    text: \"Check this out!\".to_owned(),\n    url: \"https://example.com\".to_owned(),\n};\nshare(data).await?;",
         );
     }
 
@@ -473,7 +473,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::deep_link::store_url(url);\nlet url = functora_egui::deep_link::take_url();\nlet route = functora_egui::deep_link::url_to_route(&url);",
+            "// Deep links: store + take + route parsing\nuse functora_egui::deep_link::{store_url, take_url, url_to_route};\n\n// Store a URL (e.g. from push notification)\nlet url = \"https://myapp.com/?page=settings&tab=notifications\";\nstore_url(url);\n\n// Later, take and parse it\nlet url = take_url();\nlet route = url_to_route(&url);\n// route = Route { path: \"/settings\", query: {\"tab\": \"notifications\"} }",
         );
     }
 
@@ -607,7 +607,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let files = functora_egui::files::pick_files(true).await?;\nlet preview = functora_egui::files::preview(name, &data);\nlet mime = functora_egui::files::mime_for_name(name);",
+            "// Files: pick + preview + mime\nuse functora_egui::files::{pick_files, preview, preview_blob, preview_cached, mime_for_name, format_size, CancelToken};\nuse std::sync::Arc;\n\n// Pick files (multiple = true)\nlet cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));\nlet files = pick_files(true).await?;\n\nfor (name, data) in files {\n    // Get mime type\n    let mime = mime_for_name(&name).unwrap_or(\"application/octet-stream\");\n    \n    // Preview (text/image/pdf)\n    let preview = preview(&name, &data);\n    \n    // Or create a revocable blob URL (web)\n    let blob_url = preview_blob(&name, &data);\n    \n    // Or cached preview (avoids re-decoding)\n    let cached = preview_cached(&name, &data);\n    \n    let size = format_size(data.len() as u64);\n    eprintln!(\"picked: {name} ({mime}, {size})\");\n    \n    // Cancel if needed\n    // cancel.store(true, Ordering::Relaxed);\n}",
         );
     }
 
@@ -654,7 +654,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::download::download(data, &filename).await?;",
+            "// Download: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;",
         );
     }
 
@@ -692,7 +692,10 @@ impl crate::app::ShowcaseApp {
         _ = Typography::small("On desktop this will show 'Print not supported' - expected.")
             .show(ui);
 
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// Print: window.print() (web) / PrintManager (Android) / stub (desktop)\nuse functora_egui::print::print_page;\n\n// Triggers native print dialog\nprint_page().await?;",
+        );
     }
 
     pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
@@ -770,7 +773,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "nav.push(route);\nnav.go_back();\nlet route = nav.current();",
+            "// NavStack: push / go_back / current / reset\nuse functora_egui::nav::NavStack;\n\nlet mut nav = NavStack::new();\n\n// Push a route (any type implementing Clone + PartialEq)\nnav.push(\"/settings\");\nnav.push(\"/profile\");\n\n// Current route\nlet current = nav.current();\nassert_eq!(current, \"/profile\");\n\n// Go back\nnav.go_back();\nassert_eq!(nav.current(), \"/settings\");\n\n// Check state\nnav.can_go_back(); // true\nnav.has_navigated(); // true\n\n// Reset\nnav.reset();\nassert_eq!(nav.current(), \"/\");",
         );
     }
 
@@ -863,7 +866,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::progress::claim_job(&mut slot, Stage::Zip);",
+            "// Progress: Job<Stage> + claim_job for exclusive access\nuse functora_egui::progress::{Job, Stage, claim_job, Progress};\n\nlet mut job = Job {\n    stage: Stage::Download,\n    done: 0,\n    total: 100,\n    name: Some(\"file.zip\".to_owned()),\n};\n\n// Update progress\njob.done = 50;\n\n// Claim for exclusive access (returns Some(guard) if available)\nif let Some(_guard) = claim_job(&mut job, Stage::Zip) {\n    // Exclusive access - do zip work\n    job.done = 100;\n}\n\n// Render progress bar\n// Progress::new(f32::from(job.percent()) / 100.0).show(ui);",
         );
     }
 
@@ -925,7 +928,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let hint = functora_egui::camera::install_hint().await?;\nlet res = functora_egui::camera::trigger_pwa_install().await?;",
+            "// PWA: install_hint + trigger_pwa_install\nuse functora_egui::{camera::install_hint, camera::trigger_pwa_install};\n\n// Check if install is available\nlet hint = install_hint().await?;\nmatch hint {\n    functora_egui::camera::InstallHint::Available => {\n        // Show install button\n    }\n    functora_egui::camera::InstallHint::NotAvailable => {\n        // Hide install button\n    }\n    functora_egui::camera::InstallHint::Unknown => {}\n}\n\n// Trigger install prompt\nlet res = trigger_pwa_install().await?;\n// res = Accepted | Rejected | NotAvailable | AlreadyInstalled",
         );
     }
 
@@ -997,7 +1000,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let encoded = functora_egui::encoding::encode_payload(&payload)?;\nlet decoded = functora_egui::encoding::decode_payload::<T>(&encoded)?;\nlet svg = functora_egui::encoding::generate_qr_code(&text)?;",
+            "// Encoding: base64url JSON + query params + QR SVG\nuse functora_egui::encoding::{encode_payload, decode_payload, generate_qr_code, append_query_param};\nuse serde::{Serialize, Deserialize};\n\n#[derive(Serialize, Deserialize)]\nstruct Payload { msg: String }\n\nlet payload = Payload { msg: \"hello\".to_owned() };\n\n// Encode to base64url JSON\nlet encoded = encode_payload(&payload)?;\n// \"eyJtc2ciOiJoZWxsbyJ9\"\n\n// Decode back\nlet decoded: Payload = decode_payload(&encoded)?;\nassert_eq!(decoded.msg, \"hello\");\n\n// Generate QR code SVG\nlet svg = generate_qr_code(\"https://example.com\")?;\n\n// Append query param\nlet url = append_query_param(\"https://example.com\", \"k\", \"v\");\n// \"https://example.com?k=v\"",
         );
     }
 
@@ -1056,7 +1059,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "if let Some(_guard) = self.platform.in_flight.claim() {\n    // exclusive access for the duration of the guard\n}",
+            "// InFlight: prevents concurrent async actions\nuse functora_egui::in_flight::InFlight;\n\nlet in_flight = InFlight::new();\n\n// Try to claim exclusive access\nif let Some(_guard) = in_flight.claim() {\n    // Exclusive access granted\n    // Do async work (share/print/pick/download)...\n    // Guard auto-releases on drop\n} else {\n    // Already in flight - reject or queue\n    eprintln!(\"Action already in progress\");\n}\n\n// Check status\nin_flight.is_in_flight();",
         );
     }
 
@@ -1127,7 +1130,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "functora_egui::camera::check_camera().await?;\nfunctora_egui::camera::start_camera().await?;\nlet frame = functora_egui::camera::capture_frame().await?;\nfunctora_egui::camera::stop_camera().await?;",
+            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;",
         );
     }
 
@@ -1216,7 +1219,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Stateful widget with auto-start + live preview + auto-scan.\nQrScanner::new().continuous(true).on_scan(|text| { ... })\n    .show(ui, &mut qr_state);",
+            "// QrScanner: stateful live preview + auto-scan\nuse functora_egui::{QrScanner, QrScannerState};\n\n// State (persist across frames)\nlet mut qr_state = QrScannerState::new();\n\n// Start scanner (call once or on button)\nqr_state.start(&ctx)?;\n\n// Render widget (call every frame)\nQrScanner::new()\n    .continuous(true)           // keep scanning after first decode\n    .on_scan(|text| {           // callback on decode\n        log::info!(\"QR: {}\", text);\n    })\n    .show(ui, &mut qr_state);\n\n// Check decoded text\nif let Some(text) = qr_state.decoded() {\n    eprintln!(\"Decoded: {text}\");\n}\n\n// Check error\nif let Some(err) = qr_state.error() {\n    eprintln!(\"Error: {err}\");\n}\n\n// Stop when done\nqr_state.stop();",
         );
     }
 
@@ -1266,7 +1269,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let thumb = functora_egui::thumbnail::video_thumbnail(bytes);",
+            "// Thumbnail: video_thumbnail (mp4 -> jpeg)\nuse functora_egui::thumbnail::video_thumbnail;\n\n// Input: video bytes (mp4)\nlet video_bytes: Vec<u8> = ...;\n\n// Generate thumbnail\nlet jpeg = video_thumbnail(&video_bytes)?;\n// Returns JPEG bytes\n\n// Convert to data URL for display\nlet data_url = format!(\"data:image/jpeg;base64,{}\", base64::encode(&jpeg));\n// Use with egui::Image::new(data_url)",
         );
     }
 
@@ -1311,7 +1314,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let zip = functora_egui::zip::create_zip_async(&files, progress, stage).await?;\nlet files = functora_egui::zip::unzip_async(bytes, progress, stage).await?;",
+            "// Zip: create_zip_async + unzip_async with progress\nuse functora_egui::zip::{create_zip_async, unzip_async};\nuse functora_egui::progress::{Job, Stage};\n\n// Create zip from picked files\nlet files: Vec<(String, Vec<u8>)> = ...;\nlet mut job = Job { stage: Stage::Zip, done: 0, total: files.len(), name: None };\n\nlet zip_bytes = create_zip_async(&files, &mut job, Stage::Zip).await?;\n// zip_bytes: Vec<u8>\n\n// Unzip\nlet mut job = Job { stage: Stage::Unzip, done: 0, total: 0, name: None };\nlet files = unzip_async(&zip_bytes, &mut job, Stage::Unzip).await?;\n// files: Vec<(String, Vec<u8>)>",
         );
     }
 
@@ -1363,7 +1366,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let enc = functora_egui::crypto::encrypt_symmetric(data, password)?;\nlet plain = functora_egui::crypto::decrypt_symmetric(&enc, password)?;",
+            "// Crypto: encrypt_symmetric / decrypt_symmetric (ChaCha20Poly1305)\nuse functora_egui::crypto::{encrypt_symmetric, decrypt_symmetric};\n\nlet data = b\"secret message\";\nlet password = \"my-password\";\n\n// Encrypt\nlet encrypted = encrypt_symmetric(data, password)?;\n// Returns Vec<u8> (nonce + ciphertext + tag)\n\n// Decrypt\nlet decrypted = decrypt_symmetric(&encrypted, password)?;\nassert_eq!(decrypted, data);",
         );
     }
 
@@ -1423,7 +1426,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let result = functora_egui::worker::run(input, |job| { ... }, |val, reporter| async {\n    reporter(Job { stage, done, total, name });\n    Ok(output)\n}).await?;",
+            "// Worker: run async work on thread (desktop) or inline (wasm) with progress\nuse functora_egui::worker::run;\nuse functora_egui::progress::{Job, Stage};\n\nlet input = 42u32;\n\nlet result = run(\n    input,\n    |_job| { /* setup */ },\n    |val, mut reporter| async move {\n        // Report progress\n        reporter(Job {\n            stage: Stage::Download,\n            done: 1,\n            total: 1,\n            name: Some(\"task\".to_owned()),\n        });\n        \n        // Do async work\n        let output = format!(\"Worker done: {val}\");\n        Ok(output)\n    },\n).await?;\n\n// result: String",
         );
     }
 

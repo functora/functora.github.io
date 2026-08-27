@@ -45,7 +45,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Typography::h1(\"Title\").show(ui);\nTypography::small(\"fine print\").show(ui);\nTypography::lead(\"Lead paragraph\").show(ui);\nTypography::muted(\"Muted text\").show(ui);",
+            "// Typography: styled text with variants\nuse functora_egui::{Typography, TypographyVariant};\n\nTypography::h1(\"Title\").show(ui);\nTypography::h2(\"Subtitle\").show(ui);\nTypography::h3(\"Heading\").show(ui);\nTypography::h4(\"Sub-heading\").show(ui);\nTypography::small(\"fine print\").show(ui);\nTypography::lead(\"Lead paragraph\").show(ui);\nTypography::muted(\"Muted text\").show(ui);\n\n// Custom variant\nTypography::new(\"Plain paragraph with Large variant.\")\n    .variant(TypographyVariant::Large)\n    .show(ui);",
         );
     }
 
@@ -74,7 +74,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Label::new(\"Email\").show(ui);\nLabel::new(\"Muted\").muted().show(ui);",
+            "// Label: text labels for forms\nuse functora_egui::{Label, Input, ComponentSize, Flex};\n\nLabel::new(\"Your email address\").show(ui);\n\nInput::new(&mut email).placeholder(\"you@example.com\").show(ui);\n\n// Sizes\nLabel::new(\"Small label\").size(ComponentSize::Sm).show(ui);\nLabel::new(\"Muted label\").muted().show(ui);",
         );
     }
 
@@ -103,7 +103,10 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        snippet(ui, "Kbd::new(\"Ctrl\").show(ui, false);");
+        snippet(
+            ui,
+            "// Kbd: keyboard hint chips\nuse functora_egui::{Kbd, Flex};\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Ctrl\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"K\"));\n    f.label(\"opens command palette\");\n});\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Shift\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"Tab\"));\n    f.label(\"cycles focus\");\n});",
+        );
     }
 
     pub(crate) fn demo_item(&mut self, ui: &mut egui::Ui) {
@@ -157,7 +160,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Item::new().show(ui, |item| { ... });\nItem::new().variant(ItemVariant::Outline).show(ui, |item| { ... });",
+            "// Item: clickable rows for lists/menus\nuse functora_egui::{Item, Label, Button, LucideIcon, ButtonVariant, ComponentSize};\n\n// Default variant\nItem::new().show(ui, |item| {\n    item.vertical(|v| {\n        v.add(Label::new(\"Notifications\"));\n        v.label(\"Check your activity and updates\");\n    });\n});\n\n// Outline variant with icons\nItem::new().variant(ItemVariant::Outline).show(ui, |item| {\n    item.horizontal(|h| {\n        h.add(Button::icon_only(LucideIcon::Settings).variant(ButtonVariant::Ghost).size(ComponentSize::Sm));\n        h.label(\"Open settings\");\n    });\n});",
         );
     }
 
@@ -204,6 +207,9 @@ impl crate::app::ShowcaseApp {
         _ = Typography::small("Icons render from built-in SVG paths; no external font needed.")
             .show(ui);
 
-        snippet(ui, "Button::icon_only(LucideIcon::Settings).show(ui);");
+        snippet(
+            ui,
+            "// Icons: 1600+ Lucide icons from built-in SVG paths\nuse functora_egui::{LucideIcon, Button, ButtonVariant, ComponentSize};\n\n// Search and display icons\nlet search = \"settings\";\nlet icons: Vec<LucideIcon> = LucideIcon::ALL\n    .iter()\n    .copied()\n    .filter(|icon| icon.name().to_lowercase().contains(search))\n    .collect();\n\nfor icon in icons {\n    Button::icon_only(icon)\n        .variant(ButtonVariant::Ghost)\n        .size(ComponentSize::Sm)\n        .on_hover_text(icon.name())\n        .show(ui);\n}\n\n// Icons render from built-in SVG; no external font needed",
+        );
     }
 }

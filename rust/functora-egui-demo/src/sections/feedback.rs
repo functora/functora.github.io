@@ -27,7 +27,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Alert::new().title(\"Heads up!\").show(ui, |ui| { ... });\nAlert::new().title(\"Error\").variant(AlertVariant::Destructive).show(ui, |ui| { ... });",
+            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant, Flex, Label, Button, ButtonVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .show(ui, |ui| {\n        ui.label(\"This is an informational alert message.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });",
         );
     }
 
@@ -46,7 +46,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Badge::new(\"Default\").show(ui);\nBadge::new(\"Secondary\").variant(BadgeVariant::Secondary).show(ui);",
+            "// Badge: small labels for counts, states, statuses\nuse functora_egui::{Badge, BadgeVariant, Flex};\n\nFlex::row().gap(8.0).wrap().show(ui, |f| {\n    f.add(Badge::new(\"Default\"));\n    f.add(Badge::new(\"Secondary\").variant(BadgeVariant::Secondary));\n    f.add(Badge::new(\"Outline\").variant(BadgeVariant::Outline));\n    f.add(Badge::new(\"Destructive\").variant(BadgeVariant::Destructive));\n});",
         );
     }
 
@@ -57,7 +57,10 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("{:.0}%", self.progress_val * 100.0)).show(ui);
 
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// Progress: indicator with value 0.0..=1.0\nuse functora_egui::Progress;\n\nlet mut progress = 0.66;\nProgress::new(progress).show(ui);\n\n// progress is a f32 between 0.0 and 1.0",
+        );
     }
 
     pub(crate) fn demo_skeleton(ui: &mut egui::Ui) {
@@ -74,7 +77,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Skeleton::new(48.0, 48.0).circle().show(ui);\nSkeleton::new(200.0, 16.0).show(ui);",
+            "// Skeleton: placeholder shimmering blocks\nuse functora_egui::{Skeleton, Flex};\n\nFlex::row().gap(8.0).align_center().show(ui, |f| {\n    f.add(Skeleton::new(48.0, 48.0).circle());\n    f.grow_nested(1.0, Flex::column().gap(4.0), |f2| {\n        f2.add(Skeleton::new(200.0, 16.0));\n        f2.add(Skeleton::new(180.0, 16.0));\n        f2.add(Skeleton::new(120.0, 16.0));\n    });\n});",
         );
     }
 
@@ -106,7 +109,10 @@ impl crate::app::ShowcaseApp {
             );
         });
 
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// Spinner: animated loading indicator\nuse functora_egui::{Spinner, Button, LucideIcon, Flex};\n\nFlex::row().gap(16.0).align_center().show(ui, |f| {\n    f.add(Spinner::new().size(16.0));\n    f.add(Spinner::new().size(24.0));\n    f.add(Spinner::new().size(32.0));\n    f.add(Spinner::new().size(48.0));\n});\n\n// Inside a button\nButton::new(\"Loading\")\n    .icon(LucideIcon::LoaderCircle)\n    .enabled(false)\n    .show(ui);",
+        );
     }
 
     pub(crate) fn demo_toast(&mut self, ui: &mut egui::Ui) {
@@ -161,7 +167,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "toast.add(\"Saved\", ToastVariant::Success, now);\ntoast.add_with_description(\"Title\", \"Body\", ToastVariant::Default, now);",
+            "// Toast: transient notifications\nuse functora_egui::{ToastState, ToastVariant, Button, ButtonVariant, Flex};\n\nlet mut toast = ToastState::new();\nlet ctx = ui.ctx();\n\nFlex::row().gap(8.0).wrap().show(ui, |f| {\n    if f.add(Button::new(\"Default\").variant(ButtonVariant::Outline)).clicked() {\n        toast.add(\"Default toast\", ToastVariant::Default, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Success\").variant(ButtonVariant::Outline)).clicked() {\n        toast.add(\"Success toast\", ToastVariant::Success, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Destructive\").variant(ButtonVariant::Destructive)).clicked() {\n        toast.add(\"Destructive toast\", ToastVariant::Error, ctx.input(|i| i.time));\n    }\n});\n\n// With description\ntoast.add_with_description(\n    \"Scheduled: Catch up\",\n    \"Friday, February 10, 2026 at 5:57 PM\",\n    ToastVariant::Default,\n    ctx.input(|i| i.time),\n);\n\n// Call toast.show(&ctx) in your render loop",
         );
     }
 
@@ -189,7 +195,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Empty::show(ui, |ui| { Card::new().show(ui, |card| { ... }); });",
+            "// Empty: centered empty state for lists/searches\nuse functora_egui::{Empty, Card, Button, ButtonVariant, LucideIcon, Typography, ComponentSize};\n\nEmpty::show(ui, |ui| {\n    Card::new().show(ui, |card| {\n        Button::icon_only(LucideIcon::Inbox)\n            .variant(ButtonVariant::Ghost)\n            .size(ComponentSize::Lg)\n            .show(card);\n        card.add_space(4.0);\n        Typography::h4(\"No results found\").show(card);\n        card.add_space(4.0);\n        Typography::small(\"Try adjusting your search...\").show(card);\n        card.add_space(8.0);\n        Button::new(\"Reset Search\")\n            .variant(ButtonVariant::Outline)\n            .size(ComponentSize::Sm)\n            .show(card);\n    });\n});",
         );
     }
 }

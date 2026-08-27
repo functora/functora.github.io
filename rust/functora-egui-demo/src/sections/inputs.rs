@@ -139,7 +139,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Button::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").show(ui);\nButton::new(\"Disabled\").enabled(false).show(ui);",
+            "// Button: variants + sizes + icons + shortcuts\nuse functora_egui::{Button, ButtonVariant, ComponentSize, LucideIcon};\n\n// Variants\nButton::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::new(\"Outline\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Secondary\").variant(ButtonVariant::Secondary).show(ui);\nButton::new(\"Ghost\").variant(ButtonVariant::Ghost).show(ui);\nButton::new(\"Link\").variant(ButtonVariant::Link).show(ui);\n\n// Sizes\nButton::new(\"XS\").size(ComponentSize::Xs).show(ui);\nButton::new(\"Small\").size(ComponentSize::Sm).show(ui);\nButton::new(\"Default\").show(ui);\nButton::new(\"Large\").size(ComponentSize::Lg).show(ui);\n\n// Icon only\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::icon_only(LucideIcon::Settings).variant(ButtonVariant::Outline).show(ui);\n\n// Icon + text\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Upload\").icon(LucideIcon::Upload).variant(ButtonVariant::Outline).show(ui);\n\n// Shortcut text\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").variant(ButtonVariant::Outline).show(ui);\n\n// Disabled\nButton::new(\"Disabled\").enabled(false).show(ui);",
         );
     }
 
@@ -153,7 +153,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "ui.add(Checkbox::new(&mut checked).label(\"Accept terms\"));",
+            "// Checkbox: bound to boolean\nuse functora_egui::Checkbox;\n\nlet mut checked = false;\nui.add(Checkbox::new(&mut checked).label(\"Accept terms and conditions\"));\n\n// checked is now true/false based on user interaction",
         );
     }
 
@@ -166,7 +166,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "ui.add(Switch::new(&mut enabled).label(\"Airplane mode\"));",
+            "// Switch: toggle on/off with label\nuse functora_egui::Switch;\n\nlet mut enabled = false;\nui.add(Switch::new(&mut enabled).label(\"Airplane mode\"));\n\n// enabled is now true/false",
         );
     }
 
@@ -197,7 +197,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "ui.add(Radio::new(&mut option_a).label(\"Option A\"), false);",
+            "// Radio: individual buttons for exclusive selection\nuse functora_egui::Radio;\n\nlet mut option_a = true;\nlet mut option_b = false;\nlet mut option_c = false;\n\nif ui.add(Radio::new(&mut option_a).label(\"Option A\")).clicked() {\n    option_b = false;\n    option_c = false;\n}\nif ui.add(Radio::new(&mut option_b).label(\"Option B\")).clicked() {\n    option_a = false;\n    option_c = false;\n}\nif ui.add(Radio::new(&mut option_c).label(\"Option C\")).clicked() {\n    option_a = false;\n    option_b = false;\n}",
         );
     }
 
@@ -213,7 +213,10 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected: {}", self.radio_group_val)).show(ui);
 
-        snippet(ui, "RadioGroup::new(&mut selected, &options).show(ui);");
+        snippet(
+            ui,
+            "// RadioGroup: managed group of radio buttons\nuse functora_egui::RadioGroup;\n\nlet options = [\"Option A\", \"Option B\", \"Option C\"];\nlet mut selected = \"Option A\".to_owned();\n\nRadioGroup::new(&mut selected, &options).show(ui);\n\n// selected now contains the chosen option",
+        );
     }
 
     pub(crate) fn demo_toggle(&mut self, ui: &mut egui::Ui) {
@@ -241,7 +244,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Toggle::new(&mut bold, \"B\").show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);",
+            "// Toggle: pressable button for boolean state\nuse functora_egui::{Toggle, ToggleVariant};\n\nlet mut bold = false;\nlet mut italic = false;\nlet mut underline = false;\n\nToggle::new(&mut bold, \"B\").show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);\nToggle::new(&mut underline, \"U\").variant(ToggleVariant::Outline).show(ui);",
         );
     }
 
@@ -257,7 +260,10 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Selected index: {}", self.toggle_group_idx)).show(ui);
 
-        snippet(ui, "ToggleGroup::new(items).show(ui, &mut selected_idx);");
+        snippet(
+            ui,
+            "// ToggleGroup: exclusive selection (only one active)\nuse functora_egui::ToggleGroup;\n\nlet items = vec![\"Left\", \"Center\", \"Right\"];\nlet mut selected_idx = 0;\n\nToggleGroup::new(items).show(ui, &mut selected_idx);\n\n// selected_idx now contains the chosen index",
+        );
     }
 
     pub(crate) fn demo_slider(&mut self, ui: &mut egui::Ui) {
@@ -283,7 +289,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Slider::new(&mut value, 0.0..=100.0).step(1.0).show(ui);\nSlider::new(&mut price, 0.0..=1000.0).suffix(\" USD\").show(ui);",
+            "// Slider: drag to select value in range\nuse functora_egui::Slider;\n\nlet mut value = 50.0;\nSlider::new(&mut value, 0.0..=100.0)\n    .step(1.0)\n    .width(400.0)\n    .show(ui);\n\n// With suffix\nlet mut price = 200.0;\nSlider::new(&mut price, 0.0..=1000.0)\n    .step(10.0)\n    .suffix(\" USD\")\n    .width(400.0)\n    .show(ui);",
         );
     }
 
@@ -308,7 +314,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Input::new(&mut text).placeholder(\"...\").show(ui);\nInput::new(&mut secret).password().show(ui);",
+            "// Input: single-line text field\nuse functora_egui::Input;\n\nlet mut text = String::new();\nInput::new(&mut text)\n    .placeholder(\"Type something...\")\n    .desired_width(ui.available_width())\n    .show(ui);\n\n// Password\nlet mut secret = String::new();\nInput::new(&mut secret)\n    .password()\n    .placeholder(\"secret\")\n    .desired_width(ui.available_width())\n    .show(ui);",
         );
     }
 
@@ -362,7 +368,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "NumberInput::new(&mut px).range(0.0..=100.0).suffix(\"px\").show(ui);\nNumberInput::f32(&mut price).decimals(2).prefix(\"$\").show(ui);\nNumberInput::i32(&mut count).range(0.0..=50.0).show(ui);",
+            "// NumberInput: numeric input with drag, range, prefix/suffix\nuse functora_egui::NumberInput;\n\n// f64 with range and suffix\nlet mut px = 0.0;\nNumberInput::new(&mut px)\n    .range(0.0..=100.0)\n    .speed(0.5)\n    .suffix(\"px\")\n    .width(110.0)\n    .show(ui);\n\n// f32 with decimals and prefix\nlet mut price = 0.0_f32;\nNumberInput::f32(&mut price)\n    .decimals(2)\n    .prefix(\"$\")\n    .width(90.0)\n    .show(ui);\n\n// i32 integer\nlet mut count = 0i32;\nNumberInput::i32(&mut count)\n    .range(0.0..=50.0)\n    .width(70.0)\n    .show(ui);",
         );
     }
 
@@ -398,7 +404,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "InputGroup::show(ui, &mut url, \"example.com\", Some(\"https://\"), None);",
+            "// InputGroup: input with prefix text and/or suffix addon\nuse functora_egui::{InputGroup, Button, ButtonVariant, LucideIcon, ComponentSize};\n\n// With prefix\nlet mut url = String::new();\nInputGroup::show(\n    ui,\n    &mut url,\n    \"example.com\",\n    Some(\"https://\"),\n    None::<fn(&mut egui::Ui)>,\n);\n\n// With prefix and suffix button\nlet mut search = String::new();\nInputGroup::show(\n    ui,\n    &mut search,\n    \"Search...\",\n    None,\n    Some(|ui| {\n        Button::icon_only(LucideIcon::Search)\n            .variant(ButtonVariant::Ghost)\n            .size(ComponentSize::Sm)\n            .show(ui);\n    }),\n);",
         );
     }
 
@@ -413,7 +419,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Textarea::new(&mut msg).placeholder(\"Write...\").min_height(80.0).show(ui);",
+            "// Textarea: multi-line text area\nuse functora_egui::Textarea;\n\nlet mut msg = String::new();\nTextarea::new(&mut msg)\n    .placeholder(\"Write a message...\")\n    .desired_width(ui.available_width().min(420.0))\n    .min_height(80.0)\n    .show(ui);",
         );
     }
 
@@ -435,7 +441,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Select::new(&mut fruit, &fruits).placeholder(\"Pick a fruit...\").show(ui);",
+            "// Select: dropdown selection from a list (Option value)\nuse functora_egui::Select;\n\nlet fruits = vec![\"Apple\", \"Banana\", \"Cherry\", \"Grape\", \"Mango\"];\nlet mut fruit: Option<String> = None;\n\nSelect::new(&mut fruit, &fruits)\n    .placeholder(\"Pick a fruit...\")\n    .show(ui);\n\n// fruit is now Some(\"Apple\") or None",
         );
     }
 
@@ -454,7 +460,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "SelectValue::new(&mut blend_mode, &blend_modes).show(ui);",
+            "// SelectValue: dropdown bound to non-Option string\nuse functora_egui::SelectValue;\n\nlet blend_modes = vec![\"Normal\", \"Multiply\", \"Screen\", \"Overlay\"];\nlet mut blend_mode = \"Normal\".to_owned();\n\nSelectValue::new(&mut blend_mode, &blend_modes).show(ui);\n\n// blend_mode always has a valid value (never None)",
         );
     }
 
@@ -476,7 +482,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Combobox::new(items).placeholder(\"Search...\")\n    .show(ui, &mut selected_idx, &mut search);",
+            "// Combobox: searchable dropdown with type-ahead filtering\nuse functora_egui::Combobox;\n\nlet frameworks = vec![\"React\", \"Vue\", \"Angular\", \"Svelte\", \"Solid\"];\nlet mut selected_idx: Option<usize> = None;\nlet mut search = String::new();\n\nCombobox::new(frameworks)\n    .placeholder(\"Select framework...\")\n    .show(ui, &mut selected_idx, &mut search);\n\n// selected_idx is Some(index) or None",
         );
     }
 
@@ -487,7 +493,10 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("OTP: \"{}\"", self.otp_value)).show(ui);
 
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// InputOtp: one-time passcode digit boxes\nuse functora_egui::InputOtp;\n\nlet mut otp = String::new();\nInputOtp::new(6).show(ui, &mut otp);\n\n// otp now contains the 6-digit code",
+        );
     }
 
     pub(crate) fn demo_date_picker(&mut self, ui: &mut egui::Ui) {
@@ -505,7 +514,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "DatePicker::new().placeholder(\"Pick a date\").show(ui, &mut state);",
+            "// DatePicker: popover calendar\nuse functora_egui::{DatePicker, DatePickerState};\n\nlet mut state = DatePickerState::default();\n\nDatePicker::new()\n    .placeholder(\"Pick a date\")\n    .show(ui, &mut state);\n\nif state.is_set() {\n    let date = state.format(); // e.g. \"2026-08-27\"\n    eprintln!(\"Selected: {date}\");\n}",
         );
     }
 
@@ -555,7 +564,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "ColorSwatch::new(color).label(\"Signal\").selected(true).show_hex();",
+            "// ColorSwatch: clickable color swatches\nuse functora_egui::ColorSwatch;\nuse egui::Color32;\n\nlet palette = [\n    (\"Signal\", Color32::from_rgb(25, 113, 194)),\n    (\"Mint\", Color32::from_rgb(18, 184, 134)),\n    (\"Amber\", Color32::from_rgb(245, 159, 0)),\n    (\"Rose\", Color32::from_rgb(224, 49, 49)),\n    (\"Ink\", Color32::from_rgb(33, 37, 41)),\n];\n\nfor (idx, (label, color)) in palette.iter().enumerate() {\n    if ColorSwatch::new(*color)\n        .label(*label)\n        .selected(selected_idx == idx)\n        .show_hex()\n        .show(ui)\n        .clicked()\n    {\n        selected_idx = idx;\n    }\n}\n\n// Compact states\nColorSwatch::new(Color32::from_rgb(25, 113, 194)).selected(true).show(ui);\nColorSwatch::new(Color32::from_rgba_unmultiplied(25, 113, 194, 120)).show(ui);\nColorSwatch::new(Color32::TRANSPARENT).label(\"Transparent\").show_hex().show(ui);",
         );
     }
 }

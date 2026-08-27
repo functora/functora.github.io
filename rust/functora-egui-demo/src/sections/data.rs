@@ -23,7 +23,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Avatar::new(\"AL\").size(24.0).show(ui);\nAvatar::new(\"CM\").size(32.0).show(ui);",
+            "// Avatar: initials-based avatar with adjustable sizes\nuse functora_egui::{Avatar, Flex};\n\nFlex::row().gap(16.0).align_center().show(ui, |f| {\n    f.add(Avatar::new(\"AL\").size(24.0));\n    f.add(Avatar::new(\"CM\").size(32.0));\n    f.add(Avatar::new(\"DA\").size(40.0));\n    f.add(Avatar::new(\"FN\").size(56.0));\n});",
         );
     }
 
@@ -52,7 +52,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let clicked = Breadcrumb::new(items).show(ui);\nBreadcrumb::new(items).separator(\"/\").show(ui);",
+            "// Breadcrumb: navigation trail\nuse functora_egui::Breadcrumb;\n\nlet items = vec![\"Home\", \"Components\", \"Data Display\"];\n\n// Default\nlet clicked = Breadcrumb::new(items).show(ui);\nif let Some(idx) = clicked {\n    eprintln!(\"Breadcrumb: item {idx}\");\n}\n\n// Custom separator\nBreadcrumb::new(vec![\"a\", \"b\", \"c\"])\n    .separator(\"/\")\n    .show(ui);",
         );
     }
 
@@ -82,7 +82,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let clicked = Calendar::new().show(ui, &mut year, &mut month, &mut day);",
+            "// Calendar: month grid with navigation\nuse functora_egui::Calendar;\n\nlet mut year = 2026;\nlet mut month = 8;\nlet mut day = 20;\n\nif let Some(clicked_day) = Calendar::new().show(ui, &mut year, &mut month, &mut day) {\n    day = clicked_day;\n    eprintln!(\"Selected: {:04}-{:02}-{:02}\", year, month, day);\n}",
         );
     }
 
@@ -125,7 +125,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Carousel::new(count).show(ui, &mut index, |slide, idx| { ... });",
+            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet items = [\"Slide 1\", \"Slide 2\", \"Slide 3\", \"Slide 4\"];\nlet mut index = 0;\n\nCarousel::new(items.len()).show(ui, &mut index, |slide, idx| {\n    slide.allocate_ui(egui::vec2(slide.available_width().min(420.0), 200.0), |ui| {\n        let rect = ui.available_rect_before_wrap();\n        ui.painter().rect_filled(rect, theme.radius, colors[idx]);\n        ui.painter().galley(\n            rect.center() - galley.size() / 2.0,\n            galley,\n            Color32::WHITE,\n        );\n    });\n});",
         );
     }
 
@@ -141,7 +141,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Pagination::new(20).max_visible(7).show(ui, &mut page);",
+            "// Pagination: page navigation with visible range\nuse functora_egui::Pagination;\n\nlet mut page = 0;\nPagination::new(20)\n    .max_visible(7)\n    .show(ui, &mut page);\n\neprintln!(\"Page {} of 20\", page + 1);",
         );
     }
 
@@ -190,7 +190,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Sidebar::new().width(228.0).collapsible().show(ui, &mut collapsed, |nav| { ... });",
+            "// Sidebar: collapsible navigation panel (responsive drawer on mobile)\nuse functora_egui::{Sidebar, Button, ButtonVariant, LucideIcon, Typography, TypographyVariant};\n\nlet mut collapsed = false;\nSidebar::new()\n    .width(228.0)\n    .collapsible()\n    .show(ui, &mut collapsed, |nav| {\n        Typography::small(\"Navigation\").variant(TypographyVariant::Muted).show(nav);\n        nav.add_space(4.0);\n        Button::new(\"Overview\").icon(LucideIcon::Sparkles).variant(ButtonVariant::Ghost).full_width().show(nav);\n        Button::new(\"Settings\").icon(LucideIcon::Settings).variant(ButtonVariant::Ghost).full_width().show(nav);\n    });",
         );
     }
 
@@ -246,7 +246,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Table::new(headers).rows(rows).striped().show(ui);\nTable::new(headers).rows(rows).col_weights(vec![0.4, 0.4, 0.2]).show(ui);",
+            "// Table: styled table with headers, rows, striping, column weights\nuse functora_egui::Table;\n\nlet headers = vec![\"Name\", \"Status\", \"Role\"];\nlet rows = vec![\n    vec![\"Ada Lovelace\", \"Active\", \"Admin\"],\n    vec![\"Alan Turing\", \"Active\", \"Editor\"],\n    vec![\"Grace Hopper\", \"Inactive\", \"Viewer\"],\n];\n\n// Basic with striping\nTable::new(headers.clone()).rows(rows.clone()).striped().show(ui);\n\n// Custom column weights\nTable::new(vec![\"Name\", \"Email\", \"Role\"])\n    .rows(vec![\n        vec![\"Ada Lovelace\", \"ada@example.com\", \"Admin\"],\n        vec![\"Alan Turing\", \"alan@example.com\", \"Editor\"],\n    ])\n    .col_weights(vec![0.4, 0.4, 0.2])\n    .show(ui);",
         );
     }
 
@@ -295,7 +295,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "AreaChart::new(months)\n    .series(AreaSeries { values, color })\n    .stacked()\n    .height(260.0)\n    .show(ui);",
+            "// AreaChart: stacked area chart with smooth curves\nuse functora_egui::{AreaChart, AreaSeries};\nuse egui::Color32;\n\nlet months = vec![\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\"];\n\nlet primary = Color32::from_rgba_unmultiplied(25, 113, 194, 160);\nlet secondary = Color32::from_rgba_unmultiplied(18, 184, 134, 180);\n\nAreaChart::new(months)\n    .series(AreaSeries {\n        values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],\n        color: primary,\n    })\n    .series(AreaSeries {\n        values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],\n        color: secondary,\n    })\n    .stacked()\n    .height(260.0)\n    .show(ui);",
         );
     }
 }

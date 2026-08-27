@@ -35,12 +35,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
-        );
-
-        snippet(
-            ui,
-            "let bp = ui.breakpoint();\nif bp.is_mobile() { /* compact */ }\nlet spacing = ui.responsive_spacing();",
+            "// Breakpoint: mobile vs desktop detection\nuse functora_egui::{Breakpoint, ResponsiveExt, Spacing};\n\nlet bp = ui.breakpoint();\nlet spacing = ui.responsive_spacing();\n\nif bp.is_mobile() {\n    // Compact layout\n} else {\n    // Full layout\n}\n\n// spacing: Spacing { touch_height, touch_padding, gap, page_padding, content_max_width }",
         );
     }
 
@@ -78,9 +73,10 @@ impl crate::app::ShowcaseApp {
             _ = Typography::small("Desktop spacing is active.").show(ui);
         }
 
-        snippet(ui, "false");
-
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// Touch target: responsive heights and padding\\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\\n\\nlet spacing = ui.responsive_spacing();\\n\\n// touch_height: 36px desktop, 48px mobile\\n// touch_padding: extra padding for touch\\n// Button and Slider automatically use these\\n\\nFlex::row().gap(8.0).show(ui, |f| {\\n    f.add(Button::new(\"Touch me\"));\\n});\\n\\nSlider::new(&mut val, 0.0..=100.0)\\n    .step(1.0)\\n    .width(360.0)\\n    .show(ui);",
+        );
     }
 
     pub(crate) fn demo_flex_wrap(ui: &mut egui::Ui) {
@@ -153,9 +149,10 @@ impl crate::app::ShowcaseApp {
             .width(ui.available_width().min(360.0))
             .show(ui);
 
-        snippet(ui, "false");
-
-        snippet(ui, "false");
+        snippet(
+            ui,
+            "// Touch target: responsive heights and padding\\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\\n\\nlet spacing = ui.responsive_spacing();\\n\\n// touch_height: 36px desktop, 48px mobile\\n// touch_padding: extra padding for touch\\n// Button and Slider automatically use these\\n\\nFlex::row().gap(8.0).show(ui, |f| {\\n    f.add(Button::new(\"Touch me\"));\\n});\\n\\nSlider::new(&mut val, 0.0..=100.0)\\n    .step(1.0)\\n    .width(360.0)\\n    .show(ui);",
+        );
     }
 
     pub(crate) fn demo_mobile_dialog(&mut self, ui: &mut egui::Ui) {

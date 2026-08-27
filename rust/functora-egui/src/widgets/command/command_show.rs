@@ -76,11 +76,11 @@ impl super::widget::Command {
 
                 let _ = frame.show(inner_ui, |content_ui| {
                     let mut content_w: f32 = 0.0;
-                    for (group, label) in &self.items {
+                    for item in &self.items {
                         let gw = content_ui
                             .painter()
                             .layout_no_wrap(
-                                group.clone(),
+                                item.group.clone(),
                                 egui::FontId::proportional(12.0),
                                 egui::Color32::PLACEHOLDER,
                             )
@@ -89,13 +89,13 @@ impl super::widget::Command {
                         let lw = content_ui
                             .painter()
                             .layout_no_wrap(
-                                label.clone(),
+                                item.label.clone(),
                                 egui::FontId::proportional(14.0),
                                 egui::Color32::PLACEHOLDER,
                             )
                             .size()
                             .x;
-                        content_w = content_w.max(gw).max(lw);
+                        content_w = content_w.max(gw + 16.0 + 6.0).max(lw + 16.0 + 6.0);
                     }
                     let placeholder_w = content_ui
                         .painter()
@@ -164,32 +164,45 @@ impl super::widget::Command {
                                 let mut current_group = String::new();
                                 let mut any_shown = false;
 
-                                for (idx, (group, label)) in self.items.iter().enumerate() {
+                                for (idx, item) in self.items.iter().enumerate() {
                                     if !query.is_empty()
-                                        && !label.to_lowercase().contains(&query)
-                                        && !group.to_lowercase().contains(&query)
+                                        && !item.label.to_lowercase().contains(&query)
+                                        && !item.group.to_lowercase().contains(&query)
                                     {
                                         continue;
                                     }
 
                                     any_shown = true;
 
-                                    if *group != current_group {
+                                    if item.group != current_group {
                                         if !current_group.is_empty() {
                                             inner_ui4.add_space(4.0);
                                         }
-                                        let _ = inner_ui4.label(
-                                            egui::RichText::new(group)
-                                                .color(theme.muted_foreground)
-                                                .size(12.0)
-                                                .strong(),
-                                        );
+                                        let group_icon_size = 12.0;
+                                        let group_text = egui::RichText::new(&item.group)
+                                            .color(theme.muted_foreground)
+                                            .size(12.0)
+                                            .strong();
+                                        let _ = inner_ui4.horizontal(|ui_h| {
+                                            let icon_rect = egui::Rect::from_min_size(
+                                                ui_h.cursor().min,
+                                                egui::vec2(group_icon_size, group_icon_size),
+                                            );
+                                            crate::icons::paint_icon::paint_icon(
+                                                ui_h.painter(),
+                                                icon_rect,
+                                                &item.group_icon,
+                                                theme.muted_foreground,
+                                            );
+                                            ui_h.add_space(4.0);
+                                            let _ = ui_h.label(group_text);
+                                        });
                                         inner_ui4.add_space(2.0);
-                                        current_group.clone_from(group);
+                                        current_group.clone_from(&item.group);
                                     }
 
                                     let galley = inner_ui4.painter().layout_no_wrap(
-                                        label.clone(),
+                                        item.label.clone(),
                                         egui::FontId::proportional(14.0),
                                         theme.popover_foreground,
                                     );
@@ -197,29 +210,58 @@ impl super::widget::Command {
                                         inner_ui4.available_width(),
                                         galley.size().y + 8.0,
                                     );
-                                    let (rect, r) = inner_ui4
+                                    let (rect, response_raw) = inner_ui4
                                         .allocate_exact_size(desired, egui::Sense::click());
+                                    let response = response_raw
+                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
 
-                                    if r.hovered() {
+                                    let hovered = response.hovered();
+                                    if hovered {
                                         let _ = inner_ui4.painter().rect_filled(
                                             rect,
-                                            egui::CornerRadius::same(4),
+                                            egui::CornerRadius::same(
+                                                crate::utils::f32_to_u8_clamped(theme.radius),
+                                            ),
                                             theme.accent,
                                         );
                                     }
 
                                     if inner_ui4.is_rect_visible(rect) {
-                                        inner_ui4.painter().galley(
+                                        let icon_size = 14.0;
+                                        let fg = if hovered {
+                                            theme.accent_foreground
+                                        } else {
+                                            theme.popover_foreground
+                                        };
+                                        let icon_rect = egui::Rect::from_min_size(
                                             egui::pos2(
                                                 rect.min.x + 8.0,
-                                                rect.center().y - galley.size().y / 2.0,
+                                                rect.center().y - icon_size / 2.0,
                                             ),
-                                            galley,
-                                            theme.popover_foreground,
+                                            egui::vec2(icon_size, icon_size),
+                                        );
+                                        crate::icons::paint_icon::paint_icon(
+                                            inner_ui4.painter(),
+                                            icon_rect,
+                                            &item.icon,
+                                            fg,
+                                        );
+                                        let text_galley = inner_ui4.painter().layout_no_wrap(
+                                            item.label.clone(),
+                                            egui::FontId::proportional(14.0),
+                                            fg,
+                                        );
+                                        inner_ui4.painter().galley(
+                                            egui::pos2(
+                                                rect.min.x + 8.0 + icon_size + 6.0,
+                                                rect.center().y - text_galley.size().y / 2.0,
+                                            ),
+                                            text_galley,
+                                            fg,
                                         );
                                     }
 
-                                    if r.clicked() {
+                                    if response.clicked() {
                                         selected = Some(idx);
                                         *open = false;
                                         search.clear();

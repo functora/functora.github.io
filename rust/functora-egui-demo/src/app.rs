@@ -4,7 +4,7 @@
 use functora_egui::theme::shadcn_theme_dark::dark;
 use functora_egui::theme::shadcn_theme_light::light;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, Dialog, Drawer,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
     FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet, Sidebar,
     ToastState, ToastVariant, Typography, TypographyVariant,
 };
@@ -401,7 +401,39 @@ pub fn component_index(name: &str) -> Option<usize> {
         .position(|def| def.name.to_ascii_lowercase() == needle)
 }
 
-/// The selected component read from the `?component=` query on the web.
+/// Single source of truth for section buttons – used by sidebar, palette and overview.
+/// `Default` size, `Ghost`/`Default` variant with icon and selected state.
+pub fn section_button(def: &ComponentDef, selected: bool) -> Button<'static> {
+    let variant = if selected {
+        ButtonVariant::Default
+    } else {
+        ButtonVariant::Ghost
+    };
+    Button::new(def.name)
+        .icon(def.icon)
+        .variant(variant)
+        .selected(selected)
+}
+
+/// Group header with icon – used by sidebar, palette and overview.
+pub fn category_header(ui: &mut egui::Ui, name: &str, icon: LucideIcon) {
+    let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
+    let _ = ui.horizontal(|inner_ui| {
+        let icon_size = 12.0;
+        let rect = egui::Rect::from_min_size(
+            egui::pos2(
+                inner_ui.cursor().min.x,
+                inner_ui.cursor().min.y + (inner_ui.available_height() - icon_size) / 2.0,
+            ),
+            egui::vec2(icon_size, icon_size),
+        );
+        functora_egui::paint_icon(inner_ui.painter(), rect, &icon, theme.muted_foreground);
+        inner_ui.add_space(icon_size + 4.0);
+        let _ = Typography::small(name)
+            .variant(TypographyVariant::Muted)
+            .show(inner_ui);
+    });
+}
 #[cfg(target_arch = "wasm32")]
 fn initial_selected() -> usize {
     let search = web_sys::window()
@@ -813,30 +845,14 @@ impl ShowcaseApp {
 
     fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
         let mut close = false;
-        for (cat_idx, (cat_name, _cat_icon, items)) in CATEGORIES.iter().enumerate() {
+        for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
             ui.add_space(6.0);
-            _ = Typography::small(*cat_name)
-                .variant(TypographyVariant::Muted)
-                .show(ui);
+            category_header(ui, cat_name, *cat_icon);
             ui.add_space(2.0);
             for (item_idx, def) in items.iter().enumerate() {
                 let flat = flat_index(cat_idx, item_idx);
                 let selected = flat == self.selected;
-                let variant = if selected {
-                    ButtonVariant::Default
-                } else {
-                    ButtonVariant::Ghost
-                };
-                if ui
-                    .add(
-                        Button::new(def.name)
-                            .icon(def.icon)
-                            .variant(variant)
-                            .full_width()
-                            .selected(selected),
-                    )
-                    .clicked()
-                {
+                if ui.add(section_button(def, selected).full_width()).clicked() {
                     self.selected = flat;
                     close |= ui.on_mobile();
                     ui.ctx().request_repaint();
@@ -954,14 +970,18 @@ impl ShowcaseApp {
         }
 
         if self.dialogs.command_open {
-            let items: Vec<(String, String)> = CATEGORIES
+            let items: Vec<CommandItem> = CATEGORIES
                 .iter()
-                .flat_map(|(cat, _, defs)| {
-                    defs.iter()
-                        .map(|def| ((*cat).to_owned(), def.name.to_owned()))
+                .flat_map(|(cat, cat_icon, defs)| {
+                    defs.iter().map(|def| CommandItem {
+                        group: (*cat).to_owned(),
+                        group_icon: *cat_icon,
+                        label: def.name.to_owned(),
+                        icon: def.icon,
+                    })
                 })
                 .collect();
-            if let Some(idx) = Command::new(items)
+            if let Some(idx) = Command::with_items(items)
                 .placeholder("Search components...")
                 .show(
                     ctx,

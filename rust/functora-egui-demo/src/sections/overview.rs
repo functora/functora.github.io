@@ -3,7 +3,6 @@
 use crate::app::CATEGORIES;
 use functora_egui::{
     Button, ButtonVariant, Card, ComponentSize, Flex, LucideIcon, Separator, Typography,
-    TypographyVariant,
 };
 
 impl crate::app::ShowcaseApp {
@@ -76,30 +75,16 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
 
         for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-            _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
-                _ = f.add(
-                    Button::icon_only(*cat_icon)
-                        .variant(ButtonVariant::Ghost)
-                        .size(ComponentSize::Sm),
-                );
-                _ = f.ui(|ui79| {
-                    _ = Typography::small(*cat_name)
-                        .variant(TypographyVariant::Muted)
-                        .show(ui79);
-                });
-            });
+            crate::app::category_header(ui, cat_name, *cat_icon);
             ui.add_space(2.0);
             let ctx = ui.ctx().clone();
             _ = Flex::row().gap(4.0).wrap().show(ui, |f| {
                 for (item_idx, def) in items.iter().enumerate() {
                     let flat = crate::app::flat_index(cat_idx, item_idx);
-                    if f.add(
-                        Button::new(def.name)
-                            .variant(ButtonVariant::Secondary)
-                            .size(ComponentSize::Sm),
-                    )
-                    .inner
-                    .clicked()
+                    let selected = flat == self.selected;
+                    if f.add(crate::app::section_button(def, selected))
+                        .inner
+                        .clicked()
                     {
                         self.selected = flat;
                         ctx.request_repaint();

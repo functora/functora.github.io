@@ -116,7 +116,7 @@ pub use widgets::code_snippet::{snippet, snippet_break_long_words};
 pub use widgets::collapsible::widget::Collapsible;
 pub use widgets::color_swatch::widget::ColorSwatch;
 pub use widgets::combobox::widget::Combobox;
-pub use widgets::command::widget::Command;
+pub use widgets::command::widget::{Command, CommandItem};
 pub use widgets::context_menu::widget::ContextMenu;
 pub use widgets::date_picker::date_picker_state::DatePickerState;
 pub use widgets::date_picker::widget::DatePicker;

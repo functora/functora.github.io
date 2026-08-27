@@ -109,6 +109,37 @@ pub fn u32_to_f32(value: u32) -> f32 {
     value.to_f32().unwrap_or(0.0)
 }
 
+/// Spawns an async task and returns a receiver for the result.
+/// Works on both wasm32 (using `wasm_bindgen_futures::spawn_local`)
+/// and native (using `std::thread::spawn` with `pollster::block_on`).
+#[cfg(target_arch = "wasm32")]
+pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
+where
+    F: std::future::Future<Output = T> + 'static,
+    T: 'static,
+{
+    let (tx, rx) = std::sync::mpsc::channel();
+    wasm_bindgen_futures::spawn_local(async move {
+        let res = future.await;
+        drop(tx.send(res));
+    });
+    rx
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
+where
+    F: std::future::Future<Output = T> + Send + 'static,
+    T: Send + 'static,
+{
+    let (tx, rx) = std::sync::mpsc::channel();
+    drop(std::thread::spawn(move || {
+        let res = pollster::block_on(future);
+        drop(tx.send(res));
+    }));
+    rx
+}
+
 /// Scales a pixel dimension by `scale`, rounded and saturated to `u32`.
 #[must_use]
 pub fn scaled_px(value_px: u32, scale: f32) -> u32 {

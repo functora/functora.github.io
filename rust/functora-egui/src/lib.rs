@@ -10,6 +10,13 @@ pub mod deep_link;
 pub mod download;
 pub mod error;
 pub mod files;
+
+pub use files::CancelToken;
+pub use files::PickResult;
+pub use files::cancel;
+pub use files::is_cancelled;
+pub use files::new_cancel_token;
+
 pub mod icons;
 pub mod layout;
 pub mod nav;
@@ -25,6 +32,7 @@ pub mod theme;
 pub mod theme_extra;
 pub mod tokens;
 pub mod utils;
+pub use utils::spawn_async;
 #[cfg(any(feature = "web", feature = "build"))]
 pub mod web;
 pub mod widgets;

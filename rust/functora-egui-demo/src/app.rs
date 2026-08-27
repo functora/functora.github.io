@@ -9,8 +9,8 @@ use functora_egui::{
     ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
-pub type PickResult = Result<Vec<(String, Vec<u8>)>, String>;
-pub type PickReceiver = std::sync::Arc<std::sync::Mutex<Option<PickResult>>>;
+pub use functora_egui::PickResult;
+pub type PickReceiver = std::sync::mpsc::Receiver<PickResult>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum DemoRoute {

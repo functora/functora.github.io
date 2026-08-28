@@ -9,6 +9,13 @@ import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CancellationSignal;
+import android.os.ParcelFileDescriptor;
+import android.print.PageRange;
+import android.print.PrintAttributes;
+import android.print.PrintDocumentAdapter;
+import android.print.PrintDocumentInfo;
+import android.print.PrintManager;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
@@ -150,6 +157,51 @@ public class MainActivity extends GameActivity {
                         }
                     }
                 });
+    }
+
+    public void printPage() {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PrintManager printManager = (PrintManager) getSystemService(PRINT_SERVICE);
+                    if (printManager == null) {
+                        return;
+                    }
+                    String jobName = "functora-egui Document";
+                    PrintDocumentAdapter adapter = new PrintDocumentAdapter() {
+                        @Override
+                        public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes,
+                                CancellationSignal cancellationSignal, LayoutResultCallback callback, Bundle extras) {
+                            if (cancellationSignal != null && cancellationSignal.isCanceled()) {
+                                callback.onLayoutCancelled();
+                                return;
+                            }
+                            PrintDocumentInfo info = new PrintDocumentInfo.Builder(jobName)
+                                    .setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT)
+                                    .setPageCount(1)
+                                    .build();
+                            callback.onLayoutFinished(info, true);
+                        }
+
+                        @Override
+                        public void onWrite(PageRange[] pages, ParcelFileDescriptor destination,
+                                CancellationSignal cancellationSignal, WriteResultCallback callback) {
+                            if (destination != null) {
+                                try {
+                                    destination.close();
+                                } catch (Exception ignored) {
+                                }
+                            }
+                            callback.onWriteFinished(new PageRange[] {PageRange.ALL_PAGES});
+                        }
+                    };
+                    printManager.print(jobName, adapter, null);
+                } catch (Exception e) {
+                    Log.w("FunctoraPrint", "print failed", e);
+                }
+            }
+        });
     }
 
     private static Camera.Size pickPreviewSize(Camera.Parameters params, int maxDim) {

@@ -190,9 +190,10 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
 
 pub async fn print_page() -> Result<(), Error> {
     std::future::ready(()).await;
-    Err(Error::JS(
-        "Print not supported on Android without WebView".into(),
-    ))
+    with_app(|env, activity| {
+        let _ = env.call_method(activity, "printPage", "()V", &[])?;
+        Ok(())
+    })
 }
 
 #[allow(clippy::needless_pass_by_value)]

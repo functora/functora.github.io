@@ -154,6 +154,8 @@
         ];
         env.NIX_CONFIG = "experimental-features = nix-command flakes";
         env.NIXPKGS_ALLOW_UNFREE = "1";
+        env.ANDROID_USER_HOME = "~/.android";
+        env.GRADLE_USER_HOME = "~/.gradle";
       };
     };
   };

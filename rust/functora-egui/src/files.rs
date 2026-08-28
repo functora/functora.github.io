@@ -311,7 +311,7 @@ async fn android_pick_files(
             activity,
             "filePickerStart",
             "(Z)V",
-            &[JValue::Bool(multiple as u8)],
+            &[JValue::Bool(u8::from(multiple))],
         )?;
         Ok(())
     })?;
@@ -319,7 +319,7 @@ async fn android_pick_files(
         if let Some(token) = cancel
             && token.load(Ordering::Relaxed)
         {
-            let _ = crate::platform::android::with_app(|env, activity| {
+            _ = crate::platform::android::with_app(|env, activity| {
                 let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
                 Ok(())
             });
@@ -338,14 +338,14 @@ async fn android_pick_files(
             }
             1 => break,
             -1 => {
-                let _ = crate::platform::android::with_app(|env, activity| {
+                _ = crate::platform::android::with_app(|env, activity| {
                     let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
                     Ok(())
                 });
                 return Err(Error::Cancelled);
             }
             _ => {
-                let _ = crate::platform::android::with_app(|env, activity| {
+                _ = crate::platform::android::with_app(|env, activity| {
                     let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
                     Ok(())
                 });
@@ -361,10 +361,10 @@ async fn android_pick_files(
             return Ok(Vec::new());
         }
         let arr = JObjectArray::from(obj);
-        let len = env.get_array_length(&arr)? as usize;
+        let len = usize::try_from(env.get_array_length(&arr)?).unwrap_or(0);
         let mut out = Vec::with_capacity(len);
         for i in 0..len {
-            let jobj = env.get_object_array_element(&arr, i as i32)?;
+            let jobj = env.get_object_array_element(&arr, i32::try_from(i).unwrap_or(0))?;
             if jobj.is_null() {
                 out.push("file".to_owned());
                 continue;
@@ -383,10 +383,10 @@ async fn android_pick_files(
             return Ok(Vec::new());
         }
         let outer = JObjectArray::from(obj);
-        let len = env.get_array_length(&outer)? as usize;
+        let len = usize::try_from(env.get_array_length(&outer)?).unwrap_or(0);
         let mut out = Vec::with_capacity(len);
         for i in 0..len {
-            let inner_obj = env.get_object_array_element(&outer, i as i32)?;
+            let inner_obj = env.get_object_array_element(&outer, i32::try_from(i).unwrap_or(0))?;
             if inner_obj.is_null() {
                 out.push(Vec::new());
                 continue;
@@ -397,7 +397,7 @@ async fn android_pick_files(
         }
         Ok(out)
     })?;
-    let _ = crate::platform::android::with_app(|env, activity| {
+    _ = crate::platform::android::with_app(|env, activity| {
         let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
         Ok(())
     });

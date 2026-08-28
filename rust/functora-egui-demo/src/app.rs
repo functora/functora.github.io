@@ -4,9 +4,9 @@
 use functora_egui::theme::shadcn_theme_dark::dark;
 use functora_egui::theme::shadcn_theme_light::light;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
-    FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet, Sidebar,
-    ToastState, ToastVariant, Typography, TypographyVariant,
+    AlertDialog, AlertDialogResult, Breadcrumb, Button, ButtonVariant, Command, CommandItem,
+    Dialog, Drawer, FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt,
+    Sheet, Sidebar, ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
 pub use functora_egui::PickResult;
@@ -42,6 +42,49 @@ impl std::str::FromStr for DemoRoute {
             "/about" => Ok(Self::About),
             _ => Err("unknown route".into()),
         }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ShowcaseRoute(pub String);
+
+impl Default for ShowcaseRoute {
+    fn default() -> Self {
+        Self("Overview".to_string())
+    }
+}
+
+impl std::fmt::Display for ShowcaseRoute {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0.to_lowercase())
+    }
+}
+
+impl std::str::FromStr for ShowcaseRoute {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let trimmed = s.trim();
+        if let Some(idx) = component_index(trimmed) {
+            Ok(Self(component_name(idx).to_string()))
+        } else {
+            let lower = trimmed.to_lowercase();
+            if let Some(idx) = component_index(&lower) {
+                Ok(Self(component_name(idx).to_string()))
+            } else {
+                Err(format!("unknown component: {s}"))
+            }
+        }
+    }
+}
+
+impl ShowcaseRoute {
+    #[must_use]
+    pub fn from_flat(idx: usize) -> Self {
+        Self(component_name(idx).to_string())
+    }
+    #[must_use]
+    pub fn to_flat(&self) -> Option<usize> {
+        component_index(&self.0)
     }
 }
 
@@ -564,6 +607,7 @@ pub struct ShowcaseApp {
     pub sidebar_init_done: bool,
     pub selected: usize,
     pub prev_selected: usize,
+    pub router: functora_egui::route::AppRouter<ShowcaseRoute, ()>,
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
@@ -628,6 +672,7 @@ impl Default for ShowcaseApp {
             sidebar_init_done: false,
             selected: 0,
             prev_selected: 0,
+            router: functora_egui::route::AppRouter::new(&mut (), ShowcaseRoute::default()),
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
@@ -705,8 +750,24 @@ impl ShowcaseApp {
         let mut this = Self::default();
         this.nav.sidebar_collapsed = initial_collapsed;
         this.sidebar_init_done = false;
-        this.selected = initial_selected();
-        this.prev_selected = this.selected;
+        #[cfg(target_arch = "wasm32")]
+        {
+            let mut tmp = ();
+            let router = functora_egui::route::AppRouter::new(&mut tmp, ShowcaseRoute::default());
+            let current = router.current().clone();
+            this.router = router;
+            this.selected = current.to_flat().unwrap_or_else(initial_selected);
+            this.prev_selected = this.selected;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            this.selected = initial_selected();
+            this.prev_selected = this.selected;
+            this.router = functora_egui::route::AppRouter::new(
+                &mut (),
+                ShowcaseRoute::from_flat(this.selected),
+            );
+        }
         this
     }
 
@@ -725,6 +786,8 @@ impl ShowcaseApp {
         self.nav.sidebar_collapsed = ctx.on_mobile();
         self.sidebar_init_done = true;
         self.prev_selected = usize::MAX;
+        self.router.navigate(&mut (), ShowcaseRoute::default());
+        self.selected = 0;
         self.apply_theme(ctx);
         ctx.request_repaint();
     }
@@ -734,6 +797,20 @@ impl ShowcaseApp {
             self.dialogs.command_open = !self.dialogs.command_open;
             self.command_search.clear();
             ctx.request_repaint();
+        }
+    }
+
+    pub(crate) fn navigate_to(&mut self, idx: usize) {
+        self.selected = idx;
+        let route = ShowcaseRoute::from_flat(idx);
+        self.router.navigate(&mut (), route);
+    }
+
+    fn sync_from_router(&mut self) {
+        if let Some(idx) = self.router.current().to_flat()
+            && idx != self.selected
+        {
+            self.selected = idx;
         }
     }
 
@@ -852,7 +929,7 @@ impl ShowcaseApp {
                 let flat = flat_index(cat_idx, item_idx);
                 let selected = flat == self.selected;
                 if ui.add(section_button(def, selected).full_width()).clicked() {
-                    self.selected = flat;
+                    self.navigate_to(flat);
                     close |= ui.on_mobile();
                     ui.ctx().request_repaint();
                 }
@@ -988,10 +1065,21 @@ impl ShowcaseApp {
                     &mut self.command_search,
                 )
             {
-                self.selected = idx;
+                self.navigate_to(idx);
                 ctx.request_repaint();
             }
         }
+    }
+
+    fn category_of(flat: usize) -> Option<(&'static str, usize)> {
+        let mut remaining = flat;
+        for (cat_idx, (cat_name, _, items)) in CATEGORIES.iter().enumerate() {
+            if remaining < items.len() {
+                return Some((cat_name, cat_idx));
+            }
+            remaining -= items.len();
+        }
+        None
     }
 
     fn render_component(&mut self, ui: &mut egui::Ui) {
@@ -1116,6 +1204,8 @@ impl eframe::App for ShowcaseApp {
         self.apply_theme(&ctx);
         self.handle_shortcuts(&ctx);
         self.poll_platform_promises(&ctx);
+        self.router.ui(ui, &mut ());
+        self.sync_from_router();
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
 
@@ -1192,6 +1282,44 @@ impl eframe::App for ShowcaseApp {
                         collapsed = true;
                     }
                     self.nav.sidebar_collapsed = collapsed;
+                }
+                {
+                    let name = component_name(self.selected);
+                    if let Some((cat_name, cat_idx)) = Self::category_of(self.selected) {
+                        let items: Vec<String> = if cat_name == "Overview" {
+                            vec!["Home".to_string()]
+                        } else {
+                            vec!["Home".to_string(), cat_name.to_string(), name.to_string()]
+                        };
+                        let mut nav_target: Option<(usize, usize)> = None;
+                        let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
+                        let available_w = ui10.available_width();
+                        let strip = egui::Frame::NONE
+                            .fill(strip_theme.card)
+                            .inner_margin(egui::Margin::symmetric(12, 8))
+                            .show(ui10, |ui_strip| {
+                                ui_strip.set_min_width(available_w - 24.0);
+                                if let Some(idx) = Breadcrumb::new(items).show(ui_strip) {
+                                    nav_target = Some((idx, cat_idx));
+                                }
+                            });
+                        let _ = ui10.painter().hline(
+                            ui10.max_rect().x_range(),
+                            strip.response.rect.max.y + 0.5,
+                            egui::Stroke::new(1.0, strip_theme.border),
+                        );
+                        if let Some((idx, c_idx)) = nav_target {
+                            match idx {
+                                0 => self.navigate_to(0),
+                                1 if cat_name != "Overview" => {
+                                    let first = flat_index(c_idx, 0);
+                                    self.navigate_to(first);
+                                }
+                                _ => {}
+                            }
+                            ui10.ctx().request_repaint();
+                        }
+                    }
                 }
                 let should_scroll_top = self.selected != self.prev_selected;
                 if should_scroll_top {

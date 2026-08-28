@@ -1444,6 +1444,7 @@ dependencies = [
  "eframe",
  "egui",
  "egui_flex",
+ "form_urlencoded",
  "functora-core",
  "gloo-timers",
  "jni 0.21.1",

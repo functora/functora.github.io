@@ -1143,6 +1143,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "egui_inbox"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74b3d5330ea01119983d981199048a9783edf89f9d0ad79db1a9965a5930af6f"
+dependencies = [
+ "egui",
+ "parking_lot",
+]
+
+[[package]]
+name = "egui_router"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91853ac893dd7ca084585dddfc21d91a9488d083bebb530ce73dd4a44d8f6840"
+dependencies = [
+ "egui",
+ "egui_inbox",
+ "form_urlencoded",
+ "js-sys",
+ "matchit",
+ "thiserror 2.0.20",
+ "wasm-bindgen",
+ "web-sys",
+]
+
+[[package]]
 name = "either"
 version = "1.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1414,6 +1440,8 @@ dependencies = [
  "eframe",
  "egui",
  "egui_flex",
+ "egui_router",
+ "form_urlencoded",
  "functora-core",
  "gloo-timers",
  "image",
@@ -2185,6 +2213,12 @@ dependencies = [
  "tendril",
  "web_atoms",
 ]
+
+[[package]]
+name = "matchit"
+version = "0.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8863b587001c1b9a8a4e36008cebc6b3612cb1226fe2de94858e06092687b608"
 
 [[package]]
 name = "memchr"

@@ -25,6 +25,7 @@ pub mod platform;
 pub mod progress;
 pub mod pwa;
 pub mod responsive;
+pub mod route;
 pub mod share;
 pub mod storage;
 pub mod theme;

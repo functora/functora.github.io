@@ -38,7 +38,7 @@ impl crate::app::ShowcaseApp {
                 .clicked()
                     && let Some(idx) = crate::app::component_index("Button")
                 {
-                    self.selected = idx;
+                    self.navigate_to(idx);
                     ctx.request_repaint();
                 }
                 if f.add(
@@ -51,7 +51,7 @@ impl crate::app::ShowcaseApp {
                 .clicked()
                     && let Some(idx) = crate::app::component_index("Typography")
                 {
-                    self.selected = idx;
+                    self.navigate_to(idx);
                     ctx.request_repaint();
                 }
                 if f.add(
@@ -64,7 +64,7 @@ impl crate::app::ShowcaseApp {
                 .clicked()
                     && let Some(idx) = crate::app::component_index("Breakpoint")
                 {
-                    self.selected = idx;
+                    self.navigate_to(idx);
                     ctx.request_repaint();
                 }
             });
@@ -86,7 +86,7 @@ impl crate::app::ShowcaseApp {
                         .inner
                         .clicked()
                     {
-                        self.selected = flat;
+                        self.navigate_to(flat);
                         ctx.request_repaint();
                     }
                 }

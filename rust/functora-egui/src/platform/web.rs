@@ -356,3 +356,21 @@ pub fn location_href() -> Option<String> {
 pub fn location_hash() -> Option<String> {
     web_sys::window()?.location().hash().ok()
 }
+
+pub fn history_push(url: &str) -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    history
+        .push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(url))
+        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    Ok(())
+}
+
+pub fn history_replace(url: &str) -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    history
+        .replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(url))
+        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    Ok(())
+}

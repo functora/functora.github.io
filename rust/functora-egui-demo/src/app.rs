@@ -607,6 +607,8 @@ pub struct ShowcaseApp {
     pub sidebar_init_done: bool,
     pub selected: usize,
     pub prev_selected: usize,
+    pub nav_history: Vec<usize>,
+    pub nav_history_pos: usize,
     pub router: functora_egui::route::AppRouter<ShowcaseRoute, ()>,
     pub dialogs: DialogState,
     pub command_search: String,
@@ -672,6 +674,8 @@ impl Default for ShowcaseApp {
             sidebar_init_done: false,
             selected: 0,
             prev_selected: 0,
+            nav_history: vec![0],
+            nav_history_pos: 0,
             router: functora_egui::route::AppRouter::new(&mut (), ShowcaseRoute::default()),
             dialogs: DialogState::default(),
             command_search: String::new(),
@@ -755,14 +759,19 @@ impl ShowcaseApp {
             let mut tmp = ();
             let router = functora_egui::route::AppRouter::new(&mut tmp, ShowcaseRoute::default());
             let current = router.current().clone();
+            let initial_flat = current.to_flat().unwrap_or_else(initial_selected);
             this.router = router;
-            this.selected = current.to_flat().unwrap_or_else(initial_selected);
+            this.selected = initial_flat;
             this.prev_selected = this.selected;
+            this.nav_history = vec![initial_flat];
+            this.nav_history_pos = 0;
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
             this.selected = initial_selected();
             this.prev_selected = this.selected;
+            this.nav_history = vec![this.selected];
+            this.nav_history_pos = 0;
             this.router = functora_egui::route::AppRouter::new(
                 &mut (),
                 ShowcaseRoute::from_flat(this.selected),
@@ -804,6 +813,9 @@ impl ShowcaseApp {
         self.selected = idx;
         let route = ShowcaseRoute::from_flat(idx);
         self.router.navigate(&mut (), route);
+        self.nav_history.truncate(self.nav_history_pos + 1);
+        self.nav_history.push(idx);
+        self.nav_history_pos = self.nav_history.len() - 1;
     }
 
     fn sync_from_router(&mut self) {
@@ -811,6 +823,12 @@ impl ShowcaseApp {
             && idx != self.selected
         {
             self.selected = idx;
+            if let Some(pos) = self.nav_history.iter().position(|&i| i == idx) {
+                self.nav_history_pos = pos;
+            } else {
+                self.nav_history.push(idx);
+                self.nav_history_pos = self.nav_history.len() - 1;
+            }
         }
     }
 
@@ -1294,13 +1312,111 @@ impl eframe::App for ShowcaseApp {
                         let mut nav_target: Option<(usize, usize)> = None;
                         let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
                         let available_w = ui10.available_width();
+                        let can_go_back = self.nav_history_pos > 0;
+                        let can_go_forward =
+                            self.nav_history_pos < self.nav_history.len().saturating_sub(1);
                         let strip = egui::Frame::NONE
                             .fill(strip_theme.card)
                             .inner_margin(egui::Margin::symmetric(12, 8))
                             .show(ui10, |ui_strip| {
                                 ui_strip.set_min_width(available_w - 24.0);
-                                if let Some(idx) = Breadcrumb::new(items).show(ui_strip) {
+                                let btn_size = ui_strip.responsive_spacing().touch_height;
+                                let icon_size = btn_size * 0.5;
+                                let btn_w = icon_size;
+                                let btn_reserved = btn_w + 4.0;
+                                let breadcrumb_inner = ui_strip.horizontal(|ui_inner| {
+                                    if can_go_back {
+                                        ui_inner.add_space(btn_reserved);
+                                    }
+                                    let resp = Breadcrumb::new(items.clone()).show(ui_inner);
+                                    if can_go_forward {
+                                        ui_inner.add_space(btn_w);
+                                    }
+                                    resp
+                                });
+                                if let Some(idx) = breadcrumb_inner.inner {
                                     nav_target = Some((idx, cat_idx));
+                                }
+                                let center_y = breadcrumb_inner.response.rect.center().y;
+                                if can_go_back {
+                                    let rect = egui::Rect::from_min_size(
+                                        egui::pos2(
+                                            breadcrumb_inner.response.rect.min.x - btn_reserved
+                                                + btn_w,
+                                            center_y - btn_w * 0.5,
+                                        ),
+                                        egui::vec2(btn_w, btn_w),
+                                    );
+                                    let response = ui_strip
+                                        .interact(
+                                            rect,
+                                            ui_strip.id().with("back_btn"),
+                                            egui::Sense::click(),
+                                        )
+                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
+                                    if response.clicked() {
+                                        self.nav_history_pos -= 1;
+                                        let idx = self.nav_history[self.nav_history_pos];
+                                        self.navigate_to(idx);
+                                        ui_strip.ctx().request_repaint();
+                                    }
+                                    if response.hovered() {
+                                        let _ = ui_strip.painter().rect_filled(
+                                            rect,
+                                            egui::CornerRadius::same(4),
+                                            strip_theme.accent,
+                                        );
+                                    }
+                                    let icon_rect = egui::Rect::from_center_size(
+                                        rect.center(),
+                                        egui::vec2(icon_size, icon_size),
+                                    );
+                                    functora_egui::icons::paint_icon::paint_icon(
+                                        ui_strip.painter(),
+                                        icon_rect,
+                                        &LucideIcon::ArrowLeft,
+                                        strip_theme.foreground,
+                                    );
+                                }
+                                if can_go_forward {
+                                    let breadcrumb_right = breadcrumb_inner.response.rect.max.x;
+                                    let rect = egui::Rect::from_min_size(
+                                        egui::pos2(
+                                            breadcrumb_right - btn_w,
+                                            center_y - btn_w * 0.5,
+                                        ),
+                                        egui::vec2(btn_w, btn_w),
+                                    );
+                                    let response = ui_strip
+                                        .interact(
+                                            rect,
+                                            ui_strip.id().with("fwd_btn"),
+                                            egui::Sense::click(),
+                                        )
+                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
+                                    if response.clicked() {
+                                        self.nav_history_pos += 1;
+                                        let idx = self.nav_history[self.nav_history_pos];
+                                        self.navigate_to(idx);
+                                        ui_strip.ctx().request_repaint();
+                                    }
+                                    if response.hovered() {
+                                        let _ = ui_strip.painter().rect_filled(
+                                            rect,
+                                            egui::CornerRadius::same(4),
+                                            strip_theme.accent,
+                                        );
+                                    }
+                                    let icon_rect = egui::Rect::from_center_size(
+                                        rect.center(),
+                                        egui::vec2(icon_size, icon_size),
+                                    );
+                                    functora_egui::icons::paint_icon::paint_icon(
+                                        ui_strip.painter(),
+                                        icon_rect,
+                                        &LucideIcon::ArrowRight,
+                                        strip_theme.foreground,
+                                    );
                                 }
                             });
                         let _ = ui10.painter().hline(

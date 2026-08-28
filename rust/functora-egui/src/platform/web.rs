@@ -374,3 +374,25 @@ pub fn history_replace(url: &str) -> Result<(), Error> {
         .map_err(|e| Error::JS(format!("{e:?}")))?;
     Ok(())
 }
+
+#[must_use]
+pub fn history_length() -> u32 {
+    web_sys::window()
+        .and_then(|w| w.history().ok())
+        .and_then(|h| h.length().ok())
+        .unwrap_or(0)
+}
+
+pub fn history_back() -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    history.back().map_err(|e| Error::JS(format!("{e:?}")))?;
+    Ok(())
+}
+
+pub fn history_forward() -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    history.forward().map_err(|e| Error::JS(format!("{e:?}")))?;
+    Ok(())
+}

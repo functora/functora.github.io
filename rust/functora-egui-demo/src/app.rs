@@ -1285,13 +1285,12 @@ impl eframe::App for ShowcaseApp {
                     ui10.add_space(-ui10.spacing().item_spacing.y);
                 }
                 {
-                    let name = component_name(self.selected);
-                    if let Some((cat_name, cat_idx)) = Self::category_of(self.selected) {
-                        let items: Vec<String> = if cat_name == "Overview" {
-                            vec!["Home".to_string()]
-                        } else {
-                            vec!["Home".to_string(), cat_name.to_string(), name.to_string()]
-                        };
+                    if let Some((cat_name, cat_idx)) = Self::category_of(self.selected)
+                        && cat_name != "Overview"
+                    {
+                        let name = component_name(self.selected);
+                        let items =
+                            vec!["Home".to_string(), cat_name.to_string(), name.to_string()];
                         let mut nav_target: Option<(usize, usize)> = None;
                         let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
                         let available_w = ui10.available_width();
@@ -1312,7 +1311,7 @@ impl eframe::App for ShowcaseApp {
                         if let Some((idx, c_idx)) = nav_target {
                             match idx {
                                 0 => self.navigate_to(0),
-                                1 if cat_name != "Overview" => {
+                                1 => {
                                     let first = flat_index(c_idx, 0);
                                     self.navigate_to(first);
                                 }

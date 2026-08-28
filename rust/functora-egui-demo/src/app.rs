@@ -810,6 +810,9 @@ impl ShowcaseApp {
     }
 
     pub(crate) fn navigate_to(&mut self, idx: usize) {
+        if self.nav_history.get(self.nav_history_pos) == Some(&idx) {
+            return;
+        }
         self.selected = idx;
         let route = ShowcaseRoute::from_flat(idx);
         self.router.navigate(&mut (), route);

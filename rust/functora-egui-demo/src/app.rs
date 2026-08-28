@@ -1303,18 +1303,29 @@ impl eframe::App for ShowcaseApp {
                     ui10.add_space(-ui10.spacing().item_spacing.y);
                 }
                 {
-                    if let Some((cat_name, cat_idx)) = Self::category_of(self.selected)
-                        && cat_name != "Overview"
-                    {
-                        let name = component_name(self.selected);
-                        let items =
-                            vec!["Home".to_string(), cat_name.to_string(), name.to_string()];
+                    let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
+                    let available_w = ui10.available_width();
+                    let can_go_back = self.nav_history_pos > 0;
+                    let can_go_forward =
+                        self.nav_history_pos < self.nav_history.len().saturating_sub(1);
+                    let show_breadcrumb = can_go_back
+                        || can_go_forward
+                        || Self::category_of(self.selected)
+                            .is_some_and(|(cat_name, _)| cat_name != "Overview");
+                    if show_breadcrumb {
+                        let (items, cat_idx) = if let Some((cat_name, cat_idx)) =
+                            Self::category_of(self.selected)
+                            && cat_name != "Overview"
+                        {
+                            let name = component_name(self.selected);
+                            (
+                                vec!["Home".to_string(), cat_name.to_string(), name.to_string()],
+                                Some(cat_idx),
+                            )
+                        } else {
+                            (vec!["Home".to_string()], None)
+                        };
                         let mut nav_target: Option<(usize, usize)> = None;
-                        let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
-                        let available_w = ui10.available_width();
-                        let can_go_back = self.nav_history_pos > 0;
-                        let can_go_forward =
-                            self.nav_history_pos < self.nav_history.len().saturating_sub(1);
                         let strip = egui::Frame::NONE
                             .fill(strip_theme.card)
                             .inner_margin(egui::Margin::symmetric(12, 8))
@@ -1335,7 +1346,7 @@ impl eframe::App for ShowcaseApp {
                                     resp
                                 });
                                 if let Some(idx) = breadcrumb_inner.inner {
-                                    nav_target = Some((idx, cat_idx));
+                                    nav_target = Some((idx, cat_idx.unwrap_or(0)));
                                 }
                                 let center_y = breadcrumb_inner.response.rect.center().y;
                                 if can_go_back {

@@ -1282,6 +1282,7 @@ impl eframe::App for ShowcaseApp {
                         collapsed = true;
                     }
                     self.nav.sidebar_collapsed = collapsed;
+                    ui10.add_space(-ui10.spacing().item_spacing.y);
                 }
                 {
                     let name = component_name(self.selected);

@@ -1357,7 +1357,9 @@ impl eframe::App for ShowcaseApp {
                                     if response.clicked() {
                                         self.nav_history_pos -= 1;
                                         let idx = self.nav_history[self.nav_history_pos];
-                                        self.navigate_to(idx);
+                                        self.selected = idx;
+                                        let route = ShowcaseRoute::from_flat(idx);
+                                        self.router.navigate(&mut (), route);
                                         ui_strip.ctx().request_repaint();
                                     }
                                     if response.hovered() {
@@ -1397,7 +1399,9 @@ impl eframe::App for ShowcaseApp {
                                     if response.clicked() {
                                         self.nav_history_pos += 1;
                                         let idx = self.nav_history[self.nav_history_pos];
-                                        self.navigate_to(idx);
+                                        self.selected = idx;
+                                        let route = ShowcaseRoute::from_flat(idx);
+                                        self.router.navigate(&mut (), route);
                                         ui_strip.ctx().request_repaint();
                                     }
                                     if response.hovered() {

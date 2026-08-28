@@ -50,13 +50,6 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn print_page() -> Result<(), Error> {
-    std::future::ready(()).await;
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    window.print().map_err(|e| Error::JS(format!("{e:?}")))?;
-    Ok(())
-}
-
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     use wasm_bindgen::JsCast as _;
     std::future::ready(()).await;

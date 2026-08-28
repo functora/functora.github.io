@@ -188,14 +188,6 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     })
 }
 
-pub async fn print_page() -> Result<(), Error> {
-    std::future::ready(()).await;
-    with_app(|env, activity| {
-        let _ = env.call_method(activity, "printPage", "()V", &[])?;
-        Ok(())
-    })
-}
-
 #[allow(clippy::needless_pass_by_value)]
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     std::future::ready(()).await;

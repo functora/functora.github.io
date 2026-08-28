@@ -18,7 +18,6 @@ impl crate::app::ShowcaseApp {
             || self.platform.share_rx.is_some()
             || self.platform.pick_rx.is_some()
             || self.platform.download_rx.is_some()
-            || self.platform.print_rx.is_some()
             || self.platform.pwa_rx.is_some()
             || self.platform.camera_rx.is_some()
             || self.platform.qr_rx.is_some()
@@ -119,14 +118,6 @@ impl crate::app::ShowcaseApp {
                 Err(_) => "Download disconnected".clone_into(&mut self.platform.download_status),
             }
         }
-        if let Some(rx) = self.platform.print_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(())) => "Print triggered".clone_into(&mut self.platform.print_status),
-                Ok(Err(e)) => self.platform.print_status = format!("Print failed: {e}"),
-                Err(mpsc::TryRecvError::Empty) => self.platform.print_rx = Some(rx),
-                Err(_) => "Print disconnected".clone_into(&mut self.platform.print_status),
-            }
-        }
         if let Some(rx) = self.platform.pwa_rx.take() {
             match rx.try_recv() {
                 Ok(Ok(msg)) => self.platform.pwa_status = msg,
@@ -180,7 +171,6 @@ impl crate::app::ShowcaseApp {
             || self.platform.share_rx.is_some()
             || self.platform.pick_rx.is_some()
             || self.platform.download_rx.is_some()
-            || self.platform.print_rx.is_some()
             || self.platform.pwa_rx.is_some()
             || self.platform.camera_rx.is_some()
             || self.platform.qr_rx.is_some()
@@ -658,46 +648,6 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_print(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
-        _ = Typography::muted(
-            "Print via `window.print()` (web), PrintManager (Android), stub on desktop.",
-        )
-        .show(ui);
-        ui.add_space(12.0);
-        let printing = self.platform.print_rx.is_some();
-        if ui
-            .add_enabled(
-                !printing,
-                Button::new(if printing {
-                    "Printing..."
-                } else {
-                    "Print page"
-                })
-                .icon(functora_egui::LucideIcon::Printer),
-            )
-            .clicked()
-        {
-            self.platform.print_rx = Some(spawn_async(async move {
-                functora_egui::print::print_page()
-                    .await
-                    .map_err(|e| e.to_string())
-            }));
-        }
-        if !self.platform.print_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.print_status));
-        }
-        ui.add_space(8.0);
-        _ = Typography::small("On desktop this will show 'Print not supported' - expected.")
-            .show(ui);
-
-        snippet(
-            ui,
-            "// Print: window.print() (web) / PrintManager (Android) / stub (desktop)\nuse functora_egui::print::print_page;\n\n// Triggers native print dialog\nprint_page().await?;",
-        );
-    }
-
     pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "NavStack<R>: push/go_back/can_go_back/has_navigated, platform-agnostic (replaces dioxus Router).",
@@ -1005,7 +955,7 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_in_flight(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("InFlight guard: prevents concurrent async actions (share/print/pick), auto-releases on drop.").show(ui);
+        _ = Typography::muted("InFlight guard: prevents concurrent async actions (share/pick), auto-releases on drop.").show(ui);
         ui.add_space(12.0);
         _ = Typography::small(format!(
             "In flight: {}",
@@ -1059,7 +1009,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// InFlight: prevents concurrent async actions\nuse functora_egui::in_flight::InFlight;\n\nlet in_flight = InFlight::new();\n\n// Try to claim exclusive access\nif let Some(_guard) = in_flight.claim() {\n    // Exclusive access granted\n    // Do async work (share/print/pick/download)...\n    // Guard auto-releases on drop\n} else {\n    // Already in flight - reject or queue\n    eprintln!(\"Action already in progress\");\n}\n\n// Check status\nin_flight.is_in_flight();",
+            "// InFlight: prevents concurrent async actions\nuse functora_egui::in_flight::InFlight;\n\nlet in_flight = InFlight::new();\n\n// Try to claim exclusive access\nif let Some(_guard) = in_flight.claim() {\n    // Exclusive access granted\n    // Do async work (share/pick/download)...\n    // Guard auto-releases on drop\n} else {\n    // Already in flight - reject or queue\n    eprintln!(\"Action already in progress\");\n}\n\n// Check status\nin_flight.is_in_flight();",
         );
     }
 

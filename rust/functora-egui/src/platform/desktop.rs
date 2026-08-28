@@ -34,55 +34,6 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     Ok(())
 }
 
-pub async fn print_page() -> Result<(), Error> {
-    std::future::ready(()).await;
-    #[cfg(target_os = "windows")]
-    {
-        use std::process::Command;
-        let output = Command::new("cmd")
-            .args([
-                "/C",
-                "rundll32.exe",
-                "mshtml.dll,PrintHTML",
-                "\"about:blank\"",
-            ])
-            .output()
-            .map_err(|e| Error::JS(format!("Print failed: {e}")))?;
-        if !output.status.success() {
-            return Err(Error::JS("Print command failed".into()));
-        }
-        Ok(())
-    }
-    #[cfg(target_os = "macos")]
-    {
-        use std::process::Command;
-        let output = Command::new("lpr")
-            .arg("-")
-            .output()
-            .map_err(|e| Error::JS(format!("Print failed: {e}")))?;
-        if !output.status.success() {
-            return Err(Error::JS("Print command failed".into()));
-        }
-        Ok(())
-    }
-    #[cfg(target_os = "linux")]
-    {
-        use std::process::Command;
-        let output = Command::new("lpr")
-            .arg("-")
-            .output()
-            .map_err(|e| Error::JS(format!("Print failed: {e}")))?;
-        if !output.status.success() {
-            return Err(Error::JS("Print command failed".into()));
-        }
-        Ok(())
-    }
-    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
-    {
-        Err(Error::JS("Print not supported on this platform".into()))
-    }
-}
-
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     let handle = rfd::AsyncFileDialog::new()
         .set_file_name(filename)

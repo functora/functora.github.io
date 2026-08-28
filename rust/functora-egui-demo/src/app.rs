@@ -563,6 +563,7 @@ pub struct ShowcaseApp {
     pub nav: NavState,
     pub sidebar_init_done: bool,
     pub selected: usize,
+    pub prev_selected: usize,
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
@@ -626,6 +627,7 @@ impl Default for ShowcaseApp {
             nav: NavState::default(),
             sidebar_init_done: false,
             selected: 0,
+            prev_selected: 0,
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
@@ -704,6 +706,7 @@ impl ShowcaseApp {
         this.nav.sidebar_collapsed = initial_collapsed;
         this.sidebar_init_done = false;
         this.selected = initial_selected();
+        this.prev_selected = this.selected;
         this
     }
 
@@ -721,6 +724,7 @@ impl ShowcaseApp {
         *self = Self::default();
         self.nav.sidebar_collapsed = ctx.on_mobile();
         self.sidebar_init_done = true;
+        self.prev_selected = usize::MAX;
         self.apply_theme(ctx);
         ctx.request_repaint();
     }
@@ -1189,27 +1193,33 @@ impl eframe::App for ShowcaseApp {
                     }
                     self.nav.sidebar_collapsed = collapsed;
                 }
+                let should_scroll_top = self.selected != self.prev_selected;
+                if should_scroll_top {
+                    self.prev_selected = self.selected;
+                }
                 let spacing = ui10.responsive_spacing();
                 let available = ui10.available_width();
                 let content_width = available.min(spacing.content_max_width);
                 let margin = ((available - content_width) * 0.5).max(0.0);
                 let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
-                _ = egui::ScrollArea::vertical()
-                    .auto_shrink([false; 2])
-                    .show(ui10, |ui12| {
-                        ui12.add_space(spacing.page_padding);
-                        _ = ui12.horizontal(|ui13| {
-                            ui13.add_space(margin);
-                            ui13.add_space(spacing.page_padding);
-                            _ = ui13.vertical(|ui14| {
-                                ui14.set_max_width(inner_width);
-                                self.render_component(ui14);
-                                ui14.add_space(48.0);
-                            });
-                            ui13.add_space(spacing.page_padding);
-                            ui13.add_space(margin);
+                let mut scroll = egui::ScrollArea::vertical().auto_shrink([false; 2]);
+                if should_scroll_top {
+                    scroll = scroll.vertical_scroll_offset(0.0);
+                }
+                _ = scroll.show(ui10, |ui12| {
+                    ui12.add_space(spacing.page_padding);
+                    _ = ui12.horizontal(|ui13| {
+                        ui13.add_space(margin);
+                        ui13.add_space(spacing.page_padding);
+                        _ = ui13.vertical(|ui14| {
+                            ui14.set_max_width(inner_width);
+                            self.render_component(ui14);
+                            ui14.add_space(48.0);
                         });
+                        ui13.add_space(spacing.page_padding);
+                        ui13.add_space(margin);
                     });
+                });
             });
 
         self.render_overlays(&ctx);

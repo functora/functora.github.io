@@ -610,6 +610,37 @@
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
+                  # Helper: check if crate has binary targets (is an application)
+                  has_binary_targets() {
+                    local crate_path="$1"
+                    # Check for explicit binary targets in Cargo.toml
+                    grep -q '\[\[bin\]\]' "$crate_path/Cargo.toml" 2>/dev/null || \
+                    grep -q 'autobins = true' "$crate_path/Cargo.toml" 2>/dev/null || \
+                    # Check for default binary entry point (src/main.rs)
+                    [ -f "$crate_path/src/main.rs" ]
+                  }
+
+                  # Check if crate is an eframe web app (binary + eframe dep)
+                  is_eframe_web_app() {
+                    local crate_path="$1"
+                    has_binary_targets "$crate_path" && \
+                    grep -qE '^eframe\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
+                  # Check if crate is an egui library (library + egui dep, for wasm32 lib checks)
+                  is_egui_library() {
+                    local crate_path="$1"
+                    ! has_binary_targets "$crate_path" && \
+                    grep -qE '^egui\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
+                  # Check if crate is a Dioxus app (for mobile only)
+                  is_dioxus_app() {
+                    local crate_path="$1"
+                    has_binary_targets "$crate_path" && \
+                    grep -qE '^dioxus\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
                   verify_crate() {
                     local crate="$1"
                     shift
@@ -617,11 +648,17 @@
                       && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      && if [ "$crate" = "cryptonote" ] || [ "$crate" = "cryptonote-egui" ] || [ "$crate" = "functora-egui-demo" ]; then
+                      # Mobile targets: eframe web apps + Dioxus apps
+                      if is_eframe_web_app "." || is_dioxus_app "."; then
                            for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
                              ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
                                && echo "==> $crate [$T]: mobile clippy: All good!"
                            done
+                         fi
+                      # wasm32 targets: eframe web apps + egui libraries
+                      if is_eframe_web_app "." || is_egui_library "."; then
+                           ${cargo}/bin/cargo clippy --target wasm32-unknown-unknown --all-features --all-targets "$@" -- -D warnings \
+                             && echo "==> $crate [wasm32-unknown-unknown]: clippy: All good!"
                          fi
                   }
                   if [ -f Cargo.toml ]; then

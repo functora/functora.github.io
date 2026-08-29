@@ -1,92 +1,19 @@
 //! Showcase app: an interactive catalog of every functora-egui widget,
 //! layout, and feature, with light/dark theming and responsive behavior.
 
+use functora_egui::i18n::detect_browser_language;
 use functora_egui::theme::shadcn_theme_dark::dark;
 use functora_egui::theme::shadcn_theme_light::light;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Breadcrumb, Button, ButtonVariant, Command, CommandItem,
-    Dialog, Drawer, FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt,
-    Sheet, Sidebar, ToastState, ToastVariant, Typography, TypographyVariant,
+    Dialog, Drawer, FieldDescription, Flex, Item, Label, LucideIcon, NavAction, ResponsiveExt,
+    ShadcnThemeExt, Sheet, Sidebar, ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
 pub use functora_egui::PickResult;
 pub type PickReceiver = std::sync::mpsc::Receiver<PickResult>;
 
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub enum DemoRoute {
-    #[default]
-    Home,
-    Profile,
-    Settings,
-    About,
-}
-
-impl std::fmt::Display for DemoRoute {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Home => write!(f, "Home"),
-            Self::Profile => write!(f, "Profile"),
-            Self::Settings => write!(f, "Settings"),
-            Self::About => write!(f, "About"),
-        }
-    }
-}
-
-impl std::str::FromStr for DemoRoute {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "/" | "/home" | "home" => Ok(Self::Home),
-            "/profile" => Ok(Self::Profile),
-            "/settings" => Ok(Self::Settings),
-            "/about" => Ok(Self::About),
-            _ => Err("unknown route".into()),
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ShowcaseRoute(pub String);
-
-impl Default for ShowcaseRoute {
-    fn default() -> Self {
-        Self("Overview".to_string())
-    }
-}
-
-impl std::fmt::Display for ShowcaseRoute {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0.to_lowercase())
-    }
-}
-
-impl std::str::FromStr for ShowcaseRoute {
-    type Err = String;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let trimmed = s.trim();
-        if let Some(idx) = component_index(trimmed) {
-            Ok(Self(component_name(idx).to_string()))
-        } else {
-            let lower = trimmed.to_lowercase();
-            if let Some(idx) = component_index(&lower) {
-                Ok(Self(component_name(idx).to_string()))
-            } else {
-                Err(format!("unknown component: {s}"))
-            }
-        }
-    }
-}
-
-impl ShowcaseRoute {
-    #[must_use]
-    pub fn from_flat(idx: usize) -> Self {
-        Self(component_name(idx).to_string())
-    }
-    #[must_use]
-    pub fn to_flat(&self) -> Option<usize> {
-        component_index(&self.0)
-    }
-}
+use crate::route::AppRoute;
 
 pub struct PlatformState {
     pub storage_key: String,
@@ -121,7 +48,6 @@ pub struct PlatformState {
     pub download_text: String,
     pub download_status: String,
     pub download_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pub nav: functora_egui::nav::NavStack<DemoRoute>,
     pub nav_input: String,
     pub progress_job: Option<functora_egui::progress::Job<functora_egui::progress::Stage>>,
     pub progress_running: bool,
@@ -189,7 +115,6 @@ impl Default for PlatformState {
             download_text: "Hello from functora-egui download!".to_owned(),
             download_status: String::new(),
             download_rx: None,
-            nav: functora_egui::nav::NavStack::new(),
             nav_input: "/about".to_owned(),
             progress_job: None,
             progress_running: false,
@@ -607,9 +532,7 @@ pub struct ShowcaseApp {
     pub sidebar_init_done: bool,
     pub selected: usize,
     pub prev_selected: usize,
-    pub nav_history: Vec<usize>,
-    pub nav_history_pos: usize,
-    pub router: functora_egui::route::AppRouter<ShowcaseRoute, ()>,
+    pub router: functora_egui::route::AppRouter<AppRoute, ()>,
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
@@ -674,9 +597,7 @@ impl Default for ShowcaseApp {
             sidebar_init_done: false,
             selected: 0,
             prev_selected: 0,
-            nav_history: vec![0],
-            nav_history_pos: 0,
-            router: functora_egui::route::AppRouter::new(&mut (), ShowcaseRoute::default()),
+            router: functora_egui::route::AppRouter::new(&mut (), AppRoute::default()),
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
@@ -757,25 +678,19 @@ impl ShowcaseApp {
         #[cfg(target_arch = "wasm32")]
         {
             let mut tmp = ();
-            let router = functora_egui::route::AppRouter::new(&mut tmp, ShowcaseRoute::default());
+            let router = functora_egui::route::AppRouter::new(&mut tmp, AppRoute::default());
             let current = router.current().clone();
             let initial_flat = current.to_flat().unwrap_or_else(initial_selected);
             this.router = router;
             this.selected = initial_flat;
             this.prev_selected = this.selected;
-            this.nav_history = vec![initial_flat];
-            this.nav_history_pos = 0;
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
             this.selected = initial_selected();
             this.prev_selected = this.selected;
-            this.nav_history = vec![this.selected];
-            this.nav_history_pos = 0;
-            this.router = functora_egui::route::AppRouter::new(
-                &mut (),
-                ShowcaseRoute::from_flat(this.selected),
-            );
+            this.router =
+                functora_egui::route::AppRouter::new(&mut (), AppRoute::from_flat(this.selected));
         }
         this
     }
@@ -795,7 +710,7 @@ impl ShowcaseApp {
         self.nav.sidebar_collapsed = ctx.on_mobile();
         self.sidebar_init_done = true;
         self.prev_selected = usize::MAX;
-        self.router.navigate(&mut (), ShowcaseRoute::default());
+        self.router.navigate(&mut (), AppRoute::default());
         self.selected = 0;
         self.apply_theme(ctx);
         ctx.request_repaint();
@@ -810,15 +725,12 @@ impl ShowcaseApp {
     }
 
     pub(crate) fn navigate_to(&mut self, idx: usize) {
-        if self.nav_history.get(self.nav_history_pos) == Some(&idx) {
-            return;
-        }
+        let route = match idx {
+            0 => AppRoute::Overview,
+            _ => AppRoute::Component(idx),
+        };
         self.selected = idx;
-        let route = ShowcaseRoute::from_flat(idx);
         self.router.navigate(&mut (), route);
-        self.nav_history.truncate(self.nav_history_pos + 1);
-        self.nav_history.push(idx);
-        self.nav_history_pos = self.nav_history.len() - 1;
     }
 
     fn sync_from_router(&mut self) {
@@ -826,12 +738,6 @@ impl ShowcaseApp {
             && idx != self.selected
         {
             self.selected = idx;
-            if let Some(pos) = self.nav_history.iter().position(|&i| i == idx) {
-                self.nav_history_pos = pos;
-            } else {
-                self.nav_history.push(idx);
-                self.nav_history_pos = self.nav_history.len() - 1;
-            }
         }
     }
 
@@ -1308,133 +1214,37 @@ impl eframe::App for ShowcaseApp {
                 {
                     let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
                     let available_w = ui10.available_width();
-                    let can_go_back = self.nav_history_pos > 0;
-                    let can_go_forward =
-                        self.nav_history_pos < self.nav_history.len().saturating_sub(1);
-                    let show_breadcrumb = can_go_back
-                        || can_go_forward
+                    let show_breadcrumb = self.router.history().can_go_back()
+                        || self.router.history().can_go_forward()
                         || Self::category_of(self.selected)
                             .is_some_and(|(cat_name, _)| cat_name != "Overview");
                     if show_breadcrumb {
-                        let (items, cat_idx) = if let Some((cat_name, cat_idx)) =
-                            Self::category_of(self.selected)
-                            && cat_name != "Overview"
-                        {
-                            let name = component_name(self.selected);
-                            (
-                                vec!["Home".to_string(), cat_name.to_string(), name.to_string()],
-                                Some(cat_idx),
-                            )
-                        } else {
-                            (vec!["Home".to_string()], None)
-                        };
-                        let mut nav_target: Option<(usize, usize)> = None;
                         let strip = egui::Frame::NONE
                             .fill(strip_theme.card)
                             .inner_margin(egui::Margin::symmetric(12, 8))
                             .show(ui10, |ui_strip| {
                                 ui_strip.set_min_width(available_w - 24.0);
-                                let btn_size = ui_strip.responsive_spacing().touch_height;
-                                let icon_size = btn_size * 0.5;
-                                let btn_w = icon_size;
-                                let btn_reserved = btn_w + 4.0;
-                                let breadcrumb_inner = ui_strip.horizontal(|ui_inner| {
-                                    if can_go_back {
-                                        ui_inner.add_space(btn_reserved);
+                                let lang = detect_browser_language();
+                                if let Some(action) =
+                                    Breadcrumb::new(self.router.current(), self.router.history())
+                                        .show(ui_strip, lang)
+                                {
+                                    match action {
+                                        NavAction::Back => {
+                                            _ = self.router.go_back(&mut ());
+                                            ui_strip.ctx().request_repaint();
+                                        }
+                                        NavAction::Forward => {
+                                            _ = self.router.go_forward(&mut ());
+                                            ui_strip.ctx().request_repaint();
+                                        }
+                                        NavAction::Route(route) => {
+                                            if let Some(idx) = route.to_flat() {
+                                                self.navigate_to(idx);
+                                            }
+                                            ui_strip.ctx().request_repaint();
+                                        }
                                     }
-                                    let resp = Breadcrumb::new(items.clone()).show(ui_inner);
-                                    if can_go_forward {
-                                        ui_inner.add_space(btn_w);
-                                    }
-                                    resp
-                                });
-                                if let Some(idx) = breadcrumb_inner.inner {
-                                    nav_target = Some((idx, cat_idx.unwrap_or(0)));
-                                }
-                                let center_y = breadcrumb_inner.response.rect.center().y;
-                                if can_go_back {
-                                    let rect = egui::Rect::from_min_size(
-                                        egui::pos2(
-                                            breadcrumb_inner.response.rect.min.x - btn_reserved
-                                                + btn_w,
-                                            center_y - btn_w * 0.5,
-                                        ),
-                                        egui::vec2(btn_w, btn_w),
-                                    );
-                                    let response = ui_strip
-                                        .interact(
-                                            rect,
-                                            ui_strip.id().with("back_btn"),
-                                            egui::Sense::click(),
-                                        )
-                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
-                                    if response.clicked() {
-                                        self.nav_history_pos -= 1;
-                                        let idx = self.nav_history[self.nav_history_pos];
-                                        self.selected = idx;
-                                        let route = ShowcaseRoute::from_flat(idx);
-                                        self.router.navigate(&mut (), route);
-                                        ui_strip.ctx().request_repaint();
-                                    }
-                                    if response.hovered() {
-                                        let _ = ui_strip.painter().rect_filled(
-                                            rect,
-                                            egui::CornerRadius::same(4),
-                                            strip_theme.accent,
-                                        );
-                                    }
-                                    let icon_rect = egui::Rect::from_center_size(
-                                        rect.center(),
-                                        egui::vec2(icon_size, icon_size),
-                                    );
-                                    functora_egui::icons::paint_icon::paint_icon(
-                                        ui_strip.painter(),
-                                        icon_rect,
-                                        &LucideIcon::ArrowLeft,
-                                        strip_theme.foreground,
-                                    );
-                                }
-                                if can_go_forward {
-                                    let breadcrumb_right = breadcrumb_inner.response.rect.max.x;
-                                    let rect = egui::Rect::from_min_size(
-                                        egui::pos2(
-                                            breadcrumb_right - btn_w,
-                                            center_y - btn_w * 0.5,
-                                        ),
-                                        egui::vec2(btn_w, btn_w),
-                                    );
-                                    let response = ui_strip
-                                        .interact(
-                                            rect,
-                                            ui_strip.id().with("fwd_btn"),
-                                            egui::Sense::click(),
-                                        )
-                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
-                                    if response.clicked() {
-                                        self.nav_history_pos += 1;
-                                        let idx = self.nav_history[self.nav_history_pos];
-                                        self.selected = idx;
-                                        let route = ShowcaseRoute::from_flat(idx);
-                                        self.router.navigate(&mut (), route);
-                                        ui_strip.ctx().request_repaint();
-                                    }
-                                    if response.hovered() {
-                                        let _ = ui_strip.painter().rect_filled(
-                                            rect,
-                                            egui::CornerRadius::same(4),
-                                            strip_theme.accent,
-                                        );
-                                    }
-                                    let icon_rect = egui::Rect::from_center_size(
-                                        rect.center(),
-                                        egui::vec2(icon_size, icon_size),
-                                    );
-                                    functora_egui::icons::paint_icon::paint_icon(
-                                        ui_strip.painter(),
-                                        icon_rect,
-                                        &LucideIcon::ArrowRight,
-                                        strip_theme.foreground,
-                                    );
                                 }
                             });
                         let _ = ui10.painter().hline(
@@ -1442,17 +1252,6 @@ impl eframe::App for ShowcaseApp {
                             strip.response.rect.max.y + 0.5,
                             egui::Stroke::new(1.0, strip_theme.border),
                         );
-                        if let Some((idx, c_idx)) = nav_target {
-                            match idx {
-                                0 => self.navigate_to(0),
-                                1 => {
-                                    let first = flat_index(c_idx, 0);
-                                    self.navigate_to(first);
-                                }
-                                _ => {}
-                            }
-                            ui10.ctx().request_repaint();
-                        }
                     }
                 }
                 let should_scroll_top = self.selected != self.prev_selected;

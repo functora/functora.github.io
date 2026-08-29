@@ -3,7 +3,7 @@
 
 use functora_egui::{
     AreaChart, AreaSeries, Avatar, Badge, Breadcrumb, Button, ButtonVariant, Calendar, Carousel,
-    Flex, LucideIcon, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
+    Flex, LucideIcon, NavAction, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
 };
 
 use functora_egui::snippet;
@@ -28,31 +28,52 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_breadcrumb(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Navigation trail of the current location.").show(ui);
+        _ = Typography::muted("Navigation trail using generic Breadcrumb with NavHistory.")
+            .show(ui);
         ui.add_space(12.0);
-        let items = vec![
-            "Home".to_owned(),
-            "Components".to_owned(),
-            "Data Display".to_owned(),
-        ];
-        let clicked = Breadcrumb::new(items).show(ui);
-        if let Some(idx) = clicked {
-            self.toast.add(
-                format!("Breadcrumb: item {idx}"),
-                functora_egui::ToastVariant::Default,
-                ui.ctx().input(|i| i.time),
-            );
+        let lang = functora_egui::i18n::detect_browser_language();
+        if let Some(action) =
+            Breadcrumb::new(self.router.current(), self.router.history()).show(ui, lang)
+        {
+            match action {
+                NavAction::Back => {
+                    _ = self.router.go_back(&mut ());
+                }
+                NavAction::Forward => {
+                    _ = self.router.go_forward(&mut ());
+                }
+                NavAction::Route(route) => {
+                    if let Some(idx) = route.to_flat() {
+                        self.navigate_to(idx);
+                    }
+                }
+            }
         }
         ui.add_space(12.0);
-        _ = Typography::small("Custom separator").show(ui);
+        _ = Typography::small("Custom separator (uses router history)").show(ui);
         ui.add_space(4.0);
-        _ = Breadcrumb::new(vec!["a".to_owned(), "b".to_owned(), "c".to_owned()])
-            .separator("/")
-            .show(ui);
+        if let Some(action) = Breadcrumb::new(self.router.current(), self.router.history())
+            .separator(" > ")
+            .show(ui, lang)
+        {
+            match action {
+                NavAction::Back => {
+                    _ = self.router.go_back(&mut ());
+                }
+                NavAction::Forward => {
+                    _ = self.router.go_forward(&mut ());
+                }
+                NavAction::Route(route) => {
+                    if let Some(idx) = route.to_flat() {
+                        self.navigate_to(idx);
+                    }
+                }
+            }
+        }
 
         snippet(
             ui,
-            "// Breadcrumb: navigation trail\nuse functora_egui::Breadcrumb;\n\nlet items = vec![\"Home\", \"Components\", \"Data Display\"];\n\n// Default\nlet clicked = Breadcrumb::new(items).show(ui);\nif let Some(idx) = clicked {\n    eprintln!(\"Breadcrumb: item {idx}\");\n}\n\n// Custom separator\nBreadcrumb::new(vec![\"a\", \"b\", \"c\"])\n    .separator(\"/\")\n    .show(ui);",
+            "// Generic Breadcrumb with NavHistory\nuse functora_egui::{Breadcrumb, NavAction};\n\nlet lang = functora_egui::i18n::detect_browser_language();\nif let Some(action) = Breadcrumb::new(router.current(), router.history())\n    .show(ui, lang)\n{\n    match action {\n        NavAction::Back => router.go_back(&mut ()),\n        NavAction::Forward => router.go_forward(&mut ()),\n        NavAction::Route(route) => router.navigate(&mut (), route),\n    }\n}",
         );
     }
 

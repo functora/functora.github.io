@@ -1,81 +1,73 @@
+use crate::route::Routable;
+
 #[derive(Debug, Clone)]
-pub struct NavStack<R> {
+pub struct NavHistory<R: Routable> {
     stack: Vec<R>,
-    idx: u32,
+    pos: usize,
 }
 
-impl<R> NavStack<R>
-where
-    R: Default + PartialEq + Clone,
-{
+impl<R: Routable> NavHistory<R> {
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(initial: R) -> Self {
         Self {
-            stack: vec![R::default()],
-            idx: 0,
+            stack: vec![initial],
+            pos: 0,
         }
     }
 
-    /// # Panics
-    /// Panics if the stack is empty, which cannot happen for a correctly constructed `NavStack`.
     #[must_use]
     pub fn current(&self) -> &R {
-        self.stack.last().unwrap_or_else(|| {
-            panic!("NavStack empty");
-        })
+        &self.stack[self.pos]
     }
 
     pub fn push(&mut self, route: R) {
-        if route == R::default() {
-            self.reset();
+        self.stack.truncate(self.pos + 1);
+        self.stack.push(route);
+        self.pos = self.stack.len() - 1;
+    }
+
+    pub fn replace(&mut self, route: R) {
+        self.stack[self.pos] = route;
+    }
+
+    pub fn go_back(&mut self) -> Option<&R> {
+        if self.pos > 0 {
+            self.pos -= 1;
+            Some(self.current())
         } else {
-            self.idx = self.idx.saturating_add(1);
-            self.stack.push(route);
+            None
         }
     }
 
-    pub fn push_route(&mut self, href: &str)
-    where
-        R: std::str::FromStr,
-    {
-        if let Ok(route) = href.parse::<R>() {
-            self.push(route);
-        }
-    }
-
-    pub fn go_back(&mut self) -> bool {
-        if self.stack.len() > 1 {
-            _ = self.stack.pop();
-            self.idx = self.idx.saturating_sub(1);
-            true
+    pub fn go_forward(&mut self) -> Option<&R> {
+        if self.pos + 1 < self.stack.len() {
+            self.pos += 1;
+            Some(self.current())
         } else {
-            self.idx = 0;
-            false
+            None
         }
     }
 
     #[must_use]
     pub fn can_go_back(&self) -> bool {
-        self.stack.len() > 1
+        self.pos > 0
     }
 
     #[must_use]
-    pub fn has_navigated(&self) -> bool {
-        self.idx > 0
+    pub fn can_go_forward(&self) -> bool {
+        self.pos + 1 < self.stack.len()
     }
 
-    pub fn reset(&mut self) {
-        self.stack.truncate(1);
-        self.stack[0] = R::default();
-        self.idx = 0;
+    pub fn truncate_forward(&mut self) {
+        self.stack.truncate(self.pos + 1);
     }
 
-    pub fn increment(&mut self) {
-        self.idx = self.idx.saturating_add(1);
-    }
-
-    pub fn decrement(&mut self) {
-        self.idx = self.idx.saturating_sub(1);
+    pub fn sync(&mut self, route: &R) {
+        if let Some(pos) = self.stack.iter().position(|r| r == route) {
+            self.pos = pos;
+        } else {
+            self.push(route.clone());
+        }
     }
 
     #[must_use]
@@ -84,16 +76,7 @@ where
     }
 
     #[must_use]
-    pub fn idx(&self) -> u32 {
-        self.idx
-    }
-}
-
-impl<R> Default for NavStack<R>
-where
-    R: Default + PartialEq + Clone,
-{
-    fn default() -> Self {
-        Self::new()
+    pub fn pos(&self) -> usize {
+        self.pos
     }
 }

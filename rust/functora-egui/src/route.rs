@@ -1,5 +1,8 @@
+use std::borrow::Cow;
 use std::fmt::Display;
 use std::str::FromStr;
+
+use functora_core::i18n::Language;
 
 pub trait Routable:
     Display + FromStr + Clone + PartialEq + Eq + std::fmt::Debug + Send + Sync + 'static
@@ -53,6 +56,23 @@ impl<T> Routable for T where
 {
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RouteKind {
+    Page,
+    Category,
+    Modal,
+    External,
+}
+
+pub trait RouteMetadata: Routable {
+    fn label(&self, lang: Language) -> Cow<'static, str>;
+    fn parent(&self) -> Option<Self>;
+    fn children(&self) -> Vec<Self>;
+    fn kind(&self) -> RouteKind {
+        RouteKind::Page
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BreadcrumbSegment<R> {
     pub name: String,
@@ -60,42 +80,38 @@ pub struct BreadcrumbSegment<R> {
     pub is_last: bool,
 }
 
-pub fn breadcrumbs_for<R, F>(route: &R, mut category_lookup: F) -> Vec<BreadcrumbSegment<R>>
+pub fn breadcrumbs_for<R>(route: &R, lang: Language) -> Vec<BreadcrumbSegment<R>>
 where
-    R: Routable + Clone,
-    F: FnMut(&R) -> Option<(&'static str, &'static str)>,
+    R: RouteMetadata + Clone,
 {
-    let Some((cat, comp)) = category_lookup(route) else {
-        return Vec::new();
-    };
-    if cat.is_empty() {
-        return vec![BreadcrumbSegment {
-            name: comp.to_string(),
-            route: route.clone(),
-            is_last: true,
-        }];
+    let mut chain = Vec::new();
+    let mut current = Some(route.clone());
+    while let Some(r) = current {
+        if r.kind() != RouteKind::Category {
+            chain.push(BreadcrumbSegment {
+                name: r.label(lang).into_owned(),
+                route: r.clone(),
+                is_last: false,
+            });
+        }
+        current = r.parent();
     }
-    vec![
-        BreadcrumbSegment {
-            name: cat.to_string(),
-            route: route.clone(),
-            is_last: false,
-        },
-        BreadcrumbSegment {
-            name: comp.to_string(),
-            route: route.clone(),
-            is_last: true,
-        },
-    ]
+    chain.reverse();
+    if let Some(last) = chain.last_mut() {
+        last.is_last = true;
+    }
+    chain
 }
 
 #[cfg(feature = "router")]
 pub mod router_impl {
     use super::Routable;
+    use crate::nav::NavHistory;
     use std::marker::PhantomData;
 
     pub struct AppRouter<R: Routable, S> {
         current: R,
+        history: NavHistory<R>,
         _s: PhantomData<S>,
     }
 
@@ -118,8 +134,10 @@ pub mod router_impl {
                     default.clone()
                 }
             };
+            let history = NavHistory::new(current.clone());
             Self {
                 current,
+                history,
                 _s: PhantomData,
             }
         }
@@ -128,36 +146,66 @@ pub mod router_impl {
             &self.current
         }
 
+        pub fn history(&self) -> &NavHistory<R> {
+            &self.history
+        }
+
+        pub fn history_mut(&mut self) -> &mut NavHistory<R> {
+            &mut self.history
+        }
+
         #[allow(clippy::needless_pass_by_value)]
         pub fn navigate(&mut self, _state: &mut S, route: R) {
-            self.current = route.clone();
-            history_push(&route);
+            self.history.push(route.clone());
+            self.current = route;
+            history_push(&self.current);
         }
 
         #[allow(clippy::needless_pass_by_value)]
         pub fn replace(&mut self, _state: &mut S, route: R) {
-            self.current = route.clone();
-            history_replace(&route);
+            self.history.replace(route.clone());
+            self.current = route;
+            history_replace(&self.current);
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
+        pub fn go_back(&mut self, _state: &mut S) -> Option<&R> {
+            if let Some(r) = self.history.go_back() {
+                self.current = r.clone();
+                history_push(&self.current);
+                Some(r)
+            } else {
+                None
+            }
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
+        pub fn go_forward(&mut self, _state: &mut S) -> Option<&R> {
+            if let Some(r) = self.history.go_forward() {
+                self.current = r.clone();
+                history_push(&self.current);
+                Some(r)
+            } else {
+                None
+            }
         }
 
         pub fn sync_from_url(&mut self, url: &str) -> Option<R> {
             let route = R::from_url(url)?;
-            if route != self.current {
+            if route == self.current {
+                None
+            } else {
                 self.current = route.clone();
-                return Some(route);
+                self.history.sync(&route);
+                Some(route)
             }
-            None
         }
 
         pub fn ui(&mut self, _ui: &mut egui::Ui, _state: &mut S) {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
-                    if let Some(route) = R::from_url(&href) {
-                        self.current = route;
-                    } else if href.split('?').next().unwrap_or("").ends_with('/') || href == "/" {
-                        self.current = R::default();
-                    }
+                    self.sync_from_url(&href);
                 }
             }
         }
@@ -203,10 +251,12 @@ pub mod router_impl {
 #[cfg(not(feature = "router"))]
 pub mod router_impl {
     use super::Routable;
+    use crate::nav::NavHistory;
     use std::marker::PhantomData;
 
     pub struct AppRouter<R: Routable, S> {
         current: R,
+        history: NavHistory<R>,
         _s: PhantomData<S>,
     }
 
@@ -229,8 +279,10 @@ pub mod router_impl {
                     default.clone()
                 }
             };
+            let history = NavHistory::new(current.clone());
             Self {
                 current,
+                history,
                 _s: PhantomData,
             }
         }
@@ -239,34 +291,66 @@ pub mod router_impl {
             &self.current
         }
 
+        pub fn history(&self) -> &NavHistory<R> {
+            &self.history
+        }
+
+        pub fn history_mut(&mut self) -> &mut NavHistory<R> {
+            &mut self.history
+        }
+
         #[allow(clippy::needless_pass_by_value)]
         pub fn navigate(&mut self, _state: &mut S, route: R) {
-            self.current = route.clone();
-            history_push(&route);
+            self.history.push(route.clone());
+            self.current = route;
+            history_push(&self.current);
         }
 
         #[allow(clippy::needless_pass_by_value)]
         pub fn replace(&mut self, _state: &mut S, route: R) {
-            self.current = route.clone();
-            history_replace(&route);
+            self.history.replace(route.clone());
+            self.current = route;
+            history_replace(&self.current);
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
+        pub fn go_back(&mut self, _state: &mut S) -> Option<&R> {
+            if let Some(r) = self.history.go_back() {
+                self.current = r.clone();
+                history_push(&self.current);
+                Some(r)
+            } else {
+                None
+            }
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
+        pub fn go_forward(&mut self, _state: &mut S) -> Option<&R> {
+            if let Some(r) = self.history.go_forward() {
+                self.current = r.clone();
+                history_push(&self.current);
+                Some(r)
+            } else {
+                None
+            }
         }
 
         pub fn sync_from_url(&mut self, url: &str) -> Option<R> {
             let route = R::from_url(url)?;
-            if route != self.current {
+            if route == self.current {
+                None
+            } else {
                 self.current = route.clone();
-                return Some(route);
+                self.history.sync(&route);
+                Some(route)
             }
-            None
         }
 
         pub fn ui(&mut self, _ui: &mut egui::Ui, _state: &mut S) {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
-                    if let Some(route) = R::from_url(&href) {
-                        self.current = route;
-                    }
+                    self.sync_from_url(&href);
                 }
             }
         }

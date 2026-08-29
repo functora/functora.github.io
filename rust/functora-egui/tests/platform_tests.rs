@@ -1,5 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
-use functora_egui::{deep_link, files, nav::NavStack, progress, storage, theme_extra::Theme};
+use functora_egui::{deep_link, files, nav::NavHistory, progress, storage, theme_extra::Theme};
 use std::sync::{Mutex, OnceLock, PoisonError};
 
 fn deep_link_lock() -> &'static Mutex<()> {
@@ -69,7 +69,7 @@ fn deep_link_poll() {
     assert!(polled.is_some());
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 enum Route {
     #[default]
     Home,
@@ -77,13 +77,23 @@ enum Route {
     Settings,
 }
 
+impl std::fmt::Display for Route {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Home => write!(f, "home"),
+            Self::About => write!(f, "about"),
+            Self::Settings => write!(f, "settings"),
+        }
+    }
+}
+
 impl std::str::FromStr for Route {
     type Err = String;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "/about" => Ok(Route::About),
-            "/settings" => Ok(Route::Settings),
-            "/" => Ok(Route::Home),
+            "/about" | "about" => Ok(Route::About),
+            "/settings" | "settings" => Ok(Route::Settings),
+            "/" | "home" => Ok(Route::Home),
             _ => Err("unknown".into()),
         }
     }
@@ -91,36 +101,36 @@ impl std::str::FromStr for Route {
 
 #[test]
 fn nav_stack_push_and_back() {
-    let mut nav: NavStack<Route> = NavStack::new();
+    let mut nav: NavHistory<Route> = NavHistory::new(Route::Home);
     assert_eq!(nav.current(), &Route::Home);
     assert!(!nav.can_go_back());
-    assert!(!nav.has_navigated());
     nav.push(Route::About);
     assert_eq!(nav.current(), &Route::About);
     assert!(nav.can_go_back());
-    assert!(nav.has_navigated());
-    assert!(nav.go_back());
+    _ = nav.go_back();
     assert_eq!(nav.current(), &Route::Home);
-    assert!(!nav.go_back());
+    _ = nav.go_back();
 }
 
 #[test]
 fn nav_stack_push_route() {
-    let mut nav: NavStack<Route> = NavStack::new();
-    nav.push_route("/about");
+    let mut nav: NavHistory<Route> = NavHistory::new(Route::Home);
+    nav.push(Route::About);
     assert_eq!(nav.current(), &Route::About);
-    nav.push_route("/unknown");
-    assert_eq!(nav.current(), &Route::About);
+    nav.push(Route::Settings);
+    assert_eq!(nav.current(), &Route::Settings);
 }
 
 #[test]
 fn nav_stack_reset() {
-    let mut nav: NavStack<Route> = NavStack::new();
+    let mut nav: NavHistory<Route> = NavHistory::new(Route::Home);
     nav.push(Route::About);
     nav.push(Route::Settings);
-    nav.reset();
+    nav.truncate_forward();
+    assert_eq!(nav.current(), &Route::Settings);
+    _ = nav.go_back();
+    _ = nav.go_back();
     assert_eq!(nav.current(), &Route::Home);
-    assert_eq!(nav.idx(), 0);
 }
 
 #[test]

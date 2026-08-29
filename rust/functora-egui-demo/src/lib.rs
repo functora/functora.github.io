@@ -1,6 +1,7 @@
 //! functora-egui-demo: showcase app for the functora-egui widget library.
 
 pub mod app;
+pub mod route;
 pub mod sections;
 
 pub use app::*;

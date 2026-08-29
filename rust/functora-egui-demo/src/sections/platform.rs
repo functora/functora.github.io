@@ -1,3 +1,4 @@
+use crate::route::AppRoute;
 use functora_egui::{
     Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress,
     ResponsiveExt, Separator, ShadcnThemeExt, Switch, Textarea, Typography, spawn_async,
@@ -650,81 +651,41 @@ impl crate::app::ShowcaseApp {
 
     pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "NavStack<R>: push/go_back/can_go_back/has_navigated, platform-agnostic (replaces dioxus Router).",
+            "NavHistory<R> + AppRouter<R, S>: push/go_back/go_forward, integrates with browser history."
         )
         .show(ui);
         ui.add_space(12.0);
-        _ = Typography::small(format!(
-            "Current: {} (idx {})",
-            self.platform.nav.current(),
-            self.platform.nav.idx()
-        ))
-        .show(ui);
-        _ = Typography::small(format!(
-            "Can go back: {}, Has navigated: {}",
-            self.platform.nav.can_go_back(),
-            self.platform.nav.has_navigated()
-        ))
-        .show(ui);
+        _ = Typography::small(format!("Current route: {}", self.router.current())).show(ui);
         ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-            for route in [
-                crate::app::DemoRoute::Home,
-                crate::app::DemoRoute::Profile,
-                crate::app::DemoRoute::Settings,
-                crate::app::DemoRoute::About,
-            ] {
-                let label = route.to_string();
-                if f.add(
-                    Button::new(&label)
-                        .variant(ButtonVariant::Outline)
-                        .size(functora_egui::ComponentSize::Sm),
-                )
-                .inner
-                .clicked()
-                {
-                    self.platform.nav.push(route);
-                }
-            }
-        });
-        ui.add_space(8.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
             if f.add(Button::new("Go back").icon(functora_egui::LucideIcon::ArrowLeft))
                 .inner
                 .clicked()
             {
-                _ = self.platform.nav.go_back();
+                _ = self.router.go_back(&mut ());
             }
-            if f.add(Button::new("Reset").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Go forward").icon(functora_egui::LucideIcon::ArrowRight))
                 .inner
                 .clicked()
             {
-                self.platform.nav.reset();
+                _ = self.router.go_forward(&mut ());
+            }
+            if f.add(Button::new("Navigate to Overview").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.router.navigate(&mut (), AppRoute::Overview);
             }
         });
         ui.add_space(8.0);
         _ = Card::new().show(ui, |ui2| {
-            _ = Typography::small("Go via string route").show(ui2);
+            _ = Typography::small("Example: NavHistory + AppRouter").show(ui2);
             ui2.add_space(4.0);
-            _ = Flex::row().gap(8.0).show(ui2, |f| {
-                _ = f.add(Input::new(&mut self.platform.nav_input).placeholder("/about"));
-                if f.add(Button::new("Push route").size(functora_egui::ComponentSize::Sm))
-                    .inner
-                    .clicked()
-                {
-                    self.platform
-                        .nav
-                        .push_route(&self.platform.nav_input.clone());
-                }
-            });
+            snippet(
+                ui2,
+                "// NavHistory: push / go_back / go_forward / sync\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::{AppRouter, Routable};\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(42));\nassert_eq!(history.current(), &AppRoute::Component(42));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&mut (), AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(42));\nrouter.go_back(&mut ());",
+            );
         });
-        ui.add_space(8.0);
-        _ = Typography::small(format!("Stack: {:?}", self.platform.nav.stack())).show(ui);
-
-        snippet(
-            ui,
-            "// NavStack: push / go_back / current / reset\nuse functora_egui::nav::NavStack;\n\nlet mut nav = NavStack::new();\n\n// Push a route (any type implementing Clone + PartialEq)\nnav.push(\"/settings\");\nnav.push(\"/profile\");\n\n// Current route\nlet current = nav.current();\nassert_eq!(current, \"/profile\");\n\n// Go back\nnav.go_back();\nassert_eq!(nav.current(), \"/settings\");\n\n// Check state\nnav.can_go_back(); // true\nnav.has_navigated(); // true\n\n// Reset\nnav.reset();\nassert_eq!(nav.current(), \"/\");",
-        );
     }
 
     pub(crate) fn demo_progress_worker(&mut self, ui: &mut egui::Ui) {

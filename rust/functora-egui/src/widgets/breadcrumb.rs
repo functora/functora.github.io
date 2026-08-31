@@ -4,7 +4,6 @@ use functora_core::i18n::Language;
 use crate::icons::lucide_icon::LucideIcon;
 use crate::icons::paint_icon::paint_icon;
 use crate::nav::NavHistory;
-use crate::responsive::responsive_ext::ResponsiveExt;
 use crate::route::{RouteMetadata, breadcrumbs_for};
 use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 
@@ -40,26 +39,28 @@ impl<'a, R: RouteMetadata> Breadcrumb<'a, R> {
         let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
         let mut action = None;
 
-        let btn_size = ui.responsive_spacing().touch_height * 0.5;
-        let icon_size = btn_size * 0.5;
+        let font_id = egui::FontId::proportional(14.0);
+        let sample_galley =
+            ui.painter()
+                .layout_no_wrap("A".into(), font_id.clone(), theme.foreground);
+        let pill_height = sample_galley.size().y + 8.0;
+        let btn_side = pill_height;
+        let icon_side = btn_side * 0.6;
 
         let _ = ui.horizontal(|ui_inner| {
             ui_inner.spacing_mut().item_spacing.x = 4.0;
 
             if self.history.can_go_back() {
-                let (rect, response) = ui_inner
-                    .allocate_at_least(vec2(btn_size, ui_inner.available_height()), Sense::click());
-                if ui_inner
-                    .interact(rect, ui_inner.id().with("back_btn"), Sense::click())
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
+                let (rect, mut response) =
+                    ui_inner.allocate_exact_size(vec2(btn_side, btn_side), Sense::click());
+                response = response.on_hover_cursor(CursorIcon::PointingHand);
+                if response.clicked() {
                     action = Some(NavAction::Back);
                 }
                 if response.hovered() {
                     paint_hover_bg(ui_inner.painter(), &rect, theme.accent);
                 }
-                let icon_rect = Rect::from_center_size(rect.center(), vec2(icon_size, icon_size));
+                let icon_rect = Rect::from_center_size(rect.center(), vec2(icon_side, icon_side));
                 paint_icon(
                     ui_inner.painter(),
                     icon_rect,
@@ -77,7 +78,6 @@ impl<'a, R: RouteMetadata> Breadcrumb<'a, R> {
                     Sense::click()
                 };
 
-                let font_id = egui::FontId::proportional(14.0);
                 let galley = ui_inner.painter().layout_no_wrap(
                     seg.name.clone(),
                     font_id.clone(),
@@ -152,19 +152,16 @@ impl<'a, R: RouteMetadata> Breadcrumb<'a, R> {
             }
 
             if self.history.can_go_forward() {
-                let (rect, response) = ui_inner
-                    .allocate_at_least(vec2(btn_size, ui_inner.available_height()), Sense::click());
-                if ui_inner
-                    .interact(rect, ui_inner.id().with("fwd_btn"), Sense::click())
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
+                let (rect, mut response) =
+                    ui_inner.allocate_exact_size(vec2(btn_side, btn_side), Sense::click());
+                response = response.on_hover_cursor(CursorIcon::PointingHand);
+                if response.clicked() {
                     action = Some(NavAction::Forward);
                 }
                 if response.hovered() {
                     paint_hover_bg(ui_inner.painter(), &rect, theme.accent);
                 }
-                let icon_rect = Rect::from_center_size(rect.center(), vec2(icon_size, icon_size));
+                let icon_rect = Rect::from_center_size(rect.center(), vec2(icon_side, icon_side));
                 paint_icon(
                     ui_inner.painter(),
                     icon_rect,

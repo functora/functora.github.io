@@ -156,6 +156,9 @@ pub mod router_impl {
 
         #[allow(clippy::needless_pass_by_value)]
         pub fn navigate(&mut self, _state: &mut S, route: R) {
+            if route == self.current {
+                return;
+            }
             self.history.push(route.clone());
             self.current = route;
             history_push(&self.current);
@@ -301,6 +304,9 @@ pub mod router_impl {
 
         #[allow(clippy::needless_pass_by_value)]
         pub fn navigate(&mut self, _state: &mut S, route: R) {
+            if route == self.current {
+                return;
+            }
             self.history.push(route.clone());
             self.current = route;
             history_push(&self.current);

@@ -21,6 +21,9 @@ impl<R: Routable> NavHistory<R> {
     }
 
     pub fn push(&mut self, route: R) {
+        if self.stack[self.pos] == route {
+            return;
+        }
         self.stack.truncate(self.pos + 1);
         self.stack.push(route);
         self.pos = self.stack.len() - 1;

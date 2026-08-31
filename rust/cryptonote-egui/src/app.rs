@@ -22,7 +22,7 @@ use crate::messages::Msg;
 use crate::progress::{Job, Stage, claim_job, clear_progress};
 use crate::route::Screen;
 use crate::state::{ActionMode, External, TemporaryState};
-use crate::storage::PersistentState;
+use crate::storage::{APP_ATTRS, PersistentState};
 use functora_egui::files::format_size;
 
 pub struct CryptonoteApp {
@@ -344,8 +344,30 @@ impl CryptonoteApp {
         }
     }
 
+    fn sidebar_effective_width(ctx: &egui::Context) -> f32 {
+        let spacing = ctx.responsive_spacing();
+        let items = [
+            "Home", "Open", "View", "Share", "File", "About", "Donate", "License", "Privacy",
+        ];
+        let max_text = items
+            .iter()
+            .map(|name| {
+                let font_id = egui::FontId::proportional(14.0);
+                ctx.fonts_mut(|fonts| {
+                    fonts
+                        .layout_no_wrap((*name).to_owned(), font_id, egui::Color32::WHITE)
+                        .rect
+                        .width()
+                })
+            })
+            .fold(0.0, f32::max);
+        let icon = spacing.touch_height * 0.5;
+        max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
+    }
+
     fn top_bar(&mut self, ui: &mut egui::Ui) {
         let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let lang = self.lang();
         _ = egui::Frame::NONE
             .inner_margin(egui::Margin {
                 left: 8,
@@ -357,12 +379,10 @@ impl CryptonoteApp {
                 _ = Flex::row().justify_between().align_center().w_full().show(ui, |f| {
                     _ = f.ui(|ui| {
                         _ = ui.horizontal(|ui| {
+                            let brand = "🔐 Cryptonote".to_string();
                             let resp = ui.add(
                                 egui::Label::new(
-                                    egui::RichText::new("Cryptonote")
-                                        .size(20.0)
-                                        .strong()
-                                        .color(theme.foreground),
+                                    egui::RichText::new(brand).size(20.0).strong().color(theme.foreground),
                                 )
                                 .selectable(false)
                                 .sense(egui::Sense::click()),
@@ -370,10 +390,34 @@ impl CryptonoteApp {
                             if resp.clicked() {
                                 self.reset();
                             }
+                            ui.add_space(8.0);
+                            _ = ui.label(
+                                egui::RichText::new(format!("v{}", APP_ATTRS.vsn))
+                                    .size(10.0)
+                                    .color(theme.muted_foreground),
+                            );
                         });
                     });
                     _ = f.ui(|ui| {
                         _ = ui.horizontal(|ui| {
+                            // Language selector - compact
+                            let current_lang = lang.to_639_1().unwrap_or("en").to_string();
+                            if ui
+                                .add(
+                                    Button::new(current_lang)
+                                        .variant(ButtonVariant::Ghost)
+                                        .size(functora_egui::ComponentSize::Sm),
+                                )
+                                .clicked()
+                            {
+                                // Cycle through supported languages
+                                let langs = functora_egui::i18n::SUPPORTED_LANGUAGES;
+                                if let Some(idx) = langs.iter().position(|&l| l == lang) {
+                                    let next = langs[(idx + 1) % langs.len()];
+                                    self.persistent.language = next;
+                                    self.save_persistent();
+                                }
+                            }
                             let theme_icon = if self.dark {
                                 functora_egui::LucideIcon::Moon
                             } else {
@@ -1596,6 +1640,41 @@ impl CryptonoteApp {
             self.navigate(Screen::Home);
         }
     }
+
+    fn footer(ui: &mut egui::Ui) {
+        let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
+        _ = Separator::horizontal().show(ui);
+        let () = ui.add_space(8.0);
+        _ = ui.horizontal(|ui| {
+            _ = ui.label(
+                egui::RichText::new(format!(
+                    "\u{00A9} {} Functora. v{}",
+                    functora_egui::FUNCTORA_CORE_YEAR,
+                    APP_ATTRS.vsn
+                ))
+                .size(11.0)
+                .color(theme.muted_foreground),
+            );
+            _ = ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui
+                    .add(
+                        Button::new("Privacy")
+                            .variant(ButtonVariant::Ghost)
+                            .size(functora_egui::ComponentSize::Sm),
+                    )
+                    .clicked()
+                {
+                    // no-op, footer link handled via breadcrumb
+                }
+            });
+        });
+        let () = ui.add_space(4.0);
+        _ = ui.label(
+            egui::RichText::new(format!("Cryptonote is free and open source. {}", APP_ATTRS.description))
+                .size(10.0)
+                .color(theme.muted_foreground),
+        );
+    }
 }
 
 impl eframe::App for CryptonoteApp {
@@ -1618,7 +1697,7 @@ impl eframe::App for CryptonoteApp {
             .show(ui, |ui| {
                 self.top_bar(ui);
             });
-        // Sidebar desktop
+        // Sidebar desktop - collapsable rail / panel
         if !ctx.on_mobile() {
             let is_rail = self.sidebar_collapsed;
             let spacing = ctx.responsive_spacing();
@@ -1627,16 +1706,7 @@ impl eframe::App for CryptonoteApp {
             let effective = if is_rail {
                 spacing.touch_height
             } else {
-                let text_width = ctx.fonts_mut(|f| {
-                    f.layout_no_wrap(
-                        "Privacy".to_owned(),
-                        egui::FontId::proportional(14.0),
-                        egui::Color32::WHITE,
-                    )
-                    .rect
-                    .width()
-                });
-                (text_width + 80.0).min((max_allowed_outer - 16.0).max(0.0))
+                Self::sidebar_effective_width(&ctx).min((max_allowed_outer - 16.0).max(0.0))
             };
             let panel_outer = effective + 16.0;
             let panel_fill = if is_rail { theme.background } else { theme.card };
@@ -1646,36 +1716,19 @@ impl eframe::App for CryptonoteApp {
                 .resizable(false)
                 .show_separator_line(false)
                 .show(ui, |ui| {
-                    let collapsed = self.sidebar_collapsed;
-                    let _ = egui::ScrollArea::vertical().show(ui, |ui| {
-                        if collapsed {
-                            let () = ui.add_space(8.0);
-                            let icons = [
-                                (Screen::Home, functora_egui::LucideIcon::House),
-                                (Screen::Open, functora_egui::LucideIcon::FolderOpen),
-                                (Screen::View, functora_egui::LucideIcon::Eye),
-                                (Screen::Share, functora_egui::LucideIcon::Share2),
-                                (Screen::File, functora_egui::LucideIcon::File),
-                                (Screen::About, functora_egui::LucideIcon::Info),
-                            ];
-                            for (scr, icon) in icons {
-                                let selected = self.router.current() == &scr;
-                                let btn = Button::icon_only(icon)
-                                    .variant(if selected {
-                                        ButtonVariant::Default
-                                    } else {
-                                        ButtonVariant::Ghost
-                                    })
-                                    .selected(selected);
-                                if ui.add(btn).clicked() {
-                                    self.navigate(scr);
-                                }
-                                let () = ui.add_space(4.0);
-                            }
-                        } else {
-                            let _ = self.sidebar_content(ui);
-                        }
+                    let mut collapsed = self.sidebar_collapsed;
+                    let close = std::cell::Cell::new(false);
+                    _ = egui::ScrollArea::vertical().show(ui, |ui| {
+                        _ = Sidebar::new()
+                            .width(effective)
+                            .collapsible()
+                            .show(ui, &mut collapsed, |ui| {
+                                close.set(self.sidebar_content(ui));
+                            });
                     });
+                    if close.get() {
+                        collapsed = true;
+                    }
                     self.sidebar_collapsed = collapsed;
                 });
         }
@@ -1684,11 +1737,23 @@ impl eframe::App for CryptonoteApp {
             .frame(egui::Frame::NONE.fill(theme.background))
             .show(ui, |ui| {
                 if ui.on_mobile() {
-                    let _ = egui::ScrollArea::vertical().show(ui, |ui| {
-                        let _ = self.sidebar_content(ui);
-                        let () = ui.add_space(12.0);
-                        _ = Separator::horizontal().show(ui);
-                    });
+                    let spacing = ui.responsive_spacing();
+                    let screen_width = ui.ctx().input(|i| i.viewport_rect().width());
+                    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
+                    let effective = Self::sidebar_effective_width(ui.ctx()).min((max_allowed_outer - 16.0).max(0.0));
+                    let close = std::cell::Cell::new(false);
+                    let mut collapsed = self.sidebar_collapsed;
+                    _ = Sidebar::new()
+                        .width(effective)
+                        .collapsible()
+                        .show(ui, &mut collapsed, |ui| {
+                            close.set(self.sidebar_content(ui));
+                        });
+                    if close.get() {
+                        collapsed = true;
+                    }
+                    self.sidebar_collapsed = collapsed;
+                    ui.add_space(-ui.spacing().item_spacing.y);
                 }
                 // breadcrumb
                 {
@@ -1734,6 +1799,8 @@ impl eframe::App for CryptonoteApp {
                                 Screen::License => self.screen_license(ui),
                                 Screen::Privacy => self.screen_privacy(ui),
                             }
+                            let () = ui.add_space(16.0);
+                            Self::footer(ui);
                             let () = ui.add_space(48.0);
                         });
                         let () = ui.add_space(spacing.page_padding + margin);

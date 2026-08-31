@@ -1,0 +1,35 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace = "com.functora.cryptonote_egui"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.functora.cryptonote_egui"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 110
+        versionName = "0.1.10"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.games:games-activity:4.4.0"
+    implementation "androidx.appcompat:appcompat:1.7.1"
+    implementation "androidx.core:core:1.15.0"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
+}

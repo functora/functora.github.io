@@ -56,3 +56,38 @@ pub fn current_theme(ctx: &egui::Context) -> Theme {
         Theme::Light
     }
 }
+
+#[must_use]
+pub fn detect_system_theme(ctx: &egui::Context) -> Option<Theme> {
+    ctx.system_theme().map(|t| match t {
+        egui::Theme::Light => Theme::Light,
+        egui::Theme::Dark => Theme::Dark,
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[must_use]
+pub fn detect_system_theme_wasm() -> Option<Theme> {
+    web_sys::window()
+        .and_then(|w| w.match_media("(prefers-color-scheme: dark)").ok()?)
+        .map(|m| {
+            if m.matches() {
+                Theme::Dark
+            } else {
+                Theme::Light
+            }
+        })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[must_use]
+pub fn detect_system_theme_wasm() -> Option<Theme> {
+    None
+}
+
+#[must_use]
+pub fn default_theme(ctx: &egui::Context) -> Theme {
+    detect_system_theme(ctx)
+        .or_else(detect_system_theme_wasm)
+        .unwrap_or(Theme::Light)
+}

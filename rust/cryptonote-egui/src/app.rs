@@ -5,13 +5,13 @@
     clippy::type_complexity,
     clippy::too_many_lines
 )]
-use egui::{CentralPanel, ScrollArea};
+use egui::ScrollArea;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
-use functora_egui::storage::{load_state, persist_value};
+use functora_egui::storage::persist_value;
 use functora_egui::{
-    Alert, Breadcrumb, Button, ButtonVariant, Card, Flex, Input, Label, NavAction, Progress, ResponsiveExt, Separator,
-    ShadcnThemeExt, Sidebar, Textarea, Theme, ToastState, ToastVariant,
+    Alert, Button, ButtonVariant, Card, Flex, Input, Label, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell,
+    Textarea, ToastState, ToastVariant,
 };
 
 use crate::encoding::{NoteData, decode_note, extract_note_param};
@@ -27,11 +27,10 @@ use functora_egui::files::format_size;
 
 pub struct CryptonoteApp {
     router: AppRouter<Screen, ()>,
-    persistent: PersistentState,
+    persistent: PersistentState<()>,
     temporary: TemporaryState,
     toast: ToastState,
     sidebar_collapsed: bool,
-    dark: bool,
     // async receivers
     clipboard_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     clipboard_write_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
@@ -54,7 +53,6 @@ impl Default for CryptonoteApp {
             temporary: TemporaryState::default(),
             toast: ToastState::new(),
             sidebar_collapsed: true,
-            dark: true,
             clipboard_rx: None,
             clipboard_write_rx: None,
             share_rx: None,
@@ -74,18 +72,12 @@ impl CryptonoteApp {
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
-        let dark_theme = functora_egui::theme::shadcn_theme_dark::dark();
-        ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, dark_theme);
-        let mut this = Self::default();
-        if let Some(persisted) = load_state::<PersistentState>("cryptonote_persistent") {
-            this.persistent = persisted;
-            let theme = match this.persistent.theme {
-                Theme::Dark => functora_egui::theme::shadcn_theme_dark::dark(),
-                Theme::Light => functora_egui::theme::shadcn_theme_light::light(),
-            };
-            ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
-            this.dark = matches!(this.persistent.theme, Theme::Dark);
-        }
+        let persistent = PersistentState::load_or_default(&cc.egui_ctx, "cryptonote_persistent", ());
+        functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
+        let mut this = Self {
+            persistent,
+            ..Default::default()
+        };
         let width = cc.egui_ctx.input(|i| i.viewport_rect().width());
         this.sidebar_collapsed = if width == 0.0 {
             true
@@ -103,10 +95,6 @@ impl CryptonoteApp {
         this
     }
 
-    fn save_persistent(&self) {
-        persist_value("cryptonote_persistent", &self.persistent);
-    }
-
     fn lang(&self) -> Language {
         self.persistent.language
     }
@@ -117,19 +105,7 @@ impl CryptonoteApp {
     }
 
     fn apply_theme(&self, ctx: &egui::Context) {
-        let theme = if self.dark {
-            functora_egui::theme::shadcn_theme_dark::dark()
-        } else {
-            functora_egui::theme::shadcn_theme_light::light()
-        };
-        ShadcnThemeExt::set_shadcn_theme(ctx, theme);
-    }
-
-    fn toggle_theme(&mut self, ctx: &egui::Context) {
-        self.dark = !self.dark;
-        self.persistent.theme = if self.dark { Theme::Dark } else { Theme::Light };
-        self.save_persistent();
-        self.apply_theme(ctx);
+        functora_egui::theme_extra::set_theme(ctx, self.persistent.theme);
     }
 
     fn reset(&mut self) {
@@ -341,177 +317,6 @@ impl CryptonoteApp {
                 }
             });
             self.archive_rx = Some(rx);
-        }
-    }
-
-    fn sidebar_effective_width(ctx: &egui::Context) -> f32 {
-        let spacing = ctx.responsive_spacing();
-        let items = [
-            "Home", "Open", "View", "Share", "File", "About", "Donate", "License", "Privacy",
-        ];
-        let max_text = items
-            .iter()
-            .map(|name| {
-                let font_id = egui::FontId::proportional(14.0);
-                ctx.fonts_mut(|fonts| {
-                    fonts
-                        .layout_no_wrap((*name).to_owned(), font_id, egui::Color32::WHITE)
-                        .rect
-                        .width()
-                })
-            })
-            .fold(0.0, f32::max);
-        let icon = spacing.touch_height * 0.5;
-        max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
-    }
-
-    fn top_bar(&mut self, ui: &mut egui::Ui) {
-        let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let lang = self.lang();
-        _ = egui::Frame::NONE
-            .inner_margin(egui::Margin {
-                left: 8,
-                right: 8,
-                top: 6,
-                bottom: 6,
-            })
-            .show(ui, |ui| {
-                _ = Flex::row().justify_between().align_center().w_full().show(ui, |f| {
-                    _ = f.ui(|ui| {
-                        _ = ui.horizontal(|ui| {
-                            let brand = "🔐 Cryptonote".to_string();
-                            let resp = ui.add(
-                                egui::Label::new(
-                                    egui::RichText::new(brand).size(20.0).strong().color(theme.foreground),
-                                )
-                                .selectable(false)
-                                .sense(egui::Sense::click()),
-                            );
-                            if resp.clicked() {
-                                self.reset();
-                            }
-                            ui.add_space(8.0);
-                            _ = ui.label(
-                                egui::RichText::new(format!("v{}", APP_ATTRS.vsn))
-                                    .size(10.0)
-                                    .color(theme.muted_foreground),
-                            );
-                        });
-                    });
-                    _ = f.ui(|ui| {
-                        _ = ui.horizontal(|ui| {
-                            // Language selector - compact
-                            let current_lang = lang.to_639_1().unwrap_or("en").to_string();
-                            if ui
-                                .add(
-                                    Button::new(current_lang)
-                                        .variant(ButtonVariant::Ghost)
-                                        .size(functora_egui::ComponentSize::Sm),
-                                )
-                                .clicked()
-                            {
-                                // Cycle through supported languages
-                                let langs = functora_egui::i18n::SUPPORTED_LANGUAGES;
-                                if let Some(idx) = langs.iter().position(|&l| l == lang) {
-                                    let next = langs[(idx + 1) % langs.len()];
-                                    self.persistent.language = next;
-                                    self.save_persistent();
-                                }
-                            }
-                            let theme_icon = if self.dark {
-                                functora_egui::LucideIcon::Moon
-                            } else {
-                                functora_egui::LucideIcon::Sun
-                            };
-                            if ui
-                                .add(
-                                    Button::icon_only(theme_icon)
-                                        .variant(ButtonVariant::Outline)
-                                        .size(functora_egui::ComponentSize::Sm),
-                                )
-                                .clicked()
-                            {
-                                self.toggle_theme(ui.ctx());
-                            }
-                            let () = ui.add_space(4.0);
-                            let _ = Sidebar::toggle_button(ui, &mut self.sidebar_collapsed);
-                        });
-                    });
-                });
-            });
-        let rect = ui.max_rect();
-        _ = ui
-            .painter()
-            .hline(rect.x_range(), rect.max.y - 0.5, egui::Stroke::new(1.0, theme.border));
-    }
-
-    fn sidebar_content(&mut self, ui: &mut egui::Ui) -> bool {
-        let lang = self.lang();
-        let mut close = false;
-        let items: Vec<(Screen, &'static str, functora_egui::LucideIcon)> = vec![
-            (Screen::Home, "Home", functora_egui::LucideIcon::House),
-            (Screen::Open, "Open", functora_egui::LucideIcon::FolderOpen),
-            (Screen::View, "View", functora_egui::LucideIcon::Eye),
-            (Screen::Share, "Share", functora_egui::LucideIcon::Share2),
-            (Screen::File, "File", functora_egui::LucideIcon::File),
-            (Screen::About, "About", functora_egui::LucideIcon::Info),
-            (Screen::Donate, "Donate", functora_egui::LucideIcon::Heart),
-            (Screen::License, "License", functora_egui::LucideIcon::Scale),
-            (Screen::Privacy, "Privacy", functora_egui::LucideIcon::Shield),
-        ];
-        for (screen, label, icon) in items {
-            let selected = self.router.current() == &screen || self.temporary.screen == screen;
-            let btn = Button::new(label)
-                .icon(icon)
-                .variant(if selected {
-                    ButtonVariant::Default
-                } else {
-                    ButtonVariant::Ghost
-                })
-                .selected(selected)
-                .full_width();
-            if ui.add(btn).clicked() {
-                self.navigate(screen);
-                close |= ui.on_mobile();
-            }
-        }
-        let () = ui.add_space(12.0);
-        _ = Separator::horizontal().show(ui);
-        let () = ui.add_space(8.0);
-        if ui
-            .add(
-                Button::new("Reset")
-                    .icon(functora_egui::LucideIcon::Trash2)
-                    .variant(ButtonVariant::Ghost)
-                    .full_width(),
-            )
-            .clicked()
-        {
-            self.reset();
-            close |= ui.on_mobile();
-        }
-        let _ = lang;
-        close
-    }
-
-    fn show_breadcrumb(&mut self, ui: &mut egui::Ui) {
-        let lang = self.lang();
-        let current = self.router.current().clone();
-        let history = self.router.history().clone();
-        if let Some(action) = Breadcrumb::new(&current, &history).show(ui, lang) {
-            match action {
-                NavAction::Back => {
-                    let _ = self.router.go_back(&mut ());
-                    self.temporary.screen = self.router.current().clone();
-                }
-                NavAction::Forward => {
-                    let _ = self.router.go_forward(&mut ());
-                    self.temporary.screen = self.router.current().clone();
-                }
-                NavAction::Route(r) => {
-                    self.navigate(r);
-                }
-            }
         }
     }
 
@@ -1688,136 +1493,125 @@ impl eframe::App for CryptonoteApp {
         if routed != self.temporary.screen {
             self.temporary.screen = routed;
         }
-
-        let theme = ShadcnThemeExt::shadcn_theme(&ctx);
-        // Top bar
-        _ = egui::Panel::top("top_bar")
-            .frame(egui::Frame::NONE.fill(theme.card))
-            .show_separator_line(false)
-            .show(ui, |ui| {
-                self.top_bar(ui);
-            });
-        // Sidebar desktop - collapsable rail / panel
-        if !ctx.on_mobile() {
-            let is_rail = self.sidebar_collapsed;
-            let spacing = ctx.responsive_spacing();
-            let screen_width = ctx.input(|i| i.viewport_rect().width());
-            let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
-            let effective = if is_rail {
-                spacing.touch_height
-            } else {
-                Self::sidebar_effective_width(&ctx).min((max_allowed_outer - 16.0).max(0.0))
-            };
-            let panel_outer = effective + 16.0;
-            let panel_fill = if is_rail { theme.background } else { theme.card };
-            _ = egui::Panel::right("sidebar_panel")
-                .exact_size(panel_outer)
-                .frame(egui::Frame::NONE.fill(panel_fill))
-                .resizable(false)
-                .show_separator_line(false)
-                .show(ui, |ui| {
-                    let mut collapsed = self.sidebar_collapsed;
-                    let close = std::cell::Cell::new(false);
-                    _ = egui::ScrollArea::vertical().show(ui, |ui| {
-                        _ = Sidebar::new()
-                            .width(effective)
-                            .collapsible()
-                            .show(ui, &mut collapsed, |ui| {
-                                close.set(self.sidebar_content(ui));
-                            });
-                    });
-                    if close.get() {
-                        collapsed = true;
-                    }
-                    self.sidebar_collapsed = collapsed;
-                });
+        let mut persistent = std::mem::take(&mut self.persistent);
+        let prev_persistent = persistent.clone();
+        let mut collapsed_val = self.sidebar_collapsed;
+        let route = self.router.current().clone();
+        let history = self.router.history().clone();
+        let needs_reset = std::cell::Cell::new(false);
+        let temporary_ptr: *mut TemporaryState = &raw mut self.temporary;
+        let router_ptr: *mut AppRouter<Screen, ()> = &raw mut self.router;
+        let theme_bg = ShadcnThemeExt::shadcn_theme(&ctx);
+        let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, |side_ui| {
+            let temporary_ref = unsafe { &mut *temporary_ptr };
+            let router_ref = unsafe { &mut *router_ptr };
+            let mut close = false;
+            let items: Vec<(Screen, &'static str, functora_egui::LucideIcon)> = vec![
+                (Screen::Home, "Home", functora_egui::LucideIcon::House),
+                (Screen::Open, "Open", functora_egui::LucideIcon::FolderOpen),
+                (Screen::View, "View", functora_egui::LucideIcon::Eye),
+                (Screen::Share, "Share", functora_egui::LucideIcon::Share2),
+                (Screen::File, "File", functora_egui::LucideIcon::File),
+                (Screen::About, "About", functora_egui::LucideIcon::Info),
+                (Screen::Donate, "Donate", functora_egui::LucideIcon::Heart),
+                (Screen::License, "License", functora_egui::LucideIcon::Scale),
+                (Screen::Privacy, "Privacy", functora_egui::LucideIcon::Shield),
+            ];
+            for (screen, label, icon) in items {
+                let selected = router_ref.current() == &screen || temporary_ref.screen == screen;
+                let btn = Button::new(label)
+                    .icon(icon)
+                    .variant(if selected {
+                        ButtonVariant::Default
+                    } else {
+                        ButtonVariant::Ghost
+                    })
+                    .selected(selected)
+                    .full_width();
+                if side_ui.add(btn).clicked() {
+                    temporary_ref.screen = screen.clone();
+                    router_ref.navigate(&mut (), screen);
+                    close |= side_ui.on_mobile();
+                }
+            }
+            side_ui.add_space(12.0);
+            let _ = Separator::horizontal().show(side_ui);
+            side_ui.add_space(8.0);
+            if side_ui
+                .add(
+                    Button::new("Reset")
+                        .icon(functora_egui::LucideIcon::Trash2)
+                        .variant(ButtonVariant::Ghost)
+                        .full_width(),
+                )
+                .clicked()
+            {
+                temporary_ref.reset();
+                let home = Screen::Home;
+                temporary_ref.screen = home.clone();
+                router_ref.navigate(&mut (), home);
+                close |= side_ui.on_mobile();
+            }
+            close
+        })
+        .version(APP_ATTRS.vsn)
+        .theme(&mut persistent.theme)
+        .language(&mut persistent.language)
+        .on_brand(|| needs_reset.set(true))
+        .sidebar_labels([
+            "Home", "Open", "View", "Share", "File", "About", "Donate", "License", "Privacy",
+        ])
+        .breadcrumb(&route, &history)
+        .show(ui, |content_ui| {
+            match self.temporary.screen.clone() {
+                Screen::Home => self.screen_home(content_ui),
+                Screen::Open => self.screen_open(content_ui),
+                Screen::View => self.screen_view(content_ui),
+                Screen::Share => self.screen_share(content_ui),
+                Screen::File => self.screen_file(content_ui),
+                Screen::About => self.screen_about(content_ui),
+                Screen::Donate => self.screen_donate(content_ui),
+                Screen::License => self.screen_license(content_ui),
+                Screen::Privacy => self.screen_privacy(content_ui),
+            }
+            content_ui.add_space(16.0);
+            Self::footer(content_ui);
+            content_ui.add_space(48.0);
+        });
+        self.sidebar_collapsed = collapsed_val;
+        self.persistent = persistent;
+        if prev_persistent != self.persistent {
+            persist_value("cryptonote_persistent", &self.persistent);
+            self.apply_theme(&ctx);
         }
-
-        _ = CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(theme.background))
-            .show(ui, |ui| {
-                if ui.on_mobile() {
-                    let spacing = ui.responsive_spacing();
-                    let screen_width = ui.ctx().input(|i| i.viewport_rect().width());
-                    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
-                    let effective = Self::sidebar_effective_width(ui.ctx()).min((max_allowed_outer - 16.0).max(0.0));
-                    let close = std::cell::Cell::new(false);
-                    let mut collapsed = self.sidebar_collapsed;
-                    _ = Sidebar::new()
-                        .width(effective)
-                        .collapsible()
-                        .show(ui, &mut collapsed, |ui| {
-                            close.set(self.sidebar_content(ui));
-                        });
-                    if close.get() {
-                        collapsed = true;
-                    }
-                    self.sidebar_collapsed = collapsed;
-                    ui.add_space(-ui.spacing().item_spacing.y);
+        if needs_reset.get() {
+            self.reset();
+        }
+        if let Some(action) = breadcrumb_action {
+            match action {
+                functora_egui::NavAction::Back => {
+                    let _ = self.router.go_back(&mut ());
+                    self.temporary.screen = self.router.current().clone();
                 }
-                // breadcrumb
-                {
-                    let available_w = ui.available_width();
-                    let show_breadcrumb = self.router.history().can_go_back()
-                        || self.router.history().can_go_forward()
-                        || self.temporary.screen != Screen::Home;
-                    if show_breadcrumb {
-                        let strip = egui::Frame::NONE
-                            .fill(theme.card)
-                            .inner_margin(egui::Margin::symmetric(12, 8))
-                            .show(ui, |ui| {
-                                let () = ui.set_min_width(available_w - 24.0);
-                                self.show_breadcrumb(ui);
-                            });
-                        _ = ui.painter().hline(
-                            ui.max_rect().x_range(),
-                            strip.response.rect.max.y + 0.5,
-                            egui::Stroke::new(1.0, theme.border),
-                        );
-                        let () = ui.add_space(8.0);
-                    }
+                functora_egui::NavAction::Forward => {
+                    let _ = self.router.go_forward(&mut ());
+                    self.temporary.screen = self.router.current().clone();
                 }
-                let spacing = ui.responsive_spacing();
-                let available = ui.available_width();
-                let content_width = available.min(spacing.content_max_width);
-                let margin = ((available - content_width) * 0.5).max(0.0);
-                let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
-                let _ = egui::ScrollArea::vertical().auto_shrink([false; 2]).show(ui, |ui| {
-                    let () = ui.add_space(spacing.page_padding);
-                    _ = ui.horizontal(|ui| {
-                        let () = ui.add_space(margin + spacing.page_padding);
-                        _ = ui.vertical(|ui| {
-                            let () = ui.set_max_width(inner_width);
-                            match self.temporary.screen.clone() {
-                                Screen::Home => self.screen_home(ui),
-                                Screen::Open => self.screen_open(ui),
-                                Screen::View => self.screen_view(ui),
-                                Screen::Share => self.screen_share(ui),
-                                Screen::File => self.screen_file(ui),
-                                Screen::About => self.screen_about(ui),
-                                Screen::Donate => self.screen_donate(ui),
-                                Screen::License => self.screen_license(ui),
-                                Screen::Privacy => self.screen_privacy(ui),
-                            }
-                            let () = ui.add_space(16.0);
-                            Self::footer(ui);
-                            let () = ui.add_space(48.0);
-                        });
-                        let () = ui.add_space(spacing.page_padding + margin);
-                    });
-                });
-            });
+                functora_egui::NavAction::Route(r) => {
+                    self.navigate(r);
+                }
+            }
+        }
         self.toast.show(&ctx);
-        // bottom progress bar as overlay
         if let Some(job) = self.temporary.progress.clone() {
             _ = egui::Panel::bottom("progress_bottom")
-                .frame(egui::Frame::NONE.fill(theme.card))
+                .frame(egui::Frame::NONE.fill(theme_bg.card))
                 .show_separator_line(true)
-                .show(ui, |ui| {
-                    let () = ui.add_space(4.0);
-                    _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-                    _ = ui.label(format!("{:?} {} / {}", job.stage, job.done, job.total));
-                    let () = ui.add_space(4.0);
+                .show(ui, |bottom_ui| {
+                    bottom_ui.add_space(4.0);
+                    let _ = bottom_ui.add(Progress::new(f32::from(job.percent()) / 100.0));
+                    let _ = bottom_ui.label(format!("{:?} {} / {}", job.stage, job.done, job.total));
+                    bottom_ui.add_space(4.0);
                 });
         }
     }

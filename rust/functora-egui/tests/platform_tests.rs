@@ -289,7 +289,7 @@ fn encoding_helpers() {
 
 #[test]
 fn state_default() {
-    let s = functora_egui::state::PersistentState::default();
+    let s = functora_egui::state::PersistentState::<()>::default();
     assert_eq!(s.theme, Theme::Light);
 }
 

@@ -36,6 +36,7 @@ pub mod item;
 pub mod kbd;
 pub mod label;
 pub mod menubar;
+pub mod navbar;
 pub mod navigation_menu;
 pub mod number_input;
 pub mod pagination;

@@ -208,7 +208,7 @@ pub mod router_impl {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
-                    self.sync_from_url(&href);
+                    drop(self.sync_from_url(&href));
                 }
             }
         }
@@ -226,7 +226,9 @@ pub mod router_impl {
         #[cfg(target_arch = "wasm32")]
         {
             let url = route.to_url();
-            let _ = crate::platform::web::history_push(&url);
+            if let Err(err) = crate::platform::web::history_push(&url) {
+                tracing::warn!("history_push failed: {err}");
+            }
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -242,7 +244,9 @@ pub mod router_impl {
         #[cfg(target_arch = "wasm32")]
         {
             let url = route.to_url();
-            let _ = crate::platform::web::history_replace(&url);
+            if let Err(err) = crate::platform::web::history_replace(&url) {
+                tracing::warn!("history_replace failed: {err}");
+            }
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -356,7 +360,7 @@ pub mod router_impl {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
-                    self.sync_from_url(&href);
+                    drop(self.sync_from_url(&href));
                 }
             }
         }
@@ -374,7 +378,9 @@ pub mod router_impl {
         #[cfg(target_arch = "wasm32")]
         {
             let url = route.to_url();
-            let _ = crate::platform::web::history_push(&url);
+            if let Err(err) = crate::platform::web::history_push(&url) {
+                tracing::warn!("history_push failed: {err}");
+            }
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -390,7 +396,9 @@ pub mod router_impl {
         #[cfg(target_arch = "wasm32")]
         {
             let url = route.to_url();
-            let _ = crate::platform::web::history_replace(&url);
+            if let Err(err) = crate::platform::web::history_replace(&url) {
+                tracing::warn!("history_replace failed: {err}");
+            }
         }
         #[cfg(not(target_arch = "wasm32"))]
         {

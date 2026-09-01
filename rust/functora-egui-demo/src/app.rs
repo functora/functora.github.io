@@ -1,13 +1,12 @@
 //! Showcase app: an interactive catalog of every functora-egui widget,
 //! layout, and feature, with light/dark theming and responsive behavior.
 
-use functora_egui::i18n::detect_browser_language;
-use functora_egui::theme::shadcn_theme_dark::dark;
-use functora_egui::theme::shadcn_theme_light::light;
+use functora_egui::state::PersistentState;
+use functora_egui::storage::persist_value;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Breadcrumb, Button, ButtonVariant, Command, CommandItem,
-    Dialog, Drawer, FieldDescription, Flex, Item, Label, LucideIcon, NavAction, ResponsiveExt,
-    ShadcnThemeExt, Sheet, Sidebar, ToastState, ToastVariant, Typography, TypographyVariant,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
+    FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet, Shell,
+    ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
 pub use functora_egui::PickResult;
@@ -420,20 +419,9 @@ fn initial_selected() -> usize {
     0
 }
 
+#[derive(Default)]
 pub struct NavState {
-    pub dark: bool,
-    pub sidebar_collapsed: bool,
     pub sidebar_demo_collapsed: bool,
-}
-
-impl Default for NavState {
-    fn default() -> Self {
-        Self {
-            dark: true,
-            sidebar_collapsed: true,
-            sidebar_demo_collapsed: false,
-        }
-    }
 }
 
 #[derive(Default)]
@@ -529,6 +517,8 @@ impl Default for FormState {
 /// All state for the showcase demos, one field per interactive demo.
 pub struct ShowcaseApp {
     pub nav: NavState,
+    pub persistent: PersistentState<()>,
+    pub sidebar_collapsed: bool,
     pub sidebar_init_done: bool,
     pub selected: usize,
     pub prev_selected: usize,
@@ -594,6 +584,8 @@ impl Default for ShowcaseApp {
     fn default() -> Self {
         Self {
             nav: NavState::default(),
+            persistent: PersistentState::default(),
+            sidebar_collapsed: true,
             sidebar_init_done: false,
             selected: 0,
             prev_selected: 0,
@@ -655,8 +647,9 @@ impl ShowcaseApp {
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
-        let theme = dark();
-        ShadcnThemeExt::set_shadcn_theme(&cc.egui_ctx, theme);
+        let persistent =
+            PersistentState::load_or_default(&cc.egui_ctx, "functora_egui_demo_persistent", ());
+        functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
         let startup_width = {
             #[cfg(target_arch = "wasm32")]
             {
@@ -672,9 +665,13 @@ impl ShowcaseApp {
         } else {
             startup_width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
         };
-        let mut this = Self::default();
-        this.nav.sidebar_collapsed = initial_collapsed;
+        let mut this = Self {
+            persistent,
+            sidebar_collapsed: initial_collapsed,
+            ..Default::default()
+        };
         this.sidebar_init_done = false;
+        this.apply_theme(&cc.egui_ctx);
         #[cfg(target_arch = "wasm32")]
         {
             let mut tmp = ();
@@ -695,19 +692,18 @@ impl ShowcaseApp {
         this
     }
 
-    fn toggle_theme(&mut self, ctx: &egui::Context) {
-        self.nav.dark = !self.nav.dark;
-        self.apply_theme(ctx);
-    }
-
     fn apply_theme(&self, ctx: &egui::Context) {
-        let theme = if self.nav.dark { dark() } else { light() };
-        ShadcnThemeExt::set_shadcn_theme(ctx, theme);
+        functora_egui::theme_extra::set_theme(ctx, self.persistent.theme);
     }
 
     fn reset_to_home(&mut self, ctx: &egui::Context) {
+        let prev_persistent = self.persistent.clone();
         *self = Self::default();
-        self.nav.sidebar_collapsed = ctx.on_mobile();
+        self.persistent = PersistentState::with_system_defaults(ctx, ());
+        if self.persistent != prev_persistent {
+            persist_value("functora_egui_demo_persistent", &self.persistent);
+        }
+        self.sidebar_collapsed = ctx.on_mobile();
         self.sidebar_init_done = true;
         self.prev_selected = usize::MAX;
         self.router.navigate(&mut (), AppRoute::default());
@@ -741,111 +737,7 @@ impl ShowcaseApp {
         }
     }
 
-    fn sidebar_effective_width(ctx: &egui::Context) -> f32 {
-        let spacing = ctx.responsive_spacing();
-        let max_text = CATEGORIES
-            .iter()
-            .flat_map(|(_, _, items)| items.iter())
-            .map(|def| {
-                let font_id = egui::FontId::proportional(14.0);
-                ctx.fonts_mut(|fonts| {
-                    fonts
-                        .layout_no_wrap(def.name.to_owned(), font_id, egui::Color32::WHITE)
-                        .rect
-                        .width()
-                })
-            })
-            .fold(0.0, f32::max);
-        let icon = spacing.touch_height * 0.5;
-        max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
-    }
-
-    fn render_top_bar(&mut self, ui: &mut egui::Ui) {
-        let pad_x: i8 = 8;
-        let _panel = egui::Frame::NONE
-            .inner_margin(egui::Margin {
-                left: pad_x,
-                right: pad_x,
-                top: 6,
-                bottom: 6,
-            })
-            .show(ui, |ui2| {
-                _ = Flex::row()
-                    .gap(4.0)
-                    .justify_between()
-                    .align_center()
-                    .w_full()
-                    .show(ui2, |f| {
-                        _ = f.ui(|ui_left| {
-                            _ = ui_left.horizontal(|ui_inner| {
-                                let ctx = ui_inner.ctx().clone();
-                                let theme = ShadcnThemeExt::shadcn_theme(&ctx);
-                                let resp = ui_inner
-                                    .add(
-                                        egui::Label::new(
-                                            egui::RichText::new("functora-egui")
-                                                .size(20.0)
-                                                .strong()
-                                                .color(theme.foreground),
-                                        )
-                                        .selectable(false)
-                                        .sense(egui::Sense::click()),
-                                    )
-                                    .on_hover_cursor(egui::CursorIcon::PointingHand);
-                                if resp.clicked() {
-                                    self.reset_to_home(&ctx);
-                                }
-                            });
-                        });
-                        _ = f.ui(|ui_right| {
-                            _ = ui_right.horizontal(|ui_inner| {
-                                let search = if ui_inner.on_mobile() {
-                                    Button::icon_only(LucideIcon::Search)
-                                        .variant(ButtonVariant::Outline)
-                                        .size(functora_egui::ComponentSize::Sm)
-                                } else {
-                                    Button::new("Search")
-                                        .icon(LucideIcon::Search)
-                                        .variant(ButtonVariant::Outline)
-                                        .size(functora_egui::ComponentSize::Sm)
-                                        .shortcut_text("Ctrl K")
-                                };
-                                if ui_inner.add(search).clicked() {
-                                    self.dialogs.command_open = true;
-                                    self.command_search.clear();
-                                }
-                                ui_inner.add_space(4.0);
-                                let theme_icon = if self.nav.dark {
-                                    LucideIcon::Moon
-                                } else {
-                                    LucideIcon::Sun
-                                };
-                                if ui_inner
-                                    .add(
-                                        Button::icon_only(theme_icon)
-                                            .variant(ButtonVariant::Outline)
-                                            .size(functora_egui::ComponentSize::Sm),
-                                    )
-                                    .on_hover_text(if self.nav.dark {
-                                        "Light theme"
-                                    } else {
-                                        "Dark theme"
-                                    })
-                                    .clicked()
-                                {
-                                    self.toggle_theme(ui_inner.ctx());
-                                }
-                                ui_inner.add_space(4.0);
-                                _ = Sidebar::toggle_button(
-                                    ui_inner,
-                                    &mut self.nav.sidebar_collapsed,
-                                );
-                            });
-                        });
-                    });
-            });
-    }
-
+    #[allow(dead_code)]
     fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
         let mut close = false;
         for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
@@ -998,6 +890,7 @@ impl ShowcaseApp {
         }
     }
 
+    #[allow(dead_code)]
     fn category_of(flat: usize) -> Option<(&'static str, usize)> {
         let mut remaining = flat;
         for (cat_idx, (cat_name, _, items)) in CATEGORIES.iter().enumerate() {
@@ -1124,7 +1017,7 @@ impl eframe::App for ShowcaseApp {
         if !self.sidebar_init_done {
             let width = ctx.input(|i| i.viewport_rect().width());
             if width != 0.0 {
-                self.nav.sidebar_collapsed = ctx.on_mobile();
+                self.sidebar_collapsed = ctx.on_mobile();
                 self.sidebar_init_done = true;
             }
         }
@@ -1135,154 +1028,93 @@ impl eframe::App for ShowcaseApp {
         self.sync_from_router();
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
-
-        let theme = ShadcnThemeExt::shadcn_theme(&ctx);
-        let top = egui::Panel::top("top_bar")
-            .frame(egui::Frame::NONE.fill(theme.card))
-            .show_separator_line(false)
-            .show(ui, |ui7| {
-                self.render_top_bar(ui7);
-            });
-        _ = ui.painter().hline(
-            top.response.rect.x_range(),
-            top.response.rect.max.y - 0.5,
-            egui::Stroke::new(1.0, theme.border),
-        );
-
-        if !ctx.on_mobile() {
-            let is_rail = self.nav.sidebar_collapsed;
-            let spacing = ctx.responsive_spacing();
-            let screen_width = ctx.input(|i| i.viewport_rect().width());
-            let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
-            let effective = if is_rail {
-                spacing.touch_height
-            } else {
-                Self::sidebar_effective_width(&ctx).min((max_allowed_outer - 16.0).max(0.0))
-            };
-            let panel_outer = effective + 16.0;
-            let panel_fill = if is_rail {
-                theme.background
-            } else {
-                theme.card
-            };
-            _ = egui::Panel::right("sidebar_panel")
-                .exact_size(panel_outer)
-                .frame(egui::Frame::NONE.fill(panel_fill))
-                .resizable(false)
-                .show_separator_line(false)
-                .show(ui, |ui8| {
-                    let close = std::cell::Cell::new(false);
-                    let mut collapsed = self.nav.sidebar_collapsed;
-                    _ = Sidebar::new().width(effective).collapsible().show(
-                        ui8,
-                        &mut collapsed,
-                        |ui9| {
-                            close.set(self.render_sidebar(ui9));
-                        },
-                    );
-                    if close.get() {
-                        collapsed = true;
-                    }
-                    self.nav.sidebar_collapsed = collapsed;
-                });
+        let should_scroll_top = self.selected != self.prev_selected;
+        if should_scroll_top {
+            self.prev_selected = self.selected;
         }
-
-        _ = egui::CentralPanel::default()
-            .frame(egui::Frame::NONE.fill(theme.background))
-            .show(ui, |ui10| {
-                if ui10.on_mobile() {
-                    let spacing = ui10.responsive_spacing();
-                    let screen_width = ui10.ctx().input(|i| i.viewport_rect().width());
-                    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
-                    let effective = Self::sidebar_effective_width(ui10.ctx())
-                        .min((max_allowed_outer - 16.0).max(0.0));
-                    let close = std::cell::Cell::new(false);
-                    let mut collapsed = self.nav.sidebar_collapsed;
-                    _ = Sidebar::new().width(effective).collapsible().show(
-                        ui10,
-                        &mut collapsed,
-                        |ui11| {
-                            close.set(self.render_sidebar(ui11));
-                        },
-                    );
-                    if close.get() {
-                        collapsed = true;
-                    }
-                    self.nav.sidebar_collapsed = collapsed;
-                    ui10.add_space(-ui10.spacing().item_spacing.y);
-                }
-                {
-                    let strip_theme = ShadcnThemeExt::shadcn_theme(ui10.ctx());
-                    let available_w = ui10.available_width();
-                    let show_breadcrumb = self.router.history().can_go_back()
-                        || self.router.history().can_go_forward()
-                        || Self::category_of(self.selected)
-                            .is_some_and(|(cat_name, _)| cat_name != "Overview");
-                    if show_breadcrumb {
-                        let strip = egui::Frame::NONE
-                            .fill(strip_theme.card)
-                            .inner_margin(egui::Margin::symmetric(12, 8))
-                            .show(ui10, |ui_strip| {
-                                ui_strip.set_min_width(available_w - 24.0);
-                                let lang = detect_browser_language();
-                                if let Some(action) =
-                                    Breadcrumb::new(self.router.current(), self.router.history())
-                                        .show(ui_strip, lang)
-                                {
-                                    match action {
-                                        NavAction::Back => {
-                                            _ = self.router.go_back(&mut ());
-                                            ui_strip.ctx().request_repaint();
-                                        }
-                                        NavAction::Forward => {
-                                            _ = self.router.go_forward(&mut ());
-                                            ui_strip.ctx().request_repaint();
-                                        }
-                                        NavAction::Route(route) => {
-                                            if let Some(idx) = route.to_flat() {
-                                                self.navigate_to(idx);
-                                            }
-                                            ui_strip.ctx().request_repaint();
-                                        }
-                                    }
-                                }
-                            });
-                        let _ = ui10.painter().hline(
-                            ui10.max_rect().x_range(),
-                            strip.response.rect.max.y + 0.5,
-                            egui::Stroke::new(1.0, strip_theme.border),
-                        );
+        let mut persistent = std::mem::take(&mut self.persistent);
+        let prev_persistent = persistent.clone();
+        let mut collapsed_val = self.sidebar_collapsed;
+        let route = self.router.current().clone();
+        let history = self.router.history().clone();
+        let needs_reset = std::cell::Cell::new(false);
+        let needs_search = std::cell::Cell::new(false);
+        let selected_ptr: *mut usize = &raw mut self.selected;
+        let router_ptr: *mut functora_egui::route::AppRouter<AppRoute, ()> = &raw mut self.router;
+        let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, |side_ui| {
+            let selected_ref = unsafe { &mut *selected_ptr };
+            let router_ref = unsafe { &mut *router_ptr };
+            let mut close = false;
+            for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
+                side_ui.add_space(6.0);
+                category_header(side_ui, cat_name, *cat_icon);
+                side_ui.add_space(2.0);
+                for (item_idx, def) in items.iter().enumerate() {
+                    let flat = flat_index(cat_idx, item_idx);
+                    let is_selected = flat == *selected_ref;
+                    if side_ui
+                        .add(section_button(def, is_selected).full_width())
+                        .clicked()
+                    {
+                        let next_route = match flat {
+                            0 => AppRoute::Overview,
+                            _ => AppRoute::Component(flat),
+                        };
+                        *selected_ref = flat;
+                        router_ref.navigate(&mut (), next_route);
+                        close |= side_ui.on_mobile();
+                        side_ui.ctx().request_repaint();
                     }
                 }
-                let should_scroll_top = self.selected != self.prev_selected;
-                if should_scroll_top {
-                    self.prev_selected = self.selected;
+            }
+            close
+        })
+        .theme(&mut persistent.theme)
+        .language(&mut persistent.language)
+        .search("Search", Some("Ctrl K"))
+        .on_brand(|| needs_reset.set(true))
+        .on_search(|| needs_search.set(true))
+        .sidebar_labels(
+            CATEGORIES
+                .iter()
+                .flat_map(|(_, _, items)| items.iter().map(|d| d.name)),
+        )
+        .breadcrumb(&route, &history)
+        .scroll_top(should_scroll_top)
+        .show(ui, |content_ui| {
+            self.render_component(content_ui);
+        });
+        self.sidebar_collapsed = collapsed_val;
+        self.persistent = persistent;
+        if prev_persistent != self.persistent {
+            persist_value("functora_egui_demo_persistent", &self.persistent);
+        }
+        if needs_reset.get() {
+            self.reset_to_home(&ctx);
+        }
+        if needs_search.get() {
+            self.dialogs.command_open = true;
+            self.command_search.clear();
+        }
+        if let Some(action) = breadcrumb_action {
+            match action {
+                functora_egui::NavAction::Back => {
+                    let _ = self.router.go_back(&mut ());
+                    ctx.request_repaint();
                 }
-                let spacing = ui10.responsive_spacing();
-                let available = ui10.available_width();
-                let content_width = available.min(spacing.content_max_width);
-                let margin = ((available - content_width) * 0.5).max(0.0);
-                let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
-                let mut scroll = egui::ScrollArea::vertical().auto_shrink([false; 2]);
-                if should_scroll_top {
-                    scroll = scroll.vertical_scroll_offset(0.0);
+                functora_egui::NavAction::Forward => {
+                    let _ = self.router.go_forward(&mut ());
+                    ctx.request_repaint();
                 }
-                _ = scroll.show(ui10, |ui12| {
-                    ui12.add_space(spacing.page_padding);
-                    _ = ui12.horizontal(|ui13| {
-                        ui13.add_space(margin);
-                        ui13.add_space(spacing.page_padding);
-                        _ = ui13.vertical(|ui14| {
-                            ui14.set_max_width(inner_width);
-                            self.render_component(ui14);
-                            ui14.add_space(48.0);
-                        });
-                        ui13.add_space(spacing.page_padding);
-                        ui13.add_space(margin);
-                    });
-                });
-            });
-
+                functora_egui::NavAction::Route(nav_route) => {
+                    if let Some(idx) = nav_route.to_flat() {
+                        self.navigate_to(idx);
+                    }
+                    ctx.request_repaint();
+                }
+            }
+            self.sync_from_router();
+        }
         self.render_overlays(&ctx);
         self.toast.show(&ctx);
     }

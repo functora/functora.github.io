@@ -72,6 +72,10 @@ pub use responsive::breakpoint::Breakpoint;
 pub use responsive::responsive_ext::ResponsiveExt;
 pub use responsive::spacing::Spacing;
 
+pub use layout::shell::Shell;
+pub use layout::shell::sidebar_effective_width;
+pub use widgets::navbar::widget::Navbar;
+
 pub use egui_flex::FlexAlign;
 pub use egui_flex::FlexItem;
 pub use egui_flex::FlexJustify;

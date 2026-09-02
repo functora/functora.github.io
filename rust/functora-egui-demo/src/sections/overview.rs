@@ -71,12 +71,17 @@ impl crate::app::ShowcaseApp {
         });
 
         ui.add_space(16.0);
-        _ = Separator::horizontal().text("Component catalog").show(ui);
-        ui.add_space(8.0);
 
-        for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-            crate::app::category_header(ui, cat_name, *cat_icon);
-            ui.add_space(2.0);
+        for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES
+            .iter()
+            .enumerate()
+            .filter(|(_, (name, _, _))| *name != "Overview")
+        {
+            _ = Separator::horizontal()
+                .text(*cat_name)
+                .icon(*cat_icon)
+                .show(ui);
+            ui.add_space(8.0);
             let ctx = ui.ctx().clone();
             _ = Flex::row().gap(4.0).wrap().show(ui, |f| {
                 for (item_idx, def) in items.iter().enumerate() {

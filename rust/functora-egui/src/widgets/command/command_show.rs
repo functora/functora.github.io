@@ -175,28 +175,18 @@ impl super::widget::Command {
                                     any_shown = true;
 
                                     if item.group != current_group {
-                                        if !current_group.is_empty() {
-                                            inner_ui4.add_space(4.0);
+                                        if item.group == "Overview" {
+                                            inner_ui4.add_space(8.0);
+                                        } else {
+                                            if !current_group.is_empty() {
+                                                inner_ui4.add_space(8.0);
+                                            }
+                                            let _ = crate::widgets::separator::widget::Separator::horizontal()
+                                                .text(&item.group)
+                                                .icon(item.group_icon)
+                                                .show(inner_ui4);
+                                            inner_ui4.add_space(8.0);
                                         }
-                                        let group_icon_size = 12.0;
-                                        let group_text = egui::RichText::new(&item.group)
-                                            .color(theme.muted_foreground)
-                                            .size(12.0)
-                                            .strong();
-                                        let _ = inner_ui4.horizontal(|ui_h| {
-                                            let (icon_rect, _) = ui_h.allocate_exact_size(
-                                                egui::vec2(group_icon_size, group_icon_size),
-                                                egui::Sense::hover(),
-                                            );
-                                            crate::icons::paint_icon::paint_icon(
-                                                ui_h.painter(),
-                                                icon_rect,
-                                                &item.group_icon,
-                                                theme.muted_foreground,
-                                            );
-                                            let _ = ui_h.label(group_text);
-                                        });
-                                        inner_ui4.add_space(2.0);
                                         current_group.clone_from(&item.group);
                                     }
 

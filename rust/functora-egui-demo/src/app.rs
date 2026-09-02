@@ -5,8 +5,8 @@ use functora_egui::state::PersistentState;
 use functora_egui::storage::persist_value;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
-    FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt,
-    ShadcnThemeExt, Sheet, Shell, ToastState, ToastVariant, Typography, TypographyVariant,
+    FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Separator,
+    Sheet, Shell, ToastState, ToastVariant, Typography,
 };
 
 pub use functora_egui::PickResult;
@@ -381,22 +381,7 @@ pub fn section_button(def: &ComponentDef, selected: bool) -> Button<'static> {
 
 /// Group header with icon – used by sidebar, palette and overview.
 pub fn category_header(ui: &mut egui::Ui, name: &str, icon: LucideIcon) {
-    let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
-    let _ = ui.horizontal(|inner_ui| {
-        let icon_size = 12.0;
-        let rect = egui::Rect::from_min_size(
-            egui::pos2(
-                inner_ui.cursor().min.x,
-                inner_ui.cursor().min.y + (inner_ui.available_height() - icon_size) / 2.0,
-            ),
-            egui::vec2(icon_size, icon_size),
-        );
-        functora_egui::paint_icon(inner_ui.painter(), rect, &icon, theme.muted_foreground);
-        inner_ui.add_space(icon_size + 4.0);
-        let _ = Typography::small(name)
-            .variant(TypographyVariant::Muted)
-            .show(inner_ui);
-    });
+    let _ = Separator::horizontal().text(name).icon(icon).show(ui);
 }
 #[cfg(target_arch = "wasm32")]
 fn initial_selected() -> usize {
@@ -757,9 +742,13 @@ impl ShowcaseApp {
     fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
         let mut close = false;
         for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-            ui.add_space(6.0);
-            category_header(ui, cat_name, *cat_icon);
-            ui.add_space(2.0);
+            let is_overview = *cat_name == "Overview";
+            if is_overview {
+                ui.add_space(8.0);
+            } else {
+                category_header(ui, cat_name, *cat_icon);
+                ui.add_space(8.0);
+            }
             for (item_idx, def) in items.iter().enumerate() {
                 let flat = flat_index(cat_idx, item_idx);
                 let selected = flat == self.selected;
@@ -769,6 +758,7 @@ impl ShowcaseApp {
                     ui.ctx().request_repaint();
                 }
             }
+            ui.add_space(8.0);
         }
         close
     }
@@ -1064,9 +1054,13 @@ impl eframe::App for ShowcaseApp {
             let router_ref = unsafe { &mut *router_ptr };
             let mut close = false;
             for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-                side_ui.add_space(6.0);
-                category_header(side_ui, cat_name, *cat_icon);
-                side_ui.add_space(2.0);
+                let is_overview = *cat_name == "Overview";
+                if is_overview {
+                    side_ui.add_space(8.0);
+                } else {
+                    category_header(side_ui, cat_name, *cat_icon);
+                    side_ui.add_space(8.0);
+                }
                 for (item_idx, def) in items.iter().enumerate() {
                     let flat = flat_index(cat_idx, item_idx);
                     let is_selected = flat == *selected_ref;
@@ -1084,6 +1078,7 @@ impl eframe::App for ShowcaseApp {
                         side_ui.ctx().request_repaint();
                     }
                 }
+                side_ui.add_space(8.0);
             }
             close
         })

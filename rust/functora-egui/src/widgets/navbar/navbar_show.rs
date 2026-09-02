@@ -101,7 +101,7 @@ impl super::widget::Navbar<'_> {
                                     {
                                         *lang = *new_lang;
                                     }
-                                    inner_ui.add_space(4.0);
+                                    inner_ui.add_space(2.0);
                                 }
                                 if let Some(label) = self.search_label {
                                     let search = if inner_ui.on_mobile() {
@@ -123,7 +123,7 @@ impl super::widget::Navbar<'_> {
                                     {
                                         cb();
                                     }
-                                    inner_ui.add_space(4.0);
+                                    inner_ui.add_space(2.0);
                                 }
                                 if let Some(th) = theme_opt.take() {
                                     let icon = if *th == Theme::Dark {
@@ -148,7 +148,7 @@ impl super::widget::Navbar<'_> {
                                         *th = th.next();
                                         crate::theme_extra::set_theme(inner_ui.ctx(), *th);
                                     }
-                                    inner_ui.add_space(4.0);
+                                    inner_ui.add_space(2.0);
                                 }
                                 if inner_ui
                                     .add(

@@ -5,6 +5,7 @@
 pub struct Separator {
     pub(crate) horizontal: bool,
     pub(crate) text: Option<String>,
+    pub(crate) icon: Option<crate::icons::lucide_icon::LucideIcon>,
 }
 
 impl Separator {
@@ -12,6 +13,7 @@ impl Separator {
         Self {
             horizontal: true,
             text: None,
+            icon: None,
         }
     }
 
@@ -19,12 +21,18 @@ impl Separator {
         Self {
             horizontal: false,
             text: None,
+            icon: None,
         }
     }
 
     /// Adds a centered text label to the separator.
     pub fn text(mut self, text: impl Into<String>) -> Self {
         self.text = Some(text.into());
+        self
+    }
+
+    pub fn icon(mut self, icon: crate::icons::lucide_icon::LucideIcon) -> Self {
+        self.icon = Some(icon);
         self
     }
 

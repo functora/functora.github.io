@@ -5,6 +5,8 @@ use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 use crate::theme_extra::Theme;
 use crate::widgets::breadcrumb::{Breadcrumb, NavAction};
 
+type FooterFn<'a> = Box<dyn FnOnce(&mut egui::Ui) + 'a>;
+
 #[must_use]
 pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
     let spacing = ctx.responsive_spacing();
@@ -50,6 +52,7 @@ where
     breadcrumb: Option<(&'a R, &'a NavHistory<R>)>,
     sidebar_labels: Vec<&'a str>,
     scroll_top: bool,
+    footer: Option<FooterFn<'a>>,
 }
 
 impl<'a, R> Shell<'a, R>
@@ -75,6 +78,7 @@ where
             breadcrumb: None,
             sidebar_labels: Vec::new(),
             scroll_top: false,
+            footer: None,
         }
     }
 
@@ -133,6 +137,12 @@ where
         self
     }
 
+    #[must_use]
+    pub fn footer(mut self, footer: impl FnOnce(&mut egui::Ui) + 'a) -> Self {
+        self.footer = Some(Box::new(footer));
+        self
+    }
+
     pub fn show(
         self,
         ui: &mut egui::Ui,
@@ -152,6 +162,7 @@ where
             breadcrumb,
             sidebar_labels,
             scroll_top,
+            footer,
         } = self;
         let mut collapsed_val = *collapsed;
         let language_copy = language.as_deref().copied();
@@ -289,6 +300,7 @@ where
                 if scroll_top {
                     scroll = scroll.vertical_scroll_offset(0.0);
                 }
+                let mut footer_opt = footer;
                 let _ = scroll.show(central_ui, |scroll_ui| {
                     scroll_ui.add_space(spacing.page_padding);
                     let _ = scroll_ui.horizontal(|h_ui| {
@@ -297,7 +309,16 @@ where
                         let _ = h_ui.vertical(|v_ui| {
                             v_ui.set_max_width(inner_width);
                             content(v_ui);
-                            v_ui.add_space(48.0);
+                            if let Some(f) = footer_opt.take() {
+                                v_ui.add_space(16.0);
+                                let _ = crate::widgets::separator::widget::Separator::horizontal()
+                                    .show(v_ui);
+                                v_ui.add_space(8.0);
+                                let _ = crate::widgets::footer::widget::Footer::new().show(v_ui, f);
+                                v_ui.add_space(12.0);
+                            } else {
+                                v_ui.add_space(48.0);
+                            }
                         });
                         h_ui.add_space(spacing.page_padding);
                         h_ui.add_space(margin);

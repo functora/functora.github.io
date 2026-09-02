@@ -5,8 +5,8 @@ use functora_egui::state::PersistentState;
 use functora_egui::storage::persist_value;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
-    FieldDescription, Flex, Item, Label, LucideIcon, ResponsiveExt, ShadcnThemeExt, Sheet, Shell,
-    ToastState, ToastVariant, Typography, TypographyVariant,
+    FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt,
+    ShadcnThemeExt, Sheet, Shell, ToastState, ToastVariant, Typography, TypographyVariant,
 };
 
 pub use functora_egui::PickResult;
@@ -1099,6 +1099,16 @@ impl eframe::App for ShowcaseApp {
         )
         .breadcrumb(&route, &history)
         .scroll_top(should_scroll_top)
+        .footer(|footer_ui| {
+            let _ = Footer::new().show(footer_ui, |inner| {
+                let _ = Hypertext::new()
+                    .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
+                    .link("Functora", "https://functora.github.io/")
+                    .text(". All rights reserved.")
+                    .centered()
+                    .show(inner);
+            });
+        })
         .show(ui, |content_ui| {
             self.render_component(content_ui);
         });

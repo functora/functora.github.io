@@ -244,3 +244,70 @@ fn textarea_paste_clear_custom_default() {
     click_at(&mut app, pos, &mut body);
     assert_eq!(text, "my default");
 }
+
+#[test]
+fn input_paste_clear_password_eye_toggle_preserves_text() {
+    let mut text = "secret123".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut text)
+            .password()
+            .show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let rects = find_rects(&out);
+    let outer = rects
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .expect("outer rect not found");
+    let eye_pos = Pos2::new(outer.max.x - 56.0, outer.center().y);
+    click_at(&mut app, eye_pos, &mut body);
+    click_at(&mut app, eye_pos, &mut body);
+    assert_eq!(text, "secret123");
+}
+
+#[test]
+fn input_paste_clear_password_clear_still_works() {
+    let mut text = "secret123".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut text)
+            .password()
+            .show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let rects = find_rects(&out);
+    let outer = rects
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .expect("outer rect not found");
+    let clear_pos = Pos2::new(outer.max.x - 10.0, outer.center().y);
+    click_at(&mut app, clear_pos, &mut body);
+    assert_eq!(text, "");
+}
+
+#[test]
+fn input_paste_clear_password_eye_does_not_clear() {
+    let mut text = "secret123".to_owned();
+    let mut cleared = false;
+    let mut body = |ui: &mut egui::Ui| {
+        let resp = functora_egui::InputPasteClear::new(&mut text)
+            .password()
+            .show(ui);
+        cleared = resp.cleared;
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let rects = find_rects(&out);
+    let outer = rects
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .expect("outer rect not found");
+    let eye_pos = Pos2::new(outer.max.x - 56.0, outer.center().y);
+    click_at(&mut app, eye_pos, &mut body);
+    assert!(!cleared);
+    assert_eq!(text, "secret123");
+}

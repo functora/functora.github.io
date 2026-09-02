@@ -59,12 +59,21 @@ pub(crate) fn show_input_paste_clear(
 
     let paste_width: f32 = 40.0;
     let clear_width: f32 = 40.0;
+    let eye_width: f32 = 32.0;
+    let has_eye = password;
+    let right_reserve = if has_eye {
+        clear_width + eye_width
+    } else {
+        clear_width
+    };
 
     let ptr = std::ptr::from_ref::<String>(text).cast::<()>();
     let base_id = egui::Id::new(ptr).with(ui.id());
     let slot_id = base_id.with("slot");
     let paste_id = base_id.with("paste_btn");
     let clear_id = base_id.with("clear_btn");
+    let reveal_id = base_id.with("reveal");
+    let eye_id = base_id.with("eye_btn");
 
     let slot = ui
         .data(|d| d.get_temp::<PasteSlot>(slot_id))
@@ -97,6 +106,12 @@ pub(crate) fn show_input_paste_clear(
         }
     }
 
+    let revealed = if has_eye {
+        ui.data(|d| d.get_temp::<bool>(reveal_id)).unwrap_or(false)
+    } else {
+        false
+    };
+
     let paste_rect = egui::Rect::from_min_max(
         egui::pos2(outer_rect.min.x + 2.0, outer_rect.min.y + 2.0),
         egui::pos2(outer_rect.min.x + paste_width - 2.0, outer_rect.max.y - 2.0),
@@ -105,9 +120,21 @@ pub(crate) fn show_input_paste_clear(
         egui::pos2(outer_rect.max.x - clear_width + 2.0, outer_rect.min.y + 2.0),
         egui::pos2(outer_rect.max.x - 2.0, outer_rect.max.y - 2.0),
     );
+    let eye_rect = if has_eye {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(
+                outer_rect.max.x - clear_width - eye_width + 2.0,
+                outer_rect.min.y + 2.0,
+            ),
+            egui::pos2(outer_rect.max.x - clear_width - 2.0, outer_rect.max.y - 2.0),
+        ))
+    } else {
+        None
+    };
 
     let paste_resp = ui.interact(paste_rect, paste_id, egui::Sense::click());
     let clear_resp = ui.interact(clear_rect, clear_id, egui::Sense::click());
+    let eye_resp = eye_rect.map(|r| ui.interact(r, eye_id, egui::Sense::click()));
 
     let is_pending = slot.0.lock().ok().is_some_and(|g| g.is_some());
 
@@ -124,6 +151,11 @@ pub(crate) fn show_input_paste_clear(
         default_value.clone_into(text);
         cleared = true;
     }
+    if let Some(resp) = &eye_resp
+        && resp.clicked()
+    {
+        let _ = ui.data_mut(|d| d.insert_temp(reveal_id, !revealed));
+    }
 
     let _ = ui.painter().vline(
         outer_rect.min.x + paste_width,
@@ -135,6 +167,13 @@ pub(crate) fn show_input_paste_clear(
         outer_rect.y_range(),
         egui::Stroke::new(1.0, theme.border),
     );
+    if has_eye {
+        let _ = ui.painter().vline(
+            outer_rect.max.x - right_reserve,
+            outer_rect.y_range(),
+            egui::Stroke::new(1.0, theme.border),
+        );
+    }
 
     let input_rect = egui::Rect::from_min_max(
         egui::pos2(
@@ -142,7 +181,7 @@ pub(crate) fn show_input_paste_clear(
             outer_rect.min.y + 2.0,
         ),
         egui::pos2(
-            outer_rect.max.x - clear_width - h_padding,
+            outer_rect.max.x - right_reserve - h_padding,
             outer_rect.max.y - 2.0,
         ),
     );
@@ -155,7 +194,7 @@ pub(crate) fn show_input_paste_clear(
 
     let text_edit = egui::TextEdit::singleline(text)
         .frame(egui::Frame::NONE)
-        .password(password)
+        .password(password && !revealed)
         .hint_text(&placeholder)
         .text_color(theme.foreground)
         .desired_width(input_rect.width());
@@ -185,6 +224,27 @@ pub(crate) fn show_input_paste_clear(
             paste_icon_rect,
             &paste_icon,
             display_paste_color,
+        );
+    }
+
+    if let (Some(rect), Some(resp)) = (eye_rect, &eye_resp)
+        && ui.is_rect_visible(rect)
+    {
+        let icon_rect = egui::Rect::from_center_size(rect.center(), egui::vec2(16.0, 16.0));
+        let eye_color = if resp.hovered() {
+            theme.foreground
+        } else {
+            theme.muted_foreground
+        };
+        crate::icons::paint_icon::paint_icon(
+            ui.painter(),
+            icon_rect,
+            if revealed {
+                &LucideIcon::EyeOff
+            } else {
+                &LucideIcon::Eye
+            },
+            eye_color,
         );
     }
 

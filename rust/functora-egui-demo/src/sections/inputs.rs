@@ -449,7 +449,10 @@ impl crate::app::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Password").show(ui);
+        _ = Typography::small("Password with eye toggle before clear").show(ui);
+        ui.add_space(2.0);
+        _ = Typography::muted("Layout: [paste | text | eye | clear]. Eye (Eye / EyeOff) appears only with .password() and sits immediately left of X.")
+            .show(ui);
         ui.add_space(4.0);
         let _ = InputPasteClear::new(&mut self.input_paste_clear_password)
             .placeholder("secret")
@@ -457,7 +460,7 @@ impl crate::app::ShowcaseApp {
             .show(ui);
         ui.add_space(4.0);
         _ = Typography::small(format!(
-            "Password len: {}",
+            "Password len: {}  (click eye to reveal, X to clear, paste to fill)",
             self.input_paste_clear_password.len()
         ))
         .show(ui);
@@ -479,7 +482,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// InputPasteClear: single-line with paste (left) + clear (right)\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password + custom icons\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);",
+            "// InputPasteClear: single-line with paste (left) + clear (right)\n// Password adds eye toggle before clear: [paste | text | eye | clear]\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password: eye (Eye/EyeOff) appears immediately left of X\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password() // -> [paste | •••• | eye | X ]\n    .show(ui);\n\n// Password + custom paste/clear icons (eye stays Eye/EyeOff)\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);",
         );
     }
 

@@ -14,8 +14,8 @@
     sha256 = "sha256-ieYfr4TYVRGUVriK/duN+iOlr8oAIAxz4IfnbG4hOis=";
   };
   pb = fetchTarball {
-    url = "https://github.com/pa1nki113r/Project_Brutality/archive/3f0b2f51d66ba6dc9f2d316570fa78c04a84101a.tar.gz";
-    sha256 = "0x13mllpc6qrc5w7vwxmz9ijpdy9648z5vvlk4s67wsxlslbw771";
+    url = "https://github.com/pa1nki113r/Project_Brutality/archive/1b5fdfb8cfcb58929833e2bccafa3ff05212e617.tar.gz";
+    sha256 = "1d8r8sj5qlbg7i3j58r0n5jksdql70qk7lcaqq9cj443rz44bf7f";
   };
   bd = ../bak/doom/brutal22test6.pk3;
   qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
@@ -79,7 +79,7 @@
     sandbox.config.env;
   mkDoom = {
     tag,
-    pkg ? "${pkgs.gzdoom}/bin/gzdoom",
+    pkg ? "${pkgs.uzdoom}/bin/uzdoom",
     cfg ? null,
     wad ? ../bak/doom/wads/doom2.wad,
     sky ? ../bak/doom/CryosUltDoomSkies.wad,
@@ -88,14 +88,15 @@
     tex ? "",
     gfx ? ../bak/doom/CodeFX_v2.55.pk3,
     total ? ../bak/doom/DiamondDragon.pk3,
-    music ? "",
+    music ? music_doom,
     lights ? ''"${duhd}/1 lights2.wad"'',
     liquid ? ltp4,
     relite ? ../bak/doom/relite_0.7.3b.pk3,
     parallax ? ''"${duhd}/0 Parallax PBR.pk3"'',
     nashgore ? "",
     movement ? "",
-    flashlight ? "'${duhd}/12 Flashlight++.pk3'",
+    flashlight ? ../bak/doom/flashlight_plus_plus_v9_1.pk3,
+    blur ? ../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3,
     lastweapon ? ../bak/doom/fast-swap.pk3,
     cblood ? ../bak/doom/cblood.pk3,
   }: {
@@ -120,7 +121,7 @@
         ${movement} \
         ${flashlight} \
         ${../bak/doom/Cynic_Games_LensFlare_v_1.2.1.pk3} \
-        ${../bak/doom/Cynic_Games_ChromaBlur_v1.2lts.pk3} \
+        ${blur} \
         ${lastweapon} \
         ${cblood} \
         ${
@@ -138,7 +139,25 @@
         sky = ../bak/doom/Cran_D64Patch_skygenerator.pk3;
         tex = "${../bak/doom/Cran_D64PatchTex_v1.3.1.pk3} ${../bak/doom/Cran_D64Patch_BMapsD2_v2.pk3}";
         total = "${../bak/doom/BD64-VoH_game_v1.6.1.pk3} ${../bak/doom/BD64-VoH_maps_v1.6.1.pk3}";
+        liquid = ltp701;
         movement = ../bak/doom/BD64_ZMovement.pk3;
+      }
+      // args
+    );
+  mkDoomPB = args:
+    mkDoom (
+      {
+        total = pb;
+        liquid = ltp701;
+        blur = "";
+      }
+      // args
+    );
+  mkDoomBD = args:
+    mkDoom (
+      {
+        total = bd;
+        liquid = ltp701;
       }
       // args
     );
@@ -179,26 +198,28 @@
         tag = "64";
         music = ../bak/doom/BD64-VoH_D64D2_Ost.pk3;
       }
-      // mkDoom {
+      // mkDoomPB {
         tag = "annie";
         mod = ../bak/doom/Annie-E1-v1.1.zip;
         relite = ../bak/doom/relite_0.6.7a.pk3;
       }
-      // mkDoom {
+      // mkDoomPB {
         tag = "phlegethon";
         mod = ../bak/doom/Phlegethon.wad;
+        relite = ../bak/doom/relite_0.5a.pk3;
       }
-      // mkDoom {
+      // mkDoomPB {
         tag = "dbp37-augzen";
+        dec = "";
         mod = ../bak/doom/DBP37_AUGZEN.wad;
-        relite = "";
+        relite = ../bak/doom/relite_0.5a.pk3;
       }
-      // mkDoom {
+      // mkDoomPB {
         tag = "mmdcxiv-debut";
         mod = ../bak/doom/MMDCXIV-Debut.pk3;
         relite = "";
       }
-      // mkDoom {
+      // mkDoomPB {
         tag = "dex";
         mod = ../bak/doom/DEX_1.wad;
       }
@@ -210,8 +231,22 @@
       // mkDoom {
         tag = "neon-overdrive";
         mod = ../bak/doom/NEONOVER.wad;
-        total = bd;
         relite = "";
+      }
+      // mkDoomPB {
+        tag = "dark";
+        mod = ../bak/doom/DUpart1.wad;
+        relite = ../bak/doom/relite_0.6.7a.pk3;
+      }
+      // mkDoomPB {
+        tag = "d2iro";
+        mod = ../bak/doom/D2IRO.wad;
+        relite = ../bak/doom/relite_0.5a.pk3;
+      }
+      // mkDoomPB {
+        tag = "d2ico";
+        mod = ../bak/doom/D2ICO.wad;
+        relite = ../bak/doom/relite_0.5a.pk3;
       }
       // mkDoom {
         tag = "qcde";
@@ -239,7 +274,7 @@
         flashlight = ../bak/doom/zand-flashlight.pk3;
         lastweapon = "";
       }
-      // mkDoom {
+      // mkDoomPB {
         wad = ../bak/doom/wads/doom.wad;
         tag = "spectacle-creep";
         mod = ../bak/doom/spectacle_creep_build10D.wad;

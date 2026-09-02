@@ -23,7 +23,7 @@
           "err.ee"
           "delfi.ee"
           "postimees.ee"
-          # "server4.beyondallreason.info"
+          "server4.beyondallreason.info"
         ]
         else []
       ));

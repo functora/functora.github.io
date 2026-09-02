@@ -7,6 +7,7 @@ use crate::progress::{Job, Stage, clear_progress};
 use crate::route::Screen;
 use crate::state::{External, ExternalNote, TemporaryState};
 use crate::storage::APP_ATTRS;
+use functora_egui::Routable;
 use functora_tagged::InfallibleInto;
 use zeroize::Zeroizing;
 
@@ -26,9 +27,10 @@ pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {
     current.push(att);
 }
 
-pub fn remove_attachment(state: &mut TemporaryState, index: usize) {
-    if index < state.attachments.len() {
-        drop(state.attachments.remove(index));
+pub fn remove_attachment(state: &mut TemporaryState, index: crate::state::AttachmentIdx) {
+    let idx = index.get();
+    if idx < state.attachments.len() {
+        drop(state.attachments.remove(idx));
     }
 }
 
@@ -70,7 +72,8 @@ async fn build_note(
         Some(cty) => NoteData::CipherText(crate::crypto::encrypt_symmetric(note.as_bytes(), password, cty)?),
         None => NoteData::PlainText(note.to_string()),
     };
-    let u = build_url(&format!("{}/?screen={}", APP_ATTRS.origin(), Screen::Open), &note_data)?;
+    let base = format!("{}{}", APP_ATTRS.origin(), Screen::Open.to_url());
+    let u = build_url(&base, &note_data)?;
     match generate_qr_code(&u) {
         Ok(qr) => Ok(External::Note(ExternalNote {
             data: note_data,

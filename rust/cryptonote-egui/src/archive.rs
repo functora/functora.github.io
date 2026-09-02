@@ -8,17 +8,19 @@ pub use functora_core::package::{ArchiveMetadata, ArchiveSource, PackageStages};
 pub use functora_egui::files::Attachment;
 
 const AAD_PREFIX: &[u8] = b"cryptonote.v1";
+pub const NOTE_ENTRY: &str = "note.txt";
+pub const ATTACHMENTS_PREFIX: &str = "attachments/";
 
 fn stages() -> PackageStages<Stage> {
     PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt)
 }
 
 fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, Vec<u8>)> {
-    let mut entries = vec![("note.txt".to_string(), note.as_bytes().to_vec())];
+    let mut entries = vec![(NOTE_ENTRY.to_string(), note.as_bytes().to_vec())];
     entries.extend(
         attachments
             .iter()
-            .map(|a| (format!("attachments/{}", a.name), a.data.to_vec())),
+            .map(|a| (format!("{ATTACHMENTS_PREFIX}{}", a.name), a.data.to_vec())),
     );
     entries
 }
@@ -102,11 +104,11 @@ pub async fn extract_archive_package_async(
     )
     .await?
     {
-        if name == "note.txt" {
+        if name == NOTE_ENTRY {
             note = String::from_utf8(data)?;
         } else {
             files.push(Attachment {
-                name: name.strip_prefix("attachments/").unwrap_or(&name).to_string(),
+                name: name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(&name).to_string(),
                 data: data.into(),
             });
         }
@@ -145,11 +147,11 @@ where
     )
     .await?
     {
-        if name == "note.txt" {
+        if name == NOTE_ENTRY {
             note = String::from_utf8(data)?;
         } else {
             files.push(Attachment {
-                name: name.strip_prefix("attachments/").unwrap_or(&name).to_string(),
+                name: name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(&name).to_string(),
                 data: data.into(),
             });
         }

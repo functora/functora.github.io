@@ -161,15 +161,63 @@ impl ComponentDef {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CategoryId {
+    Overview,
+    Inputs,
+    Layout,
+    Overlays,
+    Feedback,
+    Data,
+    Display,
+    Forms,
+    Responsive,
+    Platform,
+}
+
+impl CategoryId {
+    #[must_use]
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Overview => "Overview",
+            Self::Inputs => "Inputs",
+            Self::Layout => "Layout",
+            Self::Overlays => "Overlays",
+            Self::Feedback => "Feedback",
+            Self::Data => "Data",
+            Self::Display => "Display",
+            Self::Forms => "Forms",
+            Self::Responsive => "Responsive",
+            Self::Platform => "Platform",
+        }
+    }
+
+    #[must_use]
+    pub fn icon(self) -> LucideIcon {
+        match self {
+            Self::Overview => LucideIcon::Sparkles,
+            Self::Inputs => LucideIcon::Keyboard,
+            Self::Layout => LucideIcon::LayoutGrid,
+            Self::Overlays => LucideIcon::Layers,
+            Self::Feedback => LucideIcon::BellRing,
+            Self::Data => LucideIcon::Database,
+            Self::Display => LucideIcon::Type,
+            Self::Forms => LucideIcon::ListChecks,
+            Self::Responsive => LucideIcon::MonitorSmartphone,
+            Self::Platform => LucideIcon::Smartphone,
+        }
+    }
+}
+
 /// Catalog of every component grouped by category.
-pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
+pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
     (
-        "Overview",
+        CategoryId::Overview,
         LucideIcon::Sparkles,
         &[ComponentDef::new("Overview", LucideIcon::Sparkles)],
     ),
     (
-        "Inputs",
+        CategoryId::Inputs,
         LucideIcon::Keyboard,
         &[
             ComponentDef::new("Button", LucideIcon::MousePointer2),
@@ -195,7 +243,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Layout",
+        CategoryId::Layout,
         LucideIcon::LayoutGrid,
         &[
             ComponentDef::new("Flex", LucideIcon::GripHorizontal),
@@ -213,7 +261,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Overlays",
+        CategoryId::Overlays,
         LucideIcon::Layers,
         &[
             ComponentDef::new("Dialog", LucideIcon::AppWindow),
@@ -231,7 +279,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Feedback",
+        CategoryId::Feedback,
         LucideIcon::BellRing,
         &[
             ComponentDef::new("Alert", LucideIcon::CircleAlert),
@@ -244,7 +292,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Data",
+        CategoryId::Data,
         LucideIcon::Database,
         &[
             ComponentDef::new("Avatar", LucideIcon::CircleUser),
@@ -258,7 +306,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Display",
+        CategoryId::Display,
         LucideIcon::Type,
         &[
             ComponentDef::new("Typography", LucideIcon::Type),
@@ -269,7 +317,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Forms",
+        CategoryId::Forms,
         LucideIcon::ListChecks,
         &[
             ComponentDef::new("FieldGroup", LucideIcon::Boxes),
@@ -281,7 +329,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Responsive",
+        CategoryId::Responsive,
         LucideIcon::MonitorSmartphone,
         &[
             ComponentDef::new("Breakpoint", LucideIcon::MonitorSmartphone),
@@ -293,7 +341,7 @@ pub const CATEGORIES: &[(&str, LucideIcon, &[ComponentDef])] = &[
         ],
     ),
     (
-        "Platform",
+        CategoryId::Platform,
         LucideIcon::Smartphone,
         &[
             ComponentDef::new("Storage", LucideIcon::Database),
@@ -380,8 +428,11 @@ pub fn section_button(def: &ComponentDef, selected: bool) -> Button<'static> {
 }
 
 /// Group header with icon – used by sidebar, palette and overview.
-pub fn category_header(ui: &mut egui::Ui, name: &str, icon: LucideIcon) {
-    let _ = Separator::horizontal().text(name).icon(icon).show(ui);
+pub fn category_header(ui: &mut egui::Ui, id: CategoryId) {
+    let _ = Separator::horizontal()
+        .text(id.label())
+        .icon(id.icon())
+        .show(ui);
 }
 #[cfg(target_arch = "wasm32")]
 fn initial_selected() -> usize {
@@ -741,12 +792,12 @@ impl ShowcaseApp {
     #[allow(dead_code)]
     fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
         let mut close = false;
-        for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-            let is_overview = *cat_name == "Overview";
+        for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
+            let is_overview = *cat_id == CategoryId::Overview;
             if is_overview {
                 ui.add_space(8.0);
             } else {
-                category_header(ui, cat_name, *cat_icon);
+                category_header(ui, *cat_id);
                 ui.add_space(8.0);
             }
             for (item_idx, def) in items.iter().enumerate() {
@@ -873,10 +924,10 @@ impl ShowcaseApp {
         if self.dialogs.command_open {
             let items: Vec<CommandItem> = CATEGORIES
                 .iter()
-                .flat_map(|(cat, cat_icon, defs)| {
+                .flat_map(|(cat, _, defs)| {
                     defs.iter().map(|def| CommandItem {
-                        group: (*cat).to_owned(),
-                        group_icon: *cat_icon,
+                        group: cat.label().to_owned(),
+                        group_icon: cat.icon(),
                         label: def.name.to_owned(),
                         icon: def.icon,
                     })
@@ -897,11 +948,11 @@ impl ShowcaseApp {
     }
 
     #[allow(dead_code)]
-    fn category_of(flat: usize) -> Option<(&'static str, usize)> {
+    fn category_of(flat: usize) -> Option<(CategoryId, usize)> {
         let mut remaining = flat;
-        for (cat_idx, (cat_name, _, items)) in CATEGORIES.iter().enumerate() {
+        for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
             if remaining < items.len() {
-                return Some((cat_name, cat_idx));
+                return Some((*cat_id, cat_idx));
             }
             remaining -= items.len();
         }
@@ -1053,12 +1104,12 @@ impl eframe::App for ShowcaseApp {
             let selected_ref = unsafe { &mut *selected_ptr };
             let router_ref = unsafe { &mut *router_ptr };
             let mut close = false;
-            for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES.iter().enumerate() {
-                let is_overview = *cat_name == "Overview";
+            for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
+                let is_overview = *cat_id == CategoryId::Overview;
                 if is_overview {
                     side_ui.add_space(8.0);
                 } else {
-                    category_header(side_ui, cat_name, *cat_icon);
+                    category_header(side_ui, *cat_id);
                     side_ui.add_space(8.0);
                 }
                 for (item_idx, def) in items.iter().enumerate() {

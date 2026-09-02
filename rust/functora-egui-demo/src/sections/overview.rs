@@ -1,6 +1,6 @@
 //! Overview section: the library pitch and feature highlights.
 
-use crate::app::CATEGORIES;
+use crate::app::{CATEGORIES, CategoryId};
 use functora_egui::{Flex, Separator, Typography};
 
 impl crate::app::ShowcaseApp {
@@ -12,14 +12,14 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(16.0);
 
-        for (cat_idx, (cat_name, cat_icon, items)) in CATEGORIES
+        for (cat_idx, (cat_id, _, items)) in CATEGORIES
             .iter()
             .enumerate()
-            .filter(|(_, (name, _, _))| *name != "Overview")
+            .filter(|(_, (id, _, _))| *id != CategoryId::Overview)
         {
             _ = Separator::horizontal()
-                .text(*cat_name)
-                .icon(*cat_icon)
+                .text(cat_id.label())
+                .icon(cat_id.icon())
                 .show(ui);
             ui.add_space(8.0);
             let ctx = ui.ctx().clone();

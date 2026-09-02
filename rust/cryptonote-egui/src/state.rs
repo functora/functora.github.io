@@ -2,6 +2,26 @@ use crate::crypto::{CipherType, ExternalArchive};
 use crate::encoding::NoteData;
 use crate::progress::{Job, Stage};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct AttachmentIdx(pub usize);
+
+impl AttachmentIdx {
+    #[must_use]
+    pub fn new(index: usize, len: usize) -> Option<Self> {
+        (index < len).then_some(Self(index))
+    }
+
+    #[must_use]
+    pub fn get(self) -> usize {
+        self.0
+    }
+
+    #[must_use]
+    pub fn as_usize(self) -> usize {
+        self.0
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Copy, Default)]
 pub enum ActionMode {
     #[default]
@@ -59,7 +79,7 @@ pub struct TemporaryState {
     pub url_input: String,
     pub external: External,
     pub progress: Option<Job<Stage>>,
-    pub attachment: Option<usize>,
+    pub attachment: Option<AttachmentIdx>,
     pub message: Option<crate::messages::Msg>,
 }
 

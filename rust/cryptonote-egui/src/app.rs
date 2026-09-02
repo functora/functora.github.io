@@ -21,9 +21,12 @@ use crate::hooks::{remove_attachment, share_error};
 use crate::messages::Msg;
 use crate::progress::{Job, Stage, claim_job, clear_progress};
 use crate::route::Screen;
-use crate::state::{ActionMode, External, TemporaryState};
+use crate::state::{ActionMode, AttachmentIdx, External, TemporaryState};
 use crate::storage::{APP_ATTRS, PersistentState};
 use functora_egui::files::format_size;
+
+const PERSISTENT_KEY: &str = "cryptonote_persistent";
+const BYTES_URI_PREFIX: &str = "bytes://";
 
 pub struct CryptonoteApp {
     router: AppRouter<Screen, ()>,
@@ -72,7 +75,7 @@ impl CryptonoteApp {
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
-        let persistent = PersistentState::load_or_default(&cc.egui_ctx, "cryptonote_persistent", ());
+        let persistent = PersistentState::load_or_default(&cc.egui_ctx, PERSISTENT_KEY, ());
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
         let mut this = Self {
             persistent,
@@ -88,7 +91,7 @@ impl CryptonoteApp {
         {
             let mut tmp = ();
             let router = AppRouter::new(&mut tmp, Screen::default());
-            let current = router.current().clone();
+            let current = *router.current();
             this.router = router;
             this.temporary.screen = current;
         }
@@ -100,7 +103,7 @@ impl CryptonoteApp {
     }
 
     fn navigate(&mut self, screen: Screen) {
-        self.temporary.screen = screen.clone();
+        self.temporary.screen = screen;
         self.router.navigate(&mut (), screen);
     }
 
@@ -705,8 +708,8 @@ impl CryptonoteApp {
         let () = ui.add_space(8.0);
         _ = Label::new(format!("Attachments: {}", self.temporary.attachments.len())).show(ui);
         let () = ui.add_space(4.0);
-        let mut to_remove: Option<usize> = None;
-        let mut to_open: Option<usize> = None;
+        let mut to_remove: Option<AttachmentIdx> = None;
+        let mut to_open: Option<AttachmentIdx> = None;
         for (idx, att) in self.temporary.attachments.iter().enumerate() {
             let size = format_size(att.data.len() as u64);
             _ = Flex::row().gap(8.0).show(ui, |f| {
@@ -722,7 +725,7 @@ impl CryptonoteApp {
                 .inner
                 .clicked()
                 {
-                    to_open = Some(idx);
+                    to_open = Some(AttachmentIdx(idx));
                 }
                 if f.add(
                     Button::new(Msg::RemoveFile.render(self.lang()))
@@ -733,7 +736,7 @@ impl CryptonoteApp {
                 .inner
                 .clicked()
                 {
-                    to_remove = Some(idx);
+                    to_remove = Some(AttachmentIdx(idx));
                 }
             });
             let () = ui.add_space(4.0);
@@ -939,7 +942,7 @@ impl CryptonoteApp {
                         .inner
                         .clicked()
                         {
-                            self.temporary.attachment = Some(idx);
+                            self.temporary.attachment = Some(AttachmentIdx(idx));
                             self.navigate(Screen::File);
                         }
                         if f.add(
@@ -1262,7 +1265,7 @@ impl CryptonoteApp {
         let att_opt = self
             .temporary
             .attachment
-            .and_then(|idx| self.temporary.attachments.get(idx).cloned());
+            .and_then(|idx| self.temporary.attachments.get(idx.get()).cloned());
         if let Some(att) = att_opt.clone() {
             let size = format_size(att.data.len() as u64);
             _ = ui.label(egui::RichText::new(&att.name).size(18.0).strong());
@@ -1273,7 +1276,7 @@ impl CryptonoteApp {
                 functora_egui::files::Preview::Image(_) => {
                     _ = ui.label(format!("Image: {} (preview blob available)", att.name));
                     // Try to show image via egui Image from bytes if possible
-                    let uri = format!("bytes://{}", att.name);
+                    let uri = format!("{BYTES_URI_PREFIX}{}", att.name);
                     _ = ui
                         .add(egui::Image::from_bytes(uri, att.data.clone()).max_width(ui.available_width().min(400.0)));
                 }
@@ -1489,14 +1492,14 @@ impl eframe::App for CryptonoteApp {
         self.poll_receivers(&ctx);
         self.handle_deep_link();
         self.router.ui(ui, &mut ());
-        let routed = self.router.current().clone();
+        let routed = *self.router.current();
         if routed != self.temporary.screen {
             self.temporary.screen = routed;
         }
         let mut persistent = std::mem::take(&mut self.persistent);
         let prev_persistent = persistent.clone();
         let mut collapsed_val = self.sidebar_collapsed;
-        let route = self.router.current().clone();
+        let route = *self.router.current();
         let history = self.router.history().clone();
         let needs_reset = std::cell::Cell::new(false);
         let temporary_ptr: *mut TemporaryState = &raw mut self.temporary;
@@ -1529,7 +1532,7 @@ impl eframe::App for CryptonoteApp {
                     .selected(selected)
                     .full_width();
                 if side_ui.add(btn).clicked() {
-                    temporary_ref.screen = screen.clone();
+                    temporary_ref.screen = screen;
                     router_ref.navigate(&mut (), screen);
                     close |= side_ui.on_mobile();
                 }
@@ -1548,7 +1551,7 @@ impl eframe::App for CryptonoteApp {
             {
                 temporary_ref.reset();
                 let home = Screen::Home;
-                temporary_ref.screen = home.clone();
+                temporary_ref.screen = home;
                 router_ref.navigate(&mut (), home);
                 close |= side_ui.on_mobile();
             }
@@ -1563,7 +1566,7 @@ impl eframe::App for CryptonoteApp {
         ])
         .breadcrumb(&route, &history)
         .show(ui, |content_ui| {
-            match self.temporary.screen.clone() {
+            match self.temporary.screen {
                 Screen::Home => self.screen_home(content_ui),
                 Screen::Open => self.screen_open(content_ui),
                 Screen::View => self.screen_view(content_ui),
@@ -1581,7 +1584,7 @@ impl eframe::App for CryptonoteApp {
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
         if prev_persistent != self.persistent {
-            persist_value("cryptonote_persistent", &self.persistent);
+            persist_value(PERSISTENT_KEY, &self.persistent);
             self.apply_theme(&ctx);
         }
         if needs_reset.get() {
@@ -1591,11 +1594,11 @@ impl eframe::App for CryptonoteApp {
             match action {
                 functora_egui::NavAction::Back => {
                     let _ = self.router.go_back(&mut ());
-                    self.temporary.screen = self.router.current().clone();
+                    self.temporary.screen = *self.router.current();
                 }
                 functora_egui::NavAction::Forward => {
                     let _ = self.router.go_forward(&mut ());
-                    self.temporary.screen = self.router.current().clone();
+                    self.temporary.screen = *self.router.current();
                 }
                 functora_egui::NavAction::Route(r) => {
                     self.navigate(r);

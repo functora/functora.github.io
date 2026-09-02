@@ -4,12 +4,16 @@ use std::str::FromStr;
 
 use functora_core::i18n::Language;
 
+pub const SCREEN_PARAM: &str = "screen";
+pub const COMPONENT_PARAM: &str = "component";
+pub const ROOT_PATH: &str = "/";
+
 pub trait Routable:
     Display + FromStr + Clone + PartialEq + Eq + std::fmt::Debug + Send + Sync + 'static
 {
     #[allow(clippy::must_use_candidate)]
     fn screen_param() -> &'static str {
-        "screen"
+        SCREEN_PARAM
     }
     #[allow(clippy::must_use_candidate)]
     fn to_slug(&self) -> String {
@@ -21,7 +25,7 @@ pub trait Routable:
         Self: Default,
     {
         if *self == Self::default() {
-            "/".to_string()
+            ROOT_PATH.to_string()
         } else {
             format!(
                 "/?{}={}",
@@ -43,7 +47,7 @@ pub trait Routable:
         let key = Self::screen_param();
         if let Some(screen) = params.get(key) {
             screen.parse().ok()
-        } else if let Some(component) = params.get("component") {
+        } else if let Some(component) = params.get(COMPONENT_PARAM) {
             component.parse().ok()
         } else {
             None
@@ -73,11 +77,24 @@ pub trait RouteMetadata: Routable {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BreadcrumbPosition {
+    Last,
+    NotLast,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BreadcrumbSegment<R> {
     pub name: String,
     pub route: R,
-    pub is_last: bool,
+    pub position: BreadcrumbPosition,
+}
+
+impl<R> BreadcrumbSegment<R> {
+    #[must_use]
+    pub fn is_last(&self) -> bool {
+        self.position == BreadcrumbPosition::Last
+    }
 }
 
 pub fn breadcrumbs_for<R>(route: &R, lang: Language) -> Vec<BreadcrumbSegment<R>>
@@ -91,14 +108,14 @@ where
             chain.push(BreadcrumbSegment {
                 name: r.label(lang).into_owned(),
                 route: r.clone(),
-                is_last: false,
+                position: BreadcrumbPosition::NotLast,
             });
         }
         current = r.parent();
     }
     chain.reverse();
     if let Some(last) = chain.last_mut() {
-        last.is_last = true;
+        last.position = BreadcrumbPosition::Last;
     }
     chain
 }

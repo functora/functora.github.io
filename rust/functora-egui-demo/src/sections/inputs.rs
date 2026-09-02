@@ -2,9 +2,10 @@
 //! text fields, selects, comboboxes, OTP, date picker, color swatch.
 
 use functora_egui::{
-    Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, Combobox, ComponentSize, DatePicker,
-    Flex, Input, InputGroup, InputOtp, LucideIcon, NumberInput, Radio, RadioGroup, Select,
-    SelectValue, Slider, Switch, Textarea, Toggle, ToggleGroup, ToggleVariant, Typography,
+    Badge, Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, Combobox, ComponentSize,
+    DatePicker, Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio,
+    RadioGroup, Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle,
+    ToggleGroup, ToggleVariant, Typography,
 };
 
 use functora_egui::snippet;
@@ -405,6 +406,132 @@ impl crate::app::ShowcaseApp {
         snippet(
             ui,
             "// InputGroup: input with prefix text and/or suffix addon\nuse functora_egui::{InputGroup, Button, ButtonVariant, LucideIcon, ComponentSize};\n\n// With prefix\nlet mut url = String::new();\nInputGroup::show(\n    ui,\n    &mut url,\n    \"example.com\",\n    Some(\"https://\"),\n    None::<fn(&mut egui::Ui)>,\n);\n\n// With prefix and suffix button\nlet mut search = String::new();\nInputGroup::show(\n    ui,\n    &mut search,\n    \"Search...\",\n    None,\n    Some(|ui| {\n        Button::icon_only(LucideIcon::Search)\n            .variant(ButtonVariant::Ghost)\n            .size(ComponentSize::Sm)\n            .show(ui);\n    }),\n);",
+        );
+    }
+
+    pub(crate) fn demo_input_paste_clear(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted("Single-line input with paste on the left and clear on the right.")
+            .show(ui);
+        ui.add_space(12.0);
+
+        _ = Typography::small("Default empty string").show(ui);
+        ui.add_space(4.0);
+        let resp = InputPasteClear::new(&mut self.input_paste_clear_text)
+            .placeholder("Paste something...")
+            .show(ui);
+        if let Some(err) = &resp.clipboard_error {
+            let msg = err.to_string();
+            ui.add_space(4.0);
+            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+        }
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Value: \"{}\"  pasted={} cleared={}",
+            self.input_paste_clear_text, resp.pasted, resp.cleared
+        ))
+        .show(ui);
+        if resp.pasted {
+            ui.ctx().request_repaint();
+        }
+
+        ui.add_space(12.0);
+        _ = Typography::small("Custom default value").show(ui);
+        ui.add_space(4.0);
+        let resp2 = InputPasteClear::new(&mut self.input_paste_clear_custom_default)
+            .placeholder("Custom default is \"default value\"")
+            .default_value("default value")
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Value: \"{}\"  cleared={}",
+            self.input_paste_clear_custom_default, resp2.cleared
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        _ = Typography::small("Password").show(ui);
+        ui.add_space(4.0);
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_password)
+            .placeholder("secret")
+            .password()
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Password len: {}",
+            self.input_paste_clear_password.len()
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        _ = Typography::small("Custom icons").show(ui);
+        ui.add_space(4.0);
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_custom_icons)
+            .placeholder("Custom icons: Copy / Trash")
+            .paste_icon(LucideIcon::Copy)
+            .clear_icon(LucideIcon::Trash)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Custom icons value: \"{}\"",
+            self.input_paste_clear_custom_icons
+        ))
+        .show(ui);
+
+        snippet(
+            ui,
+            "// InputPasteClear: single-line with paste (left) + clear (right)\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password + custom icons\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);",
+        );
+    }
+
+    pub(crate) fn demo_textarea_paste_clear(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Multi-line text area with paste on the left and clear on the right (toolbar).",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+
+        _ = Typography::small("Default empty string").show(ui);
+        ui.add_space(4.0);
+        let resp = TextareaPasteClear::new(&mut self.textarea_paste_clear_text)
+            .placeholder("Paste a long text...")
+            .min_height(80.0)
+            .show(ui);
+        if let Some(err) = &resp.clipboard_error {
+            let msg = err.to_string();
+            ui.add_space(4.0);
+            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+        }
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Chars: {}  pasted={} cleared={}",
+            self.textarea_paste_clear_text.len(),
+            resp.pasted,
+            resp.cleared
+        ))
+        .show(ui);
+        if resp.pasted {
+            ui.ctx().request_repaint();
+        }
+
+        ui.add_space(12.0);
+        _ = Typography::small("Custom icons + min_height").show(ui);
+        ui.add_space(4.0);
+        let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_custom)
+            .placeholder("Custom icons")
+            .paste_icon(LucideIcon::Copy)
+            .clear_icon(LucideIcon::Trash2)
+            .min_height(100.0)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Custom textarea chars: {}",
+            self.textarea_paste_clear_custom.len()
+        ))
+        .show(ui);
+
+        snippet(
+            ui,
+            "// TextareaPasteClear: multi-line with paste + clear toolbar\nuse functora_egui::{TextareaPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = TextareaPasteClear::new(&mut text)\n    .placeholder(\"Paste a long text...\")\n    .min_height(80.0)\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom icons\nTextareaPasteClear::new(&mut text)\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash2)\n    .min_height(100.0)\n    .show(ui);",
         );
     }
 

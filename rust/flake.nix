@@ -217,15 +217,16 @@
         srWeb = app:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [python3];
+            runtimeInputs = with pkgs; [coreutils psmisc python3];
             text = ''
-                  (
-                    cd "${app}"
-                    VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                    dx bundle --release --web --debug-symbols=false
+                  cd "${app}"
+                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                  dx bundle --release --web --debug-symbols=false
                     cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
-                    python3 <<PYEOF
-              import http.server, socketserver, os
+                    fuser -k -TERM 8000/tcp 2>/dev/null || true
+                    sleep 0.5
+                    exec python3 <<PYEOF
+              import http.server, os
               PORT = 8000
               BASE = "/apps/${app}/$VSN"
               ROOT = os.path.abspath("./target/dx/${app}/release/web/public")
@@ -241,9 +242,149 @@
                           return
                       super().do_GET()
 
-              socketserver.TCPServer(("", PORT), Handler).serve_forever()
+              http.server.HTTPServer(("", PORT), Handler).serve_forever()
               PYEOF
-                  )
+            '';
+          };
+        mkFunctoraEguiWeb = app: icons:
+          pkgs.writeShellApplication rec {
+            name = "release-web-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused];
+            text = ''
+              (
+                cd "${app}"
+                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                REL="../../apps/${app}/$VSN"
+                if [ -d "$REL" ]
+                then
+                  echo "$REL does already exist!"
+                  exit 1
+                else
+                  mkdir -p "$REL"
+                fi
+                LIBNAME="$(echo "${app}" | tr - _)"
+                ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
+                ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
+                  --target web \
+                  --no-typescript \
+                  --out-dir "$REL/pkg" \
+                  "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                ${pkgs.binaryen}/bin/wasm-opt -O2 --strip-debug \
+                  "$REL/pkg/''${LIBNAME}_bg.wasm" -o "$REL/pkg/''${LIBNAME}_bg.opt.wasm"
+                mv "$REL/pkg/''${LIBNAME}_bg.opt.wasm" "$REL/pkg/''${LIBNAME}_bg.wasm"
+                cp assets/index.html "$REL/index.html"
+                cp assets/manifest.webmanifest "$REL/manifest.webmanifest"
+                cp assets/egui.js "$REL/egui.js"
+                cp ../functora-dioxus/assets/sw.js "$REL/sw.js"
+                cp "${icons}/android-chrome-192x192.png" "$REL/"
+                cp "${icons}/android-chrome-512x512.png" "$REL/"
+                cp "${icons}/favicon.ico" "$REL/"
+                echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
+                echo "$REL web release success!"
+              )
+            '';
+          };
+        srFunctoraEguiWeb = app: icons:
+          pkgs.writeShellApplication {
+            name = "serve-web-${app}";
+            runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
+            text = ''
+                  cd "${app}"
+                  LIBNAME="$(echo "${app}" | tr - _)"
+                    ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
+                    ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
+                      --target web \
+                      --no-typescript \
+                      --out-dir /tmp/${app}-web/pkg \
+                      "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                    cp assets/index.html /tmp/${app}-web/index.html
+                    cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
+                    cp assets/egui.js /tmp/${app}-web/egui.js
+                    cp ../functora-dioxus/assets/sw.js /tmp/${app}-web/sw.js
+                    cp "${icons}/android-chrome-192x192.png" /tmp/${app}-web/
+                    cp "${icons}/android-chrome-512x512.png" /tmp/${app}-web/
+                    cp "${icons}/favicon.ico" /tmp/${app}-web/
+                    fuser -k -TERM 8000/tcp 2>/dev/null || true
+                    sleep 0.5
+                    exec python3 <<PYEOF
+              import http.server
+              PORT = 8000
+              ROOT = "/tmp/${app}-web"
+
+              class Handler(http.server.SimpleHTTPRequestHandler):
+                  def __init__(self, *a, **k):
+                      super().__init__(*a, directory=ROOT, **k)
+
+              http.server.HTTPServer(("", PORT), Handler).serve_forever()
+              PYEOF
+            '';
+          };
+        mkFunctoraEguiAab = app: icons: let
+          abis = {
+            "aarch64-linux-android" = "arm64-v8a";
+            "armv7-linux-androideabi" = "armeabi-v7a";
+            "i686-linux-android" = "x86";
+            "x86_64-linux-android" = "x86_64";
+          };
+          targets = builtins.attrNames abis;
+          libName = builtins.replaceStrings ["-"] ["_"] app;
+          ndk-bin = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin";
+          rustEnv = ''
+            export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
+            export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="${ndk-bin}/aarch64-linux-android28-clang"
+            export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER="${ndk-bin}/armv7a-linux-androideabi28-clang"
+            export CARGO_TARGET_I686_LINUX_ANDROID_LINKER="${ndk-bin}/i686-linux-android28-clang"
+            export CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER="${ndk-bin}/x86_64-linux-android28-clang"
+            export AR_aarch64_linux_android="${ndk-bin}/llvm-ar"
+            export AR_armv7_linux_androideabi="${ndk-bin}/llvm-ar"
+            export AR_i686_linux_android="${ndk-bin}/llvm-ar"
+            export AR_x86_64_linux_android="${ndk-bin}/llvm-ar"
+          '';
+          buildCmd = target: "${rustToolchain}/bin/cargo build --release --target \"${target}\"";
+          copyCmd = target: ''
+            DST="android/app/src/main/jniLibs/${abis.${target}}"
+            SRC="target/${target}/release/lib${libName}.so"
+            mkdir -p "$DST"
+            if [ ! -f "$DST/lib${libName}.so" ] || ! cmp -s "$SRC" "$DST/lib${libName}.so"; then
+              cp "$SRC" "$DST/lib${libName}.so"
+            fi
+          '';
+          pruneCmd = "find android/app/src/main/jniLibs -mindepth 1 -maxdepth 1 -type d ${builtins.concatStringsSep " " (map (t: "! -name \"${abis.${t}}\"") targets)} -exec rm -rf {} + 2>/dev/null || true";
+          prepCmd = ''
+            VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+            for D in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+              mkdir -p "android/app/src/main/res/mipmap-$D"
+              SRC="${icons}/mipmap-$D.png"
+              DST="android/app/src/main/res/mipmap-$D/ic_launcher.png"
+              if [ ! -f "$DST" ] || ! cmp -s "$SRC" "$DST"; then
+                cp "$SRC" "$DST"
+              fi
+            done
+          '';
+          bundleCmd = ''
+            export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
+            export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
+            (cd android && gradle bundleRelease)
+            OUT="android/app/build/outputs/bundle/release"
+            cp "$OUT/app-release.aab" "$OUT/${app}-v$VSN.aab"
+            echo "READY: ${app}/$OUT/${app}-v$VSN.aab"
+          '';
+        in
+          pkgs.writeShellApplication {
+            name = "release-aab-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused gawk jdk findutils gradle];
+            text = ''
+              (
+                cd "${app}"
+                ${rustEnv}
+                ${builtins.concatStringsSep "\n" (map buildCmd targets)}
+                ${pruneCmd}
+                ${builtins.concatStringsSep "\n" (map copyCmd targets)}
+                ${prepCmd}
+                ${bundleCmd}
+                rm -f "$OUT/${app}-v$VSN-"*.aab
+                echo "READY (universal, all ABIs): ${app}/$OUT/${app}-v$VSN.aab"
+              )
             '';
           };
         android-keygen = pkgs.writeShellApplication {
@@ -284,7 +425,7 @@
 
             APPS=("$@")
             if [ ''${#APPS[@]} -eq 0 ]; then
-              APPS=(cryptonote)
+              APPS=(cryptonote cryptonote-egui)
             fi
 
             if [ ! -f "$KEYSTORE" ]; then
@@ -303,43 +444,52 @@
               printf '[\n'
               for i in "''${!APPS[@]}"; do
                 [ "$i" -gt 0 ] && printf ',\n'
-                printf '  {\n    "relation": ["delegate_permission/common.handle_all_urls"],\n    "target": {\n      "namespace": "android_app",\n      "package_name": "com.functora.%s",\n      "sha256_cert_fingerprints": ["%s", "6F:FA:9F:54:93:B0:CA:76:D5:0E:0A:5B:41:84:3A:7B:6E:F4:25:8B:AB:8C:23:13:98:76:D9:E8:AC:06:F6:2D"]\n    }\n  }\n' "''${APPS[$i]}" "$FP"
+                printf '  {\n    "relation": ["delegate_permission/common.handle_all_urls"],\n    "target": {\n      "namespace": "android_app",\n      "package_name": "com.functora.%s",\n      "sha256_cert_fingerprints": ["%s", "6F:FA:9F:54:93:B0:CA:76:D5:0E:0A:5B:41:84:3A:7B:6E:F4:25:8B:AB:8C:23:13:98:76:D9:E8:AC:06:F6:2D"]\n    }\n  }\n' "$(echo "''${APPS[$i]}" | tr - _)" "$FP"
               done
               printf ']\n'
             } > "$DIR/.well-known/assetlinks.json"
             echo "Wrote $DIR/.well-known/assetlinks.json"
           '';
         };
-        mkApk = app:
+        mkApk = app: aabDir:
           pkgs.writeShellApplication {
             name = "release-apk-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused findutils jdk unzip bundletool];
             text = ''
-              DEF="./${app}/target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
-              DIR="''${1:-$DEF}"
+              DIR="''${1:-${aabDir}}"
+              VSN="$(cd "${app}" && grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+
+              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
+              export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
+              export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
 
               IFS= read -r -s -p "Keystore password: " KS_PASS
               echo
 
-              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2";
-              export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
-              export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
-
-              for AAB in "$DIR"/*.aab; do
+              FOUND=0
+              for AAB in "$DIR"/*v"$VSN"*.aab; do
                 [ -f "$AAB" ] || continue
-
-                NAME=$(${pkgs.coreutils}/bin/basename "$AAB" .aab)
+                NAME="$(basename "$AAB" .aab)"
                 [[ "$NAME" != *-signed ]] || continue
+
+                STALE="$(cd "${app}" && find src Cargo.toml Cargo.lock -type f -newer "$AAB" 2>/dev/null | head -1 || true)"
+                if [ -n "$STALE" ]; then
+                  echo "AAB $AAB is older than $STALE (Rust sources changed). Run release-aab-${app} first."
+                  exit 1
+                fi
+
+                FOUND=1
                 SIG="$DIR/$NAME-signed.aab"
                 APK="$DIR/$NAME.apk"
                 TMP="$DIR/$NAME.apks"
 
                 cp "$AAB" "$SIG"
-                "${pkgs.jdk}/bin/jarsigner" -verbose \
+                jarsigner \
                   -keystore "$HOME/keys/app-key.jks" \
                   -storepass "$KS_PASS" \
                   "$SIG" app-key
 
-                "${pkgs.bundletool}/bin/bundletool" build-apks \
+                bundletool build-apks \
                   --bundle="$AAB" \
                   --output="$TMP" \
                   --mode=universal \
@@ -349,14 +499,18 @@
                   --ks-key-alias=app-key \
                   --overwrite
 
-                "${pkgs.unzip}/bin/unzip" -p "$TMP" universal.apk > "$APK"
+                unzip -p "$TMP" universal.apk > "$APK"
                 rm -f "$TMP"
-
                 echo "READY: $APK"
               done
+              [ "$FOUND" -eq 1 ] || {
+                echo "No v$VSN aab found in $DIR (current Cargo.toml version). Run release-aab-${app} first."
+                exit 1
+              }
             '';
           };
         shell = rec {
+          PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
           ANDROID_SDK_ROOT = ANDROID_HOME;
           NDK_HOME = "${ANDROID_HOME}/ndk-bundle";
@@ -366,6 +520,22 @@
           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
           CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";
           CARGO_TARGET_I686_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang";
+          NDK_BIN = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin";
+          CC_aarch64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
+          CXX_aarch64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++";
+          CC_armv7_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";
+          CXX_armv7_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang++";
+          CC_i686_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang";
+          CXX_i686_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/i686-linux-android28-clang++";
+          CC_x86_64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android28-clang";
+          CXX_x86_64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android28-clang++";
+          CC_thumbv7neon_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";
+          CXX_thumbv7neon_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang++";
+          AR_aarch64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
+          AR_armv7_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
+          AR_i686_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
+          AR_x86_64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
+          AR_thumbv7neon_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
           packages = with pkgs;
             [
               bacon
@@ -386,6 +556,7 @@
               clean-css-cli
               # linux
               pkg-config
+              xvfb-run
               webkitgtk_4_1
               openssl
               xdotool
@@ -408,6 +579,7 @@
               android-sdk
               glibc
               jdk
+              gradle
               android-icons
               android-keygen
               release-assetlinks-json
@@ -420,7 +592,13 @@
               # apps
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
-              (mkApk "cryptonote")
+              (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
+              (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
+              (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
+              (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
+              (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
               # tools
               gemini-cli
               pkgs.chromium
@@ -432,6 +610,37 @@
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
+                  # Helper: check if crate has binary targets (is an application)
+                  has_binary_targets() {
+                    local crate_path="$1"
+                    # Check for explicit binary targets in Cargo.toml
+                    grep -q '\[\[bin\]\]' "$crate_path/Cargo.toml" 2>/dev/null || \
+                    grep -q 'autobins = true' "$crate_path/Cargo.toml" 2>/dev/null || \
+                    # Check for default binary entry point (src/main.rs)
+                    [ -f "$crate_path/src/main.rs" ]
+                  }
+
+                  # Check if crate is an eframe web app (binary + eframe dep)
+                  is_eframe_web_app() {
+                    local crate_path="$1"
+                    has_binary_targets "$crate_path" && \
+                    grep -qE '^eframe\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
+                  # Check if crate is an egui library (library + egui dep, for wasm32 lib checks)
+                  is_egui_library() {
+                    local crate_path="$1"
+                    ! has_binary_targets "$crate_path" && \
+                    grep -qE '^egui\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
+                  # Check if crate is a Dioxus app (for mobile only)
+                  is_dioxus_app() {
+                    local crate_path="$1"
+                    has_binary_targets "$crate_path" && \
+                    grep -qE '^dioxus\s*=' "$crate_path/Cargo.toml" 2>/dev/null
+                  }
+
                   verify_crate() {
                     local crate="$1"
                     shift
@@ -439,11 +648,17 @@
                       && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      && if [ "$crate" = "cryptonote" ]; then
+                      # Mobile targets: eframe web apps + Dioxus apps
+                      if is_eframe_web_app "." || is_dioxus_app "."; then
                            for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
                              ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
                                && echo "==> $crate [$T]: mobile clippy: All good!"
                            done
+                         fi
+                      # wasm32 targets: eframe web apps + egui libraries
+                      if is_eframe_web_app "." || is_egui_library "."; then
+                           ${cargo}/bin/cargo clippy --target wasm32-unknown-unknown --all-features --all-targets "$@" -- -D warnings \
+                             && echo "==> $crate [wasm32-unknown-unknown]: clippy: All good!"
                          fi
                   }
                   if [ -f Cargo.toml ]; then
@@ -484,7 +699,9 @@
                 '';
               })
             ]
-            ++ (mkAab "cryptonote");
+            ++ (mkAab "cryptonote")
+            ++ [(mkFunctoraEguiAab "cryptonote-egui" "../cryptonote/assets/favicon")]
+            ++ [(mkFunctoraEguiAab "functora-egui-demo" "assets/favicon")];
         };
         mkRustPkg = pkg:
           pkgs.rustPlatform.buildRustPackage {

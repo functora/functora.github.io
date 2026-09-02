@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="{{ theme_color }}" />
+    <title>{{ title }}</title>
+    <link rel="icon" href="favicon.ico" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <style>
+      html {
+        touch-action: manipulation;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100%;
+        width: 100%;
+        background: {{ theme_color }};
+        overflow: hidden;
+        overscroll-behavior: none;
+      }
+      #the_canvas_id {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+        outline: none;
+        touch-action: none;
+      }
+      @media print {
+        @page {
+          margin: 0;
+          size: auto;
+        }
+        html, body {
+          overflow: visible !important;
+          height: auto !important;
+          width: auto !important;
+          background: white !important;
+        }
+        #the_canvas_id {
+          position: static !important;
+          width: auto !important;
+          height: auto !important;
+          max-width: 100% !important;
+          max-height: 100vh !important;
+          object-fit: contain !important;
+          display: block !important;
+          margin: 0 auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="the_canvas_id"></canvas>
+    <script type="module">
+      import { focusCanvas, registerServiceWorker } from './egui.js';
+      import init from './pkg/{{ pkg_js }}';
+      await init();
+      focusCanvas();
+      registerServiceWorker('{{ vsn }}');
+    </script>
+  </body>
+</html>

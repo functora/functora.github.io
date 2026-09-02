@@ -1,0 +1,15 @@
+#[cfg(any(feature = "web", feature = "build"))]
+pub mod config;
+#[cfg(all(feature = "web", target_arch = "wasm32"))]
+pub mod runner;
+#[cfg(feature = "web")]
+pub mod startup;
+#[cfg(any(feature = "web", feature = "build"))]
+pub mod templates;
+
+#[cfg(any(feature = "web", feature = "build"))]
+pub use crate::config::shared::derive_pkg_js;
+#[cfg(any(feature = "web", feature = "build"))]
+pub use config::{WebConfig, derive_theme_color, derive_title, load_config};
+#[cfg(feature = "web")]
+pub use startup::startup_width;

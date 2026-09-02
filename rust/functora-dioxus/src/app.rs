@@ -2,6 +2,7 @@
 use crate::AppAttrs;
 use crate::storage::use_storage;
 use dioxus::prelude::*;
+pub use functora_core::white_label::{ManifestIcon, manifest_json};
 pub use functora_tagged::InfallibleInto;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
@@ -32,51 +33,6 @@ impl Default for AppAssets {
             )],
         }
     }
-}
-
-pub struct ManifestIcon {
-    pub src: String,
-    pub sizes: &'static str,
-    pub r#type: &'static str,
-    pub purpose: &'static str,
-}
-
-#[must_use]
-pub fn manifest_json(
-    app: &str,
-    vsn: &str,
-    description: &str,
-    start_url: &str,
-    scope: &str,
-    icons: &[ManifestIcon],
-) -> String {
-    let name = crate::white_label::capitalize_first(app);
-    let icons_json = icons
-        .iter()
-        .map(|icon| {
-            format!(
-                "{{\"src\":{},\"sizes\":\"{}\",\"type\":\"{}\",\"purpose\":\"{}\"}}",
-                json_str(&icon.src),
-                icon.sizes,
-                icon.r#type,
-                icon.purpose
-            )
-        })
-        .collect::<Vec<_>>()
-        .join(",");
-    format!(
-        "{{\"name\":{},\"short_name\":{},\"description\":{},\"start_url\":{},\"scope\":{},\"display\":\"standalone\",\"theme_color\":\"#679\",\"background_color\":\"#ffffff\",\"cache_name\":{},\"icons\":[{icons_json}]}}",
-        json_str(&name),
-        json_str(&name),
-        json_str(description),
-        json_str(start_url),
-        json_str(scope),
-        json_str(&format!("{app}-v{vsn}")),
-    )
-}
-
-fn json_str(s: &str) -> String {
-    serde_json::to_string(s).unwrap_or_default()
 }
 
 #[must_use]

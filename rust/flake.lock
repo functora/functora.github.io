@@ -74,11 +74,11 @@
         "nixpkgs": "nixpkgs"
       },
       "locked": {
-        "lastModified": 1786588037,
-        "narHash": "sha256-68paX6xeV/KWjp+USvT9bTp3/R+af7Hc1jShMSU6+44=",
+        "lastModified": 1788304332,
+        "narHash": "sha256-FrfH1o+jW3w+pkK0mCxYbOsE86kW7jbmBJmxdWrYZtw=",
         "owner": "dominicnunez",
         "repo": "opencode-nix",
-        "rev": "2e6a7221188ce279d3dfbbdd72bdf628c49c7ca2",
+        "rev": "224221bed6c3ad13a1ed33d5ad280752d0958bcb",
         "type": "github"
       },
       "original": {

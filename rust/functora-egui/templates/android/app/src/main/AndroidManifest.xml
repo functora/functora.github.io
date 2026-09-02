@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+{% if camera %}
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+{% endif %}
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="{{ label }}"
+        android:theme="@style/Theme.GameActivity">
+        <activity
+            android:name="{{ activity_fqn }}"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|screenLayout|uiMode|smallestScreenSize|density|fontScale|navigation|locale"
+            android:exported="true"
+            android:launchMode="singleInstance"
+            android:windowSoftInputMode="adjustResize">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="{{ lib_name }}" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="{{ host }}" android:pathPrefix="{{ path_prefix }}" />
+            </intent-filter>
+{{ extra_intent_filters }}        </activity>
+    </application>
+
+</manifest>

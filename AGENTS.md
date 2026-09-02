@@ -1,6 +1,9 @@
 ## Git
 
+- **Git history and working tree are strictly read-only.**
 - **NEVER commit, amend, push, or create pull requests.** The user reviews all changes and commits them manually. Leave the working tree dirty for review.
+- **NEVER mutate history or the working tree.** Do not run `git commit`, `git amend`/`--amend`, `git push`, `git pull`, `git reset`, `git checkout`/`switch`/`restore`, `git branch`/`tag`, `git stash`, `git merge`/`rebase`/`cherry-pick`/`revert`, or any other command that creates, rewrites, or discards commits, branches, or files.
+- Only read-only inspection is allowed: `git status`, `git diff`, `git log`, `git show`, `git ls-files`, `git diff --stat`, etc. Use these to review the current state and verify only intended files were changed.
 
 ## Coding Guidelines
 

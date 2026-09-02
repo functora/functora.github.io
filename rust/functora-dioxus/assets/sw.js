@@ -11,11 +11,18 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(
         caches.open(CACHE).then((cache) =>
             cache.match(e.request).then((cached) => {
-                if (cached) return cached;
-                return fetch(e.request).then((resp) => {
-                    if (resp.ok) cache.put(e.request, resp.clone());
-                    return resp;
-                }).catch(() => isNav ? cache.match(self.registration.scope) : undefined);
+                const revalidate = () =>
+                    fetch(e.request).then((resp) => {
+                        if (resp.ok) cache.put(e.request, resp.clone());
+                        return resp;
+                    });
+                if (cached) {
+                    revalidate().catch(() => {});
+                    return cached;
+                }
+                return revalidate().catch(() =>
+                    isNav ? cache.match(self.registration.scope) : undefined
+                );
             })
         )
     );

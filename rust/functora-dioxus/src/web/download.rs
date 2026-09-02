@@ -1,6 +1,7 @@
 use crate::Error;
 use crate::abort::EvalAbort;
 use crate::encoding::download_script;
+use crate::error::eval_error;
 use crate::progress::{Job, report_progress};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
@@ -29,14 +30,16 @@ where
         eval.send(DownloadMsg {
             t: "chunk",
             data: BASE64.encode(chunk),
-        })?;
+        })
+        .map_err(eval_error)?;
         done += chunk.len() as u64;
         report_progress(progress, stage, done, total).await;
     }
     eval.send(DownloadMsg {
         t: "done",
         data: String::new(),
-    })?;
+    })
+    .map_err(eval_error)?;
     abort.disarm();
     Ok(filename.to_string())
 }

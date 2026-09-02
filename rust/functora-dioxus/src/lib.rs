@@ -28,16 +28,7 @@ pub mod widgets;
 pub mod worker;
 pub mod zip;
 
-pub const FUNCTORA_DIOXUS_YEAR: &str = env!("FUNCTORA_DIOXUS_YEAR");
-pub const FUNCTORA_DIOXUS_DATE: &str = env!("FUNCTORA_DIOXUS_DATE");
-const _: () = assert!(
-    !FUNCTORA_DIOXUS_YEAR.is_empty(),
-    "FUNCTORA_DIOXUS_YEAR must not be empty"
-);
-const _: () = assert!(
-    !FUNCTORA_DIOXUS_DATE.is_empty(),
-    "FUNCTORA_DIOXUS_DATE must not be empty"
-);
+pub use functora_core::{FUNCTORA_CORE_DATE as FUNCTORA_DIOXUS_DATE, FUNCTORA_CORE_YEAR as FUNCTORA_DIOXUS_YEAR};
 
 pub use app::*;
 pub use crypto::*;

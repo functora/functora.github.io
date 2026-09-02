@@ -150,9 +150,17 @@ impl super::widget::Navbar<'_> {
                                     }
                                     inner_ui.add_space(4.0);
                                 }
-                                let _ = crate::widgets::sidebar::widget::Sidebar::toggle_button(
-                                    inner_ui, collapsed,
-                                );
+                                if inner_ui
+                                    .add(
+                                        Button::icon_only(LucideIcon::Menu)
+                                            .variant(ButtonVariant::Ghost)
+                                            .size(ComponentSize::Sm),
+                                    )
+                                    .clicked()
+                                {
+                                    *collapsed = !*collapsed;
+                                    inner_ui.ctx().request_repaint();
+                                }
                             });
                         });
                     });

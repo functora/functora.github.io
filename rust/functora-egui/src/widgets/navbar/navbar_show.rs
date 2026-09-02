@@ -71,7 +71,7 @@ impl super::widget::Navbar<'_> {
                                     let trigger = inner_ui.add(
                                         Button::new(current)
                                             .icon(LucideIcon::Languages)
-                                            .variant(ButtonVariant::Ghost)
+                                            .variant(ButtonVariant::Outline)
                                             .size(ComponentSize::Sm),
                                     );
                                     let items: Vec<
@@ -153,7 +153,7 @@ impl super::widget::Navbar<'_> {
                                 if inner_ui
                                     .add(
                                         Button::icon_only(LucideIcon::Menu)
-                                            .variant(ButtonVariant::Ghost)
+                                            .variant(ButtonVariant::Outline)
                                             .size(ComponentSize::Sm),
                                     )
                                     .clicked()

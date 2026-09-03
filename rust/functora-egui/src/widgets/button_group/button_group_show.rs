@@ -73,18 +73,11 @@ impl super::widget::ButtonGroup {
         );
 
         if ui.is_rect_visible(rect) {
-            let ring_color = egui::Color32::from_rgba_unmultiplied(
-                theme.foreground.r(),
-                theme.foreground.g(),
-                theme.foreground.b(),
-                26,
-            );
-
             // Outer rounded border
             let _ = ui.painter().rect_stroke(
                 rect,
                 egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(cr)),
-                egui::Stroke::new(1.0, ring_color),
+                egui::Stroke::new(1.0, theme.border),
                 egui::epaint::StrokeKind::Inside,
             );
 
@@ -94,7 +87,7 @@ impl super::widget::ButtonGroup {
                     let _ = ui.painter().vline(
                         x,
                         rect.min.y..=rect.max.y,
-                        egui::Stroke::new(1.0, ring_color),
+                        egui::Stroke::new(1.0, theme.border),
                     );
                 }
             }

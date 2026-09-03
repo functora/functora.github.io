@@ -5,6 +5,7 @@ use crate::theme_extra::Theme;
 use crate::tokens::button_variant::ButtonVariant;
 use crate::tokens::component_size::ComponentSize;
 use crate::widgets::button::widget::Button;
+use crate::widgets::button_group::widget::ButtonGroup;
 
 impl super::widget::Navbar<'_> {
     pub fn show(
@@ -65,105 +66,109 @@ impl super::widget::Navbar<'_> {
                         });
                         let _ = flex.ui(|right_ui| {
                             let _ = right_ui.horizontal(|inner_ui| {
-                                if let Some(lang_cell) = lang_opt.take() {
-                                    let current_lang = lang_cell.get();
-                                    let current = current_lang
-                                        .to_639_1()
-                                        .unwrap_or("en")
-                                        .to_ascii_uppercase();
-                                    let trigger = inner_ui.add(
-                                        Button::new(current)
-                                            .icon(LucideIcon::Languages)
-                                            .variant(ButtonVariant::Outline)
-                                            .size(ComponentSize::Sm),
-                                    );
-                                    let items: Vec<
-                                        crate::widgets::dropdown_menu::widget::MenuItem,
-                                    > = crate::i18n::SUPPORTED_LANGUAGES
-                                        .iter()
-                                        .map(|l| {
-                                            let code =
-                                                l.to_639_1().unwrap_or("en").to_ascii_uppercase();
-                                            let selected = *l == current_lang;
-                                            crate::widgets::dropdown_menu::widget::MenuItem::label(
-                                                code,
-                                            )
-                                            .selected(selected)
-                                        })
-                                        .collect();
-                                    let mut chosen: Option<usize> = None;
-                                    crate::widgets::dropdown_menu::widget::DropdownMenu::show_rich(
-                                        inner_ui,
-                                        &trigger,
-                                        &items,
-                                        |idx| chosen = Some(idx),
-                                    );
-                                    if let Some(idx) = chosen
-                                        && let Some(new_lang) =
-                                            crate::i18n::SUPPORTED_LANGUAGES.get(idx)
-                                    {
-                                        lang_cell.set(*new_lang);
-                                    }
-                                    inner_ui.add_space(2.0);
-                                }
-                                if let Some(label) = self.search_label {
-                                    let search = if inner_ui.on_mobile() {
-                                        Button::icon_only(LucideIcon::Search)
-                                            .variant(ButtonVariant::Outline)
-                                            .size(ComponentSize::Sm)
-                                    } else {
-                                        let mut b = Button::new(label)
-                                            .icon(LucideIcon::Search)
-                                            .variant(ButtonVariant::Outline)
-                                            .size(ComponentSize::Sm);
-                                        if let Some(sc) = self.search_shortcut {
-                                            b = b.shortcut_text(sc);
+                                let _ = ButtonGroup::show(inner_ui, |group_ui| {
+                                    if let Some(lang_cell) = lang_opt.take() {
+                                        let current_lang = lang_cell.get();
+                                        let current = current_lang
+                                            .to_639_1()
+                                            .unwrap_or("en")
+                                            .to_ascii_uppercase();
+                                        let trigger = group_ui.add(
+                                            Button::new(current)
+                                                .icon(LucideIcon::Languages)
+                                                .variant(ButtonVariant::Outline)
+                                                .size(ComponentSize::Sm),
+                                        );
+                                        let items: Vec<
+                                            crate::widgets::dropdown_menu::widget::MenuItem,
+                                        > = crate::i18n::SUPPORTED_LANGUAGES
+                                            .iter()
+                                            .map(|l| {
+                                                let code = l
+                                                    .to_639_1()
+                                                    .unwrap_or("en")
+                                                    .to_ascii_uppercase();
+                                                let selected = *l == current_lang;
+                                                crate::widgets::dropdown_menu::widget::MenuItem::label(
+                                                    code,
+                                                )
+                                                .selected(selected)
+                                            })
+                                            .collect();
+                                        let mut chosen: Option<usize> = None;
+                                        crate::widgets::dropdown_menu::widget::DropdownMenu::show_rich(
+                                            group_ui,
+                                            &trigger,
+                                            &items,
+                                            |idx| chosen = Some(idx),
+                                        );
+                                        if let Some(idx) = chosen
+                                            && let Some(new_lang) =
+                                                crate::i18n::SUPPORTED_LANGUAGES.get(idx)
+                                        {
+                                            lang_cell.set(*new_lang);
                                         }
-                                        b
-                                    };
-                                    if inner_ui.add(search).clicked()
-                                        && let Some(cb) = on_search.as_mut()
-                                    {
-                                        cb();
                                     }
-                                    inner_ui.add_space(2.0);
-                                }
-                                if let Some(th) = theme_opt.take() {
-                                    let icon = if *th == Theme::Dark {
-                                        LucideIcon::Moon
-                                    } else {
-                                        LucideIcon::Sun
-                                    };
-                                    let hover = if *th == Theme::Dark {
-                                        "Light theme"
-                                    } else {
-                                        "Dark theme"
-                                    };
-                                    if inner_ui
+                                    if let Some(label) = self.search_label {
+                                        let search = if group_ui.on_mobile() {
+                                            Button::icon_only(LucideIcon::Search)
+                                                .variant(ButtonVariant::Outline)
+                                                .size(ComponentSize::Sm)
+                                        } else {
+                                            let mut b = Button::new(label)
+                                                .icon(LucideIcon::Search)
+                                                .variant(ButtonVariant::Outline)
+                                                .size(ComponentSize::Sm);
+                                            if let Some(sc) = self.search_shortcut {
+                                                b = b.shortcut_text(sc);
+                                            }
+                                            b
+                                        };
+                                        if group_ui.add(search).clicked()
+                                            && let Some(cb) = on_search.as_mut()
+                                        {
+                                            cb();
+                                        }
+                                    }
+                                    if let Some(th) = theme_opt.take() {
+                                        let icon = if *th == Theme::Dark {
+                                            LucideIcon::Moon
+                                        } else {
+                                            LucideIcon::Sun
+                                        };
+                                        let hover = if *th == Theme::Dark {
+                                            "Light theme"
+                                        } else {
+                                            "Dark theme"
+                                        };
+                                        if group_ui
+                                            .add(
+                                                Button::icon_only(icon)
+                                                    .variant(ButtonVariant::Outline)
+                                                    .size(ComponentSize::Sm),
+                                            )
+                                            .on_hover_text(hover)
+                                            .clicked()
+                                        {
+                                            *th = th.next();
+                                            crate::theme_extra::set_theme(
+                                                group_ui.ctx(),
+                                                *th,
+                                            );
+                                        }
+                                    }
+                                    if group_ui
                                         .add(
-                                            Button::icon_only(icon)
+                                            Button::icon_only(LucideIcon::Menu)
                                                 .variant(ButtonVariant::Outline)
                                                 .size(ComponentSize::Sm),
                                         )
-                                        .on_hover_text(hover)
                                         .clicked()
                                     {
-                                        *th = th.next();
-                                        crate::theme_extra::set_theme(inner_ui.ctx(), *th);
+                                        *collapsed = !*collapsed;
+                                        group_ui.ctx().request_repaint();
                                     }
-                                    inner_ui.add_space(2.0);
-                                }
-                                if inner_ui
-                                    .add(
-                                        Button::icon_only(LucideIcon::Menu)
-                                            .variant(ButtonVariant::Outline)
-                                            .size(ComponentSize::Sm),
-                                    )
-                                    .clicked()
-                                {
-                                    *collapsed = !*collapsed;
-                                    inner_ui.ctx().request_repaint();
-                                }
+                                });
                             });
                         });
                     });

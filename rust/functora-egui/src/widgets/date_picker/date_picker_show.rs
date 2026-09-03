@@ -103,20 +103,105 @@ impl super::widget::DatePicker {
                 color: egui::Color32::from_black_alpha(8),
             });
 
-        let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &btn_response, ui.layer_id())
-            .open_memory(toggle_cmd)
-            .frame(themed_frame);
+        let spacing =
+            crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+        let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+        let is_mobile_narrow = spacing.is_mobile() && screen_w < 400.0;
+        let popup_width = if spacing.is_mobile() {
+            (screen_w - 16.0 - 24.0).clamp(280.0, 360.0)
+        } else {
+            308.0
+        };
 
         let mut close_popup = false;
 
-        let _ = popup.show(|popup_ui: &mut egui::Ui| {
-            let cal = crate::widgets::calendar::widget::Calendar::new();
-            if let Some(_day) =
-                cal.show(popup_ui, &mut state.year, &mut state.month, &mut state.day)
-            {
-                close_popup = true;
+        if is_mobile_narrow {
+            let thin: f32 = 8.0;
+            let outer_w = (screen_w - 2.0 * thin).clamp(304.0, 384.0);
+            let inner_w = outer_w - 24.0;
+            let mut is_open = ui.data(|d| d.get_temp::<bool>(popup_id)).unwrap_or(false);
+            if btn_response.clicked() {
+                is_open = !is_open;
+                let _ = ui.data_mut(|d| d.insert_temp(popup_id, is_open));
+                ui.ctx().request_repaint();
             }
-        });
+            if is_open {
+                let area_resp = egui::Area::new(popup_id)
+                    .fixed_pos(egui::pos2(thin, trigger_rect.max.y + 8.0))
+                    .order(egui::Order::Foreground)
+                    .show(ui.ctx(), |area_ui| {
+                        let _ = egui::Frame::NONE
+                            .fill(theme.popover)
+                            .inner_margin(egui::Margin::same(12))
+                            .corner_radius(egui::CornerRadius::same(cr))
+                            .stroke(egui::Stroke::new(1.0, theme.border))
+                            .shadow(egui::Shadow {
+                                offset: [0, 4],
+                                blur: 12,
+                                spread: 0,
+                                color: egui::Color32::from_black_alpha(8),
+                            })
+                            .show(area_ui, |frame_ui| {
+                                frame_ui.set_min_width(inner_w);
+                                frame_ui.set_max_width(inner_w);
+                                let cal = crate::widgets::calendar::widget::Calendar::new();
+                                if let Some(_day) = cal.show(
+                                    frame_ui,
+                                    &mut state.year,
+                                    &mut state.month,
+                                    &mut state.day,
+                                ) {
+                                    close_popup = true;
+                                }
+                            });
+                    });
+                let area_rect = area_resp.response.rect;
+                if ui.ctx().input(|i| i.pointer.any_click())
+                    && let Some(pos) = ui.ctx().input(|i| i.pointer.interact_pos())
+                    && !area_rect.contains(pos)
+                    && !trigger_rect.contains(pos)
+                {
+                    close_popup = true;
+                }
+                if close_popup {
+                    is_open = false;
+                    let _ = ui.data_mut(|d| d.insert_temp(popup_id, is_open));
+                }
+            }
+            if close_popup {
+                ui.ctx().request_repaint();
+            }
+        } else {
+            let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &btn_response, ui.layer_id())
+                .open_memory(toggle_cmd)
+                .close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside)
+                .align(if spacing.is_mobile() {
+                    egui::RectAlign::BOTTOM
+                } else {
+                    egui::RectAlign::BOTTOM_START
+                })
+                .gap(8.0)
+                .frame(themed_frame);
+
+            let _ = popup.show(|popup_ui: &mut egui::Ui| {
+                popup_ui.set_min_width(popup_width);
+                popup_ui.set_max_width(popup_width);
+                let _ = popup_ui.with_layout(
+                    egui::Layout::top_down(egui::Align::Center),
+                    |centered_ui| {
+                        let cal = crate::widgets::calendar::widget::Calendar::new();
+                        if let Some(_day) = cal.show(
+                            centered_ui,
+                            &mut state.year,
+                            &mut state.month,
+                            &mut state.day,
+                        ) {
+                            close_popup = true;
+                        }
+                    },
+                );
+            });
+        }
 
         if close_popup {
             egui::Popup::close_id(ui.ctx(), popup_id);

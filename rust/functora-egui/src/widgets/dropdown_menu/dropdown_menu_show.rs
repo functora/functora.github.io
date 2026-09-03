@@ -91,7 +91,11 @@ impl super::widget::DropdownMenu {
             } else {
                 0.0
             };
-            let mut menu_width = (max_label_w + shortcut_space + 24.0).max(120.0);
+            let has_selected = items
+                .iter()
+                .any(|it| matches!(it, super::widget::MenuItem::Item { selected: true, .. }));
+            let trailing_check = if has_selected { 20.0 } else { 0.0 };
+            let mut menu_width = (max_label_w + shortcut_space + 24.0 + trailing_check).max(120.0);
             let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(
                 popup_ui.ctx(),
             );
@@ -122,7 +126,6 @@ impl super::widget::DropdownMenu {
                             theme.muted_foreground
                         };
 
-                        let check_space: f32 = if *selected { 20.0 } else { 0.0 };
                         let galley = popup_ui.painter().layout_no_wrap(
                             label.clone(),
                             egui::FontId::proportional(14.0),
@@ -140,19 +143,7 @@ impl super::widget::DropdownMenu {
                         }
 
                         if popup_ui.is_rect_visible(rect) {
-                            let text_x = rect.min.x + 8.0 + check_space;
-                            if *selected {
-                                let check_rect = egui::Rect::from_center_size(
-                                    egui::pos2(rect.min.x + 14.0, rect.center().y),
-                                    egui::vec2(14.0, 14.0),
-                                );
-                                crate::icons::paint_icon::paint_icon(
-                                    popup_ui.painter(),
-                                    check_rect,
-                                    &crate::icons::lucide_icon::LucideIcon::Check,
-                                    theme.foreground,
-                                );
-                            }
+                            let text_x = rect.min.x + 8.0;
                             popup_ui.painter().galley(
                                 egui::pos2(text_x, rect.center().y - galley.size().y / 2.0),
                                 galley,
@@ -167,11 +158,24 @@ impl super::widget::DropdownMenu {
                                 );
                                 popup_ui.painter().galley(
                                     egui::pos2(
-                                        rect.max.x - 8.0 - sc_galley.size().x,
+                                        rect.max.x - 8.0 - trailing_check - sc_galley.size().x,
                                         rect.center().y - sc_galley.size().y / 2.0,
                                     ),
                                     sc_galley,
                                     theme.muted_foreground,
+                                );
+                            }
+
+                            if *selected {
+                                let check_rect = egui::Rect::from_center_size(
+                                    egui::pos2(rect.max.x - 14.0, rect.center().y),
+                                    egui::vec2(14.0, 14.0),
+                                );
+                                crate::icons::paint_icon::paint_icon(
+                                    popup_ui.painter(),
+                                    check_rect,
+                                    &crate::icons::lucide_icon::LucideIcon::Check,
+                                    theme.foreground,
                                 );
                             }
                         }

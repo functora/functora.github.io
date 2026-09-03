@@ -73,9 +73,15 @@ impl super::widget::Navbar<'_> {
                                             .to_639_1()
                                             .unwrap_or("en")
                                             .to_ascii_uppercase();
+                                        let current_flag = match current_lang {
+                                            crate::i18n::Language::Eng => "🇬🇧",
+                                            crate::i18n::Language::Spa => "🇪🇸",
+                                            crate::i18n::Language::Rus => "🇷🇺",
+                                            _ => "🌐",
+                                        };
+                                        let trigger_label = format!("{current_flag} {current}");
                                         let trigger = group_ui.add(
-                                            Button::new(current)
-                                                .icon(LucideIcon::Languages)
+                                            Button::new(trigger_label)
                                                 .variant(ButtonVariant::Outline)
                                                 .size(ComponentSize::Sm),
                                         );
@@ -88,9 +94,16 @@ impl super::widget::Navbar<'_> {
                                                     .to_639_1()
                                                     .unwrap_or("en")
                                                     .to_ascii_uppercase();
+                                                let flag = match *l {
+                                                    crate::i18n::Language::Eng => "🇬🇧",
+                                                    crate::i18n::Language::Spa => "🇪🇸",
+                                                    crate::i18n::Language::Rus => "🇷🇺",
+                                                    _ => "🌐",
+                                                };
+                                                let label = format!("{flag} {code}");
                                                 let selected = *l == current_lang;
                                                 crate::widgets::dropdown_menu::widget::MenuItem::label(
-                                                    code,
+                                                    label,
                                                 )
                                                 .selected(selected)
                                             })

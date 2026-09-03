@@ -1,15 +1,12 @@
 //! Overview section: the library pitch and feature highlights.
 
-use crate::app::{CATEGORIES, CategoryId};
+use crate::app::{CATEGORIES, CategoryId, OverviewBody};
+use functora_egui::i18n::I18N;
 use functora_egui::{Flex, Separator, Typography};
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_overview(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::new(
-            "Interactive showcase of 60+ shadcn/ui-inspired widgets for egui with light/dark \
-             themes and 1600+ Lucide icons. Browse via the sidebar or press Ctrl+K.",
-        )
-        .show(ui);
+    pub(crate) fn demo_overview(&mut self, ui: &mut egui::Ui, lang: functora_egui::i18n::Language) {
+        _ = Typography::new(OverviewBody.render(lang)).show(ui);
         ui.add_space(16.0);
 
         for (cat_idx, (cat_id, _, items)) in CATEGORIES
@@ -18,7 +15,7 @@ impl crate::app::ShowcaseApp {
             .filter(|(_, (id, _, _))| *id != CategoryId::Overview)
         {
             _ = Separator::horizontal()
-                .text(cat_id.label())
+                .text(cat_id.render(lang))
                 .icon(cat_id.icon())
                 .show(ui);
             ui.add_space(8.0);

@@ -12,7 +12,7 @@ impl super::widget::Navbar<'_> {
         outer_ui: &mut egui::Ui,
         collapsed: &mut bool,
         theme: Option<&mut Theme>,
-        language: Option<&mut functora_core::i18n::Language>,
+        language: Option<&std::cell::Cell<functora_core::i18n::Language>>,
         mut on_brand: Option<&mut dyn FnMut()>,
         mut on_search: Option<&mut dyn FnMut()>,
     ) -> egui::Response {
@@ -65,9 +65,12 @@ impl super::widget::Navbar<'_> {
                         });
                         let _ = flex.ui(|right_ui| {
                             let _ = right_ui.horizontal(|inner_ui| {
-                                if let Some(lang) = lang_opt.take() {
-                                    let current =
-                                        lang.to_639_1().unwrap_or("en").to_ascii_uppercase();
+                                if let Some(lang_cell) = lang_opt.take() {
+                                    let current_lang = lang_cell.get();
+                                    let current = current_lang
+                                        .to_639_1()
+                                        .unwrap_or("en")
+                                        .to_ascii_uppercase();
                                     let trigger = inner_ui.add(
                                         Button::new(current)
                                             .icon(LucideIcon::Languages)
@@ -81,7 +84,7 @@ impl super::widget::Navbar<'_> {
                                         .map(|l| {
                                             let code =
                                                 l.to_639_1().unwrap_or("en").to_ascii_uppercase();
-                                            let selected = l == lang;
+                                            let selected = *l == current_lang;
                                             crate::widgets::dropdown_menu::widget::MenuItem::label(
                                                 code,
                                             )
@@ -99,7 +102,7 @@ impl super::widget::Navbar<'_> {
                                         && let Some(new_lang) =
                                             crate::i18n::SUPPORTED_LANGUAGES.get(idx)
                                     {
-                                        *lang = *new_lang;
+                                        lang_cell.set(*new_lang);
                                     }
                                     inner_ui.add_space(2.0);
                                 }

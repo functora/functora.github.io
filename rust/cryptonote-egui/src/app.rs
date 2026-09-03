@@ -35,15 +35,15 @@ pub struct CryptonoteApp {
     toast: ToastState,
     sidebar_collapsed: bool,
     // async receivers
-    clipboard_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    clipboard_write_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
-    share_rx: Option<std::sync::mpsc::Receiver<Result<(), String>>>,
-    download_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pick_rx: Option<std::sync::mpsc::Receiver<Result<Vec<(String, Vec<u8>)>, String>>>,
+    clipboard_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
+    clipboard_write_rx: Option<std::sync::mpsc::Receiver<Result<(), AppError>>>,
+    share_rx: Option<std::sync::mpsc::Receiver<Result<(), AppError>>>,
+    download_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
+    pick_rx: Option<std::sync::mpsc::Receiver<Result<Vec<(String, Vec<u8>)>, AppError>>>,
     pick_cancel: Option<functora_egui::CancelToken>,
-    generate_rx: Option<std::sync::mpsc::Receiver<Result<External, String>>>,
-    decrypt_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    archive_rx: Option<std::sync::mpsc::Receiver<Result<Screen, String>>>,
+    generate_rx: Option<std::sync::mpsc::Receiver<Result<External, AppError>>>,
+    decrypt_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
+    archive_rx: Option<std::sync::mpsc::Receiver<Result<Screen, AppError>>>,
     qr_state: functora_egui::QrScannerState,
     qr_continuous: bool,
 }
@@ -142,9 +142,11 @@ impl CryptonoteApp {
                     self.toast.add("Pasted", ToastVariant::Success, ctx.input(|i| i.time));
                 }
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::FunctoraEgui(
-                        functora_egui::error::Error::JS(e),
-                    ))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_rx = Some(rx),
                 Err(_) => {}
@@ -154,9 +156,11 @@ impl CryptonoteApp {
             match rx.try_recv() {
                 Ok(Ok(())) => self.toast.add("Copied", ToastVariant::Success, ctx.input(|i| i.time)),
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::FunctoraEgui(
-                        functora_egui::error::Error::JS(e),
-                    ))))
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_write_rx = Some(rx),
                 Err(_) => {}
@@ -166,9 +170,11 @@ impl CryptonoteApp {
             match rx.try_recv() {
                 Ok(Ok(())) => self.toast.add("Shared", ToastVariant::Success, ctx.input(|i| i.time)),
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::FunctoraEgui(
-                        functora_egui::error::Error::JS(e),
-                    ))))
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.share_rx = Some(rx),
                 Err(_) => {}
@@ -186,9 +192,11 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                 }
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::FunctoraEgui(
-                        functora_egui::error::Error::JS(e),
-                    ))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.download_rx = Some(rx),
@@ -209,8 +217,10 @@ impl CryptonoteApp {
                     self.pick_cancel = None;
                 }
                 Ok(Err(e)) => {
-                    if e != "Cancelled" && !e.contains("cancelled") {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::Archive(e))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
@@ -230,7 +240,11 @@ impl CryptonoteApp {
                     self.navigate(Screen::Share);
                 }
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::Archive(e))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.generate_rx = Some(rx),
@@ -246,7 +260,11 @@ impl CryptonoteApp {
                     self.navigate(Screen::View);
                 }
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::InvalidFormat(e))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.decrypt_rx = Some(rx),
@@ -260,7 +278,11 @@ impl CryptonoteApp {
                     self.navigate(screen);
                 }
                 Ok(Err(e)) => {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::Archive(e))));
+                    if !matches!(&e, AppError::Cancelled)
+                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    {
+                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                    }
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.archive_rx = Some(rx),
@@ -316,7 +338,7 @@ impl CryptonoteApp {
                             Ok(Screen::View)
                         }
                     }
-                    Err(e) => Err(e.to_string()),
+                    Err(e) => Err(e),
                 }
             });
             self.archive_rx = Some(rx);
@@ -473,7 +495,7 @@ impl CryptonoteApp {
                                 crate::hooks::build_external(&note, &password, cipher, &attachments, |_| {}).await;
                             match res {
                                 Ok(ext) => Ok(ext),
-                                Err(e) => Err(e.to_string()),
+                                Err(e) => Err(e),
                             }
                         });
                         self.generate_rx = Some(rx);
@@ -494,7 +516,7 @@ impl CryptonoteApp {
                 let rx = functora_egui::spawn_async(async move {
                     functora_egui::files::pick_files_with_cancel(true, None, Some(&cancel))
                         .await
-                        .map_err(|e| e.to_string())
+                        .map_err(AppError::from)
                 });
                 self.pick_rx = Some(rx);
             }
@@ -507,7 +529,7 @@ impl CryptonoteApp {
             .clicked()
             {
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::read().await.map_err(|e| e.to_string())
+                    functora_egui::clipboard::read().await.map_err(AppError::from)
                 });
                 self.clipboard_rx = Some(rx);
             }
@@ -576,16 +598,14 @@ impl CryptonoteApp {
                 let cancel = functora_egui::new_cancel_token();
                 self.pick_cancel = Some(cancel.clone());
                 let rx = functora_egui::spawn_async(async move {
-                    let files = functora_egui::files::pick_files_with_cancel(false, None, Some(&cancel))
-                        .await
-                        .map_err(|e| e.to_string())?;
+                    let files = functora_egui::files::pick_files_with_cancel(false, None, Some(&cancel)).await?;
                     files
                         .into_iter()
                         .next()
-                        .ok_or_else(|| "No file selected".to_string())
+                        .ok_or(AppError::NoFileSelected)
                         .map(|(_, data)| data)
                 });
-                let arc_rx: std::sync::mpsc::Receiver<Result<Vec<u8>, String>> = rx;
+                let arc_rx: std::sync::mpsc::Receiver<Result<Vec<u8>, AppError>> = rx;
                 let rx2 = functora_egui::spawn_async(async move {
                     match arc_rx.recv() {
                         Ok(Ok(bytes)) => {
@@ -598,11 +618,11 @@ impl CryptonoteApp {
                                         Ok(Screen::View)
                                     }
                                 }
-                                Err(e) => Err(e.to_string()),
+                                Err(e) => Err(e),
                             }
                         }
                         Ok(Err(e)) => Err(e),
-                        Err(e) => Err(e.to_string()),
+                        Err(_) => Err(AppError::WorkerStopped),
                     }
                 });
                 self.archive_rx = Some(rx2);
@@ -617,7 +637,7 @@ impl CryptonoteApp {
             .clicked()
             {
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::read().await.map_err(|e| e.to_string())
+                    functora_egui::clipboard::read().await.map_err(AppError::from)
                 });
                 self.clipboard_rx = Some(rx);
             }
@@ -802,7 +822,7 @@ impl CryptonoteApp {
                 .clicked()
                 {
                     let rx = functora_egui::spawn_async(async move {
-                        functora_egui::clipboard::read().await.map_err(|e| e.to_string())
+                        functora_egui::clipboard::read().await.map_err(AppError::from)
                     });
                     self.clipboard_rx = Some(rx);
                 }
@@ -852,10 +872,9 @@ impl CryptonoteApp {
                     let rx = functora_egui::spawn_async(async move {
                         let password_clone = password.clone();
                         let enc_clone = enc.clone();
-                        let res: Result<String, String> = (|| {
-                            let decrypted = crate::crypto::decrypt_symmetric(&enc_clone, &password_clone)
-                                .map_err(|e| e.to_string())?;
-                            String::from_utf8(decrypted).map_err(|e| e.to_string())
+                        let res: Result<String, AppError> = (|| {
+                            let decrypted = crate::crypto::decrypt_symmetric(&enc_clone, &password_clone)?;
+                            Ok(String::from_utf8(decrypted)?)
                         })();
                         res
                     });
@@ -871,10 +890,9 @@ impl CryptonoteApp {
                         crate::archive::extract_archive_package_async_with_progress(source, &password, |_| {})
                             .await
                             .map(|(text, _)| text)
-                            .map_err(|e| e.to_string())
                     })
                     .recv()
-                    .unwrap_or_else(|_| Err("Cancelled".to_string()))
+                    .unwrap_or(Err(AppError::Cancelled))
                 });
                 self.decrypt_rx = Some(rx);
             }
@@ -958,7 +976,7 @@ impl CryptonoteApp {
                                 let rx = functora_egui::spawn_async(async move {
                                     functora_egui::download::download(att_clone.data.to_vec(), &att_clone.name)
                                         .await
-                                        .map_err(|e| e.to_string())
+                                        .map_err(AppError::from)
                                 });
                                 self.download_rx = Some(rx);
                             }
@@ -990,12 +1008,10 @@ impl CryptonoteApp {
                     let files = self.temporary.attachments.clone();
                     if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
                         let rx = functora_egui::spawn_async(async move {
-                            let zipped = functora_egui::zip::create_zip_async(&files, |_| {}, Stage::Zip)
-                                .await
-                                .map_err(|e| e.to_string())?;
+                            let zipped = functora_egui::zip::create_zip_async(&files, |_| {}, Stage::Zip).await?;
                             functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
                                 .await
-                                .map_err(|e| e.to_string())
+                                .map_err(AppError::from)
                         });
                         self.download_rx = Some(rx);
                     }
@@ -1015,7 +1031,7 @@ impl CryptonoteApp {
             {
                 let text = self.temporary.note.clone();
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(text).await.map_err(|e| e.to_string())
+                    functora_egui::clipboard::write(text).await.map_err(AppError::from)
                 });
                 self.clipboard_write_rx = Some(rx);
             }
@@ -1037,9 +1053,7 @@ impl CryptonoteApp {
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
                     let rx = functora_egui::spawn_async(async move {
-                        crate::hooks::build_external(&note, &password, cipher, &attachments, |_| {})
-                            .await
-                            .map_err(|e| e.to_string())
+                        crate::hooks::build_external(&note, &password, cipher, &attachments, |_| {}).await
                     });
                     self.generate_rx = Some(rx);
                 }
@@ -1055,7 +1069,7 @@ impl CryptonoteApp {
                 // Print not directly supported in egui; copy to clipboard fallback
                 let text = self.temporary.note.clone();
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(text).await.map_err(|e| e.to_string())
+                    functora_egui::clipboard::write(text).await.map_err(AppError::from)
                 });
                 self.clipboard_write_rx = Some(rx);
                 self.toast.add("Copied for printing", ToastVariant::Success, toast_time);
@@ -1131,7 +1145,7 @@ impl CryptonoteApp {
             if ui.input(|i| i.pointer.any_click()) {
                 let u = url.clone();
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(u).await.map_err(|e| e.to_string())
+                    functora_egui::clipboard::write(u).await.map_err(AppError::from)
                 });
                 self.clipboard_write_rx = Some(rx);
             }
@@ -1158,7 +1172,7 @@ impl CryptonoteApp {
                     {
                         let u = url.clone();
                         let rx = functora_egui::spawn_async(async move {
-                            functora_egui::clipboard::write(u).await.map_err(|e| e.to_string())
+                            functora_egui::clipboard::write(u).await.map_err(AppError::from)
                         });
                         self.clipboard_write_rx = Some(rx);
                     }
@@ -1176,7 +1190,7 @@ impl CryptonoteApp {
                             url: url.clone(),
                         };
                         let rx = functora_egui::spawn_async(async move {
-                            functora_egui::share::share(data).await.map_err(|e| e.to_string())
+                            functora_egui::share::share(data).await.map_err(AppError::from)
                         });
                         self.share_rx = Some(rx);
                     }
@@ -1190,9 +1204,7 @@ impl CryptonoteApp {
                     {
                         let u_clone = url.clone();
                         let rx = functora_egui::spawn_async(async move {
-                            functora_egui::clipboard::write(u_clone)
-                                .await
-                                .map_err(|e| e.to_string())
+                            functora_egui::clipboard::write(u_clone).await.map_err(AppError::from)
                         });
                         self.clipboard_write_rx = Some(rx);
                         self.toast
@@ -1216,7 +1228,7 @@ impl CryptonoteApp {
                         let rx = functora_egui::spawn_async(async move {
                             functora_egui::download::download(bytes, "archive.cryptonote")
                                 .await
-                                .map_err(|e| e.to_string())
+                                .map_err(AppError::from)
                         });
                         self.download_rx = Some(rx);
                     }
@@ -1320,7 +1332,7 @@ impl CryptonoteApp {
                 let rx = functora_egui::spawn_async(async move {
                     functora_egui::download::download(data, &name)
                         .await
-                        .map_err(|e| e.to_string())
+                        .map_err(AppError::from)
                 });
                 self.download_rx = Some(rx);
             }
@@ -1392,7 +1404,7 @@ impl CryptonoteApp {
                 {
                     let addr = block.address.clone();
                     let rx = functora_egui::spawn_async(async move {
-                        functora_egui::clipboard::write(addr).await.map_err(|e| e.to_string())
+                        functora_egui::clipboard::write(addr).await.map_err(AppError::from)
                     });
                     self.clipboard_write_rx = Some(rx);
                 }
@@ -1504,6 +1516,7 @@ impl eframe::App for CryptonoteApp {
         let needs_reset = std::cell::Cell::new(false);
         let temporary_ptr: *mut TemporaryState = &raw mut self.temporary;
         let router_ptr: *mut AppRouter<Screen, ()> = &raw mut self.router;
+        let lang_cell = std::cell::Cell::new(persistent.language);
         let theme_bg = ShadcnThemeExt::shadcn_theme(&ctx);
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, |side_ui| {
             let temporary_ref = unsafe { &mut *temporary_ptr };
@@ -1559,7 +1572,7 @@ impl eframe::App for CryptonoteApp {
         })
         .version(APP_ATTRS.vsn)
         .theme(&mut persistent.theme)
-        .language(&mut persistent.language)
+        .language(&lang_cell)
         .on_brand(|| needs_reset.set(true))
         .sidebar_labels([
             "Home", "Open", "View", "Share", "File", "About", "Donate", "License", "Privacy",
@@ -1581,6 +1594,7 @@ impl eframe::App for CryptonoteApp {
             Self::footer(content_ui);
             content_ui.add_space(48.0);
         });
+        persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
         if prev_persistent != self.persistent {

@@ -1,6 +1,7 @@
 //! Showcase app: an interactive catalog of every functora-egui widget,
 //! layout, and feature, with light/dark theming and responsive behavior.
 
+use functora_egui::i18n::{I18N, Language};
 use functora_egui::state::PersistentState;
 use functora_egui::storage::persist_value;
 use functora_egui::{
@@ -206,6 +207,104 @@ impl CategoryId {
             Self::Responsive => LucideIcon::MonitorSmartphone,
             Self::Platform => LucideIcon::Smartphone,
         }
+    }
+}
+
+impl I18N for CategoryId {
+    fn render_eng(&self) -> String {
+        self.label().into()
+    }
+
+    fn render_spa(&self) -> String {
+        match self {
+            Self::Overview => "Vista general",
+            Self::Inputs => "Entradas",
+            Self::Layout => "Diseño",
+            Self::Overlays => "Superposiciones",
+            Self::Feedback => "Comentarios",
+            Self::Data => "Datos",
+            Self::Display => "Visualización",
+            Self::Forms => "Formularios",
+            Self::Responsive => "Responsivo",
+            Self::Platform => "Plataforma",
+        }
+        .into()
+    }
+
+    fn render_rus(&self) -> String {
+        match self {
+            Self::Overview => "Обзор",
+            Self::Inputs => "Ввод",
+            Self::Layout => "Макет",
+            Self::Overlays => "Наложения",
+            Self::Feedback => "Обратная связь",
+            Self::Data => "Данные",
+            Self::Display => "Отображение",
+            Self::Forms => "Формы",
+            Self::Responsive => "Адаптивность",
+            Self::Platform => "Платформа",
+        }
+        .into()
+    }
+}
+
+pub struct OverviewBody;
+impl I18N for OverviewBody {
+    fn render_eng(&self) -> String {
+        "Interactive showcase of 60+ shadcn/ui-inspired widgets for egui with light/dark themes and 1600+ Lucide icons. Browse via the sidebar or press Ctrl+K.".into()
+    }
+
+    fn render_spa(&self) -> String {
+        "Presentación interactiva de más de 60 widgets para egui inspirados en shadcn/ui con temas claro/oscuro e iconos Lucide 1600+. Navega por la barra lateral o presiona Ctrl+K.".into()
+    }
+
+    fn render_rus(&self) -> String {
+        "Интерактивная демонстрация 60+ виджетов для egui в стиле shadcn/ui с темами светлая/тёмная и 1600+ иконок Lucide. Откройте боковую панель или нажмите Ctrl+K.".into()
+    }
+}
+
+pub struct SearchLabel;
+impl I18N for SearchLabel {
+    fn render_eng(&self) -> String {
+        "Search".into()
+    }
+
+    fn render_spa(&self) -> String {
+        "Buscar".into()
+    }
+
+    fn render_rus(&self) -> String {
+        "Поиск".into()
+    }
+}
+
+pub struct SearchCommandPlaceholder;
+impl I18N for SearchCommandPlaceholder {
+    fn render_eng(&self) -> String {
+        "Search components...".into()
+    }
+
+    fn render_spa(&self) -> String {
+        "Buscar componentes...".into()
+    }
+
+    fn render_rus(&self) -> String {
+        "Поиск компонентов...".into()
+    }
+}
+
+pub struct FooterSuffix;
+impl I18N for FooterSuffix {
+    fn render_eng(&self) -> String {
+        ". All rights reserved.".into()
+    }
+
+    fn render_spa(&self) -> String {
+        ". Todos los derechos reservados.".into()
+    }
+
+    fn render_rus(&self) -> String {
+        ". Все права защищены.".into()
     }
 }
 
@@ -428,9 +527,9 @@ pub fn section_button(def: &ComponentDef, selected: bool) -> Button<'static> {
 }
 
 /// Group header with icon – used by sidebar, palette and overview.
-pub fn category_header(ui: &mut egui::Ui, id: CategoryId) {
+pub fn category_header(ui: &mut egui::Ui, id: CategoryId, lang: Language) {
     let _ = Separator::horizontal()
-        .text(id.label())
+        .text(id.render(lang))
         .icon(id.icon())
         .show(ui);
 }
@@ -792,12 +891,13 @@ impl ShowcaseApp {
     #[allow(dead_code)]
     fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
         let mut close = false;
+        let lang = self.persistent.language;
         for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
             let is_overview = *cat_id == CategoryId::Overview;
             if is_overview {
                 ui.add_space(8.0);
             } else {
-                category_header(ui, *cat_id);
+                category_header(ui, *cat_id, lang);
                 ui.add_space(8.0);
             }
             for (item_idx, def) in items.iter().enumerate() {
@@ -922,25 +1022,24 @@ impl ShowcaseApp {
         }
 
         if self.dialogs.command_open {
+            let lang = self.persistent.language;
+            let placeholder = SearchCommandPlaceholder.render(lang);
             let items: Vec<CommandItem> = CATEGORIES
                 .iter()
                 .flat_map(|(cat, _, defs)| {
                     defs.iter().map(|def| CommandItem {
-                        group: cat.label().to_owned(),
+                        group: (*cat).render(lang),
                         group_icon: cat.icon(),
                         label: def.name.to_owned(),
                         icon: def.icon,
                     })
                 })
                 .collect();
-            if let Some(idx) = Command::with_items(items)
-                .placeholder("Search components...")
-                .show(
-                    ctx,
-                    &mut self.dialogs.command_open,
-                    &mut self.command_search,
-                )
-            {
+            if let Some(idx) = Command::with_items(items).placeholder(placeholder).show(
+                ctx,
+                &mut self.dialogs.command_open,
+                &mut self.command_search,
+            ) {
                 self.navigate_to(idx);
                 ctx.request_repaint();
             }
@@ -959,12 +1058,12 @@ impl ShowcaseApp {
         None
     }
 
-    fn render_component(&mut self, ui: &mut egui::Ui) {
+    fn render_component(&mut self, ui: &mut egui::Ui, lang: Language) {
         let name = component_name(self.selected);
         _ = Typography::h3(name).show(ui);
         ui.add_space(4.0);
         match name {
-            "Overview" => self.demo_overview(ui),
+            "Overview" => self.demo_overview(ui, lang),
             "Button" => self.demo_button(ui),
             "Checkbox" => self.demo_checkbox(ui),
             "Switch" => self.demo_switch(ui),
@@ -1100,42 +1199,47 @@ impl eframe::App for ShowcaseApp {
         let needs_search = std::cell::Cell::new(false);
         let selected_ptr: *mut usize = &raw mut self.selected;
         let router_ptr: *mut functora_egui::route::AppRouter<AppRoute, ()> = &raw mut self.router;
-        let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, |side_ui| {
-            let selected_ref = unsafe { &mut *selected_ptr };
-            let router_ref = unsafe { &mut *router_ptr };
-            let mut close = false;
-            for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
-                let is_overview = *cat_id == CategoryId::Overview;
-                if is_overview {
-                    side_ui.add_space(8.0);
-                } else {
-                    category_header(side_ui, *cat_id);
-                    side_ui.add_space(8.0);
-                }
-                for (item_idx, def) in items.iter().enumerate() {
-                    let flat = flat_index(cat_idx, item_idx);
-                    let is_selected = flat == *selected_ref;
-                    if side_ui
-                        .add(section_button(def, is_selected).full_width())
-                        .clicked()
-                    {
-                        let next_route = match flat {
-                            0 => AppRoute::Overview,
-                            _ => AppRoute::Component(flat),
-                        };
-                        *selected_ref = flat;
-                        router_ref.navigate(&mut (), next_route);
-                        close |= side_ui.on_mobile();
-                        side_ui.ctx().request_repaint();
+        let lang_cell = std::cell::Cell::new(persistent.language);
+        let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, {
+            let lang_ref = &lang_cell;
+            move |side_ui| {
+                let cur_lang = lang_ref.get();
+                let selected_ref = unsafe { &mut *selected_ptr };
+                let router_ref = unsafe { &mut *router_ptr };
+                let mut close = false;
+                for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
+                    let is_overview = *cat_id == CategoryId::Overview;
+                    if is_overview {
+                        side_ui.add_space(8.0);
+                    } else {
+                        category_header(side_ui, *cat_id, cur_lang);
+                        side_ui.add_space(8.0);
                     }
+                    for (item_idx, def) in items.iter().enumerate() {
+                        let flat = flat_index(cat_idx, item_idx);
+                        let is_selected = flat == *selected_ref;
+                        if side_ui
+                            .add(section_button(def, is_selected).full_width())
+                            .clicked()
+                        {
+                            let next_route = match flat {
+                                0 => AppRoute::Overview,
+                                _ => AppRoute::Component(flat),
+                            };
+                            *selected_ref = flat;
+                            router_ref.navigate(&mut (), next_route);
+                            close |= side_ui.on_mobile();
+                            side_ui.ctx().request_repaint();
+                        }
+                    }
+                    side_ui.add_space(8.0);
                 }
-                side_ui.add_space(8.0);
+                close
             }
-            close
         })
         .theme(&mut persistent.theme)
-        .language(&mut persistent.language)
-        .search("Search", Some("Ctrl K"))
+        .language(&lang_cell)
+        .search(&SearchLabel.render(lang_cell.get()), Some("Ctrl K"))
         .on_brand(|| needs_reset.set(true))
         .on_search(|| needs_search.set(true))
         .sidebar_labels(
@@ -1145,19 +1249,26 @@ impl eframe::App for ShowcaseApp {
         )
         .breadcrumb(&route, &history)
         .scroll_top(should_scroll_top)
-        .footer(|footer_ui| {
-            let _ = Footer::new().show(footer_ui, |inner| {
-                let _ = Hypertext::new()
-                    .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
-                    .link("Functora", "https://functora.github.io/")
-                    .text(". All rights reserved.")
-                    .centered()
-                    .show(inner);
-            });
+        .footer({
+            let lang_ref = &lang_cell;
+            move |footer_ui| {
+                let cur_lang = lang_ref.get();
+                let suffix = FooterSuffix.render(cur_lang);
+                let _ = Footer::new().show(footer_ui, |inner| {
+                    let _ = Hypertext::new()
+                        .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
+                        .link("Functora", "https://functora.github.io/")
+                        .text(suffix)
+                        .centered()
+                        .show(inner);
+                });
+            }
         })
         .show(ui, |content_ui| {
-            self.render_component(content_ui);
+            let cur_lang = lang_cell.get();
+            self.render_component(content_ui, cur_lang);
         });
+        persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
         if prev_persistent != self.persistent {

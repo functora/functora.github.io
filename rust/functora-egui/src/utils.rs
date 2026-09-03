@@ -132,11 +132,14 @@ where
     F: std::future::Future<Output = T> + Send + 'static,
     T: Send + 'static,
 {
+    use std::sync::OnceLock;
+    static POOL: OnceLock<threadpool::ThreadPool> = OnceLock::new();
+    let pool = POOL.get_or_init(|| threadpool::ThreadPool::new(2));
     let (tx, rx) = std::sync::mpsc::channel();
-    drop(std::thread::spawn(move || {
+    pool.execute(move || {
         let res = pollster::block_on(future);
         drop(tx.send(res));
-    }));
+    });
     rx
 }
 

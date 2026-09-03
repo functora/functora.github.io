@@ -1,3 +1,5 @@
+use std::cell::Cell;
+
 use crate::nav::NavHistory;
 use crate::responsive::responsive_ext::ResponsiveExt;
 use crate::route::RouteMetadata;
@@ -43,7 +45,7 @@ where
     version: Option<&'a str>,
     collapsed: &'a mut bool,
     theme: Option<&'a mut Theme>,
-    language: Option<&'a mut functora_core::i18n::Language>,
+    language: Option<&'a Cell<functora_core::i18n::Language>>,
     search_label: Option<&'a str>,
     search_shortcut: Option<&'a str>,
     on_brand: Option<Box<dyn FnMut() + 'a>>,
@@ -95,7 +97,7 @@ where
     }
 
     #[must_use]
-    pub fn language(mut self, language: &'a mut functora_core::i18n::Language) -> Self {
+    pub fn language(mut self, language: &'a Cell<functora_core::i18n::Language>) -> Self {
         self.language = Some(language);
         self
     }
@@ -165,7 +167,6 @@ where
             footer,
         } = self;
         let mut collapsed_val = *collapsed;
-        let language_copy = language.as_deref().copied();
         let mut breadcrumb_action: Option<NavAction<R>> = None;
         let ctx = ui.ctx().clone();
         if let Some(th) = theme.as_deref() {
@@ -268,8 +269,9 @@ where
                         || history.can_go_forward()
                         || route.parent().is_some();
                     if should_show {
-                        let lang = language_copy
-                            .unwrap_or_else(functora_core::i18n::detect_browser_language);
+                        let lang = language
+                            .as_ref()
+                            .map_or_else(functora_core::i18n::detect_browser_language, |c| c.get());
                         let available_w = central_ui.available_width();
                         let strip_theme = ShadcnThemeExt::shadcn_theme(central_ui.ctx());
                         let strip = egui::Frame::NONE

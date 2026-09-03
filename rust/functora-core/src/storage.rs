@@ -53,29 +53,49 @@ pub fn find_or_init_key<
     key: &str,
     init: F,
 ) -> Result<T, Error> {
+    let _guard = STORAGE_LOCK
+        .lock()
+        .map_err(|_| Error::Worker(WorkerStopped))?;
     let p = path.as_ref();
+    ensure_file(p)?;
     let content = read_to_string(p)?;
     let json: Value = from_str(&content)?;
     if let Some(val) = json.get(key) {
         Ok(from_value(val.clone())?)
     } else {
         let val = init();
-        update_key(p, key, &val)?;
-        Ok(val)
+        let mut json_mut = json;
+        if let Some(obj) = json_mut.as_object_mut() {
+            _ = obj.insert(key.to_string(), to_value(&val)?);
+            let s = to_string_pretty(&json_mut)?;
+            write(p, s)?;
+            Ok(val)
+        } else {
+            Err(Error::NotJsonObject(json_mut))
+        }
     }
 }
 
 pub fn read_json_object<P: AsRef<Path>>(path: P) -> Result<Value, Error> {
-    Ok(from_str(&read_to_string(path)?)?)
+    let _guard = STORAGE_LOCK
+        .lock()
+        .map_err(|_| Error::Worker(WorkerStopped))?;
+    Ok(from_str(&read_to_string(path.as_ref())?)?)
 }
 
 pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Error> {
+    let _guard = STORAGE_LOCK
+        .lock()
+        .map_err(|_| Error::Worker(WorkerStopped))?;
     let s = to_string_pretty(&json)?;
-    Ok(write(path, s)?)
+    Ok(write(path.as_ref(), s)?)
 }
 
 pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
-    let json = read_json_object(path)?;
+    let _guard = STORAGE_LOCK
+        .lock()
+        .map_err(|_| Error::Worker(WorkerStopped))?;
+    let json: Value = from_str(&read_to_string(path.as_ref())?)?;
     match json.as_object() {
         Some(obj) => Ok(obj.get(key).cloned()),
         None => Err(Error::NotJsonObject(json)),
@@ -87,11 +107,17 @@ pub fn set_json_value<P: AsRef<Path>, T: Serialize>(
     key: &str,
     val: T,
 ) -> Result<(), Error> {
-    let mut json = read_json_object(&path)?;
+    let _guard = STORAGE_LOCK
+        .lock()
+        .map_err(|_| Error::Worker(WorkerStopped))?;
+    let p = path.as_ref();
+    ensure_file(p)?;
+    let mut json: Value = from_str(&read_to_string(p)?)?;
     let value = to_value(val)?;
     if let Some(obj) = json.as_object_mut() {
         _ = obj.insert(key.to_string(), value);
-        write_json_object(path, &json)
+        let s = to_string_pretty(&json)?;
+        Ok(write(p, s)?)
     } else {
         Err(Error::NotJsonObject(json))
     }

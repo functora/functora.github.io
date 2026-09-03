@@ -1,8 +1,8 @@
-use functora_egui::i18n::Language;
+use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::{RouteKind, RouteMetadata};
 use std::borrow::Cow;
 
-use crate::app::{CATEGORIES, component_index, component_name};
+use crate::app::{CATEGORIES, CategoryId, component_index, component_name};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum AppRoute {
@@ -34,9 +34,9 @@ impl std::str::FromStr for AppRoute {
 }
 
 impl RouteMetadata for AppRoute {
-    fn label(&self, _lang: Language) -> Cow<'static, str> {
+    fn label(&self, lang: Language) -> Cow<'static, str> {
         match self {
-            Self::Overview => "Overview".into(),
+            Self::Overview => CategoryId::Overview.render(lang).into(),
             Self::Component(idx) => component_name(*idx).into(),
         }
     }

@@ -15,8 +15,13 @@ impl egui::Widget for super::widget::NumberInput<'_> {
             super::widget::ValueRef::I32(v) => f64::from(**v),
         };
 
-        let width = self.width.unwrap_or(60.0);
-        let desired = egui::vec2(width, height);
+        let avail = ui.available_width();
+        let width = if avail > 1.0 {
+            self.width.unwrap_or(60.0).min(avail)
+        } else {
+            self.width.unwrap_or(60.0)
+        };
+        let desired = egui::vec2(width.max(0.0), height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
         let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
         let outer_pressed = outer_hovered && ui.input(|input| input.pointer.primary_down());
@@ -109,13 +114,18 @@ impl egui::Widget for super::widget::NumberInput<'_> {
         // Keep text selection highlight visible.
         child_ui.style_mut().visuals.selection.bg_fill = theme.primary;
 
-        let response = child_ui.add_sized(value_rect.size(), dv);
+        let inner_response = child_ui.add_sized(value_rect.size(), dv);
 
         match self.value {
             super::widget::ValueRef::F64(v) => *v = proxy,
             super::widget::ValueRef::F32(v) => *v = crate::utils::f64_to_f32(proxy),
             super::widget::ValueRef::I32(v) => *v = crate::utils::f64_to_i32(proxy.round()),
         }
+
+        let mut response = inner_response.union(outer_response);
+        response.rect = outer_rect;
+        response.interact_rect = outer_rect;
+        response.set_intrinsic_size(desired);
 
         // Single border: focus ring when focused, regular border otherwise.
         if response.hovered() || response.dragged() {
@@ -126,7 +136,7 @@ impl egui::Widget for super::widget::NumberInput<'_> {
             });
         }
 
-        if response.has_focus() || response.dragged() || outer_hovered {
+        if response.has_focus() || response.dragged() || response.hovered() {
             let _ = ui.painter().rect_stroke(
                 outer_rect,
                 cr,

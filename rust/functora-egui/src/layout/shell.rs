@@ -313,9 +313,6 @@ where
                             content(v_ui);
                             if let Some(f) = footer_opt.take() {
                                 v_ui.add_space(16.0);
-                                let _ = crate::widgets::separator::widget::Separator::horizontal()
-                                    .show(v_ui);
-                                v_ui.add_space(8.0);
                                 let _ = crate::widgets::footer::widget::Footer::new().show(v_ui, f);
                                 v_ui.add_space(12.0);
                             } else {

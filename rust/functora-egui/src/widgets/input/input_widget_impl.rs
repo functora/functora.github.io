@@ -72,7 +72,7 @@ impl egui::Widget for super::widget::Input<'_> {
             .text_color(style.text_color)
             .desired_width(inner_rect.width());
 
-        let response = child_ui.add(text_edit);
+        let inner_response = child_ui.add(text_edit);
 
         // Reveal toggle for password inputs
         if self.password {
@@ -110,7 +110,7 @@ impl egui::Widget for super::widget::Input<'_> {
         }
 
         // Repaint border if focused
-        if response.has_focus() {
+        if inner_response.has_focus() {
             let focused_style = super::input_style::resolve_input_style(&theme, true);
             let _ = ui.painter().rect_stroke(
                 outer_rect,
@@ -126,6 +126,13 @@ impl egui::Widget for super::widget::Input<'_> {
             );
         }
 
+        let inner_size = inner_response
+            .intrinsic_size()
+            .unwrap_or_else(|| inner_rect.size());
+        let mut response = inner_response.union(outer_response);
+        response.rect = outer_rect;
+        response.interact_rect = outer_rect;
+        response.set_intrinsic_size(egui::vec2(inner_size.x, desired.y));
         response
     }
 }

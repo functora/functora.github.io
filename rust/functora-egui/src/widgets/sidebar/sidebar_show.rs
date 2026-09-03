@@ -32,7 +32,7 @@ impl super::widget::Sidebar {
             crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let icon = crate::icons::lucide_icon::LucideIcon::Menu;
 
-        let size = crate::tokens::component_size::ComponentSize::Sm
+        let size = crate::tokens::component_size::ComponentSize::Default
             .metrics_for(&spacing)
             .0;
         let icon_size = size * 0.5;

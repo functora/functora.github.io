@@ -645,21 +645,11 @@
                     local crate="$1"
                     shift
                     ${cargo}/bin/cargo fmt "$@" \
-                      && if [ -f Dioxus.toml ]; then dx fmt "$@"; fi \
+                      && { if [ -f Dioxus.toml ]; then dx fmt "$@"; else true; fi; } \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      # Mobile targets: eframe web apps + Dioxus apps
-                      if is_eframe_web_app "." || is_dioxus_app "."; then
-                           for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do
-                             ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings \
-                               && echo "==> $crate [$T]: mobile clippy: All good!"
-                           done
-                         fi
-                      # wasm32 targets: eframe web apps + egui libraries
-                      if is_eframe_web_app "." || is_egui_library "."; then
-                           ${cargo}/bin/cargo clippy --target wasm32-unknown-unknown --all-features --all-targets "$@" -- -D warnings \
-                             && echo "==> $crate [wasm32-unknown-unknown]: clippy: All good!"
-                         fi
+                      && { if is_eframe_web_app "." || is_dioxus_app "."; then for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings && echo "==> $crate [$T]: mobile clippy: All good!" || return 1; done; fi; } \
+                      && { if is_eframe_web_app "." || is_egui_library "."; then ${cargo}/bin/cargo clippy --target wasm32-unknown-unknown --all-features --all-targets "$@" -- -D warnings && echo "==> $crate [wasm32-unknown-unknown]: clippy: All good!" || return 1; fi; }
                   }
                   if [ -f Cargo.toml ]; then
                     verify_crate "$(basename "$PWD")" "$@" && echo "==> All good!"

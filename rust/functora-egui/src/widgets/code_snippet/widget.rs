@@ -16,6 +16,7 @@ pub fn snippet_break_long_words(ui: &mut egui::Ui, code: &str) {
 }
 
 fn snippet_impl(ui: &mut egui::Ui, code: &str, break_long_words: bool) {
+    ui.add_space(24.0);
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let available = ui.available_width();
     let wrap_width = (available - 20.0).max(0.0);

@@ -32,7 +32,9 @@ impl super::widget::Sidebar {
             crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let icon = crate::icons::lucide_icon::LucideIcon::Menu;
 
-        let size = spacing.touch_height;
+        let size = crate::tokens::component_size::ComponentSize::Sm
+            .metrics_for(&spacing)
+            .0;
         let icon_size = size * 0.5;
         let (rect, response) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::click());
 
@@ -42,6 +44,12 @@ impl super::widget::Sidebar {
             if response.hovered() || response.is_pointer_button_down_on() {
                 let _ = painter.rect_filled(rect, cr, theme.muted);
             }
+            let _ = painter.rect_stroke(
+                rect,
+                cr,
+                egui::Stroke::new(1.0, theme.border),
+                egui::epaint::StrokeKind::Inside,
+            );
             let icon_rect =
                 egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
             crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, theme.foreground);
@@ -69,7 +77,9 @@ impl super::widget::Sidebar {
             crate::icons::lucide_icon::LucideIcon::PanelRightClose
         };
 
-        let size = spacing.touch_height;
+        let size = crate::tokens::component_size::ComponentSize::Sm
+            .metrics_for(&spacing)
+            .0;
         let icon_size = size * 0.5;
         let (rect, response) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::click());
 
@@ -79,6 +89,12 @@ impl super::widget::Sidebar {
             if response.hovered() || response.is_pointer_button_down_on() {
                 let _ = painter.rect_filled(rect, cr, theme.muted);
             }
+            let _ = painter.rect_stroke(
+                rect,
+                cr,
+                egui::Stroke::new(1.0, theme.border),
+                egui::epaint::StrokeKind::Inside,
+            );
             let icon_rect =
                 egui::Rect::from_center_size(rect.center(), egui::vec2(icon_size, icon_size));
             crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, theme.foreground);
@@ -145,7 +161,9 @@ impl super::widget::Sidebar {
                 });
             } else if self.collapsible {
                 let available = inner_ui.available_rect_before_wrap();
-                let button_size = spacing.touch_height;
+                let button_size = crate::tokens::component_size::ComponentSize::Sm
+                    .metrics_for(&spacing)
+                    .0;
                 let button_rect = egui::Rect::from_min_size(
                     egui::pos2(available.max.x - button_size, available.min.y),
                     egui::vec2(button_size, button_size),
@@ -164,6 +182,12 @@ impl super::widget::Sidebar {
                     if response.hovered() || response.is_pointer_button_down_on() {
                         let _ = painter.rect_filled(button_rect, cr, theme.muted);
                     }
+                    let _ = painter.rect_stroke(
+                        button_rect,
+                        cr,
+                        egui::Stroke::new(1.0, theme.border),
+                        egui::epaint::StrokeKind::Inside,
+                    );
                     let icon = if *collapsed {
                         crate::icons::lucide_icon::LucideIcon::PanelRightOpen
                     } else {
@@ -281,7 +305,9 @@ impl super::widget::Sidebar {
                     content_ui.set_max_width(panel_width);
 
                     let available = content_ui.available_rect_before_wrap();
-                    let button_size = spacing.touch_height;
+                    let button_size = crate::tokens::component_size::ComponentSize::Sm
+                        .metrics_for(&spacing)
+                        .0;
                     let button_rect = egui::Rect::from_min_size(
                         egui::pos2(available.max.x - button_size, available.min.y),
                         egui::vec2(button_size, button_size),
@@ -300,6 +326,12 @@ impl super::widget::Sidebar {
                         if response.hovered() || response.is_pointer_button_down_on() {
                             let _ = painter.rect_filled(button_rect, cr, theme.muted);
                         }
+                        let _ = painter.rect_stroke(
+                            button_rect,
+                            cr,
+                            egui::Stroke::new(1.0, theme.border),
+                            egui::epaint::StrokeKind::Inside,
+                        );
                         let icon_size = button_size * 0.5;
                         let icon_rect = egui::Rect::from_center_size(
                             button_rect.center(),

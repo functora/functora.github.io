@@ -167,8 +167,19 @@ where
             footer,
         } = self;
         let mut collapsed_val = *collapsed;
-        let mut breadcrumb_action: Option<NavAction<R>> = None;
         let ctx = ui.ctx().clone();
+        let is_mobile = ctx.on_mobile();
+        let prev_is_mobile = ctx.data(|d| {
+            d.get_temp::<bool>(egui::Id::new("shell_prev_is_mobile"))
+                .unwrap_or(is_mobile)
+        });
+        if is_mobile && !prev_is_mobile {
+            collapsed_val = true;
+        } else if !is_mobile && prev_is_mobile {
+            collapsed_val = false;
+        }
+        let _ = ctx.data_mut(|d| d.insert_temp(egui::Id::new("shell_prev_is_mobile"), is_mobile));
+        let mut breadcrumb_action: Option<NavAction<R>> = None;
         if let Some(th) = theme.as_deref() {
             crate::theme_extra::set_theme(&ctx, *th);
         }

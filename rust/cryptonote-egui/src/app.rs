@@ -113,7 +113,8 @@ impl CryptonoteApp {
 
     fn reset(&mut self) {
         self.temporary.reset();
-        self.navigate(Screen::Home);
+        self.router.reset(&mut (), Screen::Home);
+        self.temporary.screen = Screen::Home;
     }
 
     fn poll_receivers(&mut self, ctx: &egui::Context) {

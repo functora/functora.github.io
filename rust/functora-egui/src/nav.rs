@@ -75,6 +75,11 @@ impl<R: Routable> NavHistory<R> {
         self.stack.truncate(self.pos.0 + 1);
     }
 
+    pub fn reset(&mut self, route: R) {
+        self.stack = vec![route];
+        self.pos = HistoryPos(0);
+    }
+
     pub fn sync(&mut self, route: &R) {
         if let Some(pos) = self.stack.iter().position(|r| r == route) {
             self.pos = HistoryPos(pos);

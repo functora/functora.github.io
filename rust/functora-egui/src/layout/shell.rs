@@ -158,7 +158,7 @@ where
             language,
             search_label,
             search_shortcut,
-            mut on_brand,
+            on_brand,
             mut on_search,
             mut sidebar,
             breadcrumb,
@@ -180,6 +180,7 @@ where
         }
         let _ = ctx.data_mut(|d| d.insert_temp(egui::Id::new("shell_prev_is_mobile"), is_mobile));
         let mut breadcrumb_action: Option<NavAction<R>> = None;
+        let brand_clicked = std::rc::Rc::new(std::cell::Cell::new(false));
         if let Some(th) = theme.as_deref() {
             crate::theme_extra::set_theme(&ctx, *th);
         }
@@ -195,8 +196,16 @@ where
                 if let Some(l) = search_label {
                     navbar = navbar.search(l, search_shortcut);
                 }
-                let brand_cb: Option<&mut dyn FnMut()> =
-                    on_brand.as_mut().map(|b| b.as_mut() as &mut dyn FnMut());
+                let mut on_brand_wrapper: Option<Box<dyn FnMut() + 'a>> = on_brand.map(|mut cb| {
+                    let clicked = std::rc::Rc::clone(&brand_clicked);
+                    Box::new(move || {
+                        clicked.set(true);
+                        cb();
+                    }) as Box<dyn FnMut() + 'a>
+                });
+                let brand_cb: Option<&mut dyn FnMut()> = on_brand_wrapper
+                    .as_mut()
+                    .map(|b| b.as_mut() as &mut dyn FnMut());
                 let search_cb: Option<&mut dyn FnMut()> =
                     on_search.as_mut().map(|b| b.as_mut() as &mut dyn FnMut());
                 let _ = navbar.show(
@@ -276,9 +285,10 @@ where
                     central_ui.add_space(-central_ui.spacing().item_spacing.y);
                 }
                 if let Some((route, history)) = breadcrumb {
-                    let should_show = history.can_go_back()
-                        || history.can_go_forward()
-                        || route.parent().is_some();
+                    let should_show = !brand_clicked.get()
+                        && (history.can_go_back()
+                            || history.can_go_forward()
+                            || route.parent().is_some());
                     if should_show {
                         let lang = language
                             .as_ref()

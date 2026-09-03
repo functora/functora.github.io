@@ -189,6 +189,13 @@ pub mod router_impl {
         }
 
         #[allow(clippy::needless_pass_by_value)]
+        pub fn reset(&mut self, _state: &mut S, route: R) {
+            self.history.reset(route.clone());
+            self.current = route;
+            history_replace(&self.current);
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
         pub fn go_back(&mut self, _state: &mut S) -> Option<&R> {
             if let Some(r) = self.history.go_back() {
                 self.current = r.clone();
@@ -336,6 +343,13 @@ pub mod router_impl {
         #[allow(clippy::needless_pass_by_value)]
         pub fn replace(&mut self, _state: &mut S, route: R) {
             self.history.replace(route.clone());
+            self.current = route;
+            history_replace(&self.current);
+        }
+
+        #[allow(clippy::needless_pass_by_value)]
+        pub fn reset(&mut self, _state: &mut S, route: R) {
+            self.history.reset(route.clone());
             self.current = route;
             history_replace(&self.current);
         }

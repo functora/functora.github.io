@@ -857,7 +857,7 @@ impl ShowcaseApp {
         self.sidebar_collapsed = ctx.on_mobile();
         self.sidebar_init_done = true;
         self.prev_selected = usize::MAX;
-        self.router.navigate(&mut (), AppRoute::default());
+        self.router.reset(&mut (), AppRoute::default());
         self.selected = 0;
         self.apply_theme(ctx);
         ctx.request_repaint();

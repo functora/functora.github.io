@@ -163,7 +163,7 @@ fn input_paste_clear_custom_icons() {
     let mut text = "hello".to_owned();
     let mut body = |ui: &mut egui::Ui| {
         let _ = functora_egui::InputPasteClear::new(&mut text)
-            .paste_icon(functora_egui::LucideIcon::Copy)
+            .paste_icon(functora_egui::LucideIcon::Clipboard)
             .clear_icon(functora_egui::LucideIcon::Trash)
             .show(ui);
     };

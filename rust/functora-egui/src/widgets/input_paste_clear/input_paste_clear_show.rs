@@ -4,14 +4,19 @@ use crate::icons::lucide_icon::LucideIcon;
 use crate::utils::f32_to_u8_clamped;
 
 type PasteRx = std::sync::mpsc::Receiver<Result<String, crate::error::Error>>;
+type CopyRx = std::sync::mpsc::Receiver<Result<(), crate::error::Error>>;
 
 #[derive(Clone)]
 pub(crate) struct PasteSlot(pub Arc<Mutex<Option<PasteRx>>>);
+
+#[derive(Clone)]
+pub(crate) struct CopySlot(pub Arc<Mutex<Option<CopyRx>>>);
 
 #[derive(Debug)]
 pub struct PasteClearResponse {
     pub response: egui::Response,
     pub pasted: bool,
+    pub copied: bool,
     pub cleared: bool,
     pub clipboard_error: Option<crate::error::Error>,
 }
@@ -27,6 +32,8 @@ pub(crate) fn show_input_paste_clear(
         password,
         paste_icon,
         clear_icon,
+        copy,
+        copy_icon,
     } = widget;
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
@@ -57,6 +64,7 @@ pub(crate) fn show_input_paste_clear(
         egui::epaint::StrokeKind::Inside,
     );
 
+    let copy_width: f32 = if copy { 40.0 } else { 0.0 };
     let paste_width: f32 = 40.0;
     let clear_width: f32 = 40.0;
     let eye_width: f32 = 32.0;
@@ -66,21 +74,29 @@ pub(crate) fn show_input_paste_clear(
     } else {
         clear_width
     };
+    let left_reserve = copy_width + paste_width;
 
-    let ptr = std::ptr::from_ref::<String>(text).cast::<()>();
-    let base_id = egui::Id::new(ptr).with(ui.id());
+    let base_id = ui.auto_id_with("input_paste_clear");
     let slot_id = base_id.with("slot");
     let paste_id = base_id.with("paste_btn");
     let clear_id = base_id.with("clear_btn");
     let reveal_id = base_id.with("reveal");
     let eye_id = base_id.with("eye_btn");
+    let copy_slot_id = base_id.with("copy_slot");
+    let copy_id = base_id.with("copy_btn");
 
     let slot = ui
         .data(|d| d.get_temp::<PasteSlot>(slot_id))
         .unwrap_or_else(|| PasteSlot(Arc::new(Mutex::new(None))));
     let _ = ui.data_mut(|d| d.insert_temp(slot_id, slot.clone()));
 
+    let copy_slot = ui
+        .data(|d| d.get_temp::<CopySlot>(copy_slot_id))
+        .unwrap_or_else(|| CopySlot(Arc::new(Mutex::new(None))));
+    let _ = ui.data_mut(|d| d.insert_temp(copy_slot_id, copy_slot.clone()));
+
     let mut pasted = false;
+    let mut copied = false;
     let mut clipboard_error: Option<crate::error::Error> = None;
 
     if let Ok(mut guard) = slot.0.lock()
@@ -90,6 +106,28 @@ pub(crate) fn show_input_paste_clear(
             Ok(Ok(txt)) => {
                 txt.clone_into(text);
                 pasted = true;
+            }
+            Ok(Err(e)) => {
+                clipboard_error = Some(e);
+            }
+            Err(std::sync::mpsc::TryRecvError::Empty) => {
+                *guard = Some(rx);
+                ui.ctx().request_repaint();
+            }
+            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                clipboard_error = Some(crate::error::Error::JS(
+                    "Clipboard channel disconnected".into(),
+                ));
+            }
+        }
+    }
+
+    if let Ok(mut guard) = copy_slot.0.lock()
+        && let Some(rx) = guard.take()
+    {
+        match rx.try_recv() {
+            Ok(Ok(())) => {
+                copied = true;
             }
             Ok(Err(e)) => {
                 clipboard_error = Some(e);
@@ -116,6 +154,17 @@ pub(crate) fn show_input_paste_clear(
         egui::pos2(outer_rect.min.x + 2.0, outer_rect.min.y + 2.0),
         egui::pos2(outer_rect.min.x + paste_width - 2.0, outer_rect.max.y - 2.0),
     );
+    let copy_rect = if copy {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(outer_rect.min.x + paste_width + 2.0, outer_rect.min.y + 2.0),
+            egui::pos2(
+                outer_rect.min.x + paste_width + copy_width - 2.0,
+                outer_rect.max.y - 2.0,
+            ),
+        ))
+    } else {
+        None
+    };
     let clear_rect = egui::Rect::from_min_max(
         egui::pos2(outer_rect.max.x - clear_width + 2.0, outer_rect.min.y + 2.0),
         egui::pos2(outer_rect.max.x - 2.0, outer_rect.max.y - 2.0),
@@ -132,15 +181,30 @@ pub(crate) fn show_input_paste_clear(
         None
     };
 
+    let copy_resp = copy_rect.map(|r| ui.interact(r, copy_id, egui::Sense::click()));
     let paste_resp = ui.interact(paste_rect, paste_id, egui::Sense::click());
     let clear_resp = ui.interact(clear_rect, clear_id, egui::Sense::click());
     let eye_resp = eye_rect.map(|r| ui.interact(r, eye_id, egui::Sense::click()));
 
-    let is_pending = slot.0.lock().ok().is_some_and(|g| g.is_some());
+    let is_paste_pending = slot.0.lock().ok().is_some_and(|g| g.is_some());
+    let is_copy_pending = copy_slot.0.lock().ok().is_some_and(|g| g.is_some());
 
-    if paste_resp.clicked() && !is_pending {
+    if paste_resp.clicked() && !is_paste_pending {
         let rx = crate::utils::spawn_async(async move { crate::clipboard::read().await });
         if let Ok(mut guard) = slot.0.lock() {
+            *guard = Some(rx);
+        }
+        ui.ctx().request_repaint();
+    }
+
+    if let Some(resp) = &copy_resp
+        && resp.clicked()
+        && !is_copy_pending
+        && !text.is_empty()
+    {
+        let to_copy = text.clone();
+        let rx = crate::utils::spawn_async(async move { crate::clipboard::write(to_copy).await });
+        if let Ok(mut guard) = copy_slot.0.lock() {
             *guard = Some(rx);
         }
         ui.ctx().request_repaint();
@@ -162,6 +226,13 @@ pub(crate) fn show_input_paste_clear(
         outer_rect.y_range(),
         egui::Stroke::new(1.0, theme.border),
     );
+    if copy {
+        let _ = ui.painter().vline(
+            outer_rect.min.x + left_reserve,
+            outer_rect.y_range(),
+            egui::Stroke::new(1.0, theme.border),
+        );
+    }
     let _ = ui.painter().vline(
         outer_rect.max.x - clear_width,
         outer_rect.y_range(),
@@ -177,7 +248,7 @@ pub(crate) fn show_input_paste_clear(
 
     let input_rect = egui::Rect::from_min_max(
         egui::pos2(
-            outer_rect.min.x + paste_width + h_padding,
+            outer_rect.min.x + left_reserve + h_padding,
             outer_rect.min.y + 2.0,
         ),
         egui::pos2(
@@ -201,6 +272,37 @@ pub(crate) fn show_input_paste_clear(
 
     let response = child_ui.add(text_edit);
 
+    if let Some(rect) = copy_rect
+        && let Some(resp) = &copy_resp
+        && ui.is_rect_visible(rect)
+    {
+        let icon_rect = egui::Rect::from_center_size(rect.center(), egui::vec2(16.0, 16.0));
+        let empty = text.is_empty();
+        let base_color = if empty {
+            egui::Color32::from_rgba_unmultiplied(
+                theme.muted_foreground.r(),
+                theme.muted_foreground.g(),
+                theme.muted_foreground.b(),
+                90,
+            )
+        } else if resp.hovered() {
+            theme.foreground
+        } else {
+            theme.muted_foreground
+        };
+        let display_color = if is_copy_pending {
+            egui::Color32::from_rgba_unmultiplied(
+                base_color.r(),
+                base_color.g(),
+                base_color.b(),
+                120,
+            )
+        } else {
+            base_color
+        };
+        crate::icons::paint_icon::paint_icon(ui.painter(), icon_rect, &copy_icon, display_color);
+    }
+
     if ui.is_rect_visible(paste_rect) {
         let paste_icon_rect =
             egui::Rect::from_center_size(paste_rect.center(), egui::vec2(16.0, 16.0));
@@ -209,7 +311,7 @@ pub(crate) fn show_input_paste_clear(
         } else {
             theme.muted_foreground
         };
-        let display_paste_color = if is_pending {
+        let display_paste_color = if is_paste_pending {
             egui::Color32::from_rgba_unmultiplied(
                 base_paste_color.r(),
                 base_paste_color.g(),
@@ -290,6 +392,7 @@ pub(crate) fn show_input_paste_clear(
     PasteClearResponse {
         response,
         pasted,
+        copied,
         cleared,
         clipboard_error,
     }

@@ -480,9 +480,51 @@ impl crate::app::ShowcaseApp {
         ))
         .show(ui);
 
+        ui.add_space(12.0);
+        _ = Typography::small("With copy button").show(ui);
+        ui.add_space(2.0);
+        _ = Typography::muted(
+            "Layout: [paste | copy | text | eye | clear]. Paste is always leftmost, copy is optional next to it (off by default). Enable with .copy().",
+        )
+        .show(ui);
+        ui.add_space(4.0);
+        let resp_copy = InputPasteClear::new(&mut self.input_paste_clear_copy)
+            .placeholder("Copy enabled...")
+            .copy()
+            .show(ui);
+        if let Some(err) = &resp_copy.clipboard_error {
+            let msg = err.to_string();
+            ui.add_space(4.0);
+            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+        }
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Copy demo - pasted={} copied={} cleared={} len={}",
+            resp_copy.copied,
+            resp_copy.pasted,
+            resp_copy.cleared,
+            self.input_paste_clear_copy.len()
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        _ = Typography::small("Copy with custom icon").show(ui);
+        ui.add_space(4.0);
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_copy_custom)
+            .placeholder("Custom copy icon: CopyPlus")
+            .copy_icon(LucideIcon::CopyPlus)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Custom copy value: \"{}\" len={}",
+            self.input_paste_clear_copy_custom,
+            self.input_paste_clear_copy_custom.len()
+        ))
+        .show(ui);
+
         snippet(
             ui,
-            "// InputPasteClear: single-line with paste (left) + clear (right)\n// Password adds eye toggle before clear: [paste | text | eye | clear]\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password: eye (Eye/EyeOff) appears immediately left of X\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password() // -> [paste | •••• | eye | X ]\n    .show(ui);\n\n// Password + custom paste/clear icons (eye stays Eye/EyeOff)\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);",
+            "// InputPasteClear: single-line with paste (left) + clear (right)\n// Password adds eye toggle before clear: [paste | text | eye | clear]\n// Copy adds button next to paste: [paste | copy | text | eye | clear] (off by default, paste stays leftmost)\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password: eye (Eye/EyeOff) appears immediately left of X\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password() // -> [paste | •••• | eye | X ]\n    .show(ui);\n\n// Password + custom paste/clear icons (eye stays Eye/EyeOff)\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);\n\n// Copy button next to paste (paste stays leftmost, off by default)\nInputPasteClear::new(&mut text)\n    .copy() // -> [paste | copy | text | X ]\n    .show(ui);\n\n// Copy with custom icon (also enables copy)\nInputPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | text | X ]\n    .show(ui);",
         );
     }
 
@@ -532,9 +574,52 @@ impl crate::app::ShowcaseApp {
         ))
         .show(ui);
 
+        ui.add_space(12.0);
+        _ = Typography::small("With copy button").show(ui);
+        ui.add_space(2.0);
+        _ = Typography::muted(
+            "Toolbar layout: [paste | copy | ... | clear]. Paste is always leftmost, copy is optional next to it (off by default). Enable with .copy().",
+        )
+        .show(ui);
+        ui.add_space(4.0);
+        let resp_copy = TextareaPasteClear::new(&mut self.textarea_paste_clear_copy)
+            .placeholder("Copy enabled...")
+            .copy()
+            .min_height(80.0)
+            .show(ui);
+        if let Some(err) = &resp_copy.clipboard_error {
+            let msg = err.to_string();
+            ui.add_space(4.0);
+            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+        }
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Copy textarea - pasted={} copied={} cleared={} chars={}",
+            resp_copy.pasted,
+            resp_copy.copied,
+            resp_copy.cleared,
+            self.textarea_paste_clear_copy.len()
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        _ = Typography::small("Copy with custom icon").show(ui);
+        ui.add_space(4.0);
+        let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_copy_custom)
+            .placeholder("Custom copy icon: CopyPlus")
+            .copy_icon(LucideIcon::CopyPlus)
+            .min_height(100.0)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Custom copy textarea chars: {}",
+            self.textarea_paste_clear_copy_custom.len()
+        ))
+        .show(ui);
+
         snippet(
             ui,
-            "// TextareaPasteClear: multi-line with paste + clear toolbar\nuse functora_egui::{TextareaPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = TextareaPasteClear::new(&mut text)\n    .placeholder(\"Paste a long text...\")\n    .min_height(80.0)\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.cleared { eprintln!(\"cleared\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom icons\nTextareaPasteClear::new(&mut text)\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash2)\n    .min_height(100.0)\n    .show(ui);",
+            "// TextareaPasteClear: multi-line with paste + clear toolbar\n// Copy adds button next to paste: [paste | copy | ... | clear] (off by default, paste stays leftmost)\nuse functora_egui::{TextareaPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = TextareaPasteClear::new(&mut text)\n    .placeholder(\"Paste a long text...\")\n    .min_height(80.0)\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom icons\nTextareaPasteClear::new(&mut text)\n    .paste_icon(LucideIcon::Copy)\n    .clear_icon(LucideIcon::Trash2)\n    .min_height(100.0)\n    .show(ui);\n\n// Copy button next to paste (paste stays leftmost, off by default)\nTextareaPasteClear::new(&mut text)\n    .copy() // -> [paste | copy | ... | clear]\n    .min_height(80.0)\n    .show(ui);\n\n// Copy with custom icon (also enables copy)\nTextareaPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | ... | clear]\n    .min_height(80.0)\n    .show(ui);",
         );
     }
 

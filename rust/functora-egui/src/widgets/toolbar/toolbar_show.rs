@@ -34,6 +34,19 @@ impl super::widget::Toolbar {
             .show(ui, |inner_ui| {
                 inner_ui.spacing_mut().item_spacing.x = self.spacing;
                 inner_ui.spacing_mut().item_spacing.y = self.spacing;
+                let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(
+                    inner_ui.ctx(),
+                );
+                let max_h = [
+                    crate::tokens::component_size::ComponentSize::Xs,
+                    crate::tokens::component_size::ComponentSize::Sm,
+                    crate::tokens::component_size::ComponentSize::Default,
+                    crate::tokens::component_size::ComponentSize::Lg,
+                ]
+                .into_iter()
+                .map(|s| s.metrics_for(&spacing).0)
+                .fold(0.0, f32::max);
+                inner_ui.spacing_mut().interact_size.y = max_h;
                 let wrap = self.wrap || inner_ui.on_mobile();
                 if wrap {
                     let _ = inner_ui.horizontal_wrapped(content);

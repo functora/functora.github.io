@@ -37,15 +37,11 @@ impl super::widget::ButtonGroup {
             );
         });
 
-        // Use horizontal layout for buttons
-        let old_spacing_x = ui.spacing().item_spacing.x;
-        ui.spacing_mut().item_spacing.x = 0.0;
-
+        // Use horizontal layout for buttons - keep outer spacing for toolbar gap, set inner to 0 for connected buttons
         let _ = ui.horizontal(|ui_h| {
+            ui_h.spacing_mut().item_spacing.x = 0.0;
             content(ui_h);
         });
-
-        ui.spacing_mut().item_spacing.x = old_spacing_x;
 
         // Read boundaries, group rect, final count, and deactivate
         let (boundaries, group_rect, final_count) = ui.ctx().data_mut(|d| {

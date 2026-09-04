@@ -444,7 +444,6 @@ impl crate::app::ShowcaseApp {
                     }
                 }
             });
-            _ = Separator::vertical().show(ui64);
             _ = ButtonGroup::show(ui64, |ui66| {
                 _ = Button::icon_only(LucideIcon::Undo2)
                     .variant(ButtonVariant::Ghost)
@@ -453,7 +452,6 @@ impl crate::app::ShowcaseApp {
                     .variant(ButtonVariant::Ghost)
                     .show(ui66);
             });
-            _ = Separator::vertical().show(ui64);
             if Button::new("Snap")
                 .variant(ButtonVariant::Outline)
                 .selected(self.toolbar.toolbar_snap)
@@ -485,7 +483,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Toolbar: compact command container\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Separator, Badge, BadgeVariant, ComponentSize};\n\nlet tools = [LucideIcon::MousePointer2, LucideIcon::PenTool, LucideIcon::Spline];\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (idx, icon) in tools.iter().enumerate() {\n            Button::icon_only(*icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool_idx == idx)\n                .show(bg);\n        }\n    });\n    Separator::vertical().show(bar);\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Separator::vertical().show(bar);\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
+            "// Toolbar: compact command container\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\nlet tools = [LucideIcon::MousePointer2, LucideIcon::PenTool, LucideIcon::Spline];\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (idx, icon) in tools.iter().enumerate() {\n            Button::icon_only(*icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool_idx == idx)\n                .show(bg);\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
         );
     }
 

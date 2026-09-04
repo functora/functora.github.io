@@ -18,6 +18,13 @@ pub fn store_app(app: AndroidApp) {
         .replace(app);
 }
 
+pub fn wake_event_loop() {
+    let guard = APP.lock().unwrap_or_else(PoisonError::into_inner);
+    if let Some(app) = guard.as_ref() {
+        app.create_waker().wake();
+    }
+}
+
 pub(crate) fn with_app<F, T>(f: F) -> Result<T, Error>
 where
     F: FnOnce(&mut jni::JNIEnv, &JObject) -> Result<T, jni::errors::Error>,
@@ -294,6 +301,24 @@ fn mime_for<'local>(
     } else {
         Ok(jmime.into())
     }
+}
+
+#[must_use]
+pub fn peek_back_pressed() -> bool {
+    helper_call(|env, activity| {
+        let value = env.call_method(activity, "peekBackPressed", "()Z", &[])?;
+        value.z()
+    })
+    .unwrap_or(false)
+}
+
+#[must_use]
+pub fn poll_back_pressed() -> bool {
+    helper_call(|env, activity| {
+        let value = env.call_method(activity, "pollBackPressed", "()Z", &[])?;
+        value.z()
+    })
+    .unwrap_or(false)
 }
 
 pub fn get_data_string() -> Option<String> {

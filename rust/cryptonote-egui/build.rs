@@ -13,6 +13,7 @@ fn main() {
     println!("cargo:rerun-if-changed=../functora-egui/templates/android/app/src/main/AndroidManifest.xml");
     println!("cargo:rerun-if-changed=../functora-egui/templates/android/app/src/main/java/MainActivity.java");
     println!("cargo:rerun-if-changed=../functora-egui/templates/android/app/src/main/res/values/styles.xml");
+    println!("cargo:rerun-if-changed=../functora-egui/templates/android/app/src/main/java/Waker.java");
 
     let android_cfg = functora_egui::android::config::load_android_config("Cargo.toml");
     let web_cfg = functora_egui::web::config::load_config("Cargo.toml");
@@ -56,6 +57,7 @@ fn main() {
     let styles = functora_egui::android::templates::Styles
         .render()
         .expect("askama styles");
+    let waker = functora_egui::android::templates::Waker.render().expect("askama waker");
 
     std::fs::create_dir_all("android").unwrap();
     std::fs::write("android/build.gradle", root_build).unwrap();
@@ -71,6 +73,8 @@ fn main() {
     let java_dir = format!("android/app/src/main/java/{}", android_cfg.namespace.replace('.', "/"));
     std::fs::create_dir_all(&java_dir).unwrap();
     std::fs::write(format!("{java_dir}/MainActivity.java"), java).unwrap();
+    std::fs::create_dir_all("android/app/src/main/java/com/functora").unwrap();
+    std::fs::write("android/app/src/main/java/com/functora/Waker.java", waker).unwrap();
     if android_cfg.camera
         && let Err(e) = std::fs::remove_dir_all("android/app/src/main/java/functora")
         && e.kind() != std::io::ErrorKind::NotFound

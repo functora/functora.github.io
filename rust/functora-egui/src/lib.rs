@@ -74,6 +74,8 @@ pub use responsive::spacing::Spacing;
 
 pub use layout::shell::Shell;
 pub use layout::shell::sidebar_effective_width;
+pub use platform::android_back::BackOutcome;
+pub use platform::android_back::{consume_back_pressed, handle_system_back, is_back_pressed};
 pub use widgets::navbar::widget::Navbar;
 
 pub use egui_flex::FlexAlign;

@@ -57,3 +57,11 @@ pub struct GradleProperties;
     ext = "xml"
 )]
 pub struct Styles;
+
+#[derive(Template)]
+#[template(
+    path = "android/app/src/main/java/Waker.java",
+    escape = "none",
+    ext = "java"
+)]
+pub struct Waker;

@@ -129,6 +129,7 @@ pub mod router_impl {
     pub struct AppRouter<R: Routable, S> {
         current: R,
         history: NavHistory<R>,
+        system_back: bool,
         _s: PhantomData<S>,
     }
 
@@ -155,6 +156,7 @@ pub mod router_impl {
             Self {
                 current,
                 history,
+                system_back: true,
                 _s: PhantomData,
             }
         }
@@ -169,6 +171,42 @@ pub mod router_impl {
 
         pub fn history_mut(&mut self) -> &mut NavHistory<R> {
             &mut self.history
+        }
+
+        #[must_use]
+        pub fn system_back(&self) -> bool {
+            self.system_back
+        }
+
+        pub fn set_system_back(&mut self, enabled: bool) {
+            self.system_back = enabled;
+        }
+
+        #[must_use]
+        pub fn with_system_back(mut self, enabled: bool) -> Self {
+            self.system_back = enabled;
+            self
+        }
+
+        pub fn can_go_back(&self) -> bool {
+            self.history.can_go_back()
+        }
+
+        pub fn handle_back(
+            &mut self,
+            ctx: &egui::Context,
+            _state: &mut S,
+        ) -> Option<crate::platform::android_back::BackOutcome> {
+            if !self.system_back {
+                return None;
+            }
+            let can = self.history.can_go_back();
+            crate::platform::android_back::handle_system_back(ctx, can, || {
+                if let Some(r) = self.history.go_back() {
+                    self.current = r.clone();
+                    history_push(&self.current);
+                }
+            })
         }
 
         #[allow(clippy::needless_pass_by_value)]
@@ -228,13 +266,14 @@ pub mod router_impl {
             }
         }
 
-        pub fn ui(&mut self, _ui: &mut egui::Ui, _state: &mut S) {
+        pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut S) {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
                     drop(self.sync_from_url(&href));
                 }
             }
+            let _ = self.handle_back(ui.ctx(), state);
         }
 
         pub fn active_route(&self) -> Option<String> {
@@ -288,6 +327,7 @@ pub mod router_impl {
     pub struct AppRouter<R: Routable, S> {
         current: R,
         history: NavHistory<R>,
+        system_back: bool,
         _s: PhantomData<S>,
     }
 
@@ -314,6 +354,7 @@ pub mod router_impl {
             Self {
                 current,
                 history,
+                system_back: true,
                 _s: PhantomData,
             }
         }
@@ -328,6 +369,42 @@ pub mod router_impl {
 
         pub fn history_mut(&mut self) -> &mut NavHistory<R> {
             &mut self.history
+        }
+
+        #[must_use]
+        pub fn system_back(&self) -> bool {
+            self.system_back
+        }
+
+        pub fn set_system_back(&mut self, enabled: bool) {
+            self.system_back = enabled;
+        }
+
+        #[must_use]
+        pub fn with_system_back(mut self, enabled: bool) -> Self {
+            self.system_back = enabled;
+            self
+        }
+
+        pub fn can_go_back(&self) -> bool {
+            self.history.can_go_back()
+        }
+
+        pub fn handle_back(
+            &mut self,
+            ctx: &egui::Context,
+            _state: &mut S,
+        ) -> Option<crate::platform::android_back::BackOutcome> {
+            if !self.system_back {
+                return None;
+            }
+            let can = self.history.can_go_back();
+            crate::platform::android_back::handle_system_back(ctx, can, || {
+                if let Some(r) = self.history.go_back() {
+                    self.current = r.clone();
+                    history_push(&self.current);
+                }
+            })
         }
 
         #[allow(clippy::needless_pass_by_value)]
@@ -387,13 +464,14 @@ pub mod router_impl {
             }
         }
 
-        pub fn ui(&mut self, _ui: &mut egui::Ui, _state: &mut S) {
+        pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut S) {
             #[cfg(target_arch = "wasm32")]
             {
                 if let Some(href) = crate::platform::web::location_href() {
                     drop(self.sync_from_url(&href));
                 }
             }
+            let _ = self.handle_back(ui.ctx(), state);
         }
 
         pub fn active_route(&self) -> Option<String> {

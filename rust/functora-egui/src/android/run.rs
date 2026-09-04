@@ -18,7 +18,14 @@ where
         viewport: egui::ViewportBuilder::default(),
         ..Default::default()
     };
-    let result = eframe::run_native(title, options, Box::new(creator));
+    let result = eframe::run_native(
+        title,
+        options,
+        Box::new(move |cc| {
+            crate::platform::android_back::store_context(&cc.egui_ctx);
+            creator(cc)
+        }),
+    );
     if let Err(error) = result {
         eprintln!("eframe error: {error}");
     }

@@ -14,10 +14,12 @@ import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
+import com.functora.Waker;
 import com.google.androidgamesdk.GameActivity;
 
 import java.io.ByteArrayOutputStream;
@@ -28,6 +30,24 @@ public class MainActivity extends GameActivity {
 
     static {
         System.loadLibrary("{{ lib_name }}");
+    }
+
+    // ------------------------------------------------------------------
+    // System back handling (predictive back / gesture + 3-button)
+    // Polled from Rust to drive NavHistory navigation without exiting.
+    // ------------------------------------------------------------------
+
+    private boolean backPressed = false;
+    private OnBackPressedCallback backCallback;
+
+    public synchronized boolean peekBackPressed() {
+        return backPressed;
+    }
+
+    public synchronized boolean pollBackPressed() {
+        boolean v = backPressed;
+        backPressed = false;
+        return v;
     }
 
     // ------------------------------------------------------------------
@@ -361,6 +381,22 @@ public class MainActivity extends GameActivity {
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         hideSystemUI();
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher()
+                .addCallback(
+                        this,
+                        backCallback =
+                                new OnBackPressedCallback(true) {
+                                    @Override
+                                    public void handleOnBackPressed() {
+                                        synchronized (MainActivity.this) {
+                                            backPressed = true;
+                                        }
+                                        try {
+                                            Waker.wake();
+                                        } catch (Throwable ignored) {
+                                        }
+                                    }
+                                });
     }
 
     @Override

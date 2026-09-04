@@ -55,6 +55,7 @@ where
     sidebar_labels: Vec<&'a str>,
     scroll_top: bool,
     footer: Option<FooterFn<'a>>,
+    system_back: bool,
 }
 
 impl<'a, R> Shell<'a, R>
@@ -81,6 +82,7 @@ where
             sidebar_labels: Vec::new(),
             scroll_top: false,
             footer: None,
+            system_back: true,
         }
     }
 
@@ -145,6 +147,12 @@ where
         self
     }
 
+    #[must_use]
+    pub fn system_back(mut self, enabled: bool) -> Self {
+        self.system_back = enabled;
+        self
+    }
+
     pub fn show(
         self,
         ui: &mut egui::Ui,
@@ -165,6 +173,7 @@ where
             sidebar_labels,
             scroll_top,
             footer,
+            system_back,
         } = self;
         let mut collapsed_val = *collapsed;
         let ctx = ui.ctx().clone();
@@ -180,6 +189,19 @@ where
         }
         let _ = ctx.data_mut(|d| d.insert_temp(egui::Id::new("shell_prev_is_mobile"), is_mobile));
         let mut breadcrumb_action: Option<NavAction<R>> = None;
+        if system_back {
+            if let Some((_, history)) = breadcrumb {
+                let can = history.can_go_back();
+                let mut do_nav = false;
+                let _ =
+                    crate::platform::android_back::handle_system_back(&ctx, can, || do_nav = true);
+                if do_nav {
+                    breadcrumb_action = Some(NavAction::Back);
+                }
+            } else {
+                let _ = crate::platform::android_back::handle_system_back(&ctx, false, || {});
+            }
+        }
         let brand_clicked = std::rc::Rc::new(std::cell::Cell::new(false));
         if let Some(th) = theme.as_deref() {
             crate::theme_extra::set_theme(&ctx, *th);

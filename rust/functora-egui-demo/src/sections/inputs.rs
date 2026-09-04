@@ -221,10 +221,12 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_toggle(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Toggle buttons with default and outline variants.").show(ui);
+        _ = Typography::muted("Toggle buttons with outline variant.").show(ui);
         ui.add_space(12.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            _ = f.add(Toggle::new(&mut self.text_style.toggle_bold, "B"));
+            _ = f.add(
+                Toggle::new(&mut self.text_style.toggle_bold, "B").variant(ToggleVariant::Outline),
+            );
             _ = f.add(
                 Toggle::new(&mut self.text_style.toggle_italic, "I")
                     .variant(ToggleVariant::Outline),
@@ -245,7 +247,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Toggle: pressable button for boolean state\nuse functora_egui::{Toggle, ToggleVariant};\n\nlet mut bold = false;\nlet mut italic = false;\nlet mut underline = false;\n\nToggle::new(&mut bold, \"B\").show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);\nToggle::new(&mut underline, \"U\").variant(ToggleVariant::Outline).show(ui);",
+            "// Toggle: pressable button for boolean state\nuse functora_egui::{Toggle, ToggleVariant};\n\nlet mut bold = false;\nlet mut italic = false;\nlet mut underline = false;\n\nToggle::new(&mut bold, \"B\").variant(ToggleVariant::Outline).show(ui);\nToggle::new(&mut italic, \"I\").variant(ToggleVariant::Outline).show(ui);\nToggle::new(&mut underline, \"U\").variant(ToggleVariant::Outline).show(ui);",
         );
     }
 

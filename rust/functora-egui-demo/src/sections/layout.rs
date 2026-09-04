@@ -4,7 +4,7 @@
 use functora_egui::{
     Accordion, AspectRatio, Badge, BadgeVariant, Button, ButtonGroup, ButtonVariant, Card,
     Collapsible, ComponentSize, Flex, IconTabs, Input, Kbd, Label, LucideIcon, Resizable,
-    ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography, TypographyVariant,
+    ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography,
 };
 
 use functora_egui::snippet;
@@ -228,30 +228,6 @@ impl crate::app::ShowcaseApp {
                 .show(ui52);
         });
         ui.add_space(8.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
-            _ = f.grow_nested(1.0, Flex::column(), |f6| {
-                _ = f6.ui(|ui74| {
-                    _ = Card::new().show(ui74, |ui53| {
-                        _ = Typography::small("Grow card")
-                            .variant(TypographyVariant::Muted)
-                            .show(ui53);
-                        ui53.add_space(4.0);
-                        _ = ui53.label("Cards stretch to fill the available row.");
-                    });
-                });
-            });
-            _ = f.grow_nested(1.0, Flex::column(), |f7| {
-                _ = f7.ui(|ui75| {
-                    _ = Card::new().show(ui75, |ui54| {
-                        _ = Typography::small("Grow card")
-                            .variant(TypographyVariant::Muted)
-                            .show(ui54);
-                        ui54.add_space(4.0);
-                        _ = ui54.label("Two cards share the width equally.");
-                    });
-                });
-            });
-        });
 
         snippet(
             ui,
@@ -311,15 +287,15 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_scroll_area(ui: &mut egui::Ui) {
         _ = Typography::muted("Themed scrollable region with max height.").show(ui);
         ui.add_space(12.0);
-        _ = ScrollArea::new(160.0).show(ui, |ui60| {
-            for i in 1..=20 {
-                _ = ui60.label(format!("Scrollable item {i}"));
+        _ = ScrollArea::new(360.0).show(ui, |ui60| {
+            for i in 1..=40 {
+                _ = ui60.label(format!("Scrollable item {i} — long content to demonstrate scrolling and make area bigger"));
             }
         });
 
         snippet(
             ui,
-            "// ScrollArea: themed scrollable region\nuse functora_egui::ScrollArea;\n\nScrollArea::new(160.0).show(ui, |scroll| {\n    for i in 1..=20 {\n        scroll.label(format!(\"Scrollable item {i}\"));\n    }\n});",
+            "// ScrollArea: themed scrollable region\nuse functora_egui::ScrollArea;\n\nScrollArea::new(360.0).show(ui, |scroll| {\n    for i in 1..=40 {\n        scroll.label(format!(\"Scrollable item {i} — long content to demonstrate scrolling and make area bigger\"));\n    }\n});",
         );
     }
 

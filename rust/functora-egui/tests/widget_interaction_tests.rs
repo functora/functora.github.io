@@ -334,7 +334,13 @@ fn sidebar_item_click_registers() {
     let out = app.step(vec![], &mut body);
     let button = App::rects(&out)
         .into_iter()
-        .find(|r| r.width() > 40.0 && r.width() < 280.0 && r.height() < 30.0 && r.top() > 30.0)
+        .find(|r| {
+            r.width() > 40.0
+                && r.width() < 280.0
+                && r.height() >= 24.0
+                && r.height() <= 50.0
+                && r.top() > 30.0
+        })
         .expect("nav button rect not found");
 
     let center = button.center();

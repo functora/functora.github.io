@@ -34,14 +34,13 @@ impl egui::Widget for super::widget::Button<'_> {
             !ui.is_enabled(),
         );
 
-        // When full_width, adopt the UI's own sizing so the button matches
-        // native egui menu items (same height, font, padding).
         if self.full_width {
-            style.height = ui.spacing().interact_size.y;
-            if let Some(font_id) = ui.style().text_styles.get(&egui::TextStyle::Button) {
-                style.font_size = font_id.size;
-            }
-            style.h_padding = ui.spacing().button_padding.x;
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let (h, pad, fs) = self.size.metrics_for(&spacing);
+            style.height = h;
+            style.h_padding = pad;
+            style.font_size = fs;
         }
 
         let text_string = self.text.text().to_owned();
@@ -121,13 +120,13 @@ impl egui::Widget for super::widget::Button<'_> {
             !ui.is_enabled(),
         );
 
-        // Apply full_width overrides again (height/font/padding from UI context)
         if self.full_width {
-            active_style.height = ui.spacing().interact_size.y;
-            if let Some(font_id) = ui.style().text_styles.get(&egui::TextStyle::Button) {
-                active_style.font_size = font_id.size;
-            }
-            active_style.h_padding = ui.spacing().button_padding.x;
+            let spacing =
+                crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+            let (h, pad, fs) = self.size.metrics_for(&spacing);
+            active_style.height = h;
+            active_style.h_padding = pad;
+            active_style.font_size = fs;
         }
 
         if self.selected {

@@ -8,11 +8,13 @@ static APP: Mutex<Option<AndroidApp>> = Mutex::new(None);
 struct ImeTracker {
     last: Option<TextInputState>,
     last_focused: Option<egui::Id>,
+    last_wants: bool,
 }
 
 static TRACKER: Mutex<ImeTracker> = Mutex::new(ImeTracker {
     last: None,
     last_focused: None,
+    last_wants: false,
 });
 
 pub fn store_app(app: AndroidApp) {
@@ -26,15 +28,30 @@ pub fn poll_ime(ctx: &egui::Context) {
     let guard = APP.lock().unwrap_or_else(PoisonError::into_inner);
     let Some(app) = guard.as_ref() else { return };
     let focused = ctx.memory(egui::Memory::focused);
+    let wants = ctx.egui_wants_keyboard_input();
     let mut tracker = TRACKER.lock().unwrap_or_else(PoisonError::into_inner);
-    if tracker.last_focused != focused {
+    let focused_changed = tracker.last_focused != focused;
+    let wants_changed = tracker.last_wants != wants;
+    if focused_changed || wants_changed {
+        let prev_wants = tracker.last_wants;
         tracker.last_focused = focused;
-        app.set_text_input_state(TextInputState::default());
-        if focused.is_some() {
+        tracker.last_wants = wants;
+        if wants && !prev_wants {
+            app.set_text_input_state(TextInputState::default());
             app.show_soft_input(false);
+            tracker.last = None;
+            ctx.input_mut(|input| input.events.push(preedit(&[])));
+        } else if !wants && prev_wants {
+            app.set_text_input_state(TextInputState::default());
+            app.hide_soft_input(false);
+            tracker.last = None;
+            ctx.input_mut(|input| input.events.push(preedit(&[])));
+        } else if wants {
+            app.set_text_input_state(TextInputState::default());
+            app.show_soft_input(false);
+            tracker.last = None;
+            ctx.input_mut(|input| input.events.push(preedit(&[])));
         }
-        tracker.last = None;
-        ctx.input_mut(|input| input.events.push(preedit(&[])));
         ctx.request_repaint();
         return;
     }
@@ -44,7 +61,7 @@ pub fn poll_ime(ctx: &egui::Context) {
         && prev.compose_region.map(|s| (s.start, s.end))
             == state.compose_region.map(|s| (s.start, s.end));
     if unchanged {
-        if focused.is_some() {
+        if tracker.last_wants {
             ctx.request_repaint();
         }
         return;

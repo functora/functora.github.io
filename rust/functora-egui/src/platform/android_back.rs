@@ -80,8 +80,15 @@ pub fn handle_system_back(
     if !system_back_pressed(ctx) {
         return None;
     }
-    let wants_keyboard = ctx.egui_wants_keyboard_input() || ctx.memory(|m| m.focused().is_some());
+    let wants_keyboard = ctx.egui_wants_keyboard_input();
     if wants_keyboard {
+        if let Some(id) = ctx.memory(egui::Memory::focused) {
+            ctx.memory_mut(|m| m.surrender_focus(id));
+        }
+        #[cfg(target_os = "android")]
+        {
+            let _ = crate::platform::android::hide_soft_input();
+        }
         ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
         ctx.request_repaint();
         return Some(BackOutcome::ConsumedNoop);

@@ -25,6 +25,15 @@ pub fn wake_event_loop() {
     }
 }
 
+pub fn hide_soft_input() -> Result<(), Error> {
+    let guard = APP.lock().unwrap_or_else(PoisonError::into_inner);
+    let Some(app) = guard.as_ref() else {
+        return Ok(());
+    };
+    app.hide_soft_input(false);
+    Ok(())
+}
+
 pub(crate) fn with_app<F, T>(f: F) -> Result<T, Error>
 where
     F: FnOnce(&mut jni::JNIEnv, &JObject) -> Result<T, jni::errors::Error>,

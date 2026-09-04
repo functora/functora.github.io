@@ -42,6 +42,17 @@ impl super::widget::InputOtp {
             }
         }
 
+        if response.has_focus() {
+            ui.ctx().output_mut(|o| {
+                o.ime = Some(egui::output::IMEOutput {
+                    rect: full_rect,
+                    cursor_rect: full_rect,
+                    purpose: egui::IMEPurpose::Normal,
+                    should_interrupt_composition: false,
+                });
+            });
+        }
+
         if ui.is_rect_visible(full_rect) {
             let painter = ui.painter();
             let updated_digits: Vec<char> = value.chars().collect();

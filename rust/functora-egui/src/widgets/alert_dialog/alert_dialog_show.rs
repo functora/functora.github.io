@@ -82,11 +82,6 @@ impl super::widget::AlertDialog {
 
                 let _ = frame.show(inner_ui, |content_ui| {
                     content_ui.set_max_width(panel_width);
-                    if on_mobile {
-                        content_ui.set_max_height(
-                            (screen.height() - 2.0 * spacing.page_padding - 50.0).max(0.0),
-                        );
-                    }
 
                     // Close button
                     let _ = content_ui.with_layout(
@@ -131,39 +126,50 @@ impl super::widget::AlertDialog {
 
                     // Button row aligned to right
                     let _ = content_ui.with_layout(
-                        egui::Layout::right_to_left(egui::Align::Center),
-                        |inner_ui3| {
-                            // Action button (shows first from right)
-                            let action_variant = if self.destructive {
-                                crate::tokens::button_variant::ButtonVariant::Destructive
-                            } else {
-                                crate::tokens::button_variant::ButtonVariant::Default
-                            };
+                        egui::Layout::from_main_dir_and_cross_align(
+                            egui::Direction::TopDown,
+                            egui::Align::Min,
+                        )
+                        .with_main_align(egui::Align::Min),
+                        |ui| {
+                            let _ = ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |inner_ui3| {
+                                    // Action button (shows first from right)
+                                    let action_variant = if self.destructive {
+                                        crate::tokens::button_variant::ButtonVariant::Destructive
+                                    } else {
+                                        crate::tokens::button_variant::ButtonVariant::Default
+                                    };
 
-                            let action_btn =
-                                crate::widgets::button::widget::Button::new(&self.action_text)
+                                    let action_btn = crate::widgets::button::widget::Button::new(
+                                        &self.action_text,
+                                    )
                                     .variant(action_variant)
                                     .show(inner_ui3);
 
-                            if action_btn.clicked() {
-                                *open = false;
-                                result = AlertDialogResult::Confirmed;
-                                inner_ui3.ctx().request_repaint();
-                            }
+                                    if action_btn.clicked() {
+                                        *open = false;
+                                        result = AlertDialogResult::Confirmed;
+                                        inner_ui3.ctx().request_repaint();
+                                    }
 
-                            inner_ui3.add_space(8.0);
+                                    inner_ui3.add_space(8.0);
 
-                            // Cancel button
-                            let cancel_btn =
-                                crate::widgets::button::widget::Button::new(&self.cancel_text)
+                                    // Cancel button
+                                    let cancel_btn = crate::widgets::button::widget::Button::new(
+                                        &self.cancel_text,
+                                    )
                                     .variant(crate::tokens::button_variant::ButtonVariant::Outline)
                                     .show(inner_ui3);
 
-                            if cancel_btn.clicked() {
-                                *open = false;
-                                result = AlertDialogResult::Cancelled;
-                                inner_ui3.ctx().request_repaint();
-                            }
+                                    if cancel_btn.clicked() {
+                                        *open = false;
+                                        result = AlertDialogResult::Cancelled;
+                                        inner_ui3.ctx().request_repaint();
+                                    }
+                                },
+                            );
                         },
                     );
                 });

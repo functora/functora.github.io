@@ -86,11 +86,6 @@ impl super::widget::Dialog {
 
                 let _ = frame.show(inner_ui, |content_ui| {
                     content_ui.set_max_width(panel_width);
-                    if on_mobile {
-                        content_ui.set_max_height(
-                            (screen.height() - 2.0 * spacing.page_padding - 50.0).max(0.0),
-                        );
-                    }
 
                     // Close button
                     let _ = content_ui.with_layout(
@@ -135,7 +130,16 @@ impl super::widget::Dialog {
                     }
 
                     content_ui.add_space(16.0);
-                    content(content_ui);
+                    let _ = content_ui.with_layout(
+                        egui::Layout::from_main_dir_and_cross_align(
+                            egui::Direction::TopDown,
+                            egui::Align::Min,
+                        )
+                        .with_main_align(egui::Align::Min),
+                        |ui| {
+                            content(ui);
+                        },
+                    );
                 });
             });
     }

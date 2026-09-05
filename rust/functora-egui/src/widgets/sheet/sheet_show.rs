@@ -11,6 +11,8 @@ impl super::widget::Sheet {
 
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
         let screen = ctx.input(egui::InputState::viewport_rect);
+        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
+        let on_mobile = spacing.is_mobile();
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
@@ -38,24 +40,48 @@ impl super::widget::Sheet {
             ctx.request_repaint();
         }
 
-        // Compute animated slide offset
-        let slide_dist = self.width + 48.0; // panel + margin to fully hide
-        let (anchor, offset) = match self.side {
+        // Compute animated slide offset - on mobile Left/Right become bottom sheet for thumb reach
+        let is_horizontal = matches!(
+            self.side,
+            crate::tokens::sheet_side::SheetSide::Left
+                | crate::tokens::sheet_side::SheetSide::Right
+        );
+        let on_mobile_horizontal = on_mobile && is_horizontal;
+        let slide_dist = if on_mobile_horizontal {
+            400.0
+        } else {
+            self.width + 48.0
+        };
+        let (anchor, offset, is_bottom_sheet) = match self.side {
+            crate::tokens::sheet_side::SheetSide::Right
+            | crate::tokens::sheet_side::SheetSide::Left
+                if on_mobile_horizontal =>
+            {
+                (
+                    egui::Align2::LEFT_BOTTOM,
+                    egui::vec2(0.0, (1.0 - ease_t) * slide_dist),
+                    true,
+                )
+            }
             crate::tokens::sheet_side::SheetSide::Right => (
                 egui::Align2::RIGHT_TOP,
                 egui::vec2((1.0 - ease_t) * slide_dist, 0.0),
+                false,
             ),
             crate::tokens::sheet_side::SheetSide::Left => (
                 egui::Align2::LEFT_TOP,
                 egui::vec2(-(1.0 - ease_t) * slide_dist, 0.0),
+                false,
             ),
             crate::tokens::sheet_side::SheetSide::Top => (
                 egui::Align2::LEFT_TOP,
                 egui::vec2(0.0, -(1.0 - ease_t) * slide_dist),
+                false,
             ),
             crate::tokens::sheet_side::SheetSide::Bottom => (
                 egui::Align2::LEFT_BOTTOM,
                 egui::vec2(0.0, (1.0 - ease_t) * slide_dist),
+                false,
             ),
         };
 
@@ -63,26 +89,56 @@ impl super::widget::Sheet {
             .order(egui::Order::Foreground)
             .anchor(anchor, offset)
             .show(ctx, |inner_ui| {
-                let frame = egui::Frame::NONE
-                    .fill(theme.background)
-                    .inner_margin(egui::Margin::same(24))
-                    .stroke(egui::Stroke::new(1.0, theme.border));
+                let frame = if is_bottom_sheet
+                    || matches!(self.side, crate::tokens::sheet_side::SheetSide::Bottom)
+                {
+                    let cr = egui::CornerRadius {
+                        nw: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
+                        ne: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
+                        sw: 0,
+                        se: 0,
+                    };
+                    egui::Frame::NONE
+                        .fill(theme.background)
+                        .inner_margin(egui::Margin {
+                            left: 24,
+                            right: 24,
+                            top: 16,
+                            bottom: 24,
+                        })
+                        .corner_radius(cr)
+                        .stroke(egui::Stroke::new(1.0, theme.border))
+                } else if matches!(self.side, crate::tokens::sheet_side::SheetSide::Top) {
+                    let cr = egui::CornerRadius {
+                        nw: 0,
+                        ne: 0,
+                        sw: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
+                        se: crate::utils::f32_to_u8_clamped(theme.radius + 2.0),
+                    };
+                    egui::Frame::NONE
+                        .fill(theme.background)
+                        .inner_margin(egui::Margin::same(24))
+                        .corner_radius(cr)
+                        .stroke(egui::Stroke::new(1.0, theme.border))
+                } else {
+                    egui::Frame::NONE
+                        .fill(theme.background)
+                        .inner_margin(egui::Margin::same(24))
+                        .corner_radius(egui::CornerRadius::ZERO)
+                        .stroke(egui::Stroke::new(1.0, theme.border))
+                };
 
                 let _ = frame.show(inner_ui, |content_ui| {
-                    let is_horizontal = matches!(
-                        self.side,
-                        crate::tokens::sheet_side::SheetSide::Left
-                            | crate::tokens::sheet_side::SheetSide::Right
-                    );
-
-                    if is_horizontal {
-                        // Frame = content + 2*24 inner margin + 2*1 stroke;
-                        // keep the whole frame inside the screen with 24px margins.
+                    if is_bottom_sheet {
+                        let width = (screen.width() - 50.0).clamp(0.0, 500.0);
+                        content_ui.set_min_width(width);
+                        content_ui.set_max_width(width);
+                    } else if is_horizontal {
+                        // Desktop side sheet - full height (inset-y-0)
                         let width = self.width.min((screen.width() - 98.0).max(0.0));
-                        let height = (screen.height() - 98.0).max(0.0);
+                        let height = screen.height().max(0.0);
                         content_ui.set_min_size(egui::vec2(width, height));
                         content_ui.set_max_width(width);
-                        content_ui.set_max_height(height);
                     } else {
                         content_ui.set_min_width((screen.width() - 98.0).max(0.0));
                         content_ui

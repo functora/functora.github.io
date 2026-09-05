@@ -234,13 +234,17 @@ fn sheet_clamps_width_to_viewport_on_mobile() {
             });
     });
     let rects = collect_filled_rects(&out.shapes);
+    // On mobile Left/Right become bottom sheet (center bottom, full width minus page padding)
     let panel = find_rect(&rects, |r| {
-        r.max.x > MOBILE.x - 1.0 && r.width() > 300.0 && r.width() < MOBILE.x - 0.5
+        r.max.y > MOBILE.y - 1.0
+            && r.min.y > 100.0
+            && r.width() > 300.0
+            && r.width() < MOBILE.x + 50.0
     })
-    .expect("right sheet panel must be drawn");
+    .expect("bottom sheet panel must be drawn on mobile");
     assert!(
-        (panel.width() - (MOBILE.x - 48.0)).abs() < 2.0,
-        "panel must be clamped to the screen minus margins, got {panel:?}"
+        (panel.width() - MOBILE.x).abs() < 2.0,
+        "panel must be full width on mobile bottom sheet, got {panel:?}"
     );
     assert!(
         panel.min.x >= -0.5 && panel.max.y <= MOBILE.y + 0.5,

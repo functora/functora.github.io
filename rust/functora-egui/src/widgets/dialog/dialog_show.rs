@@ -92,10 +92,12 @@ impl super::widget::Dialog {
                         egui::Layout::right_to_left(egui::Align::TOP),
                         |inner_ui3| {
                             let close_size = 16.0;
-                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
+                            let (close_rect, close_resp_raw) = inner_ui3.allocate_exact_size(
                                 egui::vec2(close_size, close_size),
                                 egui::Sense::click(),
                             );
+                            let close_resp =
+                                close_resp_raw.on_hover_cursor(egui::CursorIcon::PointingHand);
                             if inner_ui3.is_rect_visible(close_rect) {
                                 crate::icons::paint_icon::paint_icon(
                                     inner_ui3.painter(),

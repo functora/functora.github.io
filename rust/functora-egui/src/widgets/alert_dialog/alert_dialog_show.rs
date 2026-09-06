@@ -33,6 +33,23 @@ impl super::widget::AlertDialog {
             egui::Color32::from_black_alpha(60),
         );
 
+        // Backdrop click to close (like Dialog)
+        let backdrop_response = egui::Area::new(egui::Id::new("alert_dialog_backdrop_sense"))
+            .order(egui::Order::Middle)
+            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
+            .show(ctx, |inner_ui| {
+                let (_, response) =
+                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
+                response
+            });
+
+        if backdrop_response.inner.clicked() {
+            *open = false;
+            result = AlertDialogResult::Cancelled;
+            ctx.request_repaint();
+            return result;
+        }
+
         // On mobile the alert becomes a bottom sheet; on desktop it stays a
         // centered window.
         let on_mobile = spacing.is_mobile();
@@ -88,10 +105,12 @@ impl super::widget::AlertDialog {
                         egui::Layout::right_to_left(egui::Align::TOP),
                         |inner_ui3| {
                             let close_size = 16.0;
-                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
+                            let (close_rect, close_resp_raw) = inner_ui3.allocate_exact_size(
                                 egui::vec2(close_size, close_size),
                                 egui::Sense::click(),
                             );
+                            let close_resp =
+                                close_resp_raw.on_hover_cursor(egui::CursorIcon::PointingHand);
                             if inner_ui3.is_rect_visible(close_rect) {
                                 crate::icons::paint_icon::paint_icon(
                                     inner_ui3.painter(),

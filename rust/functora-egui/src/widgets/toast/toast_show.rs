@@ -12,7 +12,16 @@ impl super::toast_state::ToastState {
         }
 
         let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0));
-        let toast_width: f32 = 356.0;
+        let viewport_width = ctx.viewport_rect().width();
+        let is_narrow = viewport_width > 0.0 && viewport_width < 400.0;
+        let side_margin: f32 = 16.0;
+        let max_outer_width: f32 = 388.0;
+        let outer_width = if is_narrow {
+            (viewport_width - side_margin * 2.0).clamp(200.0, max_outer_width)
+        } else {
+            max_outer_width
+        };
+        let toast_width: f32 = (outer_width - 32.0).max(100.0);
         let spacing: f32 = 8.0;
 
         let mut dismissed: Vec<usize> = Vec::new();

@@ -366,3 +366,164 @@ fn sidebar_item_click_registers() {
 
     assert!(clicked, "click on sidebar nav item did not register");
 }
+
+#[test]
+fn tooltip_inside_flex_shows_on_hover() {
+    use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
+    use functora_egui::{Button, ButtonVariant, ComponentSize, Flex, LucideIcon, Tooltip};
+    use std::cell::Cell;
+    use std::rc::Rc;
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(
+            &mut self,
+            events: Vec<Event>,
+            body: &mut dyn FnMut(&mut egui::Ui),
+        ) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                events,
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn texts(output: &egui::FullOutput) -> Vec<String> {
+            output
+                .shapes
+                .iter()
+                .filter_map(|cs| match &cs.shape {
+                    Shape::Text(ts) => Some(ts.galley.text().to_owned()),
+                    _ => None,
+                })
+                .collect()
+        }
+    }
+
+    let rect_cell = Rc::new(Cell::new(None::<Rect>));
+    let rect_cell_clone = rect_cell.clone();
+    let mut body = move |ui: &mut egui::Ui| {
+        let _ = Flex::row().gap(8.0).show(ui, |f| {
+            let settings = f.add(
+                Button::icon_only(LucideIcon::Settings)
+                    .variant(ButtonVariant::Outline)
+                    .size(ComponentSize::Sm),
+            );
+            rect_cell_clone.set(Some(settings.inner.rect));
+            Tooltip::new("Settings").show(&settings.inner);
+        });
+    };
+
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let rect = rect_cell.get().expect("button rect not found");
+    let center = rect.center();
+    let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
+    let mut found = false;
+    for _ in 0..60 {
+        let out = app.step(vec![], &mut body);
+        if App::texts(&out).iter().any(|t| t.contains("Settings")) {
+            found = true;
+            break;
+        }
+    }
+    assert!(found, "tooltip inside Flex should appear on hover");
+}
+
+#[test]
+fn tooltip_direct_shows_on_hover() {
+    use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
+    use functora_egui::{Button, ButtonVariant, ComponentSize, LucideIcon, Tooltip};
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(
+            &mut self,
+            events: Vec<Event>,
+            body: &mut dyn FnMut(&mut egui::Ui),
+        ) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                events,
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn texts(output: &egui::FullOutput) -> Vec<String> {
+            output
+                .shapes
+                .iter()
+                .filter_map(|cs| match &cs.shape {
+                    Shape::Text(ts) => Some(ts.galley.text().to_owned()),
+                    _ => None,
+                })
+                .collect()
+        }
+    }
+
+    let rect_cell = std::rc::Rc::new(std::cell::Cell::new(None::<Rect>));
+    let rect_cell_clone = rect_cell.clone();
+    let mut body = move |ui: &mut egui::Ui| {
+        let resp = Button::icon_only(LucideIcon::Settings)
+            .variant(ButtonVariant::Outline)
+            .size(ComponentSize::Sm)
+            .show(ui);
+        rect_cell_clone.set(Some(resp.rect));
+        Tooltip::new("DirectTip").show(&resp);
+    };
+
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let rect = rect_cell.get().expect("button rect");
+    let center = rect.center();
+    let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
+    let mut found = false;
+    for _ in 0..60 {
+        let out = app.step(vec![], &mut body);
+        if App::texts(&out).iter().any(|t| t.contains("DirectTip")) {
+            found = true;
+            break;
+        }
+    }
+    assert!(found, "direct tooltip should appear on hover");
+}

@@ -114,18 +114,18 @@ impl crate::app::ShowcaseApp {
                     .variant(ButtonVariant::Outline)
                     .size(functora_egui::ComponentSize::Sm),
             );
-            Tooltip::new("Settings").show(&settings.response);
+            Tooltip::new("Settings").show(&settings.inner);
             let notifications = f.add(
                 Button::icon_only(LucideIcon::Bell)
                     .variant(ButtonVariant::Outline)
                     .size(functora_egui::ComponentSize::Sm),
             );
-            Tooltip::new("Notifications").show(&notifications.response);
+            Tooltip::new("Notifications").show(&notifications.inner);
         });
 
         snippet(
             ui,
-            "// Tooltip: small hint on hover\nuse functora_egui::{Tooltip, Button, ButtonVariant, LucideIcon, ComponentSize};\n\nlet settings = Button::icon_only(LucideIcon::Settings)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Settings\").show(&settings.response);\n\nlet notifications = Button::icon_only(LucideIcon::Bell)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Notifications\").show(&notifications.response);",
+            "// Tooltip: small hint on hover\nuse functora_egui::{Tooltip, Button, ButtonVariant, LucideIcon, ComponentSize};\n\nlet settings = Button::icon_only(LucideIcon::Settings)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Settings\").show(&settings);\n\nlet notifications = Button::icon_only(LucideIcon::Bell)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Notifications\").show(&notifications);",
         );
     }
 

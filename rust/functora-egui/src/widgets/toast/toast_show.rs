@@ -16,13 +16,21 @@ impl super::toast_state::ToastState {
         let spacing: f32 = 8.0;
 
         let mut dismissed: Vec<usize> = Vec::new();
+        let mut y_offset: f32 = -16.0;
 
         for (idx, toast) in self.toasts.iter().enumerate() {
-            let offset_y = -(crate::utils::usize_to_f32(idx) * (72.0 + spacing)) - 16.0;
+            let id = egui::Id::new("toast").with(toast.id);
+            let estimated_height = if toast.description.is_some() {
+                72.0
+            } else {
+                52.0
+            };
+            let offset_y = y_offset;
 
-            let _ = egui::Area::new(egui::Id::new("toast").with(idx))
+            let _ = egui::Area::new(id)
                 .order(egui::Order::Foreground)
                 .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, offset_y))
+                .fade_in(false)
                 .show(ctx, |inner_ui| {
                     let (border_color, accent) = match toast.variant {
                         crate::tokens::toast_variant::ToastVariant::Default => {
@@ -52,7 +60,6 @@ impl super::toast_state::ToastState {
                         content_ui.set_min_width(toast_width);
                         content_ui.set_max_width(toast_width);
 
-                        // Title row: title on left, close X on right
                         let _ = content_ui.horizontal(|inner_ui3| {
                             let _ = inner_ui3.label(
                                 egui::RichText::new(&toast.title)
@@ -99,9 +106,10 @@ impl super::toast_state::ToastState {
                         }
                     });
                 });
+
+            y_offset -= estimated_height + spacing;
         }
 
-        // Remove dismissed toasts (reverse order to keep indices valid)
         for idx in dismissed.into_iter().rev() {
             let _ = self.toasts.remove(idx);
         }

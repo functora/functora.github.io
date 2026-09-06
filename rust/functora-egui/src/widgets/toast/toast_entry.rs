@@ -3,6 +3,7 @@
 /// A single toast message.
 #[derive(Clone)]
 pub struct ToastEntry {
+    pub id: u64,
     pub title: String,
     pub description: Option<String>,
     pub variant: crate::tokens::toast_variant::ToastVariant,

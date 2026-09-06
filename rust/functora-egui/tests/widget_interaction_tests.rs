@@ -785,3 +785,125 @@ fn toast_buttons_inside_flex_trigger_toast() {
         "toast inside Flex should be triggered on click via inner response"
     );
 }
+
+#[test]
+fn toast_vertical_spacing_is_consistent() {
+    use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+    use functora_egui::{ToastState, ToastVariant};
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(&mut self, toast: &mut ToastState) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                toast.show(ui.ctx());
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn toast_rects(output: &egui::FullOutput) -> Vec<Rect> {
+            output
+                .shapes
+                .iter()
+                .filter_map(|cs| match &cs.shape {
+                    Shape::Rect(rect_shape) => {
+                        let rect = rect_shape.rect;
+                        if (350.0..400.0).contains(&rect.width())
+                            && rect.height() > 30.0
+                            && rect.height() < 150.0
+                        {
+                            Some(rect)
+                        } else {
+                            None
+                        }
+                    }
+                    Shape::Vec(vec) => vec.iter().find_map(|shape| match shape {
+                        Shape::Rect(rect)
+                            if (350.0..400.0).contains(&rect.rect.width())
+                                && rect.rect.height() > 30.0 =>
+                        {
+                            Some(rect.rect)
+                        }
+                        _ => None,
+                    }),
+                    _ => None,
+                })
+                .collect()
+        }
+    }
+
+    let assert_spacing = |mut toast: ToastState| {
+        let mut app = App::new();
+        let _ = app.step(&mut toast);
+        let out = app.step(&mut toast);
+        let mut rects = App::toast_rects(&out);
+        assert_eq!(rects.len(), 2, "expected 2 toasts");
+        rects.sort_by(|left, right| right.max.y.partial_cmp(&left.max.y).unwrap());
+        let bottom = rects[0];
+        let top = rects[1];
+        let gap = bottom.min.y - top.max.y;
+        assert!(
+            (gap - 8.0).abs() < 1.0,
+            "toast gap should be 8.0, got {gap:.2} for rects {rects:?}"
+        );
+    };
+
+    let mut with_desc_first = ToastState::new();
+    with_desc_first.add("Default toast", ToastVariant::Default, 0.0);
+    with_desc_first.add_with_description(
+        "With desc",
+        "Friday, February 10, 2026 at 5:57 PM",
+        ToastVariant::Default,
+        0.0,
+    );
+    assert_spacing(with_desc_first);
+
+    let mut desc_first = ToastState::new();
+    desc_first.add_with_description(
+        "With desc",
+        "Friday, February 10, 2026 at 5:57 PM",
+        ToastVariant::Default,
+        0.0,
+    );
+    desc_first.add("Default toast", ToastVariant::Default, 0.0);
+    assert_spacing(desc_first);
+
+    let mut two_defaults = ToastState::new();
+    two_defaults.add("Default1", ToastVariant::Default, 0.0);
+    two_defaults.add("Default2", ToastVariant::Default, 0.0);
+    assert_spacing(two_defaults);
+
+    let mut two_descs = ToastState::new();
+    two_descs.add_with_description(
+        "Desc1",
+        "Friday, February 10, 2026 at 5:57 PM",
+        ToastVariant::Default,
+        0.0,
+    );
+    two_descs.add_with_description(
+        "Desc2",
+        "Friday, February 10, 2026 at 5:57 PM",
+        ToastVariant::Default,
+        0.0,
+    );
+    assert_spacing(two_descs);
+}

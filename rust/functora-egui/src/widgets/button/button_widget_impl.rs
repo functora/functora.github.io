@@ -43,6 +43,18 @@ impl egui::Widget for super::widget::Button<'_> {
             style.font_size = fs;
         }
 
+        let is_loader = matches!(
+            self.icon,
+            Some(
+                crate::icons::lucide_icon::LucideIcon::LoaderCircle
+                    | crate::icons::lucide_icon::LucideIcon::Loader
+                    | crate::icons::lucide_icon::LucideIcon::LoaderPinwheel
+            )
+        );
+        if is_loader {
+            ui.ctx().request_repaint();
+        }
+
         let text_string = self.text.text().to_owned();
         let is_icon_only = text_string.is_empty() && self.icon.is_some();
         let has_icon = self.icon.is_some();
@@ -165,7 +177,25 @@ impl egui::Widget for super::widget::Button<'_> {
                         rect.center(),
                         egui::vec2(icon_size, icon_size),
                     );
-                    crate::icons::paint_icon::paint_icon(painter, icon_rect, icon, active_style.fg);
+                    if is_loader {
+                        let time = crate::utils::f64_to_f32(ui.input(|i| i.time));
+                        let angle = time * std::f32::consts::TAU;
+                        let radius = icon_rect.width().min(icon_rect.height()) / 2.0 - 1.0;
+                        crate::paint::paint_arc::paint_arc(
+                            painter,
+                            icon_rect.center(),
+                            radius,
+                            angle,
+                            egui::Stroke::new(2.0, active_style.fg),
+                        );
+                    } else {
+                        crate::icons::paint_icon::paint_icon(
+                            painter,
+                            icon_rect,
+                            icon,
+                            active_style.fg,
+                        );
+                    }
                 }
             } else if has_icon && has_text {
                 if has_shortcut {
@@ -175,12 +205,25 @@ impl egui::Widget for super::widget::Button<'_> {
                             egui::pos2(x, rect.center().y - icon_size / 2.0),
                             egui::vec2(icon_size, icon_size),
                         );
-                        crate::icons::paint_icon::paint_icon(
-                            painter,
-                            icon_rect,
-                            icon,
-                            active_style.fg,
-                        );
+                        if is_loader {
+                            let time = crate::utils::f64_to_f32(ui.input(|i| i.time));
+                            let angle = time * std::f32::consts::TAU;
+                            let radius = icon_rect.width().min(icon_rect.height()) / 2.0 - 1.0;
+                            crate::paint::paint_arc::paint_arc(
+                                painter,
+                                icon_rect.center(),
+                                radius,
+                                angle,
+                                egui::Stroke::new(2.0, active_style.fg),
+                            );
+                        } else {
+                            crate::icons::paint_icon::paint_icon(
+                                painter,
+                                icon_rect,
+                                icon,
+                                active_style.fg,
+                            );
+                        }
                     }
                     let text_pos = egui::pos2(
                         x + icon_size + icon_gap,
@@ -199,12 +242,25 @@ impl egui::Widget for super::widget::Button<'_> {
                             egui::pos2(start_x, rect.center().y - icon_size / 2.0),
                             egui::vec2(icon_size, icon_size),
                         );
-                        crate::icons::paint_icon::paint_icon(
-                            painter,
-                            icon_rect,
-                            icon,
-                            active_style.fg,
-                        );
+                        if is_loader {
+                            let time = crate::utils::f64_to_f32(ui.input(|i| i.time));
+                            let angle = time * std::f32::consts::TAU;
+                            let radius = icon_rect.width().min(icon_rect.height()) / 2.0 - 1.0;
+                            crate::paint::paint_arc::paint_arc(
+                                painter,
+                                icon_rect.center(),
+                                radius,
+                                angle,
+                                egui::Stroke::new(2.0, active_style.fg),
+                            );
+                        } else {
+                            crate::icons::paint_icon::paint_icon(
+                                painter,
+                                icon_rect,
+                                icon,
+                                active_style.fg,
+                            );
+                        }
                     }
                     let text_pos = egui::pos2(
                         start_x + icon_size + icon_gap,

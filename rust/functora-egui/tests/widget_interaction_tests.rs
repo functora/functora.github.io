@@ -527,3 +527,134 @@ fn tooltip_direct_shows_on_hover() {
     }
     assert!(found, "direct tooltip should appear on hover");
 }
+
+#[test]
+fn spinner_widget_spins() {
+    use egui::{Context, Pos2, RawInput, Rect, Vec2};
+    use functora_egui::Spinner;
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(&mut self, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn shapes_key(output: &egui::FullOutput) -> String {
+            format!("{:?}", output.shapes)
+        }
+    }
+
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = Spinner::new().size(24.0).show(ui);
+    };
+    let mut app = App::new();
+    let out1 = app.step(&mut body);
+    for _ in 0..10 {
+        let _ = app.step(&mut body);
+    }
+    let out2 = app.step(&mut body);
+    assert_ne!(
+        App::shapes_key(&out1),
+        App::shapes_key(&out2),
+        "Spinner should animate over time"
+    );
+}
+
+#[test]
+fn button_loader_icon_spins_and_non_loader_is_static() {
+    use egui::{Context, Pos2, RawInput, Rect, Vec2};
+    use functora_egui::{Button, Flex, LucideIcon};
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(&mut self, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn shapes_key(output: &egui::FullOutput) -> String {
+            format!("{:?}", output.shapes)
+        }
+    }
+
+    let mut loader_body = |ui: &mut egui::Ui| {
+        let _ = Flex::row().gap(8.0).show(ui, |f| {
+            let _ = f.add(
+                Button::new("Loading")
+                    .icon(LucideIcon::LoaderCircle)
+                    .enabled(false),
+            );
+        });
+    };
+    let mut app = App::new();
+    let out1 = app.step(&mut loader_body);
+    for _ in 0..10 {
+        let _ = app.step(&mut loader_body);
+    }
+    let out2 = app.step(&mut loader_body);
+    assert_ne!(
+        App::shapes_key(&out1),
+        App::shapes_key(&out2),
+        "Button with LoaderCircle should animate"
+    );
+
+    let mut static_body = |ui: &mut egui::Ui| {
+        let _ = Button::new("Save").icon(LucideIcon::Save).show(ui);
+    };
+    let mut app2 = App::new();
+    let out1_static = app2.step(&mut static_body);
+    for _ in 0..10 {
+        let _ = app2.step(&mut static_body);
+    }
+    let out2_static = app2.step(&mut static_body);
+    assert_eq!(
+        App::shapes_key(&out1_static),
+        App::shapes_key(&out2_static),
+        "Button with non-loader icon should be static"
+    );
+}

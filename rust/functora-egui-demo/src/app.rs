@@ -5,7 +5,7 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::state::PersistentState;
 use functora_egui::storage::persist_value;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog, Drawer,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, Command, CommandItem, Dialog,
     FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Separator,
     Sheet, Shell, ToastState, ToastVariant, Typography,
 };
@@ -366,7 +366,6 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("Dialog", LucideIcon::AppWindow),
             ComponentDef::new("AlertDialog", LucideIcon::TriangleAlert),
             ComponentDef::new("Sheet", LucideIcon::PanelRight),
-            ComponentDef::new("Drawer", LucideIcon::PanelBottomOpen),
             ComponentDef::new("Popover", LucideIcon::PanelTopOpen),
             ComponentDef::new("HoverCard", LucideIcon::SquareMousePointer),
             ComponentDef::new("Tooltip", LucideIcon::MousePointerClick),
@@ -569,9 +568,8 @@ pub struct DialogState {
 }
 
 #[derive(Default)]
-pub struct DrawerState {
+pub struct SheetState {
     pub sheet_open: bool,
-    pub drawer_open: bool,
 }
 
 pub struct CheckState {
@@ -663,7 +661,7 @@ pub struct ShowcaseApp {
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
-    pub drawers: DrawerState,
+    pub sheet_state: SheetState,
     // inputs
     pub checks: CheckState,
     pub radios: RadioState,
@@ -741,7 +739,7 @@ impl Default for ShowcaseApp {
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
-            drawers: DrawerState::default(),
+            sheet_state: SheetState::default(),
             checks: CheckState::default(),
             radios: RadioState::default(),
             radio_group_val: "Option A".to_owned(),
@@ -986,12 +984,12 @@ impl ShowcaseApp {
             }
         }
 
-        if self.drawers.sheet_open {
+        if self.sheet_state.sheet_open {
             Sheet::new()
                 .title("Sheet Panel")
                 .description("A side sheet that slides in from the edge.")
                 .side(functora_egui::SheetSide::Right)
-                .show(ctx, &mut self.drawers.sheet_open, |ui| {
+                .show(ctx, &mut self.sheet_state.sheet_open, |ui| {
                     _ = Label::new("Notifications").show(ui);
                     ui.add_space(4.0);
                     for (label, desc) in [
@@ -1006,26 +1004,6 @@ impl ShowcaseApp {
                             });
                         });
                     }
-                });
-        }
-
-        if self.drawers.drawer_open {
-            Drawer::new()
-                .title("Drawer")
-                .description("A bottom drawer panel.")
-                .show(ctx, &mut self.drawers.drawer_open, |ui| {
-                    FieldDescription::show(
-                        ui,
-                        "On mobile viewports drawers slide up from the bottom edge.",
-                    );
-                    ui.add_space(8.0);
-                    _ = Flex::row().justify_end().gap(8.0).show(ui, |f| {
-                        _ = f.add(
-                            Button::new("Close")
-                                .variant(ButtonVariant::Outline)
-                                .size(functora_egui::ComponentSize::Sm),
-                        );
-                    });
                 });
         }
 
@@ -1107,7 +1085,6 @@ impl ShowcaseApp {
             "Dialog" => self.demo_dialog(ui),
             "AlertDialog" => self.demo_alert_dialog(ui),
             "Sheet" => self.demo_sheet(ui),
-            "Drawer" => self.demo_drawer(ui),
             "Popover" => Self::demo_popover(ui),
             "HoverCard" => Self::demo_hover_card(ui),
             "Tooltip" => Self::demo_tooltip(ui),

@@ -32,7 +32,7 @@ ui.add(functora_egui::Select::new(&mut selected, &options).placeholder("Pick one
 |----------|---------|
 | **Inputs** | Button, Checkbox, ColorSwatch, Input, InputOtp, Radio, RadioGroup, Select, Slider, Switch, Textarea, Toggle, ToggleGroup, Combobox, DatePicker |
 | **Layout** | Accordion, AspectRatio, Card, Collapsible, Resizable, ScrollArea, Separator, StatusBar, Tabs, Toolbar, Flex |
-| **Overlay** | AlertDialog, Command, ContextMenu, Dialog, Drawer, DropdownMenu, HoverCard, Menubar, NavigationMenu, Popover, Sheet, Tooltip |
+| **Overlay** | AlertDialog, Command, ContextMenu, Dialog, DropdownMenu, HoverCard, Menubar, NavigationMenu, Popover, Sheet, Tooltip |
 | **Feedback** | Alert, Badge, Progress, Skeleton, Spinner, Toast |
 | **Data** | Avatar, Breadcrumb, Calendar, Carousel, Pagination, Sidebar, Table |
 | **Typography** | Typography, Label, Kbd |

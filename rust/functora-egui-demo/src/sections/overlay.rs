@@ -1,4 +1,4 @@
-//! Overlays: dialogs, sheets, drawers, popovers, hover cards, tooltips,
+//! Overlays: dialogs, sheets, popovers, hover cards, tooltips,
 //! context menus, dropdowns, command palette, menubars, navigation menus.
 
 use functora_egui::{
@@ -55,30 +55,12 @@ impl crate::app::ShowcaseApp {
             .show(ui)
             .clicked()
         {
-            self.drawers.sheet_open = true;
+            self.sheet_state.sheet_open = true;
         }
 
         snippet(
             ui,
             "// Sheet: side panel from edge (right/left/top/bottom)\nuse functora_egui::{Sheet, SheetSide, Button, ButtonVariant, LucideIcon, Label};\n\nlet mut open = false;\n\nif Button::new(\"Open Sheet\").icon(LucideIcon::PanelRight).show(ui).clicked() {\n    open = true;\n}\n\nSheet::new()\n    .title(\"Sheet Panel\")\n    .description(\"A side sheet that slides in from the edge.\")\n    .side(SheetSide::Right)\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Notifications\").show(ui);\n        // ... content\n    });\n\n// On mobile, opens from bottom regardless of side",
-        );
-    }
-
-    pub(crate) fn demo_drawer(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A panel that slides up from the bottom edge.").show(ui);
-        ui.add_space(12.0);
-        if Button::new("Open Drawer")
-            .icon(LucideIcon::PanelBottomOpen)
-            .variant(ButtonVariant::Outline)
-            .show(ui)
-            .clicked()
-        {
-            self.drawers.drawer_open = true;
-        }
-
-        snippet(
-            ui,
-            "// Drawer: bottom panel (mobile) or side panel (desktop)\nuse functora_egui::{Drawer, Button, ButtonVariant, LucideIcon, FieldDescription};\n\nlet mut open = false;\n\nif Button::new(\"Open Drawer\").icon(LucideIcon::PanelBottomOpen).show(ui).clicked() {\n    open = true;\n}\n\nDrawer::new()\n    .title(\"Drawer\")\n    .description(\"A bottom drawer panel.\")\n    .show(ctx, &mut open, |ui| {\n        FieldDescription::show(ui, \"On mobile, drawers slide up from bottom.\");\n        Flex::row().justify_end().gap(8.0).show(ui, |f| {\n            f.add(Button::new(\"Close\").variant(ButtonVariant::Outline));\n        });\n    });",
         );
     }
 

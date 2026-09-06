@@ -133,7 +133,6 @@ pub use widgets::context_menu::widget::ContextMenu;
 pub use widgets::date_picker::date_picker_state::DatePickerState;
 pub use widgets::date_picker::widget::DatePicker;
 pub use widgets::dialog::widget::Dialog;
-pub use widgets::drawer::widget::Drawer;
 pub use widgets::dropdown_menu::widget::DropdownMenu;
 pub use widgets::dropdown_menu::widget::MenuItem;
 pub use widgets::empty::widget::Empty;

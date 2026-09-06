@@ -951,7 +951,7 @@ impl ShowcaseApp {
                                 .size(functora_egui::ComponentSize::Sm)
                                 .icon(LucideIcon::Check),
                         )
-                        .response
+                        .inner
                         .clicked()
                         {
                             close = true;

@@ -104,7 +104,7 @@ impl crate::app::ShowcaseApp {
                     .variant(ButtonVariant::Outline)
                     .selected(self.toolbar.toolbar_snap),
             )
-            .response
+            .inner
             .clicked()
             {
                 self.toolbar.toolbar_snap = !self.toolbar.toolbar_snap;
@@ -756,7 +756,7 @@ impl crate::app::ShowcaseApp {
                         .selected(self.color_swatch_idx == idx)
                         .show_hex(),
                 )
-                .response
+                .inner
                 .clicked()
                 {
                     self.color_swatch_idx = idx;

@@ -121,7 +121,7 @@ impl crate::app::ShowcaseApp {
         let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             if f.add(Button::new("Default").variant(ButtonVariant::Outline))
-                .response
+                .inner
                 .clicked()
             {
                 self.toast.add(
@@ -131,7 +131,7 @@ impl crate::app::ShowcaseApp {
                 );
             }
             if f.add(Button::new("Success").variant(ButtonVariant::Outline))
-                .response
+                .inner
                 .clicked()
             {
                 self.toast.add(
@@ -141,7 +141,7 @@ impl crate::app::ShowcaseApp {
                 );
             }
             if f.add(Button::new("Destructive").variant(ButtonVariant::Destructive))
-                .response
+                .inner
                 .clicked()
             {
                 self.toast.add(

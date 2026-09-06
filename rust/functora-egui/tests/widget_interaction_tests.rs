@@ -658,3 +658,130 @@ fn button_loader_icon_spins_and_non_loader_is_static() {
         "Button with non-loader icon should be static"
     );
 }
+
+#[test]
+fn toast_buttons_inside_flex_trigger_toast() {
+    use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
+    use functora_egui::{Button, ButtonVariant, Flex, ToastState, ToastVariant};
+    use std::cell::RefCell;
+    use std::rc::Rc;
+
+    const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
+
+    struct App {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl App {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(
+            &mut self,
+            events: Vec<Event>,
+            body: &mut dyn FnMut(&mut egui::Ui),
+        ) -> egui::FullOutput {
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+                time: Some(f64::from(self.frame) / 60.0),
+                events,
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
+            });
+            out.textures_delta.clear();
+            out
+        }
+
+        fn rects(output: &egui::FullOutput) -> Vec<Rect> {
+            output
+                .shapes
+                .iter()
+                .filter_map(|cs| match &cs.shape {
+                    Shape::Rect(rs) => Some(rs.rect),
+                    Shape::Vec(v) => v.iter().find_map(|s| match s {
+                        Shape::Rect(rs) => Some(rs.rect),
+                        _ => None,
+                    }),
+                    _ => None,
+                })
+                .collect()
+        }
+
+        fn has_toast_text(output: &egui::FullOutput, needle: &str) -> bool {
+            output.shapes.iter().any(|cs| match &cs.shape {
+                Shape::Text(ts) => ts.galley.text().contains(needle),
+                _ => false,
+            })
+        }
+    }
+
+    let toast_state = Rc::new(RefCell::new(ToastState::new()));
+    let toast_state_clone = toast_state.clone();
+    let mut body = move |ui: &mut egui::Ui| {
+        let ctx = ui.ctx().clone();
+        let mut guard = toast_state_clone.borrow_mut();
+        let _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            if f.add(Button::new("Default").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                guard.add(
+                    "Default toast",
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
+            }
+            if f.add(Button::new("Success").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                guard.add(
+                    "Success toast",
+                    ToastVariant::Success,
+                    ctx.input(|i| i.time),
+                );
+            }
+        });
+        guard.show(ui.ctx());
+    };
+
+    let mut app = App::new();
+    let out_initial = app.step(vec![], &mut body);
+    let button_rect = App::rects(&out_initial)
+        .into_iter()
+        .find(|r| r.width() > 40.0 && r.width() < 150.0 && r.height() > 20.0 && r.height() < 50.0)
+        .expect("toast button rect not found");
+    let center = button_rect.center();
+    let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
+    let _ = app.step(
+        vec![Event::PointerButton {
+            pos: center,
+            button: egui::PointerButton::Primary,
+            pressed: true,
+            modifiers: egui::Modifiers::default(),
+        }],
+        &mut body,
+    );
+    let _ = app.step(
+        vec![Event::PointerButton {
+            pos: center,
+            button: egui::PointerButton::Primary,
+            pressed: false,
+            modifiers: egui::Modifiers::default(),
+        }],
+        &mut body,
+    );
+    let out_final = app.step(vec![], &mut body);
+    assert!(
+        App::has_toast_text(&out_final, "Default toast"),
+        "toast inside Flex should be triggered on click via inner response"
+    );
+}

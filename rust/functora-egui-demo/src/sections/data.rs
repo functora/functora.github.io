@@ -172,13 +172,13 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
         _ = Typography::small(
-            "On desktop it is a side panel, on mobile it slides in as a drawer toggled by the header hamburger button.",
+            "On desktop it is a side panel, on mobile it slides in as a drawer toggled by the header hamburger button. Resize below 800px: the sidebar covers the screen as a drawer.",
         )
         .show(ui);
 
         snippet(
             ui,
-            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::Shell;\n\nlet mut collapsed = false;\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for (item_idx, def) in items.iter().enumerate() {\n            let selected = flat_index(cat_idx, item_idx) == selected_flat;\n            if side.add(section_button(def, selected).full_width()).clicked() {\n                selected_flat = flat_index(cat_idx, item_idx);\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
+            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for (item_idx, def) in items.iter().enumerate() {\n            let selected = flat_index(cat_idx, item_idx) == selected_flat;\n            if side.add(section_button(def, selected).full_width()).clicked() {\n                selected_flat = flat_index(cat_idx, item_idx);\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
         );
     }
 

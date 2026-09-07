@@ -153,41 +153,4 @@ impl crate::app::ShowcaseApp {
             "// Touch target: responsive heights and padding\\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\\n\\nlet spacing = ui.responsive_spacing();\\n\\n// touch_height: 36px desktop, 48px mobile\\n// touch_padding: extra padding for touch\\n// Button and Slider automatically use these\\n\\nFlex::row().gap(8.0).show(ui, |f| {\\n    f.add(Button::new(\"Touch me\"));\\n});\\n\\nSlider::new(&mut val, 0.0..=100.0)\\n    .step(1.0)\\n    .width(360.0)\\n    .show(ui);",
         );
     }
-
-    pub(crate) fn demo_mobile_dialog(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Dialogs become bottom sheets on mobile viewports.").show(ui);
-        ui.add_space(12.0);
-        if Button::new("Open Dialog")
-            .icon(functora_egui::LucideIcon::Smartphone)
-            .variant(ButtonVariant::Outline)
-            .show(ui)
-            .clicked()
-        {
-            self.dialogs.dialog_open = true;
-        }
-        ui.add_space(12.0);
-        _ = Typography::small(
-            "Shrink the window below 800px, then open the dialog: it slides up from the \
-             bottom instead of centering.",
-        )
-        .show(ui);
-    }
-
-    pub(crate) fn demo_mobile_sidebar(ui: &mut egui::Ui) {
-        _ = Typography::muted(
-            "The app sidebar slides in as a drawer overlay on mobile. This page documents it, so there is no second live demo here.",
-        )
-        .show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small(
-            "Resize below 800px: the sidebar covers the screen as a drawer. The header \
-             hamburger button toggles it.",
-        )
-        .show(ui);
-
-        snippet(
-            ui,
-            "// MobileSidebar: Shell renders the same sidebar as a drawer on mobile\n// No second Sidebar is rendered inside page content.\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    // Same CATEGORIES loop as the Sidebar page.\n    false\n})\n.show(ui, |content| {\n    // page content, drawer is owned by Shell\n});",
-        );
-    }
 }

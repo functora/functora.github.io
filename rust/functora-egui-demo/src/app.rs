@@ -434,8 +434,6 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("Spacing", LucideIcon::Ruler),
             ComponentDef::new("FlexWrap", LucideIcon::GripHorizontal),
             ComponentDef::new("TouchTarget", LucideIcon::Hand),
-            ComponentDef::new("MobileDialog", LucideIcon::Smartphone),
-            ComponentDef::new("MobileSidebar", LucideIcon::PanelLeftOpen),
         ],
     ),
     (
@@ -1121,8 +1119,6 @@ impl ShowcaseApp {
             "Spacing" => Self::demo_spacing(ui),
             "FlexWrap" => Self::demo_flex_wrap(ui),
             "TouchTarget" => self.demo_touch_target(ui),
-            "MobileDialog" => self.demo_mobile_dialog(ui),
-            "MobileSidebar" => Self::demo_mobile_sidebar(ui),
             "Storage" => self.demo_storage(ui),
             "Clipboard" => self.demo_clipboard(ui),
             "Share" => self.demo_share(ui),

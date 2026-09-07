@@ -2,8 +2,8 @@
 //! tables, and area charts.
 
 use functora_egui::{
-    AreaChart, AreaSeries, Avatar, Badge, Breadcrumb, Button, ButtonVariant, Calendar, Carousel,
-    Flex, LucideIcon, NavAction, Pagination, ResponsiveExt, Separator, Sidebar, Table, Typography,
+    AreaChart, AreaSeries, Avatar, Badge, Breadcrumb, Calendar, Carousel, Flex, NavAction,
+    Pagination, ResponsiveExt, Separator, Table, Typography,
 };
 
 use functora_egui::snippet;
@@ -165,52 +165,20 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_sidebar(&mut self, ui: &mut egui::Ui) {
+    pub(crate) fn demo_sidebar(ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "A collapsible navigation panel, responsive on mobile (slides in as a drawer).",
+            "The app sidebar is the navigation panel on the side. This page documents it, so there is no second live demo here.",
         )
         .show(ui);
         ui.add_space(12.0);
-        _ = Sidebar::new().width(228.0).collapsible().show(
-            ui,
-            &mut self.nav.sidebar_demo_collapsed,
-            |ui16| {
-                _ = Typography::small("Navigation")
-                    .variant(functora_egui::TypographyVariant::Muted)
-                    .show(ui16);
-                ui16.add_space(4.0);
-                if Button::new("Overview")
-                    .icon(LucideIcon::Sparkles)
-                    .variant(ButtonVariant::Ghost)
-                    .full_width()
-                    .show(ui16)
-                    .clicked()
-                {
-                    self.toast.add(
-                        "Overview",
-                        functora_egui::ToastVariant::Default,
-                        ui16.ctx().input(|i| i.time),
-                    );
-                }
-                if Button::new("Settings")
-                    .icon(LucideIcon::Settings)
-                    .variant(ButtonVariant::Ghost)
-                    .full_width()
-                    .show(ui16)
-                    .clicked()
-                {
-                    self.toast.add(
-                        "Settings",
-                        functora_egui::ToastVariant::Default,
-                        ui16.ctx().input(|i| i.time),
-                    );
-                }
-            },
-        );
+        _ = Typography::small(
+            "On desktop it is a side panel, on mobile it slides in as a drawer toggled by the header hamburger button.",
+        )
+        .show(ui);
 
         snippet(
             ui,
-            "// Sidebar: collapsible navigation panel (responsive drawer on mobile)\nuse functora_egui::{Sidebar, Button, ButtonVariant, LucideIcon, Typography, TypographyVariant};\n\nlet mut collapsed = false;\nSidebar::new()\n    .width(228.0)\n    .collapsible()\n    .show(ui, &mut collapsed, |nav| {\n        Typography::small(\"Navigation\").variant(TypographyVariant::Muted).show(nav);\n        nav.add_space(4.0);\n        Button::new(\"Overview\").icon(LucideIcon::Sparkles).variant(ButtonVariant::Ghost).full_width().show(nav);\n        Button::new(\"Settings\").icon(LucideIcon::Settings).variant(ButtonVariant::Ghost).full_width().show(nav);\n    });",
+            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::Shell;\n\nlet mut collapsed = false;\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for (item_idx, def) in items.iter().enumerate() {\n            let selected = flat_index(cat_idx, item_idx) == selected_flat;\n            if side.add(section_button(def, selected).full_width()).clicked() {\n                selected_flat = flat_index(cat_idx, item_idx);\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
         );
     }
 

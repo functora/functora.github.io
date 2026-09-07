@@ -2,8 +2,7 @@
 //! and mobile-first behavior demos.
 
 use functora_egui::{
-    Badge, BadgeVariant, Button, ButtonVariant, Card, Flex, ResponsiveExt, Sidebar, Slider,
-    Typography, TypographyVariant,
+    Button, ButtonVariant, Card, Flex, ResponsiveExt, Slider, Typography, TypographyVariant,
 };
 
 use functora_egui::snippet;
@@ -174,32 +173,21 @@ impl crate::app::ShowcaseApp {
         .show(ui);
     }
 
-    pub(crate) fn demo_mobile_sidebar(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("The sidebar renders as a slide-in drawer overlay on mobile.")
-            .show(ui);
-        ui.add_space(12.0);
-        _ = Button::new("Open Sidebar")
-            .icon(functora_egui::LucideIcon::PanelLeftOpen)
-            .variant(ButtonVariant::Outline)
-            .show(ui);
-        _ = Sidebar::new().width(240.0).collapsible().show(
-            ui,
-            &mut self.nav.sidebar_demo_collapsed,
-            |ui81| {
-                _ = Typography::small("Mobile sidebar")
-                    .variant(TypographyVariant::Muted)
-                    .show(ui81);
-                ui81.add_space(4.0);
-                _ = Badge::new("Drawer mode")
-                    .variant(BadgeVariant::Secondary)
-                    .show(ui81);
-            },
-        );
+    pub(crate) fn demo_mobile_sidebar(ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "The app sidebar slides in as a drawer overlay on mobile. This page documents it, so there is no second live demo here.",
+        )
+        .show(ui);
         ui.add_space(12.0);
         _ = Typography::small(
             "Resize below 800px: the sidebar covers the screen as a drawer. The header \
-             hamburger button also toggles it.",
+             hamburger button toggles it.",
         )
         .show(ui);
+
+        snippet(
+            ui,
+            "// MobileSidebar: Shell renders the same sidebar as a drawer on mobile\n// No second Sidebar is rendered inside page content.\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    // Same CATEGORIES loop as the Sidebar page.\n    false\n})\n.show(ui, |content| {\n    // page content, drawer is owned by Shell\n});",
+        );
     }
 }

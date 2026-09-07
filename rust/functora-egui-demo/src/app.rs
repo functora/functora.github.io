@@ -556,9 +556,7 @@ fn initial_selected() -> usize {
 }
 
 #[derive(Default)]
-pub struct NavState {
-    pub sidebar_demo_collapsed: bool,
-}
+pub struct NavState {}
 
 #[derive(Default)]
 pub struct DialogState {
@@ -1105,7 +1103,7 @@ impl ShowcaseApp {
             "Calendar" => self.demo_calendar(ui),
             "Carousel" => self.demo_carousel(ui),
             "Pagination" => self.demo_pagination(ui),
-            "Sidebar" => self.demo_sidebar(ui),
+            "Sidebar" => Self::demo_sidebar(ui),
             "Table" => Self::demo_table(ui),
             "AreaChart" => Self::demo_area_chart(ui),
             "Typography" => Self::demo_typography(ui),
@@ -1124,7 +1122,7 @@ impl ShowcaseApp {
             "FlexWrap" => Self::demo_flex_wrap(ui),
             "TouchTarget" => self.demo_touch_target(ui),
             "MobileDialog" => self.demo_mobile_dialog(ui),
-            "MobileSidebar" => self.demo_mobile_sidebar(ui),
+            "MobileSidebar" => Self::demo_mobile_sidebar(ui),
             "Storage" => self.demo_storage(ui),
             "Clipboard" => self.demo_clipboard(ui),
             "Share" => self.demo_share(ui),

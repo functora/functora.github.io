@@ -164,6 +164,19 @@ impl crate::app::ShowcaseApp {
                 ui.ctx().input(|i| i.time),
             );
         }
+        ui.add_space(8.0);
+        if Button::new("Long multiline toast")
+            .variant(ButtonVariant::Outline)
+            .show(ui)
+            .clicked()
+        {
+            self.toast.add_with_description(
+                "Sync completed with a very long multiline title that wraps across several lines",
+                "Uploaded 128 files, skipped 3 files, and downloaded 42 files in the background. Next sync is scheduled automatically when the device is back online.",
+                functora_egui::ToastVariant::Success,
+                ui.ctx().input(|i| i.time),
+            );
+        }
 
         snippet(
             ui,

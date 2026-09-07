@@ -25,22 +25,15 @@ impl super::toast_state::ToastState {
         let spacing: f32 = 8.0;
 
         let mut dismissed: Vec<usize> = Vec::new();
-        let mut y_offset: f32 = -16.0;
 
-        for (idx, toast) in self.toasts.iter().enumerate() {
-            let id = egui::Id::new("toast").with(toast.id);
-            let estimated_height = if toast.description.is_some() {
-                72.0
-            } else {
-                52.0
-            };
-            let offset_y = y_offset;
-
-            let _ = egui::Area::new(id)
-                .order(egui::Order::Foreground)
-                .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, offset_y))
-                .fade_in(false)
-                .show(ctx, |inner_ui| {
+        let _ = egui::Area::new(egui::Id::new("toast_stack"))
+            .order(egui::Order::Foreground)
+            .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, -16.0))
+            .fade_in(false)
+            .show(ctx, |stack_ui| {
+                stack_ui.spacing_mut().item_spacing.y = spacing;
+                stack_ui.set_width(outer_width);
+                for (idx, toast) in self.toasts.iter().enumerate().rev() {
                     let (border_color, accent) = match toast.variant {
                         crate::tokens::toast_variant::ToastVariant::Default => {
                             (theme.border, theme.foreground)
@@ -65,44 +58,60 @@ impl super::toast_state::ToastState {
                         .corner_radius(cr)
                         .stroke(egui::Stroke::new(1.0, border_color));
 
-                    let _ = frame.show(inner_ui, |content_ui| {
+                    let _ = frame.show(stack_ui, |content_ui| {
                         content_ui.set_min_width(toast_width);
                         content_ui.set_max_width(toast_width);
 
                         let _ = content_ui.horizontal(|inner_ui3| {
-                            let _ = inner_ui3.label(
+                            let close_size = 14.0;
+                            let gap = 8.0;
+                            let title_width = (toast_width - close_size - gap).max(50.0);
+                            let title_galley = egui::WidgetText::from(
                                 egui::RichText::new(&toast.title)
                                     .color(accent)
                                     .size(14.0)
                                     .strong(),
+                            )
+                            .into_galley(
+                                inner_ui3,
+                                Some(egui::TextWrapMode::Wrap),
+                                title_width,
+                                egui::TextStyle::Body,
                             );
+                            let row_height = title_galley.size().y.max(close_size);
+                            let (row_rect, _) = inner_ui3.allocate_exact_size(
+                                egui::vec2(toast_width, row_height),
+                                egui::Sense::hover(),
+                            );
+                            inner_ui3
+                                .painter()
+                                .galley(row_rect.min, title_galley, accent);
 
-                            let _ = inner_ui3.with_layout(
-                                egui::Layout::right_to_left(egui::Align::Center),
-                                |inner_ui4| {
-                                    let close_size = 14.0;
-                                    let (close_rect, close_resp) = inner_ui4.allocate_exact_size(
-                                        egui::vec2(close_size, close_size),
-                                        egui::Sense::click(),
-                                    );
-                                    if inner_ui4.is_rect_visible(close_rect) {
-                                        let color = if close_resp.hovered() {
-                                            theme.foreground
-                                        } else {
-                                            theme.muted_foreground
-                                        };
-                                        crate::icons::paint_icon::paint_icon(
-                                            inner_ui4.painter(),
-                                            close_rect,
-                                            &crate::icons::lucide_icon::LucideIcon::X,
-                                            color,
-                                        );
-                                    }
-                                    if close_resp.clicked() {
-                                        dismissed.push(idx);
-                                    }
-                                },
+                            let close_rect = egui::Rect::from_center_size(
+                                egui::pos2(
+                                    row_rect.max.x - close_size / 2.0,
+                                    row_rect.min.y + close_size / 2.0 + 1.0,
+                                ),
+                                egui::vec2(close_size, close_size),
                             );
+                            let close_resp =
+                                inner_ui3.allocate_rect(close_rect, egui::Sense::click());
+                            if inner_ui3.is_rect_visible(close_rect) {
+                                let color = if close_resp.hovered() {
+                                    theme.foreground
+                                } else {
+                                    theme.muted_foreground
+                                };
+                                crate::icons::paint_icon::paint_icon(
+                                    inner_ui3.painter(),
+                                    close_rect,
+                                    &crate::icons::lucide_icon::LucideIcon::X,
+                                    color,
+                                );
+                            }
+                            if close_resp.clicked() {
+                                dismissed.push(idx);
+                            }
                         });
 
                         if let Some(desc) = &toast.description {
@@ -114,10 +123,8 @@ impl super::toast_state::ToastState {
                             );
                         }
                     });
-                });
-
-            y_offset -= estimated_height + spacing;
-        }
+                }
+            });
 
         for idx in dismissed.into_iter().rev() {
             let _ = self.toasts.remove(idx);

@@ -824,28 +824,23 @@ fn toast_vertical_spacing_is_consistent() {
             output
                 .shapes
                 .iter()
-                .filter_map(|cs| match &cs.shape {
-                    Shape::Rect(rect_shape) => {
-                        let rect = rect_shape.rect;
-                        if (350.0..400.0).contains(&rect.width())
-                            && rect.height() > 30.0
-                            && rect.height() < 150.0
-                        {
-                            Some(rect)
-                        } else {
-                            None
-                        }
+                .filter_map(|cs| {
+                    let rect = match &cs.shape {
+                        Shape::Rect(rect_shape) => rect_shape.rect,
+                        Shape::Vec(vec) => vec
+                            .iter()
+                            .find_map(|shape| match shape {
+                                Shape::Rect(rect) => Some(rect.rect),
+                                _ => None,
+                            })
+                            .unwrap_or(egui::Rect::NOTHING),
+                        _ => return None,
+                    };
+                    if (350.0..400.0).contains(&rect.width()) && rect.height() > 30.0 {
+                        Some(rect)
+                    } else {
+                        None
                     }
-                    Shape::Vec(vec) => vec.iter().find_map(|shape| match shape {
-                        Shape::Rect(rect)
-                            if (350.0..400.0).contains(&rect.rect.width())
-                                && rect.rect.height() > 30.0 =>
-                        {
-                            Some(rect.rect)
-                        }
-                        _ => None,
-                    }),
-                    _ => None,
                 })
                 .collect()
         }
@@ -856,7 +851,7 @@ fn toast_vertical_spacing_is_consistent() {
         let _ = app.step(&mut toast);
         let out = app.step(&mut toast);
         let mut rects = App::toast_rects(&out);
-        assert_eq!(rects.len(), 2, "expected 2 toasts");
+        assert_eq!(rects.len(), 2, "expected 2 toasts, found {rects:?}");
         rects.sort_by(|left, right| right.max.y.partial_cmp(&left.max.y).unwrap());
         let bottom = rects[0];
         let top = rects[1];
@@ -906,4 +901,45 @@ fn toast_vertical_spacing_is_consistent() {
         0.0,
     );
     assert_spacing(two_descs);
+
+    let multiline_desc = "Uploaded 128 files, skipped 3 files, and downloaded 42 files in the background. Next sync happens automatically when the device is back online.";
+
+    let mut multiline_first = ToastState::new();
+    multiline_first.add_with_description("Sync report", multiline_desc, ToastVariant::Success, 0.0);
+    multiline_first.add("Default toast", ToastVariant::Default, 0.0);
+    assert_spacing(multiline_first);
+
+    let mut multiline_last = ToastState::new();
+    multiline_last.add("Default toast", ToastVariant::Default, 0.0);
+    multiline_last.add_with_description("Sync report", multiline_desc, ToastVariant::Success, 0.0);
+    assert_spacing(multiline_last);
+
+    let mut long_title = ToastState::new();
+    long_title.add(
+        "Sync completed with a very long multiline title that wraps across several lines",
+        ToastVariant::Success,
+        0.0,
+    );
+    long_title.add("Default toast", ToastVariant::Default, 0.0);
+    let mut app = App::new();
+    let _ = app.step(&mut long_title);
+    let out = app.step(&mut long_title);
+    let mut rects = App::toast_rects(&out);
+    assert_eq!(rects.len(), 2, "expected 2 toasts, found {rects:?}");
+    for rect in &rects {
+        assert!(
+            rect.width() <= 390.5,
+            "toast must not exceed max outer width 388.0 + 1px stroke, got {rect:?}"
+        );
+        assert!(
+            rect.max.x <= 1280.0 - 15.0,
+            "toast must keep right margin, got {rect:?}"
+        );
+    }
+    rects.sort_by(|left, right| right.max.y.partial_cmp(&left.max.y).unwrap());
+    let gap = rects[0].min.y - rects[1].max.y;
+    assert!(
+        (gap - 8.0).abs() < 1.0,
+        "toast gap should be 8.0, got {gap:.2} for rects {rects:?}"
+    );
 }

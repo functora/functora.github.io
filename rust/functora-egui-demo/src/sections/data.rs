@@ -161,7 +161,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Pagination: page navigation with visible range\nuse functora_egui::Pagination;\n\nlet mut page = 0;\nPagination::new(20)\n    .max_visible(7)\n    .show(ui, &mut page);\n\neprintln!(\"Page {} of 20\", page + 1);",
+            "// Pagination: page navigation with visible range\nuse functora_egui::Pagination;\n\nlet mut page = 0;\nlet max_visible = if ui.on_mobile() { 5 } else { 7 };\nPagination::new(20)\n    .max_visible(max_visible)\n    .show(ui, &mut page);\n\neprintln!(\"Page {} of 20\", page + 1);",
         );
     }
 

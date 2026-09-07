@@ -2,7 +2,7 @@
 
 use functora_egui::{
     Badge, Button, ButtonVariant, FieldDescription, FieldGroup, FieldLegend, FieldSet, Flex, Input,
-    Label, NumberInput, PropertyGrid, PropertyRow, Select, Typography,
+    Label, NumberInput, PropertyGrid, PropertyRow, ResponsiveExt, Select, Typography,
 };
 
 use functora_egui::snippet;
@@ -20,25 +20,48 @@ impl crate::app::ShowcaseApp {
             ui27.add_space(8.0);
             _ = Label::new("Expiry").show(ui27);
             ui27.add_space(8.0);
-            _ = Flex::row().gap(8.0).show(ui27, |f3| {
-                _ = f3.add(
-                    Select::new(
-                        &mut self.form.form_month,
-                        &[
-                            "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
-                        ]
-                        .map(str::to_owned),
-                    )
-                    .placeholder("Month"),
-                );
-                _ = f3.add(
-                    Select::new(
-                        &mut self.form.form_year,
-                        &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
-                    )
-                    .placeholder("Year"),
-                );
-            });
+            if ui27.on_mobile() {
+                _ = Select::new(
+                    &mut self.form.form_month,
+                    &[
+                        "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
+                    ]
+                    .map(str::to_owned),
+                )
+                .placeholder("Month")
+                .show(ui27);
+                ui27.add_space(8.0);
+                _ = Select::new(
+                    &mut self.form.form_year,
+                    &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
+                )
+                .placeholder("Year")
+                .show(ui27);
+            } else {
+                let half = (ui27.available_width() - 8.0) / 2.0;
+                _ = Flex::row().gap(8.0).show(ui27, |f3| {
+                    _ = f3.add(
+                        Select::new(
+                            &mut self.form.form_month,
+                            &[
+                                "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
+                                "12",
+                            ]
+                            .map(str::to_owned),
+                        )
+                        .placeholder("Month")
+                        .width(half),
+                    );
+                    _ = f3.add(
+                        Select::new(
+                            &mut self.form.form_year,
+                            &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
+                        )
+                        .placeholder("Year")
+                        .width(half),
+                    );
+                });
+            }
             ui27.add_space(8.0);
             _ = Label::new("CVV").show(ui27);
             ui27.add_space(8.0);
@@ -49,7 +72,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// FieldGroup: groups related fields with legend/description\nuse functora_egui::{FieldGroup, FieldSet, FieldLegend, FieldDescription, Label, Input, Button, ComponentSize};\n\nFieldGroup::show(ui, |group| {\n    group.add(FieldSet::show(ui, \"Payment\", |body| {\n        Label::new(\"Card number\").show(body);\n        Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(body);\n        Label::new(\"Expiry\").show(body);\n        Input::new(&mut expiry).placeholder(\"MM/YY\").show(body);\n        Label::new(\"CVV\").show(body);\n        Input::new(&mut cvv).placeholder(\"123\").show(body);\n    }));\n    group.add(FieldDescription::show(ui, \"All transactions are secure and encrypted.\"));\n});",
+            "// FieldGroup: groups related fields with legend/description\nuse functora_egui::{FieldGroup, FieldSet, FieldLegend, FieldDescription, Label, Input, Flex, Select, ResponsiveExt, Button, ComponentSize};\n\nFieldGroup::show(ui, |group| {\n    group.add(FieldSet::show(ui, \"Payment\", |body| {\n        Label::new(\"Card number\").show(body);\n        Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(body);\n        Label::new(\"Expiry\").show(body);\n        if body.on_mobile() {\n            Select::new(&mut month, &months).placeholder(\"Month\").show(body);\n            Select::new(&mut year, &years).placeholder(\"Year\").show(body);\n        } else {\n            let half = (body.available_width() - 8.0) / 2.0;\n            Flex::row().gap(8.0).show(body, |f| {\n                f.add(Select::new(&mut month, &months).placeholder(\"Month\").width(half));\n                f.add(Select::new(&mut year, &years).placeholder(\"Year\").width(half));\n            });\n        }\n        Label::new(\"CVV\").show(body);\n        Input::new(&mut cvv).placeholder(\"123\").show(body);\n    }));\n    group.add(FieldDescription::show(ui, \"All transactions are secure and encrypted.\"));\n});",
         );
     }
 

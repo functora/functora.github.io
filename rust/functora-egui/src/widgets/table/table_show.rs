@@ -1,10 +1,30 @@
 //! Show method for Table — renders a styled data table.
 
+#[derive(Clone, Copy)]
+struct RowStyle {
+    bg: egui::Color32,
+    fg: egui::Color32,
+    corners: egui::CornerRadius,
+}
+
 impl super::widget::Table {
     /// Shows the table. Returns the response for the outer frame.
     pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = crate::utils::f32_to_u8_clamped(theme.radius);
+        let inner = cr.saturating_sub(1);
+        let top = egui::CornerRadius {
+            nw: inner,
+            ne: inner,
+            sw: 0,
+            se: 0,
+        };
+        let bottom = egui::CornerRadius {
+            nw: 0,
+            ne: 0,
+            sw: inner,
+            se: inner,
+        };
 
         let frame = egui::Frame::NONE
             .fill(theme.card)
@@ -31,9 +51,16 @@ impl super::widget::Table {
                     &self.headers,
                     &col_widths,
                     available,
-                    theme.muted,
-                    theme.muted_foreground,
                     true,
+                    RowStyle {
+                        bg: theme.muted,
+                        fg: theme.muted_foreground,
+                        corners: if self.rows.is_empty() {
+                            egui::CornerRadius::same(inner)
+                        } else {
+                            top
+                        },
+                    },
                 );
 
                 // Divider after header
@@ -52,9 +79,16 @@ impl super::widget::Table {
                         row,
                         &col_widths,
                         available,
-                        bg,
-                        theme.foreground,
                         false,
+                        RowStyle {
+                            bg,
+                            fg: theme.foreground,
+                            corners: if row_idx + 1 == self.rows.len() {
+                                bottom
+                            } else {
+                                egui::CornerRadius::ZERO
+                            },
+                        },
                     );
 
                     // Row divider (not after last)
@@ -80,9 +114,8 @@ impl super::widget::Table {
         cells: &[String],
         col_widths: &[f32],
         total_width: f32,
-        bg: egui::Color32,
-        fg: egui::Color32,
         is_header: bool,
+        style: RowStyle,
     ) {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let base_height: f32 = if is_header { 40.0 } else { 44.0 };
@@ -97,7 +130,7 @@ impl super::widget::Table {
                 ui.painter().layout(
                     cell.clone(),
                     egui::FontId::proportional(font_size),
-                    fg,
+                    style.fg,
                     wrap_w,
                 )
             })
@@ -111,13 +144,11 @@ impl super::widget::Table {
         let actual_bg = if !is_header && response.hovered() {
             theme.accent
         } else {
-            bg
+            style.bg
         };
 
         if actual_bg != egui::Color32::TRANSPARENT {
-            let _ = ui
-                .painter()
-                .rect_filled(row_rect, egui::CornerRadius::ZERO, actual_bg);
+            let _ = ui.painter().rect_filled(row_rect, style.corners, actual_bg);
         }
 
         let mut x_offset = 0.0;
@@ -127,7 +158,7 @@ impl super::widget::Table {
                 row_rect.min.x + x_offset + 12.0,
                 row_rect.center().y - galley.size().y / 2.0,
             );
-            ui.painter().galley(text_pos, galley, fg);
+            ui.painter().galley(text_pos, galley, style.fg);
 
             x_offset += col_w;
         }

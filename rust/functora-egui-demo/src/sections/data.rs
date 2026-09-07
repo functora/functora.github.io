@@ -116,37 +116,36 @@ impl crate::app::ShowcaseApp {
             egui::Color32::from_rgb(245, 159, 0),
             egui::Color32::from_rgb(224, 49, 49),
         ];
-        _ = Carousel::new(colors.len()).show(ui, &mut self.carousel_idx, |ui50, idx| {
-            _ = ui50.allocate_ui(
-                egui::vec2(ui50.available_width().min(420.0), 200.0),
-                |ui15| {
-                    let rect = ui15.available_rect_before_wrap();
-                    let theme = functora_egui::ShadcnThemeExt::shadcn_theme(ui15.ctx());
-                    _ = ui15.painter().rect_filled(
-                        rect,
-                        egui::CornerRadius::from(theme.radius),
-                        colors[idx],
-                    );
-                    let galley = ui15.painter().layout_no_wrap(
-                        format!("Slide {}", idx + 1),
-                        egui::FontId::proportional(24.0),
-                        egui::Color32::WHITE,
-                    );
-                    ui15.painter().galley(
-                        egui::pos2(
-                            rect.center().x - galley.size().x / 2.0,
-                            rect.center().y - galley.size().y / 2.0,
-                        ),
-                        galley,
-                        egui::Color32::WHITE,
-                    );
-                },
-            );
+        let total = colors.len();
+        _ = Carousel::new(total).show(ui, &mut self.carousel_idx, |slide_ui, idx| {
+            let width = slide_ui.available_width().min(420.0);
+            let (rect, _) =
+                slide_ui.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());
+            if slide_ui.is_rect_visible(rect) {
+                let theme = functora_egui::ShadcnThemeExt::shadcn_theme(slide_ui.ctx());
+                let painter = slide_ui.painter();
+                _ = painter.rect_filled(rect, egui::CornerRadius::from(theme.radius), colors[idx]);
+                let galley = painter.layout_no_wrap(
+                    format!("Slide {}", idx + 1),
+                    egui::FontId::proportional(24.0),
+                    egui::Color32::WHITE,
+                );
+                painter.galley(
+                    egui::pos2(
+                        rect.center().x - galley.size().x / 2.0,
+                        rect.center().y - galley.size().y / 2.0,
+                    ),
+                    galley,
+                    egui::Color32::WHITE,
+                );
+            }
         });
+        ui.add_space(4.0);
+        _ = Typography::small(format!("Slide {} of {total}", self.carousel_idx + 1)).show(ui);
 
         snippet(
             ui,
-            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet items = [\"Slide 1\", \"Slide 2\", \"Slide 3\", \"Slide 4\"];\nlet mut index = 0;\n\nCarousel::new(items.len()).show(ui, &mut index, |slide, idx| {\n    slide.allocate_ui(egui::vec2(slide.available_width().min(420.0), 200.0), |ui| {\n        let rect = ui.available_rect_before_wrap();\n        ui.painter().rect_filled(rect, theme.radius, colors[idx]);\n        ui.painter().galley(\n            rect.center() - galley.size() / 2.0,\n            galley,\n            Color32::WHITE,\n        );\n    });\n});",
+            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet items = [\"Slide 1\", \"Slide 2\", \"Slide 3\", \"Slide 4\"];\nlet mut index = 0;\n\nCarousel::new(items.len()).show(ui, &mut index, |slide, idx| {\n    let width = slide.available_width().min(420.0);\n    let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n    slide.painter().rect_filled(rect, theme.radius, colors[idx]);\n    slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n});",
         );
     }
 

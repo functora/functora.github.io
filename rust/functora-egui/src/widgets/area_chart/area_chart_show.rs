@@ -46,15 +46,15 @@ impl super::widget::AreaChart {
 
         for (series_idx, raw_points) in raw_curves.iter().enumerate() {
             let smooth = catmull_rom_to_smooth(raw_points);
-            let color = self.series[series_idx].color;
+            let hue = self.series[series_idx].color.to_srgba_unmultiplied();
 
             let fill_alpha = if series_idx == 0 { 40 } else { 25 };
             let fill_color =
-                egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), fill_alpha);
+                egui::Color32::from_rgba_unmultiplied(hue[0], hue[1], hue[2], fill_alpha);
 
             let line_alpha = if series_idx == 0 { 180 } else { 120 };
             let line_color =
-                egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), line_alpha);
+                egui::Color32::from_rgba_unmultiplied(hue[0], hue[1], hue[2], line_alpha);
 
             // Build baseline: previous series smooth curve, or flat bottom
             let baseline: Vec<egui::Pos2> = match &prev_smooth {

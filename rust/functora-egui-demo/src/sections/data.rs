@@ -2,8 +2,8 @@
 //! tables, and area charts.
 
 use functora_egui::{
-    AreaChart, AreaSeries, Avatar, Badge, Breadcrumb, Calendar, Carousel, Flex, NavAction,
-    Pagination, ResponsiveExt, Separator, Table, Typography,
+    AreaChart, AreaSeries, Avatar, Badge, BadgeVariant, Breadcrumb, Calendar, Carousel, Flex,
+    NavAction, Pagination, ResponsiveExt, Separator, Table, Typography,
 };
 
 use functora_egui::snippet;
@@ -242,18 +242,6 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("A stacked area chart with smooth curves.").show(ui);
         ui.add_space(12.0);
         let theme = functora_egui::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let series_alpha = egui::Color32::from_rgba_unmultiplied(
-            theme.primary.r(),
-            theme.primary.g(),
-            theme.primary.b(),
-            160,
-        );
-        let series_beta = egui::Color32::from_rgba_unmultiplied(
-            theme.secondary.r(),
-            theme.secondary.g(),
-            theme.secondary.b(),
-            180,
-        );
         _ = AreaChart::new(vec![
             "Jan".to_owned(),
             "Feb".to_owned(),
@@ -264,11 +252,11 @@ impl crate::app::ShowcaseApp {
         ])
         .series(AreaSeries {
             values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],
-            color: series_alpha,
+            color: theme.chart_1,
         })
         .series(AreaSeries {
             values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],
-            color: series_beta,
+            color: theme.chart_2,
         })
         .stacked()
         .height(260.0)
@@ -277,13 +265,110 @@ impl crate::app::ShowcaseApp {
         _ = Separator::horizontal().show(ui);
         ui.add_space(4.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            _ = f.add(Badge::new("Primary"));
-            _ = f.add(Badge::new("Secondary"));
+            _ = f.add(Badge::new("Alpha"));
+            _ = f.add(Badge::new("Beta").variant(BadgeVariant::Success));
         });
 
         snippet(
             ui,
-            "// AreaChart: stacked area chart with smooth curves\nuse functora_egui::{AreaChart, AreaSeries};\nuse egui::Color32;\n\nlet months = vec![\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\"];\n\nlet primary = Color32::from_rgba_unmultiplied(25, 113, 194, 160);\nlet secondary = Color32::from_rgba_unmultiplied(18, 184, 134, 180);\n\nAreaChart::new(months)\n    .series(AreaSeries {\n        values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],\n        color: primary,\n    })\n    .series(AreaSeries {\n        values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],\n        color: secondary,\n    })\n    .stacked()\n    .height(260.0)\n    .show(ui);",
+            "// AreaChart: stacked area chart with smooth curves\nuse functora_egui::{AreaChart, AreaSeries, Badge, BadgeVariant};\n\nlet theme = ShadcnThemeExt::shadcn_theme(ui.ctx());\n\nAreaChart::new(months)\n    .series(AreaSeries {\n        values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],\n        color: theme.chart_1,\n    })\n    .series(AreaSeries {\n        values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],\n        color: theme.chart_2,\n    })\n    .stacked()\n    .height(260.0)\n    .show(ui);\n\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Badge::new(\"Alpha\"));\n    f.add(Badge::new(\"Beta\").variant(BadgeVariant::Success));\n});",
+        );
+    }
+}
+
+#[cfg(test)]
+mod area_chart_demo_tests {
+    use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+    use functora_egui::theme_extra::{Theme, set_theme};
+
+    struct Harness {
+        ctx: Context,
+        frame: u32,
+    }
+
+    impl Harness {
+        fn new() -> Self {
+            Self {
+                ctx: Context::default(),
+                frame: 0,
+            }
+        }
+
+        fn step(&mut self, theme: Theme, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
+            set_theme(&self.ctx, theme);
+            self.frame += 1;
+            let raw = RawInput {
+                screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280.0, 800.0))),
+                time: Some(f64::from(self.frame) / 60.0),
+                ..Default::default()
+            };
+            let mut out = self.ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner| body(inner));
+            });
+            out.textures_delta.clear();
+            out
+        }
+    }
+
+    fn max_channel_diff(hue: [u8; 4], bg: egui::Color32) -> u8 {
+        hue[0]
+            .abs_diff(bg.r())
+            .max(hue[1].abs_diff(bg.g()))
+            .max(hue[2].abs_diff(bg.b()))
+    }
+
+    fn chart_line_hues(out: &egui::FullOutput) -> Vec<[u8; 4]> {
+        out.shapes
+            .iter()
+            .filter_map(|clipped| match &clipped.shape {
+                Shape::Path(path) if path.stroke.width > 1.0 => match path.stroke.color {
+                    egui::epaint::ColorMode::Solid(color) => Some(color.to_srgba_unmultiplied()),
+                    egui::epaint::ColorMode::UV(_) => None,
+                },
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn primary_fills(out: &egui::FullOutput, primary: egui::Color32) -> usize {
+        out.shapes
+            .iter()
+            .filter(|clipped| matches!(&clipped.shape, Shape::Rect(rect) if rect.fill == primary))
+            .count()
+    }
+
+    fn render_demo(ui: &mut egui::Ui) {
+        crate::app::ShowcaseApp::demo_area_chart(ui);
+    }
+
+    #[test]
+    fn chart_lines_contrast_with_card() {
+        for theme in [Theme::Light, Theme::Dark] {
+            let mut app = Harness::new();
+            let mut body = render_demo;
+            let out = app.step(theme, &mut body);
+            let card = functora_egui::ShadcnThemeExt::shadcn_theme(&app.ctx).card;
+            let lines = chart_line_hues(&out);
+            assert_eq!(lines.len(), 2, "demo renders two series lines on {theme}");
+            for hue in lines {
+                assert!(
+                    max_channel_diff(hue, card) >= 50,
+                    "chart line {hue:?} must contrast with card {card:?} on {theme}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn legend_pills_have_distinct_fills() {
+        let mut app = Harness::new();
+        let mut body = render_demo;
+        let out = app.step(Theme::Dark, &mut body);
+        let theme = functora_egui::ShadcnThemeExt::shadcn_theme(&app.ctx);
+        assert_eq!(
+            primary_fills(&out, theme.primary),
+            1,
+            "legend must not paint two identical Default pills"
         );
     }
 }

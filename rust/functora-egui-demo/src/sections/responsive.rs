@@ -74,7 +74,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Touch target: responsive heights and padding\\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\\n\\nlet spacing = ui.responsive_spacing();\\n\\n// touch_height: 36px desktop, 48px mobile\\n// touch_padding: extra padding for touch\\n// Button and Slider automatically use these\\n\\nFlex::row().gap(8.0).show(ui, |f| {\\n    f.add(Button::new(\"Touch me\"));\\n});\\n\\nSlider::new(&mut val, 0.0..=100.0)\\n    .step(1.0)\\n    .width(360.0)\\n    .show(ui);",
+            "// Touch target: responsive heights and padding\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\n\nlet spacing = ui.responsive_spacing();\n\n// touch_height: 36px desktop, 48px mobile\n// touch_padding: extra padding for touch\n// Button and Slider automatically use these\n\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Touch me\"));\n});\n\nSlider::new(&mut val, 0.0..=100.0)\n    .step(1.0)\n    .width(360.0)\n    .show(ui);",
         );
     }
 
@@ -150,7 +150,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Touch target: responsive heights and padding\\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\\n\\nlet spacing = ui.responsive_spacing();\\n\\n// touch_height: 36px desktop, 48px mobile\\n// touch_padding: extra padding for touch\\n// Button and Slider automatically use these\\n\\nFlex::row().gap(8.0).show(ui, |f| {\\n    f.add(Button::new(\"Touch me\"));\\n});\\n\\nSlider::new(&mut val, 0.0..=100.0)\\n    .step(1.0)\\n    .width(360.0)\\n    .show(ui);",
+            "// Touch target: responsive heights and padding\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\n\nlet spacing = ui.responsive_spacing();\n\n// touch_height: 36px desktop, 48px mobile\n// touch_padding: extra padding for touch\n// Button and Slider automatically use these\n\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Touch me\"));\n});\n\nSlider::new(&mut val, 0.0..=100.0)\n    .step(1.0)\n    .width(360.0)\n    .show(ui);",
         );
     }
 }

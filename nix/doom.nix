@@ -248,6 +248,11 @@
         mod = ../bak/doom/D2ICO.wad;
         relite = ../bak/doom/relite_0.5a.pk3;
       }
+      // mkDoomPB {
+        tag = "hi";
+        mod = ../bak/doom/HI.wad;
+        relite = ../bak/doom/relite_0.5a.pk3;
+      }
       // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";

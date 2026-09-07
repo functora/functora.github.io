@@ -301,10 +301,7 @@ impl crate::app::ShowcaseApp {
         _ = ui
             .add(Input::new(&mut self.platform.storage_persistent_text).placeholder("persistent"));
         ui.add_space(4.0);
-        if ui
-            .add(Button::new("Persist").size(functora_egui::ComponentSize::Sm))
-            .clicked()
-        {
+        if ui.add(Button::new("Persist")).clicked() {
             functora_egui::storage::persist_value(
                 "demo_persistent",
                 &self.platform.storage_persistent_text,
@@ -486,7 +483,7 @@ impl crate::app::ShowcaseApp {
                     ctx.input(|i| i.time),
                 );
             }
-            if f.add(Button::new("Poll").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Poll").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -500,10 +497,7 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("url_to_route").size(functora_egui::ComponentSize::Sm))
-                .inner
-                .clicked()
-            {
+            if f.add(Button::new("url_to_route")).inner.clicked() {
                 let route = functora_egui::deep_link::url_to_route(&self.platform.deep_link_input);
                 self.toast.add(
                     format!("Route: {route:?}"),
@@ -644,10 +638,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = Typography::small("Blob memo cache demo").show(ui);
         ui.add_space(4.0);
-        if ui
-            .add(Button::new("Create revokable blob (txt)").size(functora_egui::ComponentSize::Sm))
-            .clicked()
-        {
+        if ui.add(Button::new("Create revokable blob (txt)")).clicked() {
             let preview = functora_egui::files::preview_blob("hello.txt", b"hello blob");
             self.toast.add(
                 format!("blob preview: {preview:?}"),
@@ -799,7 +790,7 @@ impl crate::app::ShowcaseApp {
                     self.platform.progress_running = false;
                 }
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -809,10 +800,7 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("Claim guard demo").size(functora_egui::ComponentSize::Sm))
-                .inner
-                .clicked()
-            {
+            if f.add(Button::new("Claim guard demo")).inner.clicked() {
                 let mut slot = self.platform.progress_job.clone();
                 let is_claimed = functora_egui::progress::claim_job(
                     &mut slot,
@@ -934,7 +922,7 @@ impl crate::app::ShowcaseApp {
                     Err(e) => self.platform.encode_output = format!("decode err: {e}"),
                 }
             }
-            if f.add(Button::new("QR SVG").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("QR SVG").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -1069,7 +1057,7 @@ impl crate::app::ShowcaseApp {
                     ))
                 }));
             }
-            if f.add(Button::new("Stop").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Stop").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -1114,7 +1102,7 @@ impl crate::app::ShowcaseApp {
                     }
                 }));
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -1134,11 +1122,7 @@ impl crate::app::ShowcaseApp {
             });
             ui2.add_space(4.0);
             if ui2
-                .add(
-                    Button::new("Restart scanner")
-                        .variant(ButtonVariant::Outline)
-                        .size(functora_egui::ComponentSize::Sm),
-                )
+                .add(Button::new("Restart scanner").variant(ButtonVariant::Outline))
                 .clicked()
             {
                 self.platform.qr_state.stop();
@@ -1196,7 +1180,7 @@ impl crate::app::ShowcaseApp {
                     Ok(format!("Thumbnail placeholder for len {}", url.len()))
                 }));
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -1286,7 +1270,7 @@ impl crate::app::ShowcaseApp {
             {
                 self.platform.crypto_output = "Decrypted placeholder".to_string();
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -1398,10 +1382,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         _ = ui.add(Input::new(&mut self.platform.platform_info).placeholder("info note"));
         ui.add_space(4.0);
-        if ui
-            .add(Button::new("Save to platform_info").size(functora_egui::ComponentSize::Sm))
-            .clicked()
-        {
+        if ui.add(Button::new("Save to platform_info")).clicked() {
             functora_egui::storage::persist_value("platform_info", &self.platform.platform_info);
             self.toast
                 .add("Saved", ToastVariant::Success, ui.ctx().input(|i| i.time));

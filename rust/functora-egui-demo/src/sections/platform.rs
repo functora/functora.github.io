@@ -402,31 +402,32 @@ impl crate::app::ShowcaseApp {
         )
         .show(ui);
         ui.add_space(12.0);
-        _ = Flex::column().gap(8.0).show(ui, |f| {
-            _ = f.add(Input::new(&mut self.platform.share_title).placeholder("Title"));
-            _ = f.add(Input::new(&mut self.platform.share_text).placeholder("Text"));
-            _ = f.add(Input::new(&mut self.platform.share_url).placeholder("https://example.com"));
-            let sharing = self.platform.share_rx.is_some();
-            if f.add(
+        _ = ui.add(Input::new(&mut self.platform.share_title).placeholder("Title"));
+        ui.add_space(4.0);
+        _ = ui.add(Input::new(&mut self.platform.share_text).placeholder("Text"));
+        ui.add_space(4.0);
+        _ = ui.add(Input::new(&mut self.platform.share_url).placeholder("https://example.com"));
+        ui.add_space(8.0);
+        let sharing = self.platform.share_rx.is_some();
+        if ui
+            .add_enabled(
+                !sharing,
                 Button::new(if sharing { "Sharing..." } else { "Share" })
-                    .icon(functora_egui::LucideIcon::Share2)
-                    .enabled(!sharing),
+                    .icon(functora_egui::LucideIcon::Share2),
             )
-            .inner
             .clicked()
-            {
-                let data = functora_egui::share::ShareData {
-                    title: self.platform.share_title.clone(),
-                    text: self.platform.share_text.clone(),
-                    url: self.platform.share_url.clone(),
-                };
-                self.platform.share_rx = Some(spawn_async(async move {
-                    functora_egui::share::share(data)
-                        .await
-                        .map_err(|e| e.to_string())
-                }));
-            }
-        });
+        {
+            let data = functora_egui::share::ShareData {
+                title: self.platform.share_title.clone(),
+                text: self.platform.share_text.clone(),
+                url: self.platform.share_url.clone(),
+            };
+            self.platform.share_rx = Some(spawn_async(async move {
+                functora_egui::share::share(data)
+                    .await
+                    .map_err(|e| e.to_string())
+            }));
+        }
 
         snippet(
             ui,

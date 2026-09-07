@@ -1,5 +1,7 @@
 //! Ergonomic wrapper over `egui_flex::FlexInstance` for adding flex children.
 
+use egui::Align2;
+
 /// Handle for adding children inside a [`super::flex::Flex`] layout.
 ///
 /// Wraps [`egui_flex::FlexInstance`] to hide `FlexItem` boilerplate for
@@ -9,7 +11,10 @@ pub struct FlexInst<'ui, 'inst>(pub(crate) &'inst mut egui_flex::FlexInstance<'u
 impl FlexInst<'_, '_> {
     /// Add a widget at its natural size.
     pub fn add(&mut self, widget: impl egui::Widget) -> egui::InnerResponse<egui::Response> {
-        self.0.add_widget(egui_flex::FlexItem::new(), widget)
+        self.0.add_widget(
+            egui_flex::FlexItem::new().align_self_content(Align2::LEFT_TOP),
+            widget,
+        )
     }
 
     /// Add a widget that grows to fill available space.

@@ -220,7 +220,7 @@ impl crate::app::ShowcaseApp {
                     None => format!("No value for {key}"),
                 };
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
+            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
@@ -230,28 +230,26 @@ impl crate::app::ShowcaseApp {
         });
         if !self.platform.storage_status.is_empty() {
             ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.storage_status));
+            _ = Typography::small(&self.platform.storage_status).show(ui);
         }
         ui.add_space(12.0);
         let _ = Separator::horizontal().show(ui);
         ui.add_space(8.0);
         _ = Typography::small("Persistent wrapper (auto-load via `Persistent::new`)").show(ui);
         ui.add_space(4.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
-            _ = f.add(
-                Input::new(&mut self.platform.storage_persistent_text).placeholder("persistent"),
+        _ = ui
+            .add(Input::new(&mut self.platform.storage_persistent_text).placeholder("persistent"));
+        ui.add_space(4.0);
+        if ui
+            .add(Button::new("Persist").size(functora_egui::ComponentSize::Sm))
+            .clicked()
+        {
+            functora_egui::storage::persist_value(
+                "demo_persistent",
+                &self.platform.storage_persistent_text,
             );
-            if f.add(Button::new("Persist").size(functora_egui::ComponentSize::Sm))
-                .inner
-                .clicked()
-            {
-                functora_egui::storage::persist_value(
-                    "demo_persistent",
-                    &self.platform.storage_persistent_text,
-                );
-                "Persistent saved".clone_into(&mut self.platform.storage_status);
-            }
-        });
+            "Persistent saved".clone_into(&mut self.platform.storage_status);
+        }
         ui.add_space(4.0);
         if let Some(v) = functora_egui::storage::load_state::<String>("demo_persistent") {
             _ = Typography::small(format!("Stored persistent: {v}")).show(ui);

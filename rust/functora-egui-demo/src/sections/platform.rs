@@ -1,7 +1,8 @@
 use crate::route::AppRoute;
 use functora_egui::{
     Badge, BlockingOverlay, Button, ButtonVariant, Card, Flex, Input, Label, Progress,
-    ResponsiveExt, Separator, ShadcnThemeExt, Switch, Textarea, Typography, spawn_async,
+    ResponsiveExt, Separator, ShadcnThemeExt, Switch, Textarea, ToastVariant, Typography,
+    spawn_async,
 };
 use std::sync::mpsc;
 
@@ -14,6 +15,7 @@ impl crate::app::ShowcaseApp {
         {
             self.platform.pick_job.clone_from(&guard);
         }
+        let now = ctx.input(|i| i.time);
         if self.platform.clipboard_rx.is_some()
             || self.platform.clipboard_write_rx.is_some()
             || self.platform.share_rx.is_some()
@@ -32,29 +34,41 @@ impl crate::app::ShowcaseApp {
             match rx.try_recv() {
                 Ok(Ok(text)) => {
                     self.platform.clipboard_read = text;
-                    "Read ok".clone_into(&mut self.platform.clipboard_status);
+                    self.toast.add("Read ok", ToastVariant::Success, now);
                 }
-                Ok(Err(e)) => self.platform.clipboard_status = format!("Read failed: {e}"),
+                Ok(Err(e)) => self
+                    .toast
+                    .add(format!("Read failed: {e}"), ToastVariant::Error, now),
                 Err(mpsc::TryRecvError::Empty) => self.platform.clipboard_rx = Some(rx),
                 Err(mpsc::TryRecvError::Disconnected) => {
-                    "Read disconnected".clone_into(&mut self.platform.clipboard_status);
+                    self.toast
+                        .add("Read disconnected", ToastVariant::Error, now);
                 }
             }
         }
         if let Some(rx) = self.platform.clipboard_write_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(())) => "Copy ok".clone_into(&mut self.platform.clipboard_status),
-                Ok(Err(e)) => self.platform.clipboard_status = format!("Copy failed: {e}"),
+                Ok(Ok(())) => self.toast.add("Copy ok", ToastVariant::Success, now),
+                Ok(Err(e)) => self
+                    .toast
+                    .add(format!("Copy failed: {e}"), ToastVariant::Error, now),
                 Err(mpsc::TryRecvError::Empty) => self.platform.clipboard_write_rx = Some(rx),
-                Err(_) => "Copy disconnected".clone_into(&mut self.platform.clipboard_status),
+                Err(_) => self
+                    .toast
+                    .add("Copy disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.share_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(())) => "Shared ok".clone_into(&mut self.platform.share_status),
-                Ok(Err(e)) => self.platform.share_status = format!("Share failed: {e}"),
+                Ok(Ok(())) => self.toast.add("Shared ok", ToastVariant::Success, now),
+                Ok(Err(e)) => {
+                    self.toast
+                        .add(format!("Share failed: {e}"), ToastVariant::Error, now)
+                }
                 Err(mpsc::TryRecvError::Empty) => self.platform.share_rx = Some(rx),
-                Err(_) => "Share disconnected".clone_into(&mut self.platform.share_status),
+                Err(_) => self
+                    .toast
+                    .add("Share disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.pick_rx.take() {
@@ -71,24 +85,29 @@ impl crate::app::ShowcaseApp {
                                 }
                                 self.platform.picked.push((name, data));
                             }
-                            self.platform.pick_status =
-                                format!("Picked {} file(s) total", self.platform.picked.len());
-                            if incoming > 1 {
-                                self.platform.pick_status = format!(
-                                    "Picked {} file(s) ({} new)",
-                                    self.platform.picked.len(),
-                                    incoming
-                                );
-                            }
+                            let total = self.platform.picked.len();
+                            self.toast.add(
+                                if incoming > 1 {
+                                    format!("Picked {total} file(s) ({incoming} new)")
+                                } else {
+                                    format!("Picked {total} file(s) total")
+                                },
+                                ToastVariant::Success,
+                                now,
+                            );
                         }
                         Err(e) => {
                             if e == "Cancelled"
                                 || e.contains("cancelled")
                                 || e.contains("Cancelled")
                             {
-                                self.platform.pick_status = "Pick cancelled".to_string();
+                                self.toast.add("Pick cancelled", ToastVariant::Default, now);
                             } else {
-                                self.platform.pick_status = format!("Pick failed: {e}");
+                                self.toast.add(
+                                    format!("Pick failed: {e}"),
+                                    ToastVariant::Error,
+                                    now,
+                                );
                             }
                         }
                     }
@@ -113,58 +132,87 @@ impl crate::app::ShowcaseApp {
         }
         if let Some(rx) = self.platform.download_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(name)) => self.platform.download_status = format!("Downloaded {name}"),
-                Ok(Err(e)) => self.platform.download_status = format!("Download failed: {e}"),
+                Ok(Ok(name)) => {
+                    self.toast
+                        .add(format!("Downloaded {name}"), ToastVariant::Success, now)
+                }
+                Ok(Err(e)) => {
+                    self.toast
+                        .add(format!("Download failed: {e}"), ToastVariant::Error, now)
+                }
                 Err(mpsc::TryRecvError::Empty) => self.platform.download_rx = Some(rx),
-                Err(_) => "Download disconnected".clone_into(&mut self.platform.download_status),
+                Err(_) => self
+                    .toast
+                    .add("Download disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.pwa_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.pwa_status = msg,
-                Ok(Err(e)) => self.platform.pwa_status = format!("PWA error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => self
+                    .toast
+                    .add(format!("PWA error: {e}"), ToastVariant::Error, now),
                 Err(mpsc::TryRecvError::Empty) => self.platform.pwa_rx = Some(rx),
-                Err(_) => "PWA disconnected".clone_into(&mut self.platform.pwa_status),
+                Err(_) => self.toast.add("PWA disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.camera_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.camera_status = msg,
-                Ok(Err(e)) => self.platform.camera_status = format!("Camera error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => {
+                    self.toast
+                        .add(format!("Camera error: {e}"), ToastVariant::Error, now)
+                }
                 Err(mpsc::TryRecvError::Empty) => self.platform.camera_rx = Some(rx),
-                Err(_) => "Camera disconnected".clone_into(&mut self.platform.camera_status),
+                Err(_) => self
+                    .toast
+                    .add("Camera disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.qr_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.qr_status = msg,
-                Ok(Err(e)) => self.platform.qr_status = format!("QR error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => self
+                    .toast
+                    .add(format!("QR error: {e}"), ToastVariant::Error, now),
                 Err(mpsc::TryRecvError::Empty) => self.platform.qr_rx = Some(rx),
-                Err(_) => "QR disconnected".clone_into(&mut self.platform.qr_status),
+                Err(_) => self.toast.add("QR disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.thumbnail_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.thumbnail_status = msg,
-                Ok(Err(e)) => self.platform.thumbnail_status = format!("Thumbnail error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => {
+                    self.toast
+                        .add(format!("Thumbnail error: {e}"), ToastVariant::Error, now)
+                }
                 Err(mpsc::TryRecvError::Empty) => self.platform.thumbnail_rx = Some(rx),
-                Err(_) => "Thumbnail disconnected".clone_into(&mut self.platform.thumbnail_status),
+                Err(_) => self
+                    .toast
+                    .add("Thumbnail disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.zip_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.zip_status = msg,
-                Ok(Err(e)) => self.platform.zip_status = format!("Zip error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => self
+                    .toast
+                    .add(format!("Zip error: {e}"), ToastVariant::Error, now),
                 Err(mpsc::TryRecvError::Empty) => self.platform.zip_rx = Some(rx),
-                Err(_) => "Zip disconnected".clone_into(&mut self.platform.zip_status),
+                Err(_) => self.toast.add("Zip disconnected", ToastVariant::Error, now),
             }
         }
         if let Some(rx) = self.platform.worker_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.worker_status = msg,
-                Ok(Err(e)) => self.platform.worker_status = format!("Worker error: {e}"),
+                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
+                Ok(Err(e)) => {
+                    self.toast
+                        .add(format!("Worker error: {e}"), ToastVariant::Error, now)
+                }
                 Err(mpsc::TryRecvError::Empty) => self.platform.worker_rx = Some(rx),
-                Err(_) => "Worker disconnected".clone_into(&mut self.platform.worker_status),
+                Err(_) => self
+                    .toast
+                    .add("Worker disconnected", ToastVariant::Error, now),
             }
         }
         if self.platform.clipboard_rx.is_some()
@@ -196,6 +244,7 @@ impl crate::app::ShowcaseApp {
         _ = Label::new("Value").show(ui);
         _ = ui.add(Input::new(&mut self.platform.storage_value).placeholder("hello"));
         ui.add_space(8.0);
+        let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             if f.add(Button::new("Save").icon(functora_egui::LucideIcon::Save))
                 .inner
@@ -204,7 +253,11 @@ impl crate::app::ShowcaseApp {
                 let key = self.platform.storage_key.clone();
                 let val = self.platform.storage_value.clone();
                 functora_egui::storage::persist_value(&key, &val);
-                self.platform.storage_status = format!("Saved {key} = {val}");
+                self.toast.add(
+                    format!("Saved {key} = {val}"),
+                    ToastVariant::Success,
+                    ctx.input(|i| i.time),
+                );
             }
             if f.add(Button::new("Load").variant(ButtonVariant::Outline))
                 .inner
@@ -212,26 +265,34 @@ impl crate::app::ShowcaseApp {
             {
                 let key = self.platform.storage_key.clone();
                 let loaded: Option<String> = functora_egui::storage::load_state(&key);
-                self.platform.storage_status = match loaded {
+                match loaded {
                     Some(v) => {
                         self.platform.storage_value.clone_from(&v);
-                        format!("Loaded {key} = {v}")
+                        self.toast.add(
+                            format!("Loaded {key} = {v}"),
+                            ToastVariant::Success,
+                            ctx.input(|i| i.time),
+                        );
                     }
-                    None => format!("No value for {key}"),
-                };
+                    None => self.toast.add(
+                        format!("No value for {key}"),
+                        ToastVariant::Default,
+                        ctx.input(|i| i.time),
+                    ),
+                }
             }
             if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
                 functora_egui::storage::persist_value(&self.platform.storage_key, &String::new());
-                "Cleared (set to empty)".clone_into(&mut self.platform.storage_status);
+                self.toast.add(
+                    "Cleared (set to empty)",
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
             }
         });
-        if !self.platform.storage_status.is_empty() {
-            ui.add_space(8.0);
-            _ = Typography::small(&self.platform.storage_status).show(ui);
-        }
         ui.add_space(12.0);
         let _ = Separator::horizontal().show(ui);
         ui.add_space(8.0);
@@ -248,7 +309,11 @@ impl crate::app::ShowcaseApp {
                 "demo_persistent",
                 &self.platform.storage_persistent_text,
             );
-            "Persistent saved".clone_into(&mut self.platform.storage_status);
+            self.toast.add(
+                "Persistent saved",
+                ToastVariant::Success,
+                ui.ctx().input(|i| i.time),
+            );
         }
         ui.add_space(4.0);
         if let Some(v) = functora_egui::storage::load_state::<String>("demo_persistent") {
@@ -316,10 +381,6 @@ impl crate::app::ShowcaseApp {
                 }));
             }
         });
-        if !self.platform.clipboard_status.is_empty() {
-            ui.add_space(8.0);
-            _ = Badge::new(&self.platform.clipboard_status).show(ui);
-        }
         ui.add_space(8.0);
         _ = Label::new("Last pasted").show(ui);
         ui.add_space(8.0);
@@ -365,11 +426,6 @@ impl crate::app::ShowcaseApp {
                         .map_err(|e| e.to_string())
                 }));
             }
-            if !self.platform.share_status.is_empty() {
-                _ = f.ui(|ui2| {
-                    _ = ui2.add(Badge::new(&self.platform.share_status));
-                });
-            }
         });
 
         snippet(
@@ -408,27 +464,37 @@ impl crate::app::ShowcaseApp {
                 .desired_width(ui.available_width()),
         );
         ui.add_space(8.0);
+        let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).show(ui, |f| {
             if f.add(Button::new("Store URL").icon(functora_egui::LucideIcon::Link))
                 .inner
                 .clicked()
             {
                 functora_egui::deep_link::store_url(self.platform.deep_link_input.clone());
-                "Stored".clone_into(&mut self.platform.deep_link_output);
+                self.toast
+                    .add("Stored", ToastVariant::Success, ctx.input(|i| i.time));
             }
             if f.add(Button::new("Take").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
                 let taken = functora_egui::deep_link::take_url();
-                self.platform.deep_link_output = format!("Take: {taken:?}");
+                self.toast.add(
+                    format!("Take: {taken:?}"),
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
             }
             if f.add(Button::new("Poll").variant(ButtonVariant::Ghost))
                 .inner
                 .clicked()
             {
                 let polled = functora_egui::deep_link::poll_deep_link();
-                self.platform.deep_link_output = format!("Poll: {polled:?}");
+                self.toast.add(
+                    format!("Poll: {polled:?}"),
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
             }
         });
         ui.add_space(8.0);
@@ -438,13 +504,13 @@ impl crate::app::ShowcaseApp {
                 .clicked()
             {
                 let route = functora_egui::deep_link::url_to_route(&self.platform.deep_link_input);
-                self.platform.deep_link_output = format!("Route: {route:?}");
+                self.toast.add(
+                    format!("Route: {route:?}"),
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
             }
         });
-        if !self.platform.deep_link_output.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.deep_link_output));
-        }
         #[cfg(target_arch = "wasm32")]
         {
             ui.add_space(8.0);
@@ -513,13 +579,8 @@ impl crate::app::ShowcaseApp {
                 .clicked()
             {
                 self.platform.picked.clear();
-                self.platform.pick_status.clear();
             }
         });
-        if !self.platform.pick_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.pick_status));
-        }
         if self.platform.picked.is_empty() {
             ui.add_space(8.0);
             _ = Typography::small("No files picked yet.").show(ui);
@@ -587,7 +648,11 @@ impl crate::app::ShowcaseApp {
             .clicked()
         {
             let preview = functora_egui::files::preview_blob("hello.txt", b"hello blob");
-            self.platform.pick_status = format!("blob preview: {preview:?}");
+            self.toast.add(
+                format!("blob preview: {preview:?}"),
+                ToastVariant::Default,
+                ui.ctx().input(|i| i.time),
+            );
         }
 
         snippet(
@@ -632,11 +697,6 @@ impl crate::app::ShowcaseApp {
                     .map_err(|e| e.to_string())
             }));
         }
-        if !self.platform.download_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.download_status));
-        }
-
         snippet(
             ui,
             "// Download: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;",
@@ -821,10 +881,6 @@ impl crate::app::ShowcaseApp {
                 }));
             }
         });
-        if !self.platform.pwa_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.pwa_status));
-        }
         ui.add_space(8.0);
         _ = Typography::small(
             "On desktop this will be NotAvailable - expected. On web with beforeinstallprompt it may be Accepted/Rejected.",
@@ -925,7 +981,11 @@ impl crate::app::ShowcaseApp {
                 .clicked()
             {
                 if let Some(_guard) = self.platform.in_flight.claim() {
-                    "Claimed! holding for 2s...".clone_into(&mut self.platform.in_flight_status);
+                    self.toast.add(
+                        "Claimed! holding for 2s...",
+                        ToastVariant::Success,
+                        ctx.input(|i| i.time),
+                    );
                     #[cfg(target_arch = "wasm32")]
                     {
                         let flag = self.platform.in_flight.clone();
@@ -947,20 +1007,14 @@ impl crate::app::ShowcaseApp {
                         }));
                     }
                 } else {
-                    "Already in flight - rejected".clone_into(&mut self.platform.in_flight_status);
+                    self.toast.add(
+                        "Already in flight - rejected",
+                        ToastVariant::Error,
+                        ctx.input(|i| i.time),
+                    );
                 }
             }
-            if f.add(Button::new("Reset").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
-            {
-                self.platform.in_flight_status.clear();
-            }
         });
-        if !self.platform.in_flight_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.in_flight_status));
-        }
 
         snippet(
             ui,
@@ -1026,10 +1080,6 @@ impl crate::app::ShowcaseApp {
                 }));
             }
         });
-        if !self.platform.camera_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.camera_status));
-        }
         ui.add_space(8.0);
         _ = Typography::small("On desktop this will report 'not available – use file picker' (expected). On web, use QrScanner below for live preview.").show(ui);
 
@@ -1067,15 +1117,10 @@ impl crate::app::ShowcaseApp {
                 .inner
                 .clicked()
             {
-                self.platform.qr_status.clear();
                 self.platform.qr_state.clear_decoded();
                 self.platform.qr_state.clear_error();
             }
         });
-        if !self.platform.qr_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.qr_status));
-        }
         ui.add_space(12.0);
         _ = Card::new().show(ui, |ui2| {
             _ = Typography::small(
@@ -1154,14 +1199,9 @@ impl crate::app::ShowcaseApp {
                 .inner
                 .clicked()
             {
-                self.platform.thumbnail_status.clear();
                 self.platform.thumbnail_texture = None;
             }
         });
-        if !self.platform.thumbnail_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.thumbnail_status));
-        }
         if let Some(tex) = &self.platform.thumbnail_texture {
             ui.add_space(8.0);
             let _ = ui.add(egui::Image::new((tex.id(), egui::vec2(220.0, 140.0))).corner_radius(8));
@@ -1191,6 +1231,7 @@ impl crate::app::ShowcaseApp {
         ))
         .show(ui);
         ui.add_space(8.0);
+        let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).show(ui, |f| {
             let busy = self.platform.zip_rx.is_some();
             if f.add(Button::new(if busy { "Zipping..." } else { "Create zip" }).enabled(!busy))
@@ -1199,23 +1240,20 @@ impl crate::app::ShowcaseApp {
             {
                 let count = self.platform.picked.len();
                 if count == 0 {
-                    self.platform.zip_status = "No files picked (go to Files)".to_string();
+                    self.toast.add(
+                        "No files picked (go to Files)",
+                        ToastVariant::Error,
+                        ctx.input(|i| i.time),
+                    );
                 } else {
-                    self.platform.zip_status =
-                        format!("Zip would include {count} files (demo placeholder)");
+                    self.toast.add(
+                        format!("Zip would include {count} files (demo placeholder)"),
+                        ToastVariant::Success,
+                        ctx.input(|i| i.time),
+                    );
                 }
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
-                .inner
-                .clicked()
-            {
-                self.platform.zip_status.clear();
-            }
         });
-        if !self.platform.zip_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.zip_status));
-        }
 
         snippet(
             ui,
@@ -1240,22 +1278,18 @@ impl crate::app::ShowcaseApp {
             {
                 let input = self.platform.crypto_input.clone();
                 self.platform.crypto_output = format!("Encrypted placeholder for '{input}'");
-                self.platform.crypto_status =
-                    "Crypto demo placeholder (no real encrypt) ".to_string();
             }
             if f.add(Button::new("Decrypt").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
                 self.platform.crypto_output = "Decrypted placeholder".to_string();
-                self.platform.crypto_status = "Decrypt placeholder".to_string();
             }
             if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
                 .inner
                 .clicked()
             {
                 self.platform.crypto_output.clear();
-                self.platform.crypto_status.clear();
             }
         });
         if !self.platform.crypto_output.is_empty() {
@@ -1263,10 +1297,6 @@ impl crate::app::ShowcaseApp {
             _ = Card::new().show(ui, |ui2| {
                 _ = Typography::small(&self.platform.crypto_output).show(ui2);
             });
-        }
-        if !self.platform.crypto_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.crypto_status));
         }
 
         snippet(
@@ -1306,28 +1336,10 @@ impl crate::app::ShowcaseApp {
                     .map_err(|e| e.to_string())
                 }));
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Ghost))
-                .inner
-                .clicked()
-            {
-                self.platform.worker_status.clear();
-            }
         });
-        if !self.platform.worker_status.is_empty() {
-            ui.add_space(8.0);
-            _ = ui.add(Badge::new(&self.platform.worker_status));
-        }
         ui.add_space(8.0);
         _ = Typography::small("Check ProgressWorker demo for Job<Stage> progress details.")
             .show(ui);
-        if let Some(rx) = self.platform.worker_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.platform.worker_status = msg,
-                Ok(Err(e)) => self.platform.worker_status = format!("Worker err: {e}"),
-                Err(mpsc::TryRecvError::Empty) => self.platform.worker_rx = Some(rx),
-                Err(_) => self.platform.worker_status = "Worker disconnected".to_string(),
-            }
-        }
 
         snippet(
             ui,
@@ -1390,7 +1402,8 @@ impl crate::app::ShowcaseApp {
             .clicked()
         {
             functora_egui::storage::persist_value("platform_info", &self.platform.platform_info);
-            self.platform.platform_info = "Saved".to_string();
+            self.toast
+                .add("Saved", ToastVariant::Success, ui.ctx().input(|i| i.time));
         }
     }
 

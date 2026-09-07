@@ -268,7 +268,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_clipboard(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_clipboard(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Clipboard read/write via arboard (desktop), navigator.clipboard (web), ClipboardManager (Android).",
@@ -276,63 +276,59 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
         let w = ui.available_width();
-        _ = Flex::column().gap(8.0).show(ui, |f| {
-            _ = f.ui(|ui2| {
-                _ = Label::new("Write to clipboard").show(ui2);
-            });
-            _ = f.add(Input::new(&mut self.platform.clipboard_write).placeholder("text to copy"));
-            _ = f.ui(|ui2| {
-                _ = Flex::row().gap(8.0).show(ui2, |f2| {
-                    let writing = self.platform.clipboard_write_rx.is_some();
-                    if f2
-                        .add(
-                            Button::new(if writing { "Copying..." } else { "Copy" })
-                                .icon(functora_egui::LucideIcon::Copy)
-                                .enabled(!writing),
-                        )
-                        .inner
-                        .clicked()
-                    {
-                        let text = self.platform.clipboard_write.clone();
-                        self.platform.clipboard_write_rx = Some(spawn_async(async move {
-                            functora_egui::clipboard::write(text)
-                                .await
-                                .map_err(|e| e.to_string())
-                        }));
-                    }
-                    let reading = self.platform.clipboard_rx.is_some();
-                    if f2
-                        .add(
-                            Button::new(if reading { "Reading..." } else { "Paste" })
-                                .variant(ButtonVariant::Outline)
-                                .icon(functora_egui::LucideIcon::ClipboardPaste)
-                                .enabled(!reading),
-                        )
-                        .inner
-                        .clicked()
-                    {
-                        self.platform.clipboard_rx = Some(spawn_async(async move {
-                            functora_egui::clipboard::read()
-                                .await
-                                .map_err(|e| e.to_string())
-                        }));
-                    }
-                });
-            });
-            if !self.platform.clipboard_status.is_empty() {
-                _ = f.ui(|ui2| {
-                    _ = ui2.add(Badge::new(&self.platform.clipboard_status));
-                });
+        _ = Label::new("Write to clipboard").show(ui);
+        ui.add_space(8.0);
+        _ = Input::new(&mut self.platform.clipboard_write)
+            .placeholder("text to copy")
+            .show(ui);
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).show(ui, |f2| {
+            let writing = self.platform.clipboard_write_rx.is_some();
+            if f2
+                .add(
+                    Button::new(if writing { "Copying..." } else { "Copy" })
+                        .icon(functora_egui::LucideIcon::Copy)
+                        .enabled(!writing),
+                )
+                .inner
+                .clicked()
+            {
+                let text = self.platform.clipboard_write.clone();
+                self.platform.clipboard_write_rx = Some(spawn_async(async move {
+                    functora_egui::clipboard::write(text)
+                        .await
+                        .map_err(|e| e.to_string())
+                }));
             }
-            _ = f.ui(|ui2| {
-                _ = Label::new("Last pasted").show(ui2);
-            });
-            _ = f.add(
-                Textarea::new(&mut self.platform.clipboard_read)
-                    .placeholder("pasted text appears here")
-                    .desired_width(w),
-            );
+            let reading = self.platform.clipboard_rx.is_some();
+            if f2
+                .add(
+                    Button::new(if reading { "Reading..." } else { "Paste" })
+                        .variant(ButtonVariant::Outline)
+                        .icon(functora_egui::LucideIcon::ClipboardPaste)
+                        .enabled(!reading),
+                )
+                .inner
+                .clicked()
+            {
+                self.platform.clipboard_rx = Some(spawn_async(async move {
+                    functora_egui::clipboard::read()
+                        .await
+                        .map_err(|e| e.to_string())
+                }));
+            }
         });
+        if !self.platform.clipboard_status.is_empty() {
+            ui.add_space(8.0);
+            _ = Badge::new(&self.platform.clipboard_status).show(ui);
+        }
+        ui.add_space(8.0);
+        _ = Label::new("Last pasted").show(ui);
+        ui.add_space(8.0);
+        _ = Textarea::new(&mut self.platform.clipboard_read)
+            .placeholder("pasted text appears here")
+            .desired_width(w)
+            .show(ui);
 
         snippet(
             ui,
@@ -468,7 +464,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_files(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_files(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         if let Some(cancel) = self.platform.pick_cancel.clone() {
             let mut open = self.platform.pick_overlay_open;
@@ -539,7 +535,7 @@ impl crate::app::ShowcaseApp {
                 let mime = functora_egui::files::mime_for_name(name).unwrap_or("unknown");
                 let size = functora_egui::files::format_size(data.len() as u64);
                 _ = Card::new().show(ui, |ui2| {
-                    _ = Flex::column().gap(4.0).show(ui2, |f| {
+                    _ = Flex::column().gap(4.0).align_start().show(ui2, |f| {
                         _ = f.ui(|ui3| {
                             _ = Typography::small(format!("{name} ({mime}, {size})")).show(ui3);
                         });

@@ -3,14 +3,14 @@
 
 use functora_egui::{
     Accordion, AspectRatio, Badge, BadgeVariant, Button, ButtonGroup, ButtonVariant, Card,
-    Collapsible, ComponentSize, Flex, IconTabs, Input, Kbd, Label, LucideIcon, Resizable,
-    ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography,
+    Collapsible, ComponentSize, Flex, FlexAlign, FlexItem, IconTabs, Input, Kbd, Label, LucideIcon,
+    Resizable, ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography,
 };
 
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_flex(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_flex(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "Flexbox-like layout with gap, grow, justify, align, wrap, and spacer.",
         )
@@ -27,7 +27,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(16.0);
         _ = Typography::small("Column with gap").show(ui);
         ui.add_space(4.0);
-        _ = Flex::column().gap(8.0).show(ui, |f| {
+        _ = Flex::column().gap(8.0).align_start().show(ui, |f| {
             _ = f.add(Badge::new("First"));
             _ = f.add(Badge::new("Second"));
             _ = f.add(Badge::new("Third"));
@@ -116,22 +116,22 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Flex::row().gap(16.0).w_full().show(ui, |f| {
             _ = f.grow_nested(1.0, Flex::column().gap(8.0), |f4| {
-                _ = f4.ui(|ui70| {
-                    _ = Label::new("First Name").show(ui70);
+                _ = f4.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui70| {
+                    _ = Label::new("First Name").show(ui70)
                 });
                 _ = f4.add(Input::new(&mut self.flex_first).placeholder("John"));
-                _ = f4.ui(|ui71| {
-                    _ = Label::new("Last Name").show(ui71);
+                _ = f4.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui71| {
+                    _ = Label::new("Last Name").show(ui71)
                 });
                 _ = f4.add(Input::new(&mut self.flex_last).placeholder("Doe"));
             });
             _ = f.grow_nested(1.0, Flex::column().gap(8.0), |f5| {
-                _ = f5.ui(|ui72| {
-                    _ = Label::new("Email").show(ui72);
+                _ = f5.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui72| {
+                    _ = Label::new("Email").show(ui72)
                 });
                 _ = f5.add(Input::new(&mut self.flex_email).placeholder("john@example.com"));
-                _ = f5.ui(|ui73| {
-                    _ = Label::new("Phone").show(ui73);
+                _ = f5.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui73| {
+                    _ = Label::new("Phone").show(ui73)
                 });
                 _ = f5.add(Input::new(&mut self.flex_phone).placeholder("+1 555-1234"));
             });
@@ -155,7 +155,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\"));\n    f.add(Button::new(\"Next\"));\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"flex\"] {\n        f.add(Badge::new(tag));\n    }\n});",
+            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\"));\n    f.add(Button::new(\"Next\"));\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"flex\"] {\n        f.add(Badge::new(tag));\n    }\n});",
         );
     }
 

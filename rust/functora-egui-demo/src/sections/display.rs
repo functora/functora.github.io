@@ -49,28 +49,22 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_label(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_label(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Labels pair with inputs in forms and settings.").show(ui);
         ui.add_space(12.0);
-        _ = Flex::column().gap(8.0).show(ui, |f| {
-            _ = f.ui(|ui51| {
-                _ = Label::new("Your email address").show(ui51);
-            });
-            _ = f.add(
-                functora_egui::Input::new(&mut self.flex_email).placeholder("you@example.com"),
-            );
-            _ = f.ui(|ui52| {
-                _ = Label::new("Sizes").show(ui52);
-            });
-            _ = f.ui(|ui53| {
-                _ = Label::new("Small label")
-                    .size(functora_egui::ComponentSize::Sm)
-                    .show(ui53);
-            });
-            _ = f.ui(|ui54| {
-                _ = Label::new("Muted label").muted().show(ui54);
-            });
-        });
+        _ = Label::new("Your email address").show(ui);
+        ui.add_space(8.0);
+        _ = functora_egui::Input::new(&mut self.flex_email)
+            .placeholder("you@example.com")
+            .show(ui);
+        ui.add_space(8.0);
+        _ = Label::new("Sizes").show(ui);
+        ui.add_space(8.0);
+        _ = Label::new("Small label")
+            .size(functora_egui::ComponentSize::Sm)
+            .show(ui);
+        ui.add_space(8.0);
+        _ = Label::new("Muted label").muted().show(ui);
 
         snippet(
             ui,

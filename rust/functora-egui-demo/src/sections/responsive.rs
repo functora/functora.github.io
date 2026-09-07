@@ -8,14 +8,14 @@ use functora_egui::{
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_breakpoint(ui: &mut egui::Ui) {
+    pub fn demo_breakpoint(ui: &mut egui::Ui) {
         _ = Typography::muted("The viewport breakpoint switches at 800px: mobile vs desktop.")
             .show(ui);
         ui.add_space(12.0);
         let bp = ui.breakpoint();
         let spacing = ui.responsive_spacing();
         _ = Card::new().show(ui, |ui71| {
-            _ = Flex::column().gap(8.0).show(ui71, |f| {
+            _ = Flex::column().gap(8.0).align_start().show(ui71, |f| {
                 _ = f.ui(|ui72| {
                     _ = Typography::small(format!("Breakpoint: {bp:?}")).show(ui72);
                 });
@@ -38,12 +38,12 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_spacing(ui: &mut egui::Ui) {
+    pub fn demo_spacing(ui: &mut egui::Ui) {
         _ = Typography::muted("Adaptive spacing scales touch targets and gaps on mobile.").show(ui);
         ui.add_space(12.0);
         let spacing = ui.responsive_spacing();
         _ = Card::new().show(ui, |ui75| {
-            _ = Flex::column().gap(8.0).show(ui75, |f| {
+            _ = Flex::column().gap(8.0).align_start().show(ui75, |f| {
                 for (name, value) in [
                     ("touch_height", format!("{:.1} px", spacing.touch_height)),
                     ("touch_padding", format!("{:.1} px", spacing.touch_padding)),
@@ -111,13 +111,13 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_touch_target(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_touch_target(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Controls use touch-friendly heights and padding on mobile.")
             .show(ui);
         ui.add_space(12.0);
         let spacing = ui.responsive_spacing();
         _ = Card::new().show(ui, |ui78| {
-            _ = Flex::column().gap(8.0).show(ui78, |f| {
+            _ = Flex::column().gap(8.0).align_start().show(ui78, |f| {
                 _ = f.ui(|ui79| {
                     _ = Typography::small(format!(
                         "Touch target height: {:.0} px (desktop 36, mobile 48)",

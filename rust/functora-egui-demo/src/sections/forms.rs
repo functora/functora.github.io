@@ -8,70 +8,71 @@ use functora_egui::{
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_field_group(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_field_group(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Groups related fields with a legend and description.").show(ui);
         ui.add_space(12.0);
         _ = FieldGroup::show(ui, |ui27| {
-            _ = Flex::column().gap(8.0).show(ui27, |f| {
-                _ = f.ui(|ui28| {
-                    _ = Label::new("Card number").show(ui28);
-                });
-                _ = f.add(Input::new(&mut self.form.form_card).placeholder("4242 4242 4242 4242"));
-                _ = f.ui(|ui29| {
-                    _ = Label::new("Expiry").show(ui29);
-                });
-                _ = f.nested(Flex::row().gap(8.0), |f3| {
-                    _ = f3.add(
-                        Select::new(
-                            &mut self.form.form_month,
-                            &[
-                                "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
-                                "12",
-                            ]
-                            .map(str::to_owned),
-                        )
-                        .placeholder("Month"),
-                    );
-                    _ = f3.add(
-                        Select::new(
-                            &mut self.form.form_year,
-                            &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
-                        )
-                        .placeholder("Year"),
-                    );
-                });
-                _ = f.ui(|ui30| {
-                    _ = Label::new("CVV").show(ui30);
-                });
-                _ = f.add(Input::new(&mut self.form.form_cvv).placeholder("123"));
+            _ = Label::new("Card number").show(ui27);
+            ui27.add_space(8.0);
+            _ = Input::new(&mut self.form.form_card)
+                .placeholder("4242 4242 4242 4242")
+                .show(ui27);
+            ui27.add_space(8.0);
+            _ = Label::new("Expiry").show(ui27);
+            ui27.add_space(8.0);
+            _ = Flex::row().gap(8.0).show(ui27, |f3| {
+                _ = f3.add(
+                    Select::new(
+                        &mut self.form.form_month,
+                        &[
+                            "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
+                        ]
+                        .map(str::to_owned),
+                    )
+                    .placeholder("Month"),
+                );
+                _ = f3.add(
+                    Select::new(
+                        &mut self.form.form_year,
+                        &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
+                    )
+                    .placeholder("Year"),
+                );
             });
+            ui27.add_space(8.0);
+            _ = Label::new("CVV").show(ui27);
+            ui27.add_space(8.0);
+            _ = Input::new(&mut self.form.form_cvv)
+                .placeholder("123")
+                .show(ui27);
         });
 
         snippet(
             ui,
-            "// FieldGroup: groups related fields with legend/description\nuse functora_egui::{FieldGroup, FieldSet, FieldLegend, FieldDescription, Label, Input, Flex, Button, ComponentSize};\n\nFieldGroup::show(ui, |group| {\n    group.add(FieldSet::show(ui, \"Payment\", |body| {\n        Flex::column().gap(8.0).show(body, |f| {\n            f.ui(|ui| Label::new(\"Card number\").show(ui));\n            f.add(Input::new(&mut card).placeholder(\"4242 4242 4242 4242\"));\n            f.ui(|ui| Label::new(\"Expiry\").show(ui));\n            f.add(Input::new(&mut expiry).placeholder(\"MM/YY\"));\n            f.ui(|ui| Label::new(\"CVV\").show(ui));\n            f.add(Input::new(&mut cvv).placeholder(\"123\"));\n        });\n    }));\n    group.add(FieldDescription::show(ui, \"All transactions are secure and encrypted.\"));\n});",
+            "// FieldGroup: groups related fields with legend/description\nuse functora_egui::{FieldGroup, FieldSet, FieldLegend, FieldDescription, Label, Input, Button, ComponentSize};\n\nFieldGroup::show(ui, |group| {\n    group.add(FieldSet::show(ui, \"Payment\", |body| {\n        Label::new(\"Card number\").show(body);\n        Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(body);\n        Label::new(\"Expiry\").show(body);\n        Input::new(&mut expiry).placeholder(\"MM/YY\").show(body);\n        Label::new(\"CVV\").show(body);\n        Input::new(&mut cvv).placeholder(\"123\").show(body);\n    }));\n    group.add(FieldDescription::show(ui, \"All transactions are secure and encrypted.\"));\n});",
         );
     }
 
-    pub(crate) fn demo_field_set(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_field_set(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A bordered fieldset container for grouped controls.").show(ui);
         ui.add_space(12.0);
         _ = FieldSet::show(ui, "Shipping address", |ui31| {
-            _ = Flex::column().gap(8.0).show(ui31, |f| {
-                _ = f.ui(|ui32| {
-                    _ = Label::new("Full name").show(ui32);
-                });
-                _ = f.add(Input::new(&mut self.form.form_name).placeholder("Ada Lovelace"));
-                _ = f.ui(|ui33| {
-                    _ = Label::new("Email").show(ui33);
-                });
-                _ = f.add(Input::new(&mut self.flex_email).placeholder("ada@example.com"));
-            });
+            _ = Label::new("Full name").show(ui31);
+            ui31.add_space(8.0);
+            _ = Input::new(&mut self.form.form_name)
+                .placeholder("Ada Lovelace")
+                .show(ui31);
+            ui31.add_space(8.0);
+            _ = Label::new("Email").show(ui31);
+            ui31.add_space(8.0);
+            _ = Input::new(&mut self.flex_email)
+                .placeholder("ada@example.com")
+                .show(ui31);
         });
 
         snippet(
             ui,
-            "// FieldSet: bordered container for grouped controls\nuse functora_egui::{FieldSet, Label, Input, Flex};\n\nFieldSet::show(ui, \"Shipping address\", |body| {\n    Flex::column().gap(8.0).show(body, |f| {\n        f.ui(|ui| Label::new(\"Full name\").show(ui));\n        f.add(Input::new(&mut name).placeholder(\"Ada Lovelace\"));\n        f.ui(|ui| Label::new(\"Email\").show(ui));\n        f.add(Input::new(&mut email).placeholder(\"ada@example.com\"));\n    });\n});",
+            "// FieldSet: bordered container for grouped controls\nuse functora_egui::{FieldSet, Label, Input};\n\nFieldSet::show(ui, \"Shipping address\", |body| {\n    Label::new(\"Full name\").show(body);\n    Input::new(&mut name).placeholder(\"Ada Lovelace\").show(body);\n    Label::new(\"Email\").show(body);\n    Input::new(&mut email).placeholder(\"ada@example.com\").show(body);\n});",
         );
     }
 
@@ -92,22 +93,18 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_field_description(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_field_description(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Supporting helper text under a field.").show(ui);
         ui.add_space(12.0);
-        _ = Flex::column().gap(8.0).show(ui, |f| {
-            _ = f.ui(|ui63| {
-                _ = Label::new("Password").show(ui63);
-            });
-            _ = f.add(Input::new(&mut self.flex_input).password());
-            _ = f.ui(|ui64| {
-                FieldDescription::show(ui64, "Use at least 8 characters with numbers and symbols.");
-            });
-        });
+        _ = Label::new("Password").show(ui);
+        ui.add_space(8.0);
+        _ = Input::new(&mut self.flex_input).password().show(ui);
+        ui.add_space(8.0);
+        FieldDescription::show(ui, "Use at least 8 characters with numbers and symbols.");
 
         snippet(
             ui,
-            "// FieldDescription: helper text under a field\nuse functora_egui::{FieldDescription, Label, Input, Flex};\n\nFlex::column().gap(8.0).show(ui, |f| {\n    f.ui(|ui| Label::new(\"Password\").show(ui));\n    f.add(Input::new(&mut password).password());\n    f.ui(|ui| FieldDescription::show(ui, \"Use at least 8 characters with numbers and symbols.\"));\n});",
+            "// FieldDescription: helper text under a field\nuse functora_egui::{FieldDescription, Label, Input};\n\nLabel::new(\"Password\").show(ui);\nInput::new(&mut password).password().show(ui);\nFieldDescription::show(ui, \"Use at least 8 characters with numbers and symbols.\");",
         );
     }
 

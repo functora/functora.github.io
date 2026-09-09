@@ -8,7 +8,7 @@ use crate::progress::yield_to_paint;
 use crate::progress::{Job, Stage};
 #[cfg(target_arch = "wasm32")]
 use base64::Engine as _;
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -35,9 +35,12 @@ pub fn is_cancelled(token: &CancelToken) -> bool {
     token.load(Ordering::Relaxed)
 }
 
+const MEMO_CAPACITY: usize = 128;
+
 #[derive(Debug, Default)]
 pub struct BlobMemo {
     entries: HashMap<(String, u64), String>,
+    order: VecDeque<(String, u64)>,
 }
 
 impl BlobMemo {
@@ -48,15 +51,32 @@ impl BlobMemo {
             .map(String::as_str)
     }
 
-    pub fn insert(&mut self, name: &str, data_key: u64, url: String) {
-        _ = self.entries.insert((name.to_string(), data_key), url);
+    pub fn insert(&mut self, name: &str, data_key: u64, url: String) -> Vec<String> {
+        if url.starts_with("data:") {
+            return Vec::new();
+        }
+        let key = (name.to_string(), data_key);
+        let replaced = self.entries.insert(key.clone(), url);
+        if let Some(old) = replaced {
+            vec![old]
+        } else {
+            self.order.push_back(key);
+            (0..self.entries.len().saturating_sub(MEMO_CAPACITY))
+                .filter_map(|_| self.order.pop_front())
+                .filter_map(|old_key| self.entries.remove(&old_key))
+                .collect()
+        }
     }
 
     #[must_use]
     pub fn forget(&mut self, url: &str) -> usize {
         let before = self.entries.len();
         self.entries.retain(|_, cached| cached.as_str() != url);
-        before - self.entries.len()
+        let removed = before - self.entries.len();
+        if removed > 0 {
+            self.order.retain(|key| self.entries.contains_key(key));
+        }
+        removed
     }
 }
 
@@ -101,8 +121,14 @@ pub fn preview_blob(name: &str, data: &[u8]) -> Preview {
                             )
                         })
                 };
-                if let Ok(mut guard) = BLOB_URL_MEMO.lock() {
-                    guard.insert(name, data_key, url.clone());
+                if !url.starts_with("data:")
+                    && let Ok(mut guard) = BLOB_URL_MEMO.lock()
+                {
+                    for old in guard.insert(name, data_key, url.clone()) {
+                        if let Err(e) = web_sys::Url::revoke_object_url(&old) {
+                            tracing::warn!("Failed to revoke object URL: {e:?}");
+                        }
+                    }
                 }
                 preview_from_url(mime, url)
             }
@@ -113,9 +139,10 @@ pub fn preview_blob(name: &str, data: &[u8]) -> Preview {
                 | Preview::Video(url)
                 | Preview::Audio(url)
                 | Preview::Pdf(url) = &preview
+                    && !url.starts_with("data:")
                     && let Ok(mut guard) = BLOB_URL_MEMO.lock()
                 {
-                    guard.insert(name, data_key, url.clone());
+                    drop(guard.insert(name, data_key, url.clone()));
                 }
                 preview
             }
@@ -300,7 +327,8 @@ async fn android_pick_files(
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
     use jni::objects::{JByteArray, JObjectArray, JString, JValue};
-    use std::time::Duration;
+    use std::time::{Duration, Instant};
+    const PICKER_TIMEOUT: Duration = Duration::from_secs(300);
     if let Some(token) = cancel
         && token.load(Ordering::Relaxed)
     {
@@ -315,7 +343,15 @@ async fn android_pick_files(
         )?;
         Ok(())
     })?;
+    let deadline = Instant::now() + PICKER_TIMEOUT;
     loop {
+        if Instant::now() >= deadline {
+            _ = crate::platform::android::with_app(|env, activity| {
+                let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+                Ok(())
+            });
+            return Err(Error::JS("File picker timed out".into()));
+        }
         if let Some(token) = cancel
             && token.load(Ordering::Relaxed)
         {
@@ -409,6 +445,25 @@ async fn android_pick_files(
 }
 
 #[cfg(target_arch = "wasm32")]
+struct DomRemoval(web_sys::Element);
+
+#[cfg(target_arch = "wasm32")]
+impl DomRemoval {
+    fn new(input: &web_sys::HtmlInputElement) -> Self {
+        Self(input.clone().into())
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Drop for DomRemoval {
+    fn drop(&mut self) {
+        if let Some(parent) = self.0.parent_node() {
+            drop(parent.remove_child(&self.0));
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 #[must_use]
 pub fn pick_files_sync_web(multiple: bool) -> Arc<Mutex<Option<PickResult>>> {
     pick_files_sync_web_with_cancel(multiple, &new_cancel_token())
@@ -458,7 +513,6 @@ pub fn pick_files_sync_web_with_cancel(
     }
     let result_clone = Arc::clone(&result);
     let input_clone = input.clone();
-    let document_clone = document.clone();
     let cancel_onchange = Arc::clone(cancel);
     {
         use wasm_bindgen::JsCast;
@@ -467,15 +521,12 @@ pub fn pick_files_sync_web_with_cancel(
             let file_list = input_clone.files();
             let result2 = Arc::clone(&result_clone);
             let input2 = input_clone.clone();
-            let document2 = document_clone.clone();
             let cancel_inner = Arc::clone(&cancel_onchange);
             wasm_bindgen_futures::spawn_local(async move {
+                let _cleanup = DomRemoval::new(&input2);
                 if cancel_inner.load(Ordering::Relaxed) {
                     if let Ok(mut guard) = result2.lock() {
                         *guard = Some(Err("Cancelled".to_owned()));
-                    }
-                    if let Some(body) = document2.body() {
-                        drop(body.remove_child(&input2));
                     }
                     return;
                 }
@@ -487,9 +538,6 @@ pub fn pick_files_sync_web_with_cancel(
                 };
                 if let Ok(mut guard) = result2.lock() {
                     *guard = Some(outcome);
-                }
-                if let Some(body) = document2.body() {
-                    drop(body.remove_child(&input2));
                 }
             });
         });
@@ -718,6 +766,7 @@ async fn pick_via_web(
             .append_child(&input)
             .map_err(|e| Error::JS(format!("{e:?}")))?,
     );
+    let _cleanup = DomRemoval::new(&input);
     input.click();
     drop(
         JsFuture::from(promise)
@@ -730,17 +779,11 @@ async fn pick_via_web(
         if let Some(slot) = progress {
             *slot = None;
         }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
-        }
         return Err(Error::Cancelled);
     }
     let Some(file_list) = input.files() else {
         if let Some(slot) = progress {
             *slot = None;
-        }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
         }
         return Ok(Vec::new());
     };
@@ -748,16 +791,9 @@ async fn pick_via_web(
         if let Some(slot) = progress {
             *slot = None;
         }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
-        }
         return Ok(Vec::new());
     }
-    let result = collect_files_chunked_web(file_list, progress, cancel).await;
-    if let Some(body) = document.body() {
-        drop(body.remove_child(&input));
-    }
-    result
+    collect_files_chunked_web(file_list, progress, cancel).await
 }
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
@@ -1053,6 +1089,7 @@ async fn pick_via_web_shared(
             .append_child(&input)
             .map_err(|e| Error::JS(format!("{e:?}")))?,
     );
+    let _cleanup = DomRemoval::new(&input);
     input.click();
     drop(
         JsFuture::from(promise)
@@ -1067,9 +1104,6 @@ async fn pick_via_web_shared(
         {
             *guard = None;
         }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
-        }
         return Err(Error::Cancelled);
     }
     let Some(file_list) = input.files() else {
@@ -1077,9 +1111,6 @@ async fn pick_via_web_shared(
             && let Ok(mut guard) = shared.lock()
         {
             *guard = None;
-        }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
         }
         return Ok(Vec::new());
     };
@@ -1089,16 +1120,9 @@ async fn pick_via_web_shared(
         {
             *guard = None;
         }
-        if let Some(body) = document.body() {
-            drop(body.remove_child(&input));
-        }
         return Ok(Vec::new());
     }
-    let result = collect_files_chunked_web_shared(file_list, progress, cancel).await;
-    if let Some(body) = document.body() {
-        drop(body.remove_child(&input));
-    }
-    result
+    collect_files_chunked_web_shared(file_list, progress, cancel).await
 }
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]

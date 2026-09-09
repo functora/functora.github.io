@@ -254,7 +254,9 @@ impl super::widget::Sidebar {
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
-        let backdrop_alpha = crate::utils::f32_to_u8_clamped(60.0 * ease_t);
+        let backdrop_alpha = crate::utils::f32_to_u8_clamped(
+            f32::from(crate::widgets::overlay_common::BACKDROP_ALPHA) * ease_t,
+        );
         let backdrop_layer =
             egui::LayerId::new(egui::Order::Middle, egui::Id::new("sidebar_backdrop"));
         let _ = ctx.layer_painter(backdrop_layer).rect_filled(

@@ -20,12 +20,7 @@ pub fn resolve_button_style(
         }
         crate::tokens::button_variant::ButtonVariant::Destructive => {
             // Nova: bg-destructive/10 text-destructive (tinted, not solid)
-            let tint = egui::Color32::from_rgba_unmultiplied(
-                theme.destructive.r(),
-                theme.destructive.g(),
-                theme.destructive.b(),
-                26, // ~10% opacity
-            );
+            let tint = crate::tokens::semantic_color::SemanticColor::Destructive.tint(theme);
             (tint, theme.destructive, None, false)
         }
         crate::tokens::button_variant::ButtonVariant::Outline => (
@@ -93,6 +88,5 @@ pub fn resolve_button_style(
 }
 
 fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    let hue = c.to_srgba_unmultiplied();
-    egui::Color32::from_rgba_unmultiplied(hue[0], hue[1], hue[2], a)
+    crate::utils::with_alpha(c, a)
 }

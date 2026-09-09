@@ -2,10 +2,10 @@
 //! text fields, selects, comboboxes, OTP, date picker, color swatch.
 
 use functora_egui::{
-    Badge, Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, Combobox, ComponentSize,
-    DatePicker, Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio,
-    RadioGroup, Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle,
-    ToggleGroup, ToggleVariant, Typography,
+    Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, Combobox, ComponentSize, DatePicker,
+    Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio, RadioGroup,
+    Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle, ToggleGroup,
+    ToggleVariant, Typography,
 };
 
 use functora_egui::snippet;
@@ -102,12 +102,12 @@ impl crate::app::ShowcaseApp {
             if f.add(
                 Button::new("Toggle Me")
                     .variant(ButtonVariant::Outline)
-                    .selected(self.toolbar.toolbar_snap),
+                    .selected(self.button_selected),
             )
             .inner
             .clicked()
             {
-                self.toolbar.toolbar_snap = !self.toolbar.toolbar_snap;
+                self.button_selected = !self.button_selected;
             }
         });
 
@@ -279,7 +279,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!("Value: {:.0}", self.slider_val)).show(ui);
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("With suffix").show(ui);
         ui.add_space(4.0);
         _ = Slider::new(&mut self.slider_price, 0.0..=1000.0)
@@ -309,7 +309,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Typography::small("Password").show(ui);
         ui.add_space(4.0);
-        _ = Input::new(&mut self.input_text)
+        _ = Input::new(&mut self.input_password)
             .password()
             .placeholder("secret")
             .desired_width(ui.available_width())
@@ -422,9 +422,12 @@ impl crate::app::ShowcaseApp {
             .placeholder("Paste something...")
             .show(ui);
         if let Some(err) = &resp.clipboard_error {
-            let msg = err.to_string();
-            ui.add_space(4.0);
-            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+            let msg = format!("Clipboard error: {err}");
+            self.toast.add(
+                msg,
+                functora_egui::ToastVariant::Error,
+                ui.ctx().input(|i| i.time),
+            );
         }
         ui.add_space(4.0);
         _ = Typography::small(format!(
@@ -495,9 +498,12 @@ impl crate::app::ShowcaseApp {
             .copy()
             .show(ui);
         if let Some(err) = &resp_copy.clipboard_error {
-            let msg = err.to_string();
-            ui.add_space(4.0);
-            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+            let msg = format!("Clipboard error: {err}");
+            self.toast.add(
+                msg,
+                functora_egui::ToastVariant::Error,
+                ui.ctx().input(|i| i.time),
+            );
         }
         ui.add_space(4.0);
         _ = Typography::small(format!(
@@ -544,9 +550,12 @@ impl crate::app::ShowcaseApp {
             .min_height(80.0)
             .show(ui);
         if let Some(err) = &resp.clipboard_error {
-            let msg = err.to_string();
-            ui.add_space(4.0);
-            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+            let msg = format!("Clipboard error: {err}");
+            self.toast.add(
+                msg,
+                functora_egui::ToastVariant::Error,
+                ui.ctx().input(|i| i.time),
+            );
         }
         ui.add_space(4.0);
         _ = Typography::small(format!(
@@ -590,9 +599,12 @@ impl crate::app::ShowcaseApp {
             .min_height(80.0)
             .show(ui);
         if let Some(err) = &resp_copy.clipboard_error {
-            let msg = err.to_string();
-            ui.add_space(4.0);
-            _ = ui.add(Badge::new(format!("Clipboard error: {msg}")));
+            let msg = format!("Clipboard error: {err}");
+            self.toast.add(
+                msg,
+                functora_egui::ToastVariant::Error,
+                ui.ctx().input(|i| i.time),
+            );
         }
         ui.add_space(4.0);
         _ = Typography::small(format!(
@@ -747,7 +759,7 @@ impl crate::app::ShowcaseApp {
             ("Ink", egui::Color32::from_rgb(33, 37, 41)),
         ];
         _ = Typography::small("Palette").show(ui);
-        ui.add_space(6.0);
+        ui.add_space(4.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             for (idx, (label, color)) in palette.iter().enumerate() {
                 if f.add(
@@ -764,9 +776,9 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Compact states").show(ui);
-        ui.add_space(6.0);
+        ui.add_space(4.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(ColorSwatch::new(egui::Color32::from_rgb(25, 113, 194)).selected(true));
             _ = f.add(ColorSwatch::new(egui::Color32::from_rgba_unmultiplied(

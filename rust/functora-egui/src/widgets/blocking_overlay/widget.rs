@@ -37,21 +37,11 @@ impl BlockingOverlay {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
         let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
         let screen = ctx.input(egui::InputState::viewport_rect);
-        let backdrop_layer =
-            egui::LayerId::new(egui::Order::Middle, egui::Id::new("blocking_backdrop"));
-        let painter = ctx.layer_painter(backdrop_layer);
-        let _ = painter.rect_filled(
-            screen,
-            egui::CornerRadius::ZERO,
-            egui::Color32::from_black_alpha(80),
+        let _ = crate::widgets::overlay_common::paint_backdrop(
+            ctx,
+            "blocking_backdrop",
+            crate::widgets::overlay_common::BACKDROP_ALPHA,
         );
-        let _ = egui::Area::new(egui::Id::new("blocking_backdrop_sense"))
-            .order(egui::Order::Middle)
-            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |ui| {
-                let (_, response) = ui.allocate_exact_size(screen.size(), egui::Sense::click());
-                response
-            });
         let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
         let panel_width = 380.0_f32.clamp(0.0, max_panel_width);
         let _ = egui::Area::new(egui::Id::new("blocking_panel"))

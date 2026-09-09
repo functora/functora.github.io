@@ -7,7 +7,7 @@ use functora_egui::{Flex, Separator, Typography};
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_overview(&mut self, ui: &mut egui::Ui, lang: functora_egui::i18n::Language) {
         _ = Typography::new(OverviewBody.render(lang)).show(ui);
-        ui.add_space(16.0);
+        ui.add_space(12.0);
 
         for (cat_idx, (cat_id, _, items)) in CATEGORIES
             .iter()

@@ -36,7 +36,8 @@ pub(crate) fn show_textarea_paste_clear(
         copy_icon,
     } = widget;
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-    let h_padding: f32 = 10.0;
+    let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
+    let h_padding: f32 = spacing.touch_padding;
     let v_padding: f32 = 8.0;
     let width = ui.available_width();
     let cr = egui::CornerRadius::same(f32_to_u8_clamped(theme.radius));
@@ -45,11 +46,11 @@ pub(crate) fn show_textarea_paste_clear(
     let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
-    let mut bg =
-        crate::paint::interpolate_color::interpolate_color(theme.background, theme.muted, 0.4);
-    if outer_hovered {
-        bg = crate::paint::interpolate_color::interpolate_color(bg, theme.accent, 0.35);
-    }
+    let bg = if outer_hovered {
+        crate::paint::interpolate_color::interpolate_color(theme.background, theme.accent, 0.35)
+    } else {
+        theme.background
+    };
     let _ = ui.painter().rect_filled(outer_rect, cr, bg);
     let _ = ui.painter().rect_stroke(
         outer_rect,

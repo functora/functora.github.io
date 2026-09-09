@@ -8,6 +8,7 @@ pub fn language_from_code(code: &str) -> Language {
         .map(str::to_ascii_lowercase)
         .as_deref()
         .and_then(Language::from_639_1)
+        .filter(|lang| SUPPORTED_LANGUAGES.contains(lang))
         .unwrap_or_default()
 }
 

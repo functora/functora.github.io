@@ -14,32 +14,17 @@ pub fn resolve_alert_style(
                 border: theme.border,
             }
         }
-        crate::tokens::alert_variant::AlertVariant::Destructive => {
+        crate::tokens::alert_variant::AlertVariant::Destructive
+        | crate::tokens::alert_variant::AlertVariant::Success
+        | crate::tokens::alert_variant::AlertVariant::Warning
+        | crate::tokens::alert_variant::AlertVariant::Info => {
+            let color = variant
+                .semantic()
+                .map_or(theme.foreground, |s| s.color(theme));
             super::resolved_alert_style::ResolvedAlertStyle {
                 bg: theme.background,
-                fg: theme.destructive,
-                border: theme.destructive,
-            }
-        }
-        crate::tokens::alert_variant::AlertVariant::Success => {
-            super::resolved_alert_style::ResolvedAlertStyle {
-                bg: theme.background,
-                fg: theme.success,
-                border: theme.success,
-            }
-        }
-        crate::tokens::alert_variant::AlertVariant::Warning => {
-            super::resolved_alert_style::ResolvedAlertStyle {
-                bg: theme.background,
-                fg: theme.warning,
-                border: theme.warning,
-            }
-        }
-        crate::tokens::alert_variant::AlertVariant::Info => {
-            super::resolved_alert_style::ResolvedAlertStyle {
-                bg: theme.background,
-                fg: theme.info,
-                border: theme.info,
+                fg: color,
+                border: color,
             }
         }
     }

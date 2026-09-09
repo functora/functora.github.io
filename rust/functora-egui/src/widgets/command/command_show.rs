@@ -175,12 +175,8 @@ impl super::widget::Command {
                                     any_shown = true;
 
                                     if item.group != current_group {
-                                        if item.group == "Overview" {
-                                            inner_ui4.add_space(8.0);
-                                        } else {
-                                            if !current_group.is_empty() {
-                                                inner_ui4.add_space(8.0);
-                                            }
+                                        inner_ui4.add_space(8.0);
+                                        if !current_group.is_empty() {
                                             let _ = crate::widgets::separator::widget::Separator::horizontal()
                                                 .text(&item.group)
                                                 .icon(item.group_icon)

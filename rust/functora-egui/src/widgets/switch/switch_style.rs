@@ -42,6 +42,5 @@ pub fn resolve_switch_style(
 }
 
 fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    let hue = c.to_srgba_unmultiplied();
-    egui::Color32::from_rgba_unmultiplied(hue[0], hue[1], hue[2], a)
+    crate::utils::with_alpha(c, a)
 }

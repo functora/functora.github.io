@@ -1,11 +1,43 @@
 use base64::Engine;
-use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
+use std::collections::{HashMap, VecDeque};
 use std::hash::{Hash, Hasher};
 use std::sync::{Arc, LazyLock, Mutex};
 
-static PREVIEW_MEMO: LazyLock<Mutex<HashMap<(String, u64), Preview>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+pub(crate) const MEMO_CAPACITY: usize = 128;
+
+pub(crate) struct FifoMemo<K, V> {
+    map: HashMap<K, V>,
+    order: VecDeque<K>,
+}
+
+impl<K: Eq + Hash + Clone, V> FifoMemo<K, V> {
+    pub(crate) fn new() -> Self {
+        Self {
+            map: HashMap::new(),
+            order: VecDeque::new(),
+        }
+    }
+
+    pub(crate) fn get(&self, key: &K) -> Option<&V> {
+        self.map.get(key)
+    }
+
+    pub(crate) fn insert(&mut self, key: K, value: V) -> Option<V> {
+        if !self.map.contains_key(&key) {
+            if self.order.len() >= MEMO_CAPACITY
+                && let Some(oldest) = self.order.pop_front()
+            {
+                _ = self.map.remove(&oldest);
+            }
+            self.order.push_back(key.clone());
+        }
+        self.map.insert(key, value)
+    }
+}
+
+static PREVIEW_MEMO: LazyLock<Mutex<FifoMemo<(String, u64), Preview>>> =
+    LazyLock::new(|| Mutex::new(FifoMemo::new()));
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Attachment {

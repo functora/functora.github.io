@@ -66,11 +66,6 @@ pub fn is_back_pressed(ctx: &egui::Context) -> bool {
     }
 }
 
-#[must_use]
-pub fn consume_back_pressed(ctx: &egui::Context) -> bool {
-    system_back_pressed(ctx)
-}
-
 pub fn handle_system_back(
     ctx: &egui::Context,
     can_go_back: bool,
@@ -99,8 +94,6 @@ pub fn handle_system_back(
         ctx.request_repaint();
         Some(BackOutcome::ConsumedNav)
     } else {
-        ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-        ctx.request_repaint();
-        Some(BackOutcome::ConsumedNoop)
+        None
     }
 }

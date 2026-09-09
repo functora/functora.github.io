@@ -25,7 +25,6 @@ impl crate::app::ShowcaseApp {
             || self.platform.camera_rx.is_some()
             || self.platform.qr_rx.is_some()
             || self.platform.thumbnail_rx.is_some()
-            || self.platform.zip_rx.is_some()
             || self.platform.worker_rx.is_some()
         {
             ctx.request_repaint();
@@ -192,16 +191,6 @@ impl crate::app::ShowcaseApp {
                     .add("Thumbnail disconnected", ToastVariant::Error, now),
             }
         }
-        if let Some(rx) = self.platform.zip_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => self
-                    .toast
-                    .add(format!("Zip error: {e}"), ToastVariant::Error, now),
-                Err(mpsc::TryRecvError::Empty) => self.platform.zip_rx = Some(rx),
-                Err(_) => self.toast.add("Zip disconnected", ToastVariant::Error, now),
-            }
-        }
         if let Some(rx) = self.platform.worker_rx.take() {
             match rx.try_recv() {
                 Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
@@ -224,7 +213,6 @@ impl crate::app::ShowcaseApp {
             || self.platform.camera_rx.is_some()
             || self.platform.qr_rx.is_some()
             || self.platform.thumbnail_rx.is_some()
-            || self.platform.zip_rx.is_some()
             || self.platform.worker_rx.is_some()
         {
             ctx.request_repaint();
@@ -239,9 +227,11 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
         _ = Label::new("Key").show(ui);
+        ui.add_space(8.0);
         _ = ui.add(Input::new(&mut self.platform.storage_key).placeholder("demo_key"));
-        ui.add_space(4.0);
+        ui.add_space(8.0);
         _ = Label::new("Value").show(ui);
+        ui.add_space(8.0);
         _ = ui.add(Input::new(&mut self.platform.storage_value).placeholder("hello"));
         ui.add_space(8.0);
         let ctx = ui.ctx().clone();
@@ -598,7 +588,11 @@ impl crate::app::ShowcaseApp {
                                 _ = Label::new(t.chars().take(200).collect::<String>()).show(ui3);
                             }
                             functora_egui::files::Preview::Markdown(ref t) => {
-                                _ = Label::new(format!("MD: {}", &t[..t.len().min(200)])).show(ui3);
+                                _ = Label::new(format!(
+                                    "MD: {}",
+                                    t.chars().take(200).collect::<String>()
+                                ))
+                                .show(ui3);
                             }
                             functora_egui::files::Preview::Image(_) => {
                                 let source = format!("bytes://{name}");
@@ -840,21 +834,6 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(8.0).show(ui, |f| {
             let pending = self.platform.pwa_rx.is_some();
             if f.add(
-                Button::new("Install hint")
-                    .variant(ButtonVariant::Outline)
-                    .enabled(!pending),
-            )
-            .inner
-            .clicked()
-            {
-                self.platform.pwa_rx = Some(spawn_async(async move {
-                    let hint = functora_egui::camera::install_hint()
-                        .await
-                        .map_err(|e| e.to_string())?;
-                    Ok(format!("Hint: {hint:?}"))
-                }));
-            }
-            if f.add(
                 Button::new("Trigger PWA install")
                     .icon(functora_egui::LucideIcon::Download)
                     .enabled(!pending),
@@ -867,6 +846,21 @@ impl crate::app::ShowcaseApp {
                         .await
                         .map_err(|e| e.to_string())?;
                     Ok(format!("Install: {res:?}"))
+                }));
+            }
+            if f.add(
+                Button::new("Install hint")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!pending),
+            )
+            .inner
+            .clicked()
+            {
+                self.platform.pwa_rx = Some(spawn_async(async move {
+                    let hint = functora_egui::camera::install_hint()
+                        .await
+                        .map_err(|e| e.to_string())?;
+                    Ok(format!("Hint: {hint:?}"))
                 }));
             }
         });
@@ -1019,9 +1013,14 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-            if f.add(Button::new("Check").icon(functora_egui::LucideIcon::Camera))
-                .inner
-                .clicked()
+            let busy = self.platform.camera_rx.is_some();
+            if f.add(
+                Button::new("Check")
+                    .icon(functora_egui::LucideIcon::Camera)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 self.platform.camera_rx = Some(spawn_async(async move {
                     functora_egui::camera::check_camera()
@@ -1030,9 +1029,13 @@ impl crate::app::ShowcaseApp {
                         .map_err(|e| e.to_string())
                 }));
             }
-            if f.add(Button::new("Start").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new("Start")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 self.platform.camera_rx = Some(spawn_async(async move {
                     functora_egui::camera::start_camera()
@@ -1041,9 +1044,13 @@ impl crate::app::ShowcaseApp {
                         .map_err(|e| e.to_string())
                 }));
             }
-            if f.add(Button::new("Capture").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new("Capture")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 self.platform.camera_rx = Some(spawn_async(async move {
                     let frame = functora_egui::camera::capture_frame()
@@ -1057,9 +1064,13 @@ impl crate::app::ShowcaseApp {
                     ))
                 }));
             }
-            if f.add(Button::new("Stop").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new("Stop")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 self.platform.camera_rx = Some(spawn_async(async move {
                     functora_egui::camera::stop_camera()
@@ -1088,9 +1099,17 @@ impl crate::app::ShowcaseApp {
         _ = ui.add(Input::new(&mut self.platform.qr_input).placeholder("https://example.com"));
         ui.add_space(4.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("Generate QR").icon(functora_egui::LucideIcon::QrCode))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new(if self.platform.qr_rx.is_some() {
+                    "Generating..."
+                } else {
+                    "Generate QR"
+                })
+                .icon(functora_egui::LucideIcon::QrCode)
+                .enabled(self.platform.qr_rx.is_none()),
+            )
+            .inner
+            .clicked()
             {
                 let input = self.platform.qr_input.clone();
                 self.platform.qr_rx = Some(spawn_async(async move {
@@ -1180,17 +1199,7 @@ impl crate::app::ShowcaseApp {
                     Ok(format!("Thumbnail placeholder for len {}", url.len()))
                 }));
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
-            {
-                self.platform.thumbnail_texture = None;
-            }
         });
-        if let Some(tex) = &self.platform.thumbnail_texture {
-            ui.add_space(8.0);
-            let _ = ui.add(egui::Image::new((tex.id(), egui::vec2(220.0, 140.0))).corner_radius(8));
-        }
         ui.add_space(8.0);
         _ = Typography::small(
             "Tip: pick a video file in Files demo, then paste its data URL here.",
@@ -1218,11 +1227,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            let busy = self.platform.zip_rx.is_some();
-            if f.add(Button::new(if busy { "Zipping..." } else { "Create zip" }).enabled(!busy))
-                .inner
-                .clicked()
-            {
+            if f.add(Button::new("Create zip")).inner.clicked() {
                 let count = self.platform.picked.len();
                 if count == 0 {
                     self.toast.add(

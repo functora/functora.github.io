@@ -10,7 +10,7 @@ impl super::widget::InputOtp {
         let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
 
         let total_width = cell_size * crate::utils::usize_to_f32(self.length)
-            + gap * crate::utils::usize_to_f32(self.length - 1);
+            + gap * crate::utils::usize_to_f32(self.length.saturating_sub(1));
         let (full_rect, response) =
             ui.allocate_exact_size(egui::vec2(total_width, cell_size), egui::Sense::click());
 

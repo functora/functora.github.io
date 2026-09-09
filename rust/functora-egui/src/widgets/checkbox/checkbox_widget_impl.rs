@@ -8,13 +8,8 @@ impl egui::Widget for super::widget::Checkbox<'_> {
         let corner_radius = 4.0;
         let spacing = 8.0;
 
-        // Layout: box + optional label (use Button text style to match menu items)
-        let label_font = ui
-            .style()
-            .text_styles
-            .get(&egui::TextStyle::Button)
-            .cloned()
-            .unwrap_or_else(|| egui::FontId::proportional(14.0));
+        // Layout: box + optional label (14pt to match Radio/Switch labels)
+        let label_font = egui::FontId::proportional(14.0);
         let label_galley = self.label.map(|l| {
             ui.painter()
                 .layout_no_wrap(l.text().to_owned(), label_font, theme.foreground)
@@ -91,7 +86,7 @@ impl egui::Widget for super::widget::Checkbox<'_> {
             }
         }
 
-        if response.hovered() {
+        if response.hovered() && ui.is_enabled() {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
 

@@ -76,7 +76,16 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
                 rect.min.x + h_padding,
                 rect.center().y - galley.size().y / 2.0,
             );
-            painter.galley(text_pos, galley, text_color);
+            let text_region = egui::Rect::from_min_max(
+                egui::pos2(rect.min.x + h_padding, rect.min.y),
+                egui::pos2(
+                    (rect.max.x - h_padding - chevron_width).max(rect.min.x),
+                    rect.max.y,
+                ),
+            );
+            painter
+                .with_clip_rect(text_region)
+                .galley(text_pos, galley, text_color);
 
             let icon_size: f32 = 14.0;
             let chevron_rect = egui::Rect::from_center_size(
@@ -129,13 +138,11 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             max_w
         };
         let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+        let screen_cap = (screen_w - 2.0 * spacing.page_padding - 16.0).max(0.0);
         let popup_width = if spacing.is_mobile() {
-            width
-                .max(content_w)
-                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
-                .max(200.0)
+            crate::utils::clamp_overlay_width(width.max(content_w), 200.0, screen_cap)
         } else {
-            content_w.max(width).min(screen_w * 0.6).max(144.0)
+            crate::utils::clamp_overlay_width(content_w.max(width), 144.0, screen_cap)
         };
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)
@@ -347,13 +354,11 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             max_w
         };
         let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
+        let screen_cap = (screen_w - 2.0 * spacing.page_padding - 16.0).max(0.0);
         let popup_width = if spacing.is_mobile() {
-            width
-                .max(content_w)
-                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
-                .max(200.0)
+            crate::utils::clamp_overlay_width(width.max(content_w), 200.0, screen_cap)
         } else {
-            content_w.max(width).min(screen_w * 0.6).max(144.0)
+            crate::utils::clamp_overlay_width(content_w.max(width), 144.0, screen_cap)
         };
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)

@@ -74,7 +74,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Touch target: responsive heights and padding\nuse functora_egui::{ResponsiveExt, Button, Slider, Flex, Card};\n\nlet spacing = ui.responsive_spacing();\n\n// touch_height: 36px desktop, 48px mobile\n// touch_padding: extra padding for touch\n// Button and Slider automatically use these\n\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Touch me\"));\n});\n\nSlider::new(&mut val, 0.0..=100.0)\n    .step(1.0)\n    .width(360.0)\n    .show(ui);",
+            "// Spacing: query responsive spacing and render it\nuse functora_egui::ResponsiveExt;\n\nlet spacing = ui.responsive_spacing();\n\neprintln!(\"touch_height: {:.1}px\", spacing.touch_height);\neprintln!(\"touch_padding: {:.1}px\", spacing.touch_padding);\neprintln!(\"gap: {:.1}px\", spacing.gap);\neprintln!(\"page_padding: {:.1}px\", spacing.page_padding);\neprintln!(\"content_max_width: {:.1}px\", spacing.content_max_width);",
         );
     }
 
@@ -99,11 +99,6 @@ impl crate::app::ShowcaseApp {
                 _ = f.add(Button::new(format!("Item {i}")).variant(ButtonVariant::Outline));
             }
         });
-
-        snippet(
-            ui,
-            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
-        );
 
         snippet(
             ui,

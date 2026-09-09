@@ -29,13 +29,17 @@ impl super::widget::ContextMenu {
                 inner_ui.ctx(),
             );
             let screen_w = inner_ui.ctx().input(|i| i.viewport_rect().width());
-            menu_width = menu_width
-                .min(screen_w - 2.0 * spacing.page_padding - 16.0)
-                .max(120.0);
+            menu_width = crate::utils::clamp_overlay_width(
+                menu_width,
+                120.0,
+                screen_w - 2.0 * spacing.page_padding - 16.0,
+            );
             if spacing.is_mobile() {
-                menu_width = menu_width
-                    .max(200.0)
-                    .min(screen_w - 2.0 * spacing.page_padding);
+                menu_width = crate::utils::clamp_overlay_width(
+                    menu_width,
+                    200.0,
+                    screen_w - 2.0 * spacing.page_padding,
+                );
             }
             inner_ui.set_min_width(menu_width);
             inner_ui.set_max_width(menu_width);

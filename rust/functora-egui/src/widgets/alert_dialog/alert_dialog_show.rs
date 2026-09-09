@@ -24,26 +24,13 @@ impl super::widget::AlertDialog {
 
         // Backdrop
         let screen = ctx.viewport_rect();
-        let backdrop_layer =
-            egui::LayerId::new(egui::Order::Middle, egui::Id::new("alert_dialog_backdrop"));
-        let painter = ctx.layer_painter(backdrop_layer);
-        let _ = painter.rect_filled(
-            screen,
-            egui::CornerRadius::ZERO,
-            egui::Color32::from_black_alpha(60),
+        let backdrop_response = crate::widgets::overlay_common::paint_backdrop(
+            ctx,
+            "alert_dialog_backdrop",
+            crate::widgets::overlay_common::BACKDROP_ALPHA,
         );
 
-        // Backdrop click to close (like Dialog)
-        let backdrop_response = egui::Area::new(egui::Id::new("alert_dialog_backdrop_sense"))
-            .order(egui::Order::Middle)
-            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |inner_ui| {
-                let (_, response) =
-                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
-                response
-            });
-
-        if backdrop_response.inner.clicked() {
+        if backdrop_response.clicked() {
             *open = false;
             result = AlertDialogResult::Cancelled;
             ctx.request_repaint();
@@ -101,31 +88,10 @@ impl super::widget::AlertDialog {
                     content_ui.set_max_width(panel_width);
 
                     // Close button
-                    let _ = content_ui.with_layout(
-                        egui::Layout::right_to_left(egui::Align::TOP),
-                        |inner_ui3| {
-                            let close_size = 16.0;
-                            let (close_rect, close_resp_raw) = inner_ui3.allocate_exact_size(
-                                egui::vec2(close_size, close_size),
-                                egui::Sense::click(),
-                            );
-                            let close_resp =
-                                close_resp_raw.on_hover_cursor(egui::CursorIcon::PointingHand);
-                            if inner_ui3.is_rect_visible(close_rect) {
-                                crate::icons::paint_icon::paint_icon(
-                                    inner_ui3.painter(),
-                                    close_rect,
-                                    &crate::icons::lucide_icon::LucideIcon::X,
-                                    theme.muted_foreground,
-                                );
-                            }
-                            if close_resp.clicked() {
-                                *open = false;
-                                result = AlertDialogResult::Cancelled;
-                                ctx.request_repaint();
-                            }
-                        },
-                    );
+                    crate::widgets::overlay_common::close_button(content_ui, ctx, &theme, open);
+                    if !*open {
+                        result = AlertDialogResult::Cancelled;
+                    }
 
                     let _ = content_ui.label(
                         egui::RichText::new(&self.title)

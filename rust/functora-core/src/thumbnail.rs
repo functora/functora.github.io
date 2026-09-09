@@ -133,13 +133,13 @@ fn yuv_to_rgb(frame: &rust_h264::decoder::Frame) -> Vec<u8> {
     rgb
 }
 
-use std::collections::HashMap;
+use crate::files::FifoMemo;
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::sync::{LazyLock, Mutex};
 
-static MEMO: LazyLock<Mutex<HashMap<u64, Option<String>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+static MEMO: LazyLock<Mutex<FifoMemo<u64, Option<String>>>> =
+    LazyLock::new(|| Mutex::new(FifoMemo::new()));
 
 #[must_use]
 pub fn cached_thumbnail(url: &str) -> Option<Option<String>> {

@@ -39,6 +39,20 @@ pub fn f64_to_i32(value: f64) -> i32 {
 }
 
 #[must_use]
+pub(crate) fn with_alpha(color: egui::Color32, alpha: u8) -> egui::Color32 {
+    let [r, g, b, _] = color.to_srgba_unmultiplied();
+    egui::Color32::from_rgba_unmultiplied(r, g, b, alpha)
+}
+
+/// Clamps an overlay width to `floor..=screen_max`, where a viewport narrower
+/// than `floor` shrinks the floor instead of overflowing the screen.
+#[must_use]
+pub(crate) fn clamp_overlay_width(width: f32, floor: f32, screen_max: f32) -> f32 {
+    let cap = screen_max.max(0.0);
+    width.clamp(floor.min(cap), cap)
+}
+
+#[must_use]
 pub fn usize_to_u32(value: usize) -> u32 {
     u32::try_from(value).unwrap_or(u32::MAX)
 }

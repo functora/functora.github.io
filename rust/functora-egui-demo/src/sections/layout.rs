@@ -24,7 +24,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Button::new("Save"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Column with gap").show(ui);
         ui.add_space(4.0);
         _ = Flex::column().gap(8.0).align_start().show(ui, |f| {
@@ -33,7 +33,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Badge::new("Third"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Grow: input fills, button stays natural").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().gap(8.0).w_full().show(ui, |f| {
@@ -44,7 +44,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Button::new("Send"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Justify end").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().justify_end().gap(8.0).w_full().show(ui, |f| {
@@ -52,7 +52,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Button::new("Confirm"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Justify between").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().justify_between().w_full().show(ui, |f| {
@@ -60,7 +60,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Button::new("Next"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Justify center").show(ui);
         ui.add_space(4.0);
         _ = Flex::row()
@@ -74,7 +74,7 @@ impl crate::app::ShowcaseApp {
                 });
             });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Wrap: overflowing items wrap to the next line").show(ui);
         ui.add_space(4.0);
         let tags = [
@@ -102,7 +102,7 @@ impl crate::app::ShowcaseApp {
             }
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Spacer: pushes items apart").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().gap(8.0).w_full().show(ui, |f| {
@@ -111,7 +111,7 @@ impl crate::app::ShowcaseApp {
             _ = f.add(Badge::new("Right"));
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Nested flex: two-column form").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().gap(16.0).w_full().show(ui, |f| {
@@ -137,7 +137,7 @@ impl crate::app::ShowcaseApp {
             });
         });
 
-        ui.add_space(16.0);
+        ui.add_space(12.0);
         _ = Typography::small("Center utility").show(ui);
         ui.add_space(4.0);
         _ = egui::Frame::NONE
@@ -464,7 +464,7 @@ impl crate::app::ShowcaseApp {
             _ = Button::new("Preview").icon(LucideIcon::Play).show(ui64);
         });
 
-        ui.add_space(14.0);
+        ui.add_space(12.0);
         _ = Typography::small("Dense toolbar").show(ui);
         ui.add_space(4.0);
         _ = Toolbar::new().dense().wrap(false).show(ui, |ui67| {

@@ -42,6 +42,7 @@ pub mod menubar;
 pub mod navbar;
 pub mod navigation_menu;
 pub mod number_input;
+pub(crate) mod overlay_common;
 pub mod pagination;
 pub mod popover;
 pub mod progress;

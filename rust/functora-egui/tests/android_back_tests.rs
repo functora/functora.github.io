@@ -116,7 +116,7 @@ fn handle_system_back_navigates_when_can() {
 }
 
 #[test]
-fn handle_system_back_noop_at_root() {
+fn handle_system_back_not_consumed_at_root() {
     let (ctx, raw) = ctx_with_events(vec![Event::Key {
         key: egui::Key::BrowserBack,
         physical_key: None,
@@ -128,7 +128,7 @@ fn handle_system_back_noop_at_root() {
         let egui_ctx = ui.ctx();
         let mut called = false;
         let outcome = functora_egui::handle_system_back(egui_ctx, false, || called = true);
-        assert_eq!(outcome, Some(BackOutcome::ConsumedNoop));
+        assert_eq!(outcome, None);
         assert!(!called);
     });
     out.textures_delta.clear();
@@ -170,7 +170,7 @@ fn app_router_handle_back_goes_back() {
 }
 
 #[test]
-fn app_router_handle_back_noop_at_root() {
+fn app_router_handle_back_not_consumed_at_root() {
     let (ctx, raw) = ctx_with_events(vec![Event::Key {
         key: egui::Key::BrowserBack,
         physical_key: None,
@@ -185,7 +185,7 @@ fn app_router_handle_back_noop_at_root() {
             functora_egui::route::AppRouter::<DemoRoute, ()>::new(&mut state, DemoRoute::Home);
         assert_eq!(router.current(), &DemoRoute::Home);
         let outcome = router.handle_back(egui_ctx, &mut state);
-        assert_eq!(outcome, Some(BackOutcome::ConsumedNoop));
+        assert_eq!(outcome, None);
         assert_eq!(router.current(), &DemoRoute::Home);
     });
     out.textures_delta.clear();

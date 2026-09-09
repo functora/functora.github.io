@@ -44,7 +44,7 @@ type WakeSlot = Arc<Mutex<Option<Waker>>>;
 
 #[cfg(not(target_arch = "wasm32"))]
 struct WorkerGuard {
-    handle: Option<std::thread::JoinHandle<()>>,
+    handle: std::thread::JoinHandle<()>,
     shutdown: Arc<AtomicBool>,
 }
 
@@ -52,10 +52,7 @@ struct WorkerGuard {
 impl Drop for WorkerGuard {
     fn drop(&mut self) {
         self.shutdown.store(true, Ordering::Release);
-        if let Some(handle) = self.handle.take() {
-            handle.thread().unpark();
-            _ = handle.join();
-        }
+        self.handle.thread().unpark();
     }
 }
 
@@ -84,10 +81,7 @@ where
         });
         move || drive(make(arg, report), &tx, &wake_slot_thread, &shutdown_thread)
     });
-    let guard = WorkerGuard {
-        handle: Some(handle),
-        shutdown,
-    };
+    let guard = WorkerGuard { handle, shutdown };
     let result = pump(rx, progress, wake_slot).await;
     drop(guard);
     result

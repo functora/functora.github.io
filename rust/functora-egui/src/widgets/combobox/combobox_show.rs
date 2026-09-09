@@ -68,7 +68,16 @@ impl super::widget::Combobox {
                 trigger_rect.min.x + h_padding,
                 trigger_rect.center().y - galley.size().y / 2.0,
             );
-            ui.painter().galley(text_pos, galley, text_color);
+            let text_region = egui::Rect::from_min_max(
+                egui::pos2(trigger_rect.min.x + h_padding, trigger_rect.min.y),
+                egui::pos2(
+                    (trigger_rect.max.x - h_padding - icon_size - 4.0).max(trigger_rect.min.x),
+                    trigger_rect.max.y,
+                ),
+            );
+            ui.painter()
+                .with_clip_rect(text_region)
+                .galley(text_pos, galley, text_color);
 
             let icon_rect = egui::Rect::from_min_size(
                 egui::pos2(
@@ -135,11 +144,11 @@ impl super::widget::Combobox {
                 content_w = content_w.max(w);
             }
             let base = trigger_rect.width().max(content_w);
+            let screen_cap = (screen_w - 2.0 * popup_spacing.page_padding - 16.0).max(0.0);
             if popup_spacing.is_mobile() {
-                base.min(screen_w - 2.0 * popup_spacing.page_padding - 16.0)
-                    .max(trigger_rect.width())
+                base.clamp(0.0, screen_cap).max(trigger_rect.width())
             } else {
-                base.min(screen_w * 0.6).max(200.0)
+                crate::utils::clamp_overlay_width(base.min(screen_w * 0.6), 200.0, screen_cap)
             }
         };
         let _ = popup.show(|popup_ui: &mut egui::Ui| {
@@ -183,12 +192,8 @@ impl super::widget::Combobox {
                         egui::FontId::proportional(14.0),
                         theme.popover_foreground,
                     );
-                    let item_desired = egui::vec2(
-                        popup_ui
-                            .available_width()
-                            .max(item_galley.size().x + item_left_pad + 8.0),
-                        item_galley.size().y + 8.0,
-                    );
+                    let item_desired =
+                        egui::vec2(popup_ui.available_width(), item_galley.size().y + 8.0);
                     let (rect, r) =
                         popup_ui.allocate_exact_size(item_desired, egui::Sense::click());
 
@@ -224,7 +229,11 @@ impl super::widget::Combobox {
                             );
                         }
 
-                        popup_ui.painter().galley(
+                        let label_region = egui::Rect::from_min_max(
+                            egui::pos2(rect.min.x + item_left_pad, rect.min.y),
+                            rect.max,
+                        );
+                        popup_ui.painter().with_clip_rect(label_region).galley(
                             egui::pos2(
                                 rect.min.x + item_left_pad,
                                 rect.center().y - item_galley.size().y / 2.0,

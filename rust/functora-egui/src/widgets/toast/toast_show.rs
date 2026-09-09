@@ -34,23 +34,13 @@ impl super::toast_state::ToastState {
                 stack_ui.spacing_mut().item_spacing.y = spacing;
                 stack_ui.set_width(outer_width);
                 for (idx, toast) in self.toasts.iter().enumerate().rev() {
-                    let (border_color, accent) = match toast.variant {
-                        crate::tokens::toast_variant::ToastVariant::Default => {
-                            (theme.border, theme.foreground)
-                        }
-                        crate::tokens::toast_variant::ToastVariant::Success => {
-                            (theme.success, theme.success)
-                        }
-                        crate::tokens::toast_variant::ToastVariant::Error => {
-                            (theme.destructive, theme.destructive)
-                        }
-                        crate::tokens::toast_variant::ToastVariant::Warning => {
-                            (theme.warning, theme.warning)
-                        }
-                        crate::tokens::toast_variant::ToastVariant::Info => {
-                            (theme.info, theme.info)
-                        }
-                    };
+                    let (border_color, accent) = toast.variant.semantic().map_or(
+                        (theme.border, theme.foreground),
+                        |semantic| {
+                            let color = semantic.color(&theme);
+                            (color, color)
+                        },
+                    );
 
                     let frame = egui::Frame::NONE
                         .fill(theme.background)

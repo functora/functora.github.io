@@ -42,7 +42,6 @@ pub struct PlatformState {
     pub download_name: String,
     pub download_text: String,
     pub download_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pub nav_input: String,
     pub progress_job: Option<functora_egui::progress::Job<functora_egui::progress::Stage>>,
     pub progress_running: bool,
     pub pwa_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
@@ -54,12 +53,8 @@ pub struct PlatformState {
     pub qr_continuous: bool,
     pub qr_input: String,
     pub qr_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pub qr_texture: Option<egui::TextureHandle>,
     pub thumbnail_input: String,
     pub thumbnail_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pub thumbnail_texture: Option<egui::TextureHandle>,
-    pub zip_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
-    pub zip_picked: Vec<(String, Vec<u8>)>,
     pub crypto_input: String,
     pub crypto_password: String,
     pub crypto_output: String,
@@ -95,7 +90,6 @@ impl Default for PlatformState {
             download_name: "hello.txt".to_owned(),
             download_text: "Hello from functora-egui download!".to_owned(),
             download_rx: None,
-            nav_input: "/about".to_owned(),
             progress_job: None,
             progress_running: false,
             pwa_rx: None,
@@ -107,12 +101,8 @@ impl Default for PlatformState {
             qr_continuous: false,
             qr_input: "https://functora.github.io".to_owned(),
             qr_rx: None,
-            qr_texture: None,
             thumbnail_input: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD".to_owned(),
             thumbnail_rx: None,
-            thumbnail_texture: None,
-            zip_rx: None,
-            zip_picked: Vec::new(),
             crypto_input: "hello world".to_owned(),
             crypto_password: "s3cret".to_owned(),
             crypto_output: String::new(),
@@ -223,15 +213,24 @@ impl I18N for CategoryId {
 pub struct OverviewBody;
 impl I18N for OverviewBody {
     fn render_eng(&self) -> String {
-        "Interactive showcase of 60+ shadcn/ui-inspired widgets for egui with light/dark themes and 1600+ Lucide icons. Browse via the sidebar or press Ctrl+K.".into()
+        format!(
+            "Interactive showcase of {} shadcn/ui-inspired widgets for egui with light/dark themes and 1600+ Lucide icons. Browse via the sidebar or press Ctrl+K.",
+            component_count()
+        )
     }
 
     fn render_spa(&self) -> String {
-        "Presentación interactiva de más de 60 widgets para egui inspirados en shadcn/ui con temas claro/oscuro e iconos Lucide 1600+. Navega por la barra lateral o presiona Ctrl+K.".into()
+        format!(
+            "Presentación interactiva de {} widgets para egui inspirados en shadcn/ui con temas claro/oscuro e iconos Lucide 1600+. Navega por la barra lateral o presiona Ctrl+K.",
+            component_count()
+        )
     }
 
     fn render_rus(&self) -> String {
-        "Интерактивная демонстрация 60+ виджетов для egui в стиле shadcn/ui с темами светлая/тёмная и 1600+ иконок Lucide. Откройте боковую панель или нажмите Ctrl+K.".into()
+        format!(
+            "Интерактивная демонстрация {} виджетов для egui в стиле shadcn/ui с темами светлая/тёмная и 1600+ иконок Lucide. Откройте боковую панель или нажмите Ctrl+K.",
+            component_count()
+        )
     }
 }
 
@@ -651,7 +650,6 @@ pub struct ShowcaseApp {
     pub input_paste_clear_copy_custom: String,
     pub textarea_text: String,
     pub textarea_paste_clear_text: String,
-    pub textarea_paste_clear_status: String,
     pub textarea_paste_clear_custom: String,
     pub textarea_paste_clear_copy: String,
     pub textarea_paste_clear_copy_custom: String,
@@ -666,6 +664,9 @@ pub struct ShowcaseApp {
     pub accordion_open: Vec<usize>,
     pub tabs_idx: usize,
     pub icon_tabs_idx: usize,
+    pub navmenu_idx: usize,
+    pub button_selected: bool,
+    pub input_password: String,
     pub pagination_page: usize,
     pub resizable_fraction: f32,
     pub flex_input: String,
@@ -728,7 +729,6 @@ impl Default for ShowcaseApp {
             input_paste_clear_copy_custom: String::new(),
             textarea_text: String::new(),
             textarea_paste_clear_text: String::new(),
-            textarea_paste_clear_status: String::new(),
             textarea_paste_clear_custom: String::new(),
             textarea_paste_clear_copy: String::new(),
             textarea_paste_clear_copy_custom: String::new(),
@@ -742,6 +742,9 @@ impl Default for ShowcaseApp {
             accordion_open: vec![0],
             tabs_idx: 0,
             icon_tabs_idx: 0,
+            navmenu_idx: 0,
+            button_selected: false,
+            input_password: String::new(),
             pagination_page: 0,
             resizable_fraction: 0.5,
             flex_input: String::new(),
@@ -846,12 +849,8 @@ impl ShowcaseApp {
     }
 
     pub(crate) fn navigate_to(&mut self, idx: usize) {
-        let route = match idx {
-            0 => AppRoute::Overview,
-            _ => AppRoute::Component(idx),
-        };
         self.selected = idx;
-        self.router.navigate(&mut (), route);
+        self.router.navigate(&mut (), AppRoute::from_flat(idx));
     }
 
     fn sync_from_router(&mut self) {
@@ -862,32 +861,6 @@ impl ShowcaseApp {
         }
     }
 
-    #[allow(dead_code)]
-    fn render_sidebar(&mut self, ui: &mut egui::Ui) -> bool {
-        let mut close = false;
-        let lang = self.persistent.language;
-        for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
-            let is_overview = *cat_id == CategoryId::Overview;
-            if is_overview {
-                ui.add_space(8.0);
-            } else {
-                category_header(ui, *cat_id, lang);
-                ui.add_space(8.0);
-            }
-            for (item_idx, def) in items.iter().enumerate() {
-                let flat = flat_index(cat_idx, item_idx);
-                let selected = flat == self.selected;
-                if ui.add(section_button(def, selected).full_width()).clicked() {
-                    self.navigate_to(flat);
-                    close |= ui.on_mobile();
-                    ui.ctx().request_repaint();
-                }
-            }
-            ui.add_space(8.0);
-        }
-        close
-    }
-
     fn render_overlays(&mut self, ctx: &egui::Context) {
         if self.dialogs.dialog_open {
             let mut close = false;
@@ -896,12 +869,14 @@ impl ShowcaseApp {
                 .description("Make changes to your profile here.")
                 .show(ctx, &mut self.dialogs.dialog_open, |ui| {
                     _ = Label::new("Full name").show(ui);
+                    ui.add_space(8.0);
                     _ = ui.add(
                         functora_egui::Input::new(&mut self.form.form_name)
                             .placeholder("Ada Lovelace"),
                     );
                     ui.add_space(8.0);
                     _ = Label::new("Bio").show(ui);
+                    ui.add_space(8.0);
                     _ = ui.add(
                         functora_egui::Textarea::new(&mut self.form.form_comments)
                             .placeholder("Tell us about yourself...")
@@ -998,18 +973,6 @@ impl ShowcaseApp {
                 ctx.request_repaint();
             }
         }
-    }
-
-    #[allow(dead_code)]
-    fn category_of(flat: usize) -> Option<(CategoryId, usize)> {
-        let mut remaining = flat;
-        for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
-            if remaining < items.len() {
-                return Some((*cat_id, cat_idx));
-            }
-            remaining -= items.len();
-        }
-        None
     }
 
     fn render_component(&mut self, ui: &mut egui::Ui, lang: Language) {
@@ -1173,12 +1136,8 @@ impl eframe::App for ShowcaseApp {
                             .add(section_button(def, is_selected).full_width())
                             .clicked()
                         {
-                            let next_route = match flat {
-                                0 => AppRoute::Overview,
-                                _ => AppRoute::Component(flat),
-                            };
                             *selected_ref = flat;
-                            router_ref.navigate(&mut (), next_route);
+                            router_ref.navigate(&mut (), AppRoute::from_flat(flat));
                             close |= side_ui.on_mobile();
                             side_ui.ctx().request_repaint();
                         }

@@ -16,26 +16,13 @@ impl super::widget::Sheet {
         let ease_t = ease_out_cubic(anim_t);
 
         // Animated backdrop
-        let backdrop_alpha = crate::utils::f32_to_u8_clamped(60.0 * ease_t);
-        let backdrop_layer =
-            egui::LayerId::new(egui::Order::Middle, egui::Id::new("sheet_backdrop"));
-        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
-            screen,
-            egui::CornerRadius::ZERO,
-            egui::Color32::from_black_alpha(backdrop_alpha),
+        let backdrop_alpha = crate::utils::f32_to_u8_clamped(
+            f32::from(crate::widgets::overlay_common::BACKDROP_ALPHA) * ease_t,
         );
+        let backdrop_response =
+            crate::widgets::overlay_common::paint_backdrop(ctx, "sheet_backdrop", backdrop_alpha);
 
-        // Backdrop click to close
-        let backdrop_response = egui::Area::new(egui::Id::new("sheet_backdrop_sense"))
-            .order(egui::Order::Middle)
-            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |inner_ui| {
-                let (_, response) =
-                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
-                response
-            });
-
-        if backdrop_response.inner.clicked() {
+        if backdrop_response.clicked() {
             *open = false;
             ctx.request_repaint();
         }
@@ -47,8 +34,18 @@ impl super::widget::Sheet {
                 | crate::tokens::sheet_side::SheetSide::Right
         );
         let on_mobile_horizontal = on_mobile && is_horizontal;
-        let slide_dist = if on_mobile_horizontal {
-            400.0
+        let panel_id = egui::Id::new("sheet_panel");
+        let measured_panel_height = ctx.memory(|m| {
+            m.area_rect(panel_id)
+                .map_or_else(|| screen.height(), |r| r.height())
+        });
+        let slide_dist = if on_mobile_horizontal
+            || matches!(
+                self.side,
+                crate::tokens::sheet_side::SheetSide::Top
+                    | crate::tokens::sheet_side::SheetSide::Bottom
+            ) {
+            measured_panel_height + 24.0
         } else {
             self.width + 48.0
         };
@@ -85,7 +82,7 @@ impl super::widget::Sheet {
             ),
         };
 
-        let _ = egui::Area::new(egui::Id::new("sheet_panel"))
+        let _ = egui::Area::new(panel_id)
             .order(egui::Order::Foreground)
             .anchor(anchor, offset)
             .show(ctx, |inner_ui| {
@@ -136,7 +133,7 @@ impl super::widget::Sheet {
                     } else if is_horizontal {
                         // Desktop side sheet - full height (inset-y-0)
                         let width = self.width.min((screen.width() - 98.0).max(0.0));
-                        let height = screen.height().max(0.0);
+                        let height = (screen.height() - 50.0).max(0.0);
                         content_ui.set_min_size(egui::vec2(width, height));
                         content_ui.set_max_width(width);
                     } else {
@@ -146,28 +143,7 @@ impl super::widget::Sheet {
                     }
 
                     // Close button
-                    let _ = content_ui.with_layout(
-                        egui::Layout::right_to_left(egui::Align::TOP),
-                        |inner_ui3| {
-                            let close_size = 16.0;
-                            let (close_rect, close_resp) = inner_ui3.allocate_exact_size(
-                                egui::vec2(close_size, close_size),
-                                egui::Sense::click(),
-                            );
-                            if inner_ui3.is_rect_visible(close_rect) {
-                                crate::icons::paint_icon::paint_icon(
-                                    inner_ui3.painter(),
-                                    close_rect,
-                                    &crate::icons::lucide_icon::LucideIcon::X,
-                                    theme.muted_foreground,
-                                );
-                            }
-                            if close_resp.clicked() {
-                                *open = false;
-                                ctx.request_repaint();
-                            }
-                        },
-                    );
+                    crate::widgets::overlay_common::close_button(content_ui, ctx, &theme, open);
 
                     // Title & description
                     if let Some(title) = self.title {

@@ -36,8 +36,12 @@ impl egui::Widget for super::widget::Radio<'_> {
             .animate_bool_responsive(response.id, *self.selected);
 
         if ui.is_rect_visible(rect) {
-            let mut style =
-                super::radio_style::resolve_radio_style(&theme, *self.selected, response.hovered());
+            let mut style = super::radio_style::resolve_radio_style(
+                &theme,
+                *self.selected,
+                response.hovered(),
+                !ui.is_enabled(),
+            );
             if response.is_pointer_button_down_on() {
                 style.circle_border = theme.ring;
             }
@@ -81,7 +85,7 @@ impl egui::Widget for super::widget::Radio<'_> {
             }
         }
 
-        if response.hovered() {
+        if response.hovered() && ui.is_enabled() {
             ui.ctx().set_cursor_icon(egui::CursorIcon::PointingHand);
         }
 

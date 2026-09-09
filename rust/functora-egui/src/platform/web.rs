@@ -52,6 +52,7 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
 
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     use wasm_bindgen::JsCast as _;
+    const REVOKE_DELAY_MS: i32 = 60_000;
     std::future::ready(()).await;
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let document = window
@@ -89,16 +90,26 @@ pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     );
     anchor_elem.click();
     let url_clone = url.clone();
+    let anchor_cleanup = anchor_elem.clone();
     let closure = wasm_bindgen::closure::Closure::once_into_js(move || {
+        if let Some(parent) = anchor_cleanup.parent_node() {
+            drop(parent.remove_child(&anchor_cleanup));
+        }
         if let Err(e) = web_sys::Url::revoke_object_url(&url_clone) {
             tracing::warn!("Failed to revoke object URL: {e:?}");
         }
     });
     if let Err(e) = window.set_timeout_with_callback_and_timeout_and_arguments_0(
         closure.as_ref().unchecked_ref(),
-        1000,
+        REVOKE_DELAY_MS,
     ) {
         tracing::warn!("set_timeout failed: {e:?}");
+        if let Some(parent) = anchor_elem.parent_node() {
+            drop(parent.remove_child(&anchor_elem));
+        }
+        if let Err(revoke_err) = web_sys::Url::revoke_object_url(&url) {
+            tracing::warn!("Failed to revoke object URL: {revoke_err:?}");
+        }
     }
     Ok(filename.to_string())
 }
@@ -175,8 +186,23 @@ pub async fn check_camera() -> Result<(), Error> {
     Ok(())
 }
 
+fn stop_media_stream(stream: &web_sys::MediaStream) {
+    use wasm_bindgen::JsCast as _;
+    for track in stream.get_tracks() {
+        if let Ok(t) = track.dyn_into::<web_sys::MediaStreamTrack>() {
+            t.stop();
+        }
+    }
+}
+
 pub async fn start_camera() -> Result<(), Error> {
     use wasm_bindgen::JsCast as _;
+    if let Some(prev_stream) = STREAM.with(|s| s.borrow_mut().take()) {
+        stop_media_stream(&prev_stream);
+    }
+    if let Some(prev_video) = VIDEO.with(|v| v.borrow_mut().take()) {
+        prev_video.set_src_object(None);
+    }
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let navigator = window.navigator();
     let media = navigator
@@ -191,17 +217,18 @@ pub async fn start_camera() -> Result<(), Error> {
     )
     .map_err(|e| Error::JS(format!("{e:?}")))?;
     constraints.set_video(&video_constraints);
-    let promise = media
+    let media_promise = media
         .get_user_media_with_constraints(&constraints)
         .map_err(|e| camera_error_msg(format!("{e:?}")))?;
-    let stream_js = wasm_bindgen_futures::JsFuture::from(promise)
+    let stream_js = wasm_bindgen_futures::JsFuture::from(media_promise)
         .await
         .map_err(|e| camera_error_msg(format!("{e:?}")))?;
     let stream: web_sys::MediaStream = stream_js.unchecked_into();
-    let document = window
-        .document()
-        .ok_or_else(|| Error::JS("No document".into()))?;
-    let video: web_sys::HtmlVideoElement = document
+    let Some(document) = window.document() else {
+        stop_media_stream(&stream);
+        return Err(Error::JS("No document".into()));
+    };
+    let Some(video): Option<web_sys::HtmlVideoElement> = document
         .get_element_by_id("qr-video")
         .and_then(|el| el.dyn_into::<web_sys::HtmlVideoElement>().ok())
         .or_else(|| {
@@ -215,14 +242,22 @@ pub async fn start_camera() -> Result<(), Error> {
                 el.dyn_into::<web_sys::HtmlVideoElement>().ok()
             })
         })
-        .ok_or_else(|| Error::JS("No video element".into()))?;
+    else {
+        stop_media_stream(&stream);
+        return Err(Error::JS("No video element".into()));
+    };
     video.set_src_object(Some(&stream));
-    let play_promise = video
-        .play()
-        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
-    let _ = wasm_bindgen_futures::JsFuture::from(play_promise)
-        .await
-        .map_err(|e| camera_error_msg(format!("{e:?}")))?;
+    let play_promise = match video.play() {
+        Ok(promise) => promise,
+        Err(e) => {
+            stop_media_stream(&stream);
+            return Err(camera_error_msg(format!("{e:?}")));
+        }
+    };
+    if let Err(e) = wasm_bindgen_futures::JsFuture::from(play_promise).await {
+        stop_media_stream(&stream);
+        return Err(camera_error_msg(format!("{e:?}")));
+    }
     STREAM.with(|s| *s.borrow_mut() = Some(stream));
     VIDEO.with(|v| *v.borrow_mut() = Some(video));
     begin_capture_session();

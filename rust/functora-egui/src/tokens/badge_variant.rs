@@ -19,3 +19,17 @@ pub enum BadgeVariant {
     /// Border only, transparent background.
     Outline,
 }
+
+impl BadgeVariant {
+    #[must_use]
+    pub fn semantic(self) -> Option<crate::tokens::semantic_color::SemanticColor> {
+        use crate::tokens::semantic_color::SemanticColor;
+        match self {
+            Self::Destructive => Some(SemanticColor::Destructive),
+            Self::Success => Some(SemanticColor::Success),
+            Self::Warning => Some(SemanticColor::Warning),
+            Self::Info => Some(SemanticColor::Info),
+            Self::Default | Self::Secondary | Self::Outline => None,
+        }
+    }
+}

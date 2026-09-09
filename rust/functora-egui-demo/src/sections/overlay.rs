@@ -30,7 +30,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Dialog: modal dialog with backdrop\n// On mobile Dialog anchors CENTER_BOTTOM as a bottom sheet.\nuse functora_egui::{Dialog, Button, ButtonVariant, LucideIcon};\n\nlet mut open = false;\n\nif Button::new(\"Open Dialog\").icon(LucideIcon::AppWindow).show(ui).clicked() {\n    open = true;\n}\n\nDialog::new()\n    .title(\"Edit Profile\")\n    .description(\"Make changes to your profile here.\")\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Full name\").show(ui);\n        Input::new(&mut name).placeholder(\"Ada Lovelace\").show(ui);\n        ui.add_space(8.0);\n        Label::new(\"Bio\").show(ui);\n        Textarea::new(&mut bio).placeholder(\"Tell us...\").show(ui);\n        ui.add_space(12.0);\n        Flex::row().justify_end().gap(8.0).show(ui, |f| {\n            f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n            if f.add(Button::new(\"Save\").icon(LucideIcon::Check)).clicked() {\n                open = false;\n            }\n        });\n    });",
+            "// Dialog: modal dialog with backdrop\n// On mobile Dialog anchors CENTER_BOTTOM as a bottom sheet.\nuse functora_egui::{Dialog, Button, ButtonVariant, LucideIcon};\n\nlet mut open = false;\n\nif Button::new(\"Open Dialog\").icon(LucideIcon::SquareMenu).show(ui).clicked() {\n    open = true;\n}\n\nDialog::new()\n    .title(\"Edit Profile\")\n    .description(\"Make changes to your profile here.\")\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Full name\").show(ui);\n        Input::new(&mut name).placeholder(\"Ada Lovelace\").show(ui);\n        ui.add_space(8.0);\n        Label::new(\"Bio\").show(ui);\n        Textarea::new(&mut bio).placeholder(\"Tell us...\").show(ui);\n        ui.add_space(12.0);\n        Flex::row().justify_end().gap(8.0).show(ui, |f| {\n            f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n            if f.add(Button::new(\"Save\").icon(LucideIcon::Check)).clicked() {\n                open = false;\n            }\n        });\n    });",
         );
     }
 
@@ -260,7 +260,7 @@ impl crate::app::ShowcaseApp {
             "Integrations".to_owned(),
             "Settings".to_owned(),
         ])
-        .show(ui, &mut self.tabs_idx);
+        .show(ui, &mut self.navmenu_idx);
         if let Some(idx) = clicked {
             self.toast.add(
                 format!("Navigation: item {idx}"),

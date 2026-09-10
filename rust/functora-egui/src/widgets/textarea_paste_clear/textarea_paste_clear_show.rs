@@ -287,7 +287,7 @@ pub(crate) fn show_textarea_paste_clear(
                 .hint_text(&placeholder)
                 .text_color(theme.foreground)
                 .desired_width(content_rect.width())
-                .desired_rows(3);
+                .desired_rows(8);
             inner_ui.add(text_edit)
         });
 

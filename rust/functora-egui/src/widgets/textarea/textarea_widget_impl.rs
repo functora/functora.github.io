@@ -60,7 +60,7 @@ impl egui::Widget for super::widget::Textarea<'_> {
                     .hint_text(&self.placeholder)
                     .text_color(theme.foreground)
                     .desired_width(inner_rect.width())
-                    .desired_rows(3);
+                    .desired_rows(8);
 
                 inner_ui.add(text_edit)
             });

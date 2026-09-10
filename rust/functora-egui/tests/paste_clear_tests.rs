@@ -215,7 +215,7 @@ fn textarea_paste_clear_clear_works() {
     let rects = find_rects(&out);
     let outer = rects
         .iter()
-        .find(|r| (r.height() - 64.0).abs() < 2.0 && r.width() > 1000.0)
+        .find(|r| (r.height() - 192.0).abs() < 2.0 && r.width() > 1000.0)
         .expect("outer rect not found");
     let toolbar_y = outer.min.y + 14.0;
     let pos = Pos2::new(outer.max.x - 10.0, toolbar_y);
@@ -237,7 +237,7 @@ fn textarea_paste_clear_custom_default() {
     let rects = find_rects(&out);
     let outer = rects
         .iter()
-        .find(|r| (r.height() - 64.0).abs() < 2.0 && r.width() > 1000.0)
+        .find(|r| (r.height() - 192.0).abs() < 2.0 && r.width() > 1000.0)
         .expect("outer rect not found");
     let toolbar_y = outer.min.y + 14.0;
     let pos = Pos2::new(outer.max.x - 10.0, toolbar_y);

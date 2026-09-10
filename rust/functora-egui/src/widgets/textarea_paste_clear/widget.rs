@@ -16,7 +16,7 @@ impl<'a> TextareaPasteClear<'a> {
             text,
             placeholder: String::new(),
             default_value: String::new(),
-            min_height: 64.0,
+            min_height: 192.0,
             paste_icon: crate::icons::lucide_icon::LucideIcon::ClipboardPaste,
             clear_icon: crate::icons::lucide_icon::LucideIcon::X,
             copy: false,

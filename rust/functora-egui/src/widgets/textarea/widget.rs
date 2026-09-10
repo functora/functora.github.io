@@ -1,6 +1,6 @@
 //! Textarea builder struct — a multi-line text input styled after shadcn/ui.
 
-/// A multi-line text area: `border-input rounded-lg px-2.5 py-2 min-h-16`.
+/// A multi-line text area: `border-input rounded-lg px-2.5 py-2 min-h-48`.
 #[must_use]
 pub struct Textarea<'a> {
     pub(crate) text: &'a mut String,
@@ -15,7 +15,7 @@ impl<'a> Textarea<'a> {
             text,
             placeholder: String::new(),
             desired_width: None,
-            min_height: 64.0, // min-h-16 = 4rem = 64px
+            min_height: 192.0, // min-h-48 = 12rem = 192px
         }
     }
 

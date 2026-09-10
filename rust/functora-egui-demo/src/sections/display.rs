@@ -1,7 +1,7 @@
 //! Display: typography, labels, keyboard hints, items, and the icon catalog.
 
 use functora_egui::{
-    Button, ButtonVariant, Card, Flex, Item, Kbd, Label, LucideIcon, ResponsiveExt, ScrollArea,
+    Button, ButtonVariant, Flex, Item, Kbd, Label, LucideIcon, ResponsiveExt, ScrollArea,
     Separator, ShadcnThemeExt, Typography, TypographyVariant,
 };
 
@@ -588,26 +588,17 @@ impl crate::app::ShowcaseApp {
             });
         ui.add_space(16.0);
 
-        _ = Typography::h4("Card + Image (alpha)").show(ui);
-        _ = Typography::muted("Transparent image composited over the secondary fill.").show(ui);
-        ui.add_space(8.0);
-        _ = Card::new().heading("Image inside a Card").show(ui, |ui2| {
-            _ = ui2.add(
-                transparent
-                    .clone()
-                    .bg_fill(theme.secondary)
-                    .max_width(160.0),
-            );
-        });
-        ui.add_space(16.0);
-
         _ = Typography::h4("Error state").show(ui);
-        _ = Typography::muted("Corrupt bytes fall back to alt text.").show(ui);
+        _ = Typography::muted(
+            "Failed loads size to a 24 px fallback box, so pin an exact size with aspect maintenance off to leave room for the alt text.",
+        )
+        .show(ui);
         ui.add_space(8.0);
         _ = ui.add(
             egui::Image::from_bytes("bytes://missing.png", b"corrupt".to_vec())
-                .alt_text("Image unavailable")
-                .max_width(120.0),
+                .maintain_aspect_ratio(false)
+                .fit_to_exact_size(egui::vec2(300.0, 64.0))
+                .alt_text("Blue checkerboard, red circle"),
         );
         ui.add_space(12.0);
     }
@@ -616,7 +607,7 @@ impl crate::app::ShowcaseApp {
         snippet(
             ui,
             "// Image: responsive images with egui::Image\n\n// Setup once alongside fonts (enables svg, file and http loaders)\nfunctora_egui::setup_image_loaders(&cc.egui_ctx);\n\n// Show SVG, PNG, JPEG, GIF, WebP, BMP, ICO, QOI, Farbfeld, TIFF or PPM from bytes\n// Keep the file extension in the URI so the loader routes correctly.\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"A photo\"),\n);\n\n// Cover mode crops overflow while preserving aspect\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(300.0, 200.0)),\n);\n\n// Paint a transparent image over a theme color (needs an alpha-channel image:
-// bg_fill shows through transparent pixels while opaque pixels cover it)\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));",
+// bg_fill shows through transparent pixels while opaque pixels cover it)\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));\n\n// Bundled fixtures: ImageSamples carries every encoding plus a transparent PNG\nlet samples = functora_egui::image_samples().expect(\"fixtures must encode\");\n\n// to_image bakes in the routing URI; clone one builder across many widgets\nlet png = samples.png.to_image();\nui.add(\n    png.clone()\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"Blue and sky checkerboard with a red circle\"),\n);\n\n// Transparent fixture: the fill shows through transparent pixels\nui.add(\n    samples\n        .transparent\n        .to_image()\n        .bg_fill(theme.secondary)\n        .max_width(160.0),\n);\n\n// Error state: failed loads fall back to a 24 px box, so pin an exact\n// size with aspect maintenance off to leave room for the alt text\nui.add(\n    egui::Image::from_bytes(\"bytes://missing.png\", data)\n        .maintain_aspect_ratio(false)\n        .fit_to_exact_size(egui::vec2(300.0, 64.0))\n        .alt_text(\"Blue checkerboard, red circle\"),\n);",
         );
     }
 }

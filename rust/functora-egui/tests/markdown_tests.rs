@@ -15,10 +15,9 @@ struct App {
 
 impl App {
     fn new() -> Self {
-        Self {
-            ctx: Context::default(),
-            frame: 0,
-        }
+        let ctx = Context::default();
+        functora_egui::setup_image_loaders(&ctx);
+        Self { ctx, frame: 0 }
     }
 
     fn step(&mut self, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
@@ -115,5 +114,63 @@ fn cached_render_is_stable_across_frames() {
     assert!(
         first.iter().any(|text| text.contains("Cached")),
         "rendered markdown must contain the heading, got {first:?}",
+    );
+}
+
+#[test]
+fn blockquote_tasklist_footnote_and_code_block_render() {
+    let mut app = App::new();
+    let mut cache = CommonMarkCache::default();
+    let found = rendered(
+        &mut app,
+        &mut cache,
+        "> Quoted text.\n\n- [x] Completed task\n- [ ] Open task\n\n```rust\nfn main() {}\n```\n\nClaim[^1].\n\n[^1]: Footnote text.",
+    );
+    for needle in [
+        "Quoted text",
+        "Completed task",
+        "Open task",
+        "fn main",
+        "Footnote text",
+    ] {
+        assert!(
+            found.iter().any(|text| text.contains(needle)),
+            "rendered markdown must contain {needle:?}, got {found:?}",
+        );
+    }
+}
+
+#[test]
+fn embedded_image_renders() {
+    let mut app = App::new();
+    let mut cache = CommonMarkCache::default();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = CommonMarkViewer::new().show(
+            ui,
+            &mut cache,
+            "![Red dot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4o6ZGEmIY1TCqYfhqAAATqigQ9JeO5gAAAABJRU5ErkJggg==)",
+        );
+    };
+    let mut shapes = Vec::new();
+    for _ in 0..10 {
+        let out = app.step(&mut body);
+        shapes = out
+            .shapes
+            .iter()
+            .filter_map(|clipped| match &clipped.shape {
+                Shape::Text(text) => Some(text.galley.text().to_owned()),
+                Shape::Mesh(_) => Some(String::from("mesh")),
+                Shape::Rect(rect) if rect.fill_texture_id() != egui::TextureId::default() => {
+                    Some(String::from("textured"))
+                }
+                _ => None,
+            })
+            .collect();
+    }
+    assert!(
+        shapes
+            .iter()
+            .any(|shape| shape == "mesh" || shape == "textured"),
+        "embedded image must decode to painted pixels, got {shapes:?}",
     );
 }

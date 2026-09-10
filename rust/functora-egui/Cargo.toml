@@ -125,6 +125,10 @@ optional = true
 version = "0.9"
 optional = true
 
+[dependencies.data-url]
+version = "0.3"
+optional = true
+
 [dependencies.egui_commonmark]
 version = "0.25"
 default-features = false
@@ -153,11 +157,11 @@ qr = ["functora-core/qr"]
 camera = ["qr", "dep:image"]
 router = ["dep:egui_router"]
 markdown = [
+    "dep:data-url",
     "dep:egui_commonmark",
     "egui_commonmark/load-images",
     "egui_commonmark/svg",
     "egui_commonmark/fetch",
-    "egui_commonmark/embedded_image",
 ]
 
 [dev-dependencies]

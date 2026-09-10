@@ -53,7 +53,11 @@ pub mod markdown {
     pub use functora_core::markdown::*;
 }
 #[cfg(feature = "markdown")]
+pub mod markdown_loader;
+#[cfg(feature = "markdown")]
 pub use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
+#[cfg(feature = "markdown")]
+pub use markdown_loader::{WasmSafeDataUrlLoader, install_data_url_loader};
 pub mod messages {
     pub use functora_core::messages::*;
 }

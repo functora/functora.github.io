@@ -1437,7 +1437,7 @@ impl crate::app::ShowcaseApp {
         });
     }
 
-    pub(crate) fn demo_markdown(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_markdown(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "Markdown: CommonMarkViewer + CommonMarkCache (egui_commonmark) renders raw source to native widgets. Opt-in feature `markdown`.",
         )
@@ -1450,7 +1450,9 @@ impl crate::app::ShowcaseApp {
             .desired_width(ui.available_width())
             .show(ui);
         ui.add_space(8.0);
+        let preview_width = ui.available_width();
         _ = Card::new().show(ui, |ui2| {
+            ui2.set_min_width((preview_width - 32.0).max(0.0));
             _ = functora_egui::CommonMarkViewer::new().show(
                 ui2,
                 &mut self.platform.md_cache,

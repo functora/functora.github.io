@@ -12,29 +12,35 @@
         "apiKey": "https://github.com/smanx/free-api"
       },
       "models": {
-        "minimaxai/minimax-m3": {
-          "name": "1) minimaxai/minimax-m3"
-        },
-        "multi-model": {
-          "name": "2) multi-model"
-        },
-        "ai-model": {
-          "name": "3) ai-model"
-        },
-        "moonshotai/kimi-k3": {
-          "name": "4) moonshotai/kimi-k3"
-        },
-        "qwen3.8-max": {
-          "name": "5) qwen3.8-max"
-        },
         "deepseek-ai/deepseek-v4-flash-0731": {
-          "name": "6) deepseek-ai/deepseek-v4-flash-0731"
+          "name": "deepseek-ai/deepseek-v4-flash-0731"
+        },
+        "minimaxai/minimax-m3": {
+          "name": "minimaxai/minimax-m3"
         },
         "z-ai/glm-5.2": {
-          "name": "7) z-ai/glm-5.2"
+          "name": "z-ai/glm-5.2"
+        },
+        "moonshotai/kimi-k3": {
+          "name": "moonshotai/kimi-k3"
+        },
+        "qwen3.8-flash": {
+          "name": "qwen3.8-flash"
+        },
+        "nvidia/nemotron-3-ultra-550b-a55b": {
+          "name": "nvidia/nemotron-3-ultra-550b-a55b"
+        },
+        "ai-model": {
+          "name": "ai-model"
+        },
+        "qwen3.8-max": {
+          "name": "qwen3.8-max"
+        },
+        "deepseek-v4-flash-thinking": {
+          "name": "deepseek-v4-flash-thinking"
         },
         "grok-4.20-fast": {
-          "name": "8) grok-4.20-fast"
+          "name": "grok-4.20-fast"
         }
       }
     },

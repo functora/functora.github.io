@@ -207,18 +207,30 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    /// Centered fixed-width image tile: image on top, caption below.
+    /// Centered fixed-width image tile: image on top, optional caption below.
     ///
     /// The fixed width keeps grid columns aligned regardless of caption
     /// length, and the caption below the image keeps images in a row
-    /// top-aligned when captions wrap to different line counts.
-    pub fn image_tile(ui: &mut egui::Ui, width: f32, caption: &str, image: egui::Image<'_>) {
+    /// top-aligned when captions wrap to different line counts. An empty
+    /// caption renders no label, so single-item sections share the exact
+    /// same alignment as grid rows. Returns the image response so callers
+    /// can detect interactions such as clicks.
+    pub fn image_tile(
+        ui: &mut egui::Ui,
+        width: f32,
+        caption: &str,
+        image: egui::Image<'_>,
+    ) -> egui::Response {
         ui.set_min_width(width);
         ui.set_max_width(width);
-        _ = ui.vertical_centered(|centered| {
-            _ = centered.add(image);
-            _ = Typography::small(caption).show(centered);
-        });
+        ui.vertical_centered(|centered| {
+            let response = centered.add(image);
+            if !caption.is_empty() {
+                _ = Typography::small(caption).show(centered);
+            }
+            response
+        })
+        .inner
     }
 
     pub(crate) fn demo_image(&mut self, ui: &mut egui::Ui) {
@@ -272,7 +284,7 @@ impl crate::app::ShowcaseApp {
                         label.to_owned()
                     };
                     _ = f.ui(|ui2| {
-                        Self::image_tile(
+                        _ = Self::image_tile(
                             ui2,
                             cell + 24.0,
                             &caption,
@@ -292,7 +304,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "Contain",
@@ -303,7 +315,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "Cover",
@@ -313,7 +325,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "FitWidth",
@@ -321,7 +333,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "Fill (distorts)",
@@ -345,7 +357,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "On primary",
@@ -353,7 +365,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "On destructive",
@@ -364,7 +376,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "On accent",
@@ -383,7 +395,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "Primary tint",
@@ -391,7 +403,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "Destructive tint",
@@ -399,7 +411,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         84.0,
                         "Accent tint",
@@ -418,10 +430,10 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(ui2, 144.0, "Full", png.clone().max_width(120.0));
+                    _ = Self::image_tile(ui2, 144.0, "Full", png.clone().max_width(120.0));
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         144.0,
                         "Top-left quadrant",
@@ -434,7 +446,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         144.0,
                         "Bottom-right quadrant",
@@ -452,20 +464,31 @@ impl crate::app::ShowcaseApp {
         _ = Typography::h4("sense (clickable)").show(ui);
         _ = Typography::muted("Click the image to fire a toast.").show(ui);
         ui.add_space(8.0);
-        if ui
-            .add(
-                png.clone()
-                    .sense(egui::Sense::click())
-                    .fit_to_exact_size(egui::vec2(120.0, 120.0)),
-            )
-            .clicked()
-        {
-            self.toast.add(
-                "Image clicked",
-                functora_egui::ToastVariant::Default,
-                ui.ctx().input(|i| i.time),
-            );
-        }
+        let sense_ctx = ui.ctx().clone();
+        _ = Flex::row()
+            .gap(spacing.gap)
+            .align_start()
+            .wrap()
+            .show(ui, |f| {
+                _ = f.ui(|ui2| {
+                    if Self::image_tile(
+                        ui2,
+                        144.0,
+                        "",
+                        png.clone()
+                            .sense(egui::Sense::click())
+                            .fit_to_exact_size(egui::vec2(120.0, 120.0)),
+                    )
+                    .clicked()
+                    {
+                        self.toast.add(
+                            "Image clicked",
+                            functora_egui::ToastVariant::Default,
+                            sense_ctx.input(|i| i.time),
+                        );
+                    }
+                });
+            });
         ui.add_space(16.0);
 
         _ = Typography::h4("rotate (45-deg about center)").show(ui);
@@ -475,11 +498,22 @@ impl crate::app::ShowcaseApp {
         .show(ui);
         ui.add_space(8.0);
         ui.add_space(20.0);
-        _ = ui.add(
-            png.clone()
-                .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))
-                .fit_to_exact_size(egui::vec2(80.0, 80.0)),
-        );
+        _ = Flex::row()
+            .gap(spacing.gap)
+            .align_start()
+            .wrap()
+            .show(ui, |f| {
+                _ = f.ui(|ui2| {
+                    _ = Self::image_tile(
+                        ui2,
+                        144.0,
+                        "",
+                        png.clone()
+                            .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))
+                            .fit_to_exact_size(egui::vec2(80.0, 80.0)),
+                    );
+                });
+            });
         ui.add_space(20.0);
 
         _ = Typography::h4("texture_options (filtering)").show(ui);
@@ -492,7 +526,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         144.0,
                         "Linear",
@@ -502,7 +536,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         144.0,
                         "Nearest",
@@ -526,7 +560,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         204.0,
                         "fit_to_fraction(0.5)",
@@ -536,7 +570,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "shrink_to_fit()",
@@ -557,10 +591,23 @@ impl crate::app::ShowcaseApp {
                 egui::ColorImage::example(),
                 egui::TextureOptions::LINEAR,
             );
-            _ = ui.add(
-                egui::Image::from_texture(egui::load::SizedTexture::from_handle(&texture))
-                    .max_width(120.0),
-            );
+            _ = Flex::row()
+                .gap(spacing.gap)
+                .align_start()
+                .wrap()
+                .show(ui, |f| {
+                    _ = f.ui(|ui2| {
+                        _ = Self::image_tile(
+                            ui2,
+                            144.0,
+                            "",
+                            egui::Image::from_texture(egui::load::SizedTexture::from_handle(
+                                &texture,
+                            ))
+                            .max_width(120.0),
+                        );
+                    });
+                });
         }
         ui.add_space(16.0);
 
@@ -573,7 +620,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         104.0,
                         "Shimmer on",
@@ -581,7 +628,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         104.0,
                         "Shimmer off",
@@ -595,11 +642,22 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("Width follows the viewport with a mobile-aware cap.").show(ui);
         ui.add_space(8.0);
         let viewport_max = if ui.on_mobile() { 160.0 } else { 400.0 };
-        _ = ui.add(
-            png.clone()
-                .maintain_aspect_ratio(true)
-                .fit_to_exact_size(egui::vec2(viewport_max, viewport_max)),
-        );
+        _ = Flex::row()
+            .gap(spacing.gap)
+            .align_start()
+            .wrap()
+            .show(ui, |f| {
+                _ = f.ui(|ui2| {
+                    _ = Self::image_tile(
+                        ui2,
+                        viewport_max + 24.0,
+                        "",
+                        png.clone()
+                            .maintain_aspect_ratio(true)
+                            .fit_to_exact_size(egui::vec2(viewport_max, viewport_max)),
+                    );
+                });
+            });
         ui.add_space(16.0);
 
         _ = Typography::h4("max_size & width").show(ui);
@@ -611,7 +669,7 @@ impl crate::app::ShowcaseApp {
             .wrap()
             .show(ui, |f| {
                 _ = f.ui(|ui2| {
-                    Self::image_tile(
+                    _ = Self::image_tile(
                         ui2,
                         224.0,
                         "max_size(200,150)",
@@ -619,7 +677,7 @@ impl crate::app::ShowcaseApp {
                     );
                 });
                 _ = f.ui(|ui2| {
-                    Self::image_tile(ui2, 224.0, "width(140)", png.clone().max_width(140.0));
+                    _ = Self::image_tile(ui2, 224.0, "width(140)", png.clone().max_width(140.0));
                 });
             });
         ui.add_space(16.0);

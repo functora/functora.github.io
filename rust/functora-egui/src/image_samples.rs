@@ -4,12 +4,41 @@ use std::sync::OnceLock;
 
 const WIDTH: u32 = 48;
 const HEIGHT: u32 = 48;
-const CIRCLE_RADIUS_SQUARED: u32 = 121;
+const CIRCLE_RADIUS: u32 = 11;
+const CIRCLE_RADIUS_SQUARED: u32 = CIRCLE_RADIUS * CIRCLE_RADIUS;
 const CENTER: u32 = 24;
 const CHECKER_CELL: u32 = 6;
 const JPEG_QUALITY: u8 = 85;
+const LIGHT: [u8; 3] = [240, 240, 245];
+const BLUE: [u8; 3] = [45, 120, 200];
+const RED: [u8; 3] = [230, 90, 60];
 
-const SAMPLE_SVG: &str = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"48\" height=\"48\" viewBox=\"0 0 48 48\"><rect width=\"48\" height=\"48\" fill=\"#f0f0f5\"/><path d=\"M0 0h24v12H12v12H0zM24 12h12v12H24zM12 24h12v12H12zM36 24h12v12H36zM0 36h12v12H0zM24 36h12v12H24z\" fill=\"#2d78c8\"/><circle cx=\"24\" cy=\"24\" r=\"11\" fill=\"#e65a3c\"/></svg>";
+fn hex(color: [u8; 3]) -> String {
+    format!("#{:02x}{:02x}{:02x}", color[0], color[1], color[2])
+}
+
+fn build_svg() -> Vec<u8> {
+    let cells = (0..HEIGHT / CHECKER_CELL)
+        .flat_map(|cell_y| (0..WIDTH / CHECKER_CELL).map(move |cell_x| (cell_x, cell_y)))
+        .filter(|(cell_x, cell_y)| (cell_x + cell_y).is_multiple_of(2))
+        .fold(String::new(), |mut svg, (cell_x, cell_y)| {
+            use std::fmt::Write as _;
+            _ = write!(
+                svg,
+                "<rect x=\"{}\" y=\"{}\" width=\"{CHECKER_CELL}\" height=\"{CHECKER_CELL}\" fill=\"{}\"/>",
+                cell_x * CHECKER_CELL,
+                cell_y * CHECKER_CELL,
+                hex(BLUE),
+            );
+            svg
+        });
+    format!(
+        "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{WIDTH}\" height=\"{HEIGHT}\" viewBox=\"0 0 {WIDTH} {HEIGHT}\"><rect width=\"{WIDTH}\" height=\"{HEIGHT}\" fill=\"{}\"/>{cells}<circle cx=\"{CENTER}\" cy=\"{CENTER}\" r=\"{CIRCLE_RADIUS}\" fill=\"{}\"/></svg>",
+        hex(LIGHT),
+        hex(RED),
+    )
+    .into_bytes()
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ImageType {
@@ -114,17 +143,17 @@ pub fn image_samples() -> Result<&'static ImageSamples, &'static image::ImageErr
 
 fn rgb_channel(x: u32, y: u32) -> [u8; 3] {
     if x.abs_diff(CENTER).pow(2) + y.abs_diff(CENTER).pow(2) < CIRCLE_RADIUS_SQUARED {
-        [230, 90, 60]
+        RED
     } else if (x / CHECKER_CELL + y / CHECKER_CELL).is_multiple_of(2) {
-        [45, 120, 200]
+        BLUE
     } else {
-        [240, 240, 245]
+        LIGHT
     }
 }
 
 fn rgba_channel(x: u32, y: u32) -> [u8; 4] {
     let rgb = rgb_channel(x, y);
-    let alpha = if rgb == [240, 240, 245] { 0 } else { 255 };
+    let alpha = if rgb == LIGHT { 0 } else { 255 };
     [rgb[0], rgb[1], rgb[2], alpha]
 }
 
@@ -264,7 +293,7 @@ fn build_samples() -> Result<ImageSamples, image::ImageError> {
     let rgb = rgb_pixels();
     let rgba = rgba_pixels();
     Ok(ImageSamples {
-        svg: sample("sample-svg", ImageType::Svg, SAMPLE_SVG.as_bytes().to_vec()),
+        svg: sample("sample-svg", ImageType::Svg, build_svg()),
         png: sample("sample-png", ImageType::Png, encode_png(&rgb)?),
         jpeg: sample("sample-jpeg", ImageType::Jpeg, encode_jpeg(&rgb)?),
         gif: sample("sample-gif", ImageType::Gif, encode_gif(&rgb)?),

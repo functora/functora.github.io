@@ -1015,10 +1015,21 @@ fn image_sample_fixtures_decode_successfully() {
         }
     }
     match std::str::from_utf8(&samples.svg.bytes) {
-        Ok(text) => assert!(
-            text.starts_with("<svg") && text.ends_with("</svg>"),
-            "svg fixture must be an svg document",
-        ),
+        Ok(text) => {
+            assert!(
+                text.starts_with("<svg") && text.ends_with("</svg>"),
+                "svg fixture must be an svg document",
+            );
+            assert!(
+                text.contains("<circle cx=\"24\" cy=\"24\" r=\"11\""),
+                "svg circle must match the raster motif (center 24,24 radius 11), got {text}",
+            );
+            let checker_cells = text.matches("width=\"6\" height=\"6\"").count();
+            assert_eq!(
+                checker_cells, 32,
+                "svg checker must use 6px squares like the raster fixtures (8x8 grid, half filled), found {checker_cells} in {text}",
+            );
+        }
         Err(error) => panic!("svg fixture must be utf-8: {error:?}"),
     }
 }

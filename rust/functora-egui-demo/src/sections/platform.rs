@@ -588,7 +588,7 @@ impl crate::app::ShowcaseApp {
                                 _ = Label::new(t.chars().take(200).collect::<String>()).show(ui3);
                             }
                             functora_egui::files::Preview::Markdown(ref t) => {
-                                _ = functora_egui::CommonMarkViewer::new().show(
+                                _ = functora_egui::markdown_view::show(
                                     ui3,
                                     &mut self.platform.md_cache,
                                     t,
@@ -1453,7 +1453,7 @@ impl crate::app::ShowcaseApp {
         let preview_width = ui.available_width();
         _ = Card::new().show(ui, |ui2| {
             ui2.set_min_width((preview_width - 32.0).max(0.0));
-            _ = functora_egui::CommonMarkViewer::new().show(
+            _ = functora_egui::markdown_view::show(
                 ui2,
                 &mut self.platform.md_cache,
                 &self.platform.md_source,
@@ -1462,7 +1462,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Markdown: rendered CommonMark via egui_commonmark\nuse functora_egui::{CommonMarkCache, CommonMarkViewer};\n\n// Cache (persist across frames)\nlet mut cache = CommonMarkCache::default();\n\n// Render every frame\nCommonMarkViewer::new().show(ui, &mut cache, \"# Hello\\n\\nThis is **bold**.\");",
+            "// Markdown: theme-aware rendered CommonMark\nuse functora_egui::CommonMarkCache;\nuse functora_egui::markdown_view;\n\n// Cache (persist across frames)\nlet mut cache = CommonMarkCache::default();\n\n// Render every frame (maps shadcn theme onto egui visuals)\nmarkdown_view::show(ui, &mut cache, \"# Hello\\n\\nThis is **bold**.\");",
         );
     }
 

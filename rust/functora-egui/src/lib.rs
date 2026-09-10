@@ -55,6 +55,8 @@ pub mod markdown {
 #[cfg(feature = "markdown")]
 pub mod markdown_loader;
 #[cfg(feature = "markdown")]
+pub mod markdown_view;
+#[cfg(feature = "markdown")]
 pub use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 #[cfg(feature = "markdown")]
 pub use markdown_loader::{WasmSafeDataUrlLoader, install_data_url_loader};

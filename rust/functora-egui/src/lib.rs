@@ -52,6 +52,8 @@ pub mod i18n {
 pub mod markdown {
     pub use functora_core::markdown::*;
 }
+#[cfg(feature = "markdown")]
+pub use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 pub mod messages {
     pub use functora_core::messages::*;
 }

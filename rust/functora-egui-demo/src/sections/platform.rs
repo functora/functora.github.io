@@ -588,11 +588,11 @@ impl crate::app::ShowcaseApp {
                                 _ = Label::new(t.chars().take(200).collect::<String>()).show(ui3);
                             }
                             functora_egui::files::Preview::Markdown(ref t) => {
-                                _ = Label::new(format!(
-                                    "MD: {}",
-                                    t.chars().take(200).collect::<String>()
-                                ))
-                                .show(ui3);
+                                _ = functora_egui::CommonMarkViewer::new().show(
+                                    ui3,
+                                    &mut self.platform.md_cache,
+                                    t,
+                                );
                             }
                             functora_egui::files::Preview::Image(_) => {
                                 let theme = ui3.ctx().shadcn_theme();
@@ -1437,21 +1437,31 @@ impl crate::app::ShowcaseApp {
         });
     }
 
-    pub(crate) fn demo_markdown(ui: &mut egui::Ui) {
+    pub(crate) fn demo_markdown(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "Markdown: functora_core::markdown::render (pulldown-cmark + ammonia) → egui rich text.",
+            "Markdown: CommonMarkViewer + CommonMarkCache (egui_commonmark) renders raw source to native widgets. Opt-in feature `markdown`.",
         )
         .show(ui);
         ui.add_space(12.0);
-        let md = "# Hello\n\nThis is **bold** and *italic*.\n\n- item 1\n- item 2\n\n[link](https://example.com)";
-        _ = Card::new().show(ui, |ui2| {
-            _ = Typography::small(md).show(ui2);
-        });
+        _ = Label::new("Source").show(ui);
         ui.add_space(8.0);
-        _ = Typography::small(
-            "Rendered via Label::new(markdown) – see actual app content for full render.",
-        )
-        .show(ui);
+        _ = Textarea::new(&mut self.platform.md_source)
+            .placeholder("# Hello")
+            .desired_width(ui.available_width())
+            .show(ui);
+        ui.add_space(8.0);
+        _ = Card::new().show(ui, |ui2| {
+            _ = functora_egui::CommonMarkViewer::new().show(
+                ui2,
+                &mut self.platform.md_cache,
+                &self.platform.md_source,
+            );
+        });
+
+        snippet(
+            ui,
+            "// Markdown: rendered CommonMark via egui_commonmark\nuse functora_egui::{CommonMarkCache, CommonMarkViewer};\n\n// Cache (persist across frames)\nlet mut cache = CommonMarkCache::default();\n\n// Render every frame\nCommonMarkViewer::new().show(ui, &mut cache, \"# Hello\\n\\nThis is **bold**.\");",
+        );
     }
 
     pub(crate) fn demo_package(ui: &mut egui::Ui) {

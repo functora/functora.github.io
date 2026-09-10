@@ -60,6 +60,8 @@ pub struct PlatformState {
     pub crypto_output: String,
     pub worker_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub platform_info: String,
+    pub md_source: String,
+    pub md_cache: functora_egui::CommonMarkCache,
 }
 
 impl Default for PlatformState {
@@ -108,6 +110,9 @@ impl Default for PlatformState {
             crypto_output: String::new(),
             worker_rx: None,
             platform_info: String::new(),
+            md_source: "# Hello\n\nThis is **bold**, *italic* and ~~struck~~.\n\n- item 1\n- item 2\n\n[link](https://example.com)\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n`code`"
+                .to_owned(),
+            md_cache: functora_egui::CommonMarkCache::default(),
         }
     }
 }
@@ -1076,7 +1081,7 @@ impl ShowcaseApp {
             "Worker" => self.demo_worker(ui),
             "PlatformInfo" => self.demo_platform_info(ui),
             "Messages" => Self::demo_messages(ui),
-            "Markdown" => Self::demo_markdown(ui),
+            "Markdown" => self.demo_markdown(ui),
             "Package" => Self::demo_package(ui),
             "WhiteLabel" => Self::demo_white_label(ui),
             _ => {

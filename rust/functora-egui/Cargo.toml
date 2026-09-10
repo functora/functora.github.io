@@ -125,6 +125,11 @@ optional = true
 version = "0.9"
 optional = true
 
+[dependencies.egui_commonmark]
+version = "0.25"
+default-features = false
+optional = true
+
 [features]
 default = []
 web = [
@@ -147,6 +152,13 @@ images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif"
 qr = ["functora-core/qr"]
 camera = ["qr", "dep:image"]
 router = ["dep:egui_router"]
+markdown = [
+    "dep:egui_commonmark",
+    "egui_commonmark/load-images",
+    "egui_commonmark/svg",
+    "egui_commonmark/fetch",
+    "egui_commonmark/embedded_image",
+]
 
 [dev-dependencies]
 tempfile = "3.19.0"

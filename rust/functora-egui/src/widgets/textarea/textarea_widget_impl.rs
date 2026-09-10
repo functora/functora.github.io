@@ -53,6 +53,7 @@ impl egui::Widget for super::widget::Textarea<'_> {
 
         let scroll_resp = egui::ScrollArea::vertical()
             .max_height(inner_rect.height())
+            .min_scrolled_height(inner_rect.height())
             .show(&mut child_ui, |inner_ui| {
                 let text_edit = egui::TextEdit::multiline(self.text)
                     .frame(egui::Frame::NONE)

@@ -65,12 +65,14 @@
         dioxusCli08 = pkgs.rustPlatform.buildRustPackage (finalAttrs: {
           pname = "dioxus-cli";
           version = "0.8.0-alpha.1";
-          src = pkgs.fetchCrate {
-            pname = "dioxus-cli";
-            version = "0.8.0-alpha.1";
-            hash = "sha256-4x9xTc9FW03ohEhDOe+wJ0EJ4yR8HWFmiEA+hvlLF7Q=";
+          src = pkgs.fetchFromGitHub {
+            owner = "DioxusLabs";
+            repo = "dioxus";
+            rev = "v0.8.0-alpha.1";
+            hash = "sha256-Hra9F7nvc3OGTpU5Re1hFgpbOv9QtIFwdJvueGjhj40=";
           };
           cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
+          buildAndTestSubdir = "packages/cli";
           buildFeatures = [
             "no-downloads"
             "disable-telemetry"
@@ -545,7 +547,7 @@
               clippy
               wasmtime
               license-generator
-              # dioxusCli08
+              dioxusCli08
               tailwindcss_4
               simple-http-server
               strace

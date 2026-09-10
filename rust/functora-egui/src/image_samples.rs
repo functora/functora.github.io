@@ -9,7 +9,7 @@ const CIRCLE_RADIUS_SQUARED: u32 = CIRCLE_RADIUS * CIRCLE_RADIUS;
 const CENTER: u32 = 24;
 const CHECKER_CELL: u32 = 6;
 const JPEG_QUALITY: u8 = 85;
-const LIGHT: [u8; 3] = [240, 240, 245];
+const SKY: [u8; 3] = [56, 189, 248];
 const BLUE: [u8; 3] = [45, 120, 200];
 const RED: [u8; 3] = [230, 90, 60];
 
@@ -34,7 +34,7 @@ fn build_svg() -> Vec<u8> {
         });
     format!(
         "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{WIDTH}\" height=\"{HEIGHT}\" viewBox=\"0 0 {WIDTH} {HEIGHT}\"><rect width=\"{WIDTH}\" height=\"{HEIGHT}\" fill=\"{}\"/>{cells}<circle cx=\"{CENTER}\" cy=\"{CENTER}\" r=\"{CIRCLE_RADIUS}\" fill=\"{}\"/></svg>",
-        hex(LIGHT),
+        hex(SKY),
         hex(RED),
     )
     .into_bytes()
@@ -79,6 +79,7 @@ pub struct ImageBytes {
     pub name: &'static str,
     pub format: ImageType,
     pub bytes: Vec<u8>,
+    pub has_alpha: bool,
 }
 
 impl ImageBytes {
@@ -127,11 +128,12 @@ impl ImageSamples {
     }
 }
 
-fn sample(name: &'static str, format: ImageType, bytes: Vec<u8>) -> ImageBytes {
+fn sample(name: &'static str, format: ImageType, bytes: Vec<u8>, has_alpha: bool) -> ImageBytes {
     ImageBytes {
         name,
         format,
         bytes,
+        has_alpha,
     }
 }
 
@@ -147,13 +149,13 @@ fn rgb_channel(x: u32, y: u32) -> [u8; 3] {
     } else if (x / CHECKER_CELL + y / CHECKER_CELL).is_multiple_of(2) {
         BLUE
     } else {
-        LIGHT
+        SKY
     }
 }
 
 fn rgba_channel(x: u32, y: u32) -> [u8; 4] {
     let rgb = rgb_channel(x, y);
-    let alpha = if rgb == LIGHT { 0 } else { 255 };
+    let alpha = if rgb == SKY { 0 } else { 255 };
     [rgb[0], rgb[1], rgb[2], alpha]
 }
 
@@ -293,25 +295,27 @@ fn build_samples() -> Result<ImageSamples, image::ImageError> {
     let rgb = rgb_pixels();
     let rgba = rgba_pixels();
     Ok(ImageSamples {
-        svg: sample("sample-svg", ImageType::Svg, build_svg()),
-        png: sample("sample-png", ImageType::Png, encode_png(&rgb)?),
-        jpeg: sample("sample-jpeg", ImageType::Jpeg, encode_jpeg(&rgb)?),
-        gif: sample("sample-gif", ImageType::Gif, encode_gif(&rgb)?),
-        webp: sample("sample-webp", ImageType::Webp, encode_webp(&rgb)?),
-        bmp: sample("sample-bmp", ImageType::Bmp, encode_bmp(&rgb)?),
-        ico: sample("sample-ico", ImageType::Ico, encode_ico(&rgba)?),
-        qoi: sample("sample-qoi", ImageType::Qoi, encode_qoi(&rgb)?),
+        svg: sample("sample-svg", ImageType::Svg, build_svg(), false),
+        png: sample("sample-png", ImageType::Png, encode_png(&rgb)?, false),
+        jpeg: sample("sample-jpeg", ImageType::Jpeg, encode_jpeg(&rgb)?, false),
+        gif: sample("sample-gif", ImageType::Gif, encode_gif(&rgb)?, false),
+        webp: sample("sample-webp", ImageType::Webp, encode_webp(&rgb)?, false),
+        bmp: sample("sample-bmp", ImageType::Bmp, encode_bmp(&rgb)?, false),
+        ico: sample("sample-ico", ImageType::Ico, encode_ico(&rgba)?, true),
+        qoi: sample("sample-qoi", ImageType::Qoi, encode_qoi(&rgb)?, false),
         farbfeld: sample(
             "sample-farbfeld",
             ImageType::Farbfeld,
             encode_farbfeld(&rgba)?,
+            true,
         ),
-        tiff: sample("sample-tiff", ImageType::Tiff, encode_tiff(&rgb)?),
-        pnm: sample("sample-ppm", ImageType::Pnm, encode_pnm(&rgb)?),
+        tiff: sample("sample-tiff", ImageType::Tiff, encode_tiff(&rgb)?, false),
+        pnm: sample("sample-ppm", ImageType::Pnm, encode_pnm(&rgb)?, false),
         transparent: sample(
             "sample-transparent",
             ImageType::Png,
             encode_png_alpha(&rgba)?,
+            true,
         ),
     })
 }

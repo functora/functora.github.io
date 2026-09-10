@@ -1036,6 +1036,74 @@ fn image_sample_fixtures_decode_successfully() {
 
 #[test]
 #[cfg(feature = "images")]
+fn image_motif_colors_contrast_with_both_themes() {
+    fn channel(value: u8) -> f64 {
+        let linear = f64::from(value) / 255.0;
+        if linear <= 0.03928 {
+            linear / 12.92
+        } else {
+            ((linear + 0.055) / 1.055).powf(2.4)
+        }
+    }
+    fn luminance(color: [u8; 3]) -> f64 {
+        0.2126 * channel(color[0]) + 0.7152 * channel(color[1]) + 0.0722 * channel(color[2])
+    }
+    fn contrast(left: [u8; 3], right: [u8; 3]) -> f64 {
+        let lighter = luminance(left).max(luminance(right));
+        let darker = luminance(left).min(luminance(right));
+        (lighter + 0.05) / (darker + 0.05)
+    }
+    const WHITE: [u8; 3] = [255, 255, 255];
+    const DARK: [u8; 3] = [34, 34, 34];
+    let samples = image_samples();
+    let decoded = match image::load_from_memory(&samples.png.bytes) {
+        Ok(decoded) => decoded.to_rgb8(),
+        Err(error) => panic!("png fixture must decode: {error:?}"),
+    };
+    let palette: std::collections::HashSet<[u8; 3]> =
+        decoded.pixels().map(|pixel| pixel.0).collect();
+    assert_eq!(
+        palette.len(),
+        3,
+        "motif must use exactly three colors (two checker cells plus circle), found {palette:?}",
+    );
+    for color in palette {
+        assert!(
+            contrast(color, WHITE) >= 2.0,
+            "motif color {color:?} must stand out on the light-theme background, ratio {}",
+            contrast(color, WHITE),
+        );
+        assert!(
+            contrast(color, DARK) >= 3.0,
+            "motif color {color:?} must stand out on the dark-theme background, ratio {}",
+            contrast(color, DARK),
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_alpha_flags_match_decoded_pixels() {
+    let samples = image_samples();
+    for (label, sample) in samples
+        .all()
+        .into_iter()
+        .chain([("Transparent PNG", &samples.transparent)])
+        .filter(|(_, sample)| sample.format != functora_egui::ImageType::Svg)
+    {
+        match image::load_from_memory(&sample.bytes) {
+            Ok(decoded) => assert_eq!(
+                decoded.to_rgba8().pixels().any(|pixel| pixel.0[3] != 255),
+                sample.has_alpha,
+                "{label} has_alpha flag must match its transparent pixels",
+            ),
+            Err(error) => panic!("{label} fixture must decode: {error:?}"),
+        }
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
 fn image_fit_variants_render_without_panic() {
     let bytes = image_samples().png.bytes.clone();
     let mut app = App::new();

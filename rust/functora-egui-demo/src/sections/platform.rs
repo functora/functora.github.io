@@ -605,8 +605,7 @@ impl crate::app::ShowcaseApp {
                                         .bg_fill(theme.secondary)
                                         .sense(egui::Sense::click())
                                         .max_width(220.0)
-                                        .max_height(220.0)
-                                        .corner_radius(egui::CornerRadius::same(8)),
+                                        .max_height(220.0),
                                     )
                                     .on_hover_text(if name.is_empty() {
                                         "Image preview".to_owned()

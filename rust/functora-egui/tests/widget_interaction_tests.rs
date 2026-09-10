@@ -977,26 +977,18 @@ fn image_samples() -> &'static functora_egui::ImageSamples {
 #[cfg(feature = "images")]
 fn image_sample_fixtures_encode_successfully() {
     let samples = image_samples();
-    for (label, expected_ext, sample) in [
-        ("svg", ".svg", &samples.svg),
-        ("png", ".png", &samples.png),
-        ("jpeg", ".jpg", &samples.jpeg),
-        ("gif", ".gif", &samples.gif),
-        ("webp", ".webp", &samples.webp),
-        ("bmp", ".bmp", &samples.bmp),
-        ("ico", ".ico", &samples.ico),
-        ("qoi", ".qoi", &samples.qoi),
-        ("farbfeld", ".ff", &samples.farbfeld),
-        ("tiff", ".tiff", &samples.tiff),
-        ("ppm", ".ppm", &samples.pnm),
-        ("transparent", ".png", &samples.transparent),
-    ] {
+    for (label, sample) in samples
+        .all()
+        .into_iter()
+        .chain([("PNG", &samples.transparent)])
+    {
         assert!(
             !sample.bytes.is_empty(),
             "{label} fixture must not be empty"
         );
+        let expected_ext = format!(".{}", sample.format.extension());
         assert!(
-            sample.uri().ends_with(expected_ext),
+            sample.uri().ends_with(expected_ext.as_str()),
             "{label} uri must end with {expected_ext} for loader routing, got {}",
             sample.uri(),
         );
@@ -1007,19 +999,12 @@ fn image_sample_fixtures_encode_successfully() {
 #[cfg(feature = "images")]
 fn image_sample_fixtures_decode_successfully() {
     let samples = image_samples();
-    for (label, sample) in [
-        ("png", &samples.png),
-        ("jpeg", &samples.jpeg),
-        ("gif", &samples.gif),
-        ("webp", &samples.webp),
-        ("bmp", &samples.bmp),
-        ("ico", &samples.ico),
-        ("qoi", &samples.qoi),
-        ("farbfeld", &samples.farbfeld),
-        ("tiff", &samples.tiff),
-        ("ppm", &samples.pnm),
-        ("transparent", &samples.transparent),
-    ] {
+    for (label, sample) in samples
+        .all()
+        .into_iter()
+        .chain([("PNG", &samples.transparent)])
+        .filter(|(_, sample)| sample.format != functora_egui::ImageType::Svg)
+    {
         match image::load_from_memory(&sample.bytes) {
             Ok(decoded) => assert_eq!(
                 (decoded.width(), decoded.height()),
@@ -1071,21 +1056,8 @@ fn image_fit_variants_render_without_panic() {
 #[cfg(feature = "images")]
 fn image_all_formats_render_without_panic() {
     let samples = image_samples();
-    let formats: [&functora_egui::ImageBytes; 11] = [
-        &samples.svg,
-        &samples.png,
-        &samples.jpeg,
-        &samples.gif,
-        &samples.webp,
-        &samples.bmp,
-        &samples.ico,
-        &samples.qoi,
-        &samples.farbfeld,
-        &samples.tiff,
-        &samples.pnm,
-    ];
     let mut app = App::new();
-    for sample in formats {
+    for (_, sample) in samples.all() {
         let _ = app.step(vec![], &mut |ui| {
             let _ = ui.add(sample.to_image().max_width(96.0).alt_text(sample.uri()));
         });
@@ -1096,20 +1068,11 @@ fn image_all_formats_render_without_panic() {
 #[cfg(feature = "images")]
 fn image_to_image_preserves_uri() {
     let samples = image_samples();
-    for sample in [
-        &samples.svg,
-        &samples.png,
-        &samples.jpeg,
-        &samples.gif,
-        &samples.webp,
-        &samples.bmp,
-        &samples.ico,
-        &samples.qoi,
-        &samples.farbfeld,
-        &samples.tiff,
-        &samples.pnm,
-        &samples.transparent,
-    ] {
+    for (_, sample) in samples
+        .all()
+        .into_iter()
+        .chain([("PNG", &samples.transparent)])
+    {
         assert_eq!(sample.to_image().uri(), Some(sample.uri().as_str()));
     }
 }

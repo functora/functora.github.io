@@ -229,30 +229,16 @@ impl crate::app::ShowcaseApp {
         ui: &mut egui::Ui,
         samples: &functora_egui::ImageSamples,
     ) {
-        let png = samples.png.bytes.as_slice();
-        let transparent = samples.transparent.bytes.as_slice();
+        let png = samples.png.to_image();
+        let transparent = samples.transparent.to_image();
         let theme = ui.ctx().shadcn_theme();
-        let image_cr =
-            egui::CornerRadius::same(functora_egui::utils::f32_to_u8_clamped(theme.radius + 2.0));
         let spacing = ui.responsive_spacing();
         let cell = if ui.on_mobile() { 96.0 } else { 140.0 };
 
         _ = Typography::h4("Formats").show(ui);
         ui.add_space(8.0);
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
-            for (label, sample) in [
-                ("SVG", &samples.svg),
-                ("PNG", &samples.png),
-                ("JPEG", &samples.jpeg),
-                ("GIF", &samples.gif),
-                ("WebP", &samples.webp),
-                ("BMP", &samples.bmp),
-                ("ICO", &samples.ico),
-                ("QOI", &samples.qoi),
-                ("Farbfeld", &samples.farbfeld),
-                ("TIFF", &samples.tiff),
-                ("PPM", &samples.pnm),
-            ] {
+            for (label, sample) in samples.all() {
                 _ = f.ui(|ui2| {
                     _ = Typography::small(label).show(ui2);
                     _ = ui2.add(sample.to_image().max_width(cell).alt_text(label));
@@ -267,38 +253,27 @@ impl crate::app::ShowcaseApp {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Contain").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://fit-contain", png.to_vec())
+                    png.clone()
                         .maintain_aspect_ratio(true)
                         .max_width(200.0)
-                        .max_height(120.0)
-                        .corner_radius(image_cr),
+                        .max_height(120.0),
                 );
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Cover").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://fit-cover", png.to_vec())
+                    png.clone()
                         .maintain_aspect_ratio(true)
-                        .fit_to_exact_size(egui::vec2(200.0, 120.0))
-                        .corner_radius(image_cr),
+                        .fit_to_exact_size(egui::vec2(200.0, 120.0)),
                 );
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("FitWidth").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://fit-width", png.to_vec())
-                        .maintain_aspect_ratio(true)
-                        .max_width(200.0)
-                        .corner_radius(image_cr),
-                );
+                _ = ui2.add(png.clone().maintain_aspect_ratio(true).max_width(200.0));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Fill (distorts)").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://fit-fill", png.to_vec())
-                        .fit_to_exact_size(egui::vec2(200.0, 120.0))
-                        .corner_radius(image_cr),
-                );
+                _ = ui2.add(png.clone().fit_to_exact_size(egui::vec2(200.0, 120.0)));
             });
         });
         ui.add_space(16.0);
@@ -308,27 +283,20 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
             _ = f.ui(|ui2| {
                 _ = Typography::small("On primary").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://trans", transparent.to_vec())
-                        .bg_fill(theme.primary)
-                        .max_width(60.0),
-                );
+                _ = ui2.add(transparent.clone().bg_fill(theme.primary).max_width(60.0));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("On destructive").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://trans", transparent.to_vec())
+                    transparent
+                        .clone()
                         .bg_fill(theme.destructive)
                         .max_width(60.0),
                 );
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("On accent").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://trans", transparent.to_vec())
-                        .bg_fill(theme.accent)
-                        .max_width(60.0),
-                );
+                _ = ui2.add(transparent.clone().bg_fill(theme.accent).max_width(60.0));
             });
         });
         ui.add_space(16.0);
@@ -338,27 +306,20 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Primary tint").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://t1", transparent.to_vec())
-                        .tint(theme.primary)
-                        .max_width(60.0),
-                );
+                _ = ui2.add(transparent.clone().tint(theme.primary).max_width(60.0));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Destructive tint").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://t2", transparent.to_vec())
+                    transparent
+                        .clone()
                         .tint(theme.destructive)
                         .max_width(60.0),
                 );
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Accent tint").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://t3", transparent.to_vec())
-                        .tint(theme.accent)
-                        .max_width(60.0),
-                );
+                _ = ui2.add(transparent.clone().tint(theme.accent).max_width(60.0));
             });
         });
         ui.add_space(16.0);
@@ -368,12 +329,12 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Full").show(ui2);
-                _ = ui2.add(egui::Image::from_bytes("bytes://u0", png.to_vec()).max_width(120.0));
+                _ = ui2.add(png.clone().max_width(120.0));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Top-left quadrant").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://u1", png.to_vec())
+                    png.clone()
                         .uv(egui::Rect::from_min_max(
                             egui::pos2(0.0, 0.0),
                             egui::pos2(0.5, 0.5),
@@ -384,7 +345,7 @@ impl crate::app::ShowcaseApp {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Bottom-right quadrant").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://u2", png.to_vec())
+                    png.clone()
                         .uv(egui::Rect::from_min_max(
                             egui::pos2(0.5, 0.5),
                             egui::pos2(1.0, 1.0),
@@ -398,11 +359,7 @@ impl crate::app::ShowcaseApp {
         _ = Typography::h4("sense (clickable)").show(ui);
         ui.add_space(8.0);
         if ui
-            .add(
-                egui::Image::from_bytes("bytes://sense-click", png.to_vec())
-                    .sense(egui::Sense::click())
-                    .max_width(120.0),
-            )
+            .add(png.clone().sense(egui::Sense::click()).max_width(120.0))
             .clicked()
         {
             self.toast.add(
@@ -416,7 +373,7 @@ impl crate::app::ShowcaseApp {
         _ = Typography::h4("rotate (45-deg about center)").show(ui);
         ui.add_space(8.0);
         _ = ui.add(
-            egui::Image::from_bytes("bytes://rotate", png.to_vec())
+            png.clone()
                 .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))
                 .max_width(120.0),
         );
@@ -428,7 +385,7 @@ impl crate::app::ShowcaseApp {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Linear").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://L", png.to_vec())
+                    png.clone()
                         .texture_options(egui::TextureOptions::LINEAR)
                         .max_width(120.0),
                 );
@@ -436,7 +393,7 @@ impl crate::app::ShowcaseApp {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Nearest").show(ui2);
                 _ = ui2.add(
-                    egui::Image::from_bytes("bytes://N", png.to_vec())
+                    png.clone()
                         .texture_options(egui::TextureOptions::NEAREST)
                         .max_width(120.0),
                 );
@@ -446,12 +403,9 @@ impl crate::app::ShowcaseApp {
 
         _ = Typography::h4("fit_to_fraction / shrink_to_fit").show(ui);
         ui.add_space(8.0);
-        _ = ui.add(
-            egui::Image::from_bytes("bytes://fit-fraction", png.to_vec())
-                .fit_to_fraction(egui::vec2(0.5, 0.5)),
-        );
+        _ = ui.add(png.clone().fit_to_fraction(egui::vec2(0.5, 0.5)));
         ui.add_space(8.0);
-        _ = ui.add(egui::Image::from_bytes("bytes://shrink-fit", png.to_vec()).shrink_to_fit());
+        _ = ui.add(png.clone().shrink_to_fit());
         ui.add_space(16.0);
 
         _ = Typography::h4("from_texture").show(ui);
@@ -474,19 +428,11 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
             _ = f.ui(|ui2| {
                 _ = Typography::small("Shimmer on").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://shimmer-on", png.to_vec())
-                        .show_loading_spinner(true)
-                        .max_width(80.0),
-                );
+                _ = ui2.add(png.clone().show_loading_spinner(true).max_width(80.0));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("Shimmer off").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://shimmer-off", png.to_vec())
-                        .show_loading_spinner(false)
-                        .max_width(80.0),
-                );
+                _ = ui2.add(png.clone().show_loading_spinner(false).max_width(80.0));
             });
         });
         ui.add_space(16.0);
@@ -495,7 +441,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         let viewport_max = if ui.on_mobile() { 160.0 } else { 400.0 };
         _ = ui.add(
-            egui::Image::from_bytes("bytes://responsive", png.to_vec())
+            png.clone()
                 .maintain_aspect_ratio(true)
                 .max_width(viewport_max),
         );
@@ -506,16 +452,11 @@ impl crate::app::ShowcaseApp {
         _ = Flex::row().gap(spacing.gap).wrap().show(ui, |f| {
             _ = f.ui(|ui2| {
                 _ = Typography::small("max_size(200,150)").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://max-size", png.to_vec())
-                        .max_size(egui::vec2(200.0, 150.0)),
-                );
+                _ = ui2.add(png.clone().max_size(egui::vec2(200.0, 150.0)));
             });
             _ = f.ui(|ui2| {
                 _ = Typography::small("width(140)").show(ui2);
-                _ = ui2.add(
-                    egui::Image::from_bytes("bytes://fixed-width", png.to_vec()).max_width(140.0),
-                );
+                _ = ui2.add(png.clone().max_width(140.0));
             });
         });
         ui.add_space(16.0);
@@ -523,21 +464,16 @@ impl crate::app::ShowcaseApp {
         _ = Typography::h4("Card + Image").show(ui);
         ui.add_space(8.0);
         _ = Card::new().heading("Image inside a Card").show(ui, |ui2| {
-            _ = ui2.add(
-                egui::Image::from_bytes("bytes://card", transparent.to_vec())
-                    .bg_fill(theme.secondary)
-                    .max_width(160.0)
-                    .corner_radius(image_cr),
-            );
+            _ = ui2.add(transparent.clone().bg_fill(theme.secondary).max_width(160.0));
             ui2.add_space(8.0);
-            _ = Typography::small("Rounded corners match the theme.").show(ui2);
+            _ = Typography::small("Images compose inside cards.").show(ui2);
         });
         ui.add_space(16.0);
 
         _ = Typography::small("Error state shows alt text.").show(ui);
         ui.add_space(4.0);
         _ = ui.add(
-            egui::Image::from_bytes("bytes://missing", b"corrupt".to_vec())
+            egui::Image::from_bytes("bytes://missing.png", b"corrupt".to_vec())
                 .alt_text("Image unavailable")
                 .max_width(120.0),
         );
@@ -547,7 +483,7 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_image_snippet(ui: &mut egui::Ui) {
         snippet(
             ui,
-            "// Image: responsive images with egui::Image\nuse functora_egui::utils::f32_to_u8_clamped;\n\n// Setup once alongside fonts (enables svg, file and http loaders)\nfunctora_egui::setup_image_loaders(&cc.egui_ctx);\n\n// Show SVG, PNG, JPEG, GIF, WebP, BMP, ICO, QOI, Farbfeld, TIFF or PPM from bytes\nui.add(\n    egui::Image::from_bytes(\"bytes://photo\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"A photo\"),\n);\n\n// Cover mode crops overflow while preserving aspect\nui.add(\n    egui::Image::from_bytes(\"bytes://photo\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(300.0, 200.0)),\n);\n\n// Rounded corners match the theme\nlet image_cr = egui::CornerRadius::same(f32_to_u8_clamped(theme.radius + 2.0));\nui.add(\n    egui::Image::from_bytes(\"bytes://logo\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0)\n        .corner_radius(image_cr),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));",
+            "// Image: responsive images with egui::Image\n\n// Setup once alongside fonts (enables svg, file and http loaders)\nfunctora_egui::setup_image_loaders(&cc.egui_ctx);\n\n// Show SVG, PNG, JPEG, GIF, WebP, BMP, ICO, QOI, Farbfeld, TIFF or PPM from bytes\n// Keep the file extension in the URI so the loader routes correctly.\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"A photo\"),\n);\n\n// Cover mode crops overflow while preserving aspect\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(300.0, 200.0)),\n);\n\n// Paint a transparent image over a theme color\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));",
         );
     }
 }

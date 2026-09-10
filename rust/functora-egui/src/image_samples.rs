@@ -45,6 +45,7 @@ impl ImageType {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ImageBytes {
     pub name: &'static str,
     pub format: ImageType,
@@ -62,6 +63,7 @@ impl ImageBytes {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct ImageSamples {
     pub svg: ImageBytes,
     pub png: ImageBytes,
@@ -75,6 +77,25 @@ pub struct ImageSamples {
     pub tiff: ImageBytes,
     pub pnm: ImageBytes,
     pub transparent: ImageBytes,
+}
+
+impl ImageSamples {
+    #[must_use]
+    pub fn all(&self) -> [(&'static str, &ImageBytes); 11] {
+        [
+            ("SVG", &self.svg),
+            ("PNG", &self.png),
+            ("JPEG", &self.jpeg),
+            ("GIF", &self.gif),
+            ("WebP", &self.webp),
+            ("BMP", &self.bmp),
+            ("ICO", &self.ico),
+            ("QOI", &self.qoi),
+            ("Farbfeld", &self.farbfeld),
+            ("TIFF", &self.tiff),
+            ("PPM", &self.pnm),
+        ]
+    }
 }
 
 fn sample(name: &'static str, format: ImageType, bytes: Vec<u8>) -> ImageBytes {

@@ -325,7 +325,9 @@ impl crate::app::ShowcaseApp {
                         ui2,
                         224.0,
                         "Fill (distorts)",
-                        png.clone().fit_to_exact_size(egui::vec2(200.0, 120.0)),
+                        png.clone()
+                            .maintain_aspect_ratio(false)
+                            .fit_to_exact_size(egui::vec2(200.0, 120.0)),
                     );
                 });
             });
@@ -451,7 +453,11 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("Click the image to fire a toast.").show(ui);
         ui.add_space(8.0);
         if ui
-            .add(png.clone().sense(egui::Sense::click()).max_width(120.0))
+            .add(
+                png.clone()
+                    .sense(egui::Sense::click())
+                    .fit_to_exact_size(egui::vec2(120.0, 120.0)),
+            )
             .clicked()
         {
             self.toast.add(
@@ -463,14 +469,18 @@ impl crate::app::ShowcaseApp {
         ui.add_space(16.0);
 
         _ = Typography::h4("rotate (45-deg about center)").show(ui);
-        _ = Typography::muted("Rotation around a relative origin point.").show(ui);
+        _ = Typography::muted(
+            "Rotation around a relative origin point; the tilted corners need breathing room.",
+        )
+        .show(ui);
         ui.add_space(8.0);
+        ui.add_space(20.0);
         _ = ui.add(
             png.clone()
                 .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))
-                .max_width(120.0),
+                .fit_to_exact_size(egui::vec2(80.0, 80.0)),
         );
-        ui.add_space(16.0);
+        ui.add_space(20.0);
 
         _ = Typography::h4("texture_options (filtering)").show(ui);
         _ = Typography::muted("Linear smooths magnified pixels; nearest keeps them crisp.")
@@ -505,11 +515,37 @@ impl crate::app::ShowcaseApp {
         ui.add_space(16.0);
 
         _ = Typography::h4("fit_to_fraction / shrink_to_fit").show(ui);
-        _ = Typography::muted("Fractional sizing relative to the available space.").show(ui);
+        _ = Typography::muted(
+            "Fractional sizing needs real available height, so these live in a row; capped so wide viewports stay sane.",
+        )
+        .show(ui);
         ui.add_space(8.0);
-        _ = ui.add(png.clone().fit_to_fraction(egui::vec2(0.5, 0.5)));
-        ui.add_space(8.0);
-        _ = ui.add(png.clone().shrink_to_fit());
+        _ = Flex::row()
+            .gap(spacing.gap)
+            .align_start()
+            .wrap()
+            .show(ui, |f| {
+                _ = f.ui(|ui2| {
+                    Self::image_tile(
+                        ui2,
+                        204.0,
+                        "fit_to_fraction(0.5)",
+                        png.clone()
+                            .fit_to_fraction(egui::vec2(0.5, 0.5))
+                            .max_size(egui::vec2(280.0, 180.0)),
+                    );
+                });
+                _ = f.ui(|ui2| {
+                    Self::image_tile(
+                        ui2,
+                        224.0,
+                        "shrink_to_fit()",
+                        png.clone()
+                            .shrink_to_fit()
+                            .max_size(egui::vec2(320.0, 200.0)),
+                    );
+                });
+            });
         ui.add_space(16.0);
 
         _ = Typography::h4("from_texture").show(ui);
@@ -562,7 +598,7 @@ impl crate::app::ShowcaseApp {
         _ = ui.add(
             png.clone()
                 .maintain_aspect_ratio(true)
-                .max_width(viewport_max),
+                .fit_to_exact_size(egui::vec2(viewport_max, viewport_max)),
         );
         ui.add_space(16.0);
 
@@ -607,7 +643,7 @@ impl crate::app::ShowcaseApp {
         snippet(
             ui,
             "// Image: responsive images with egui::Image\n\n// Setup once alongside fonts (enables svg, file and http loaders)\nfunctora_egui::setup_image_loaders(&cc.egui_ctx);\n\n// Show SVG, PNG, JPEG, GIF, WebP, BMP, ICO, QOI, Farbfeld, TIFF or PPM from bytes\n// Keep the file extension in the URI so the loader routes correctly.\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"A photo\"),\n);\n\n// Cover mode crops overflow while preserving aspect\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(300.0, 200.0)),\n);\n\n// Paint a transparent image over a theme color (needs an alpha-channel image:
-// bg_fill shows through transparent pixels while opaque pixels cover it)\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));\n\n// Bundled fixtures: ImageSamples carries every encoding plus a transparent PNG\nlet samples = functora_egui::image_samples().expect(\"fixtures must encode\");\n\n// to_image bakes in the routing URI; clone one builder across many widgets\nlet png = samples.png.to_image();\nui.add(\n    png.clone()\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"Blue and sky checkerboard with a red circle\"),\n);\n\n// Transparent fixture: the fill shows through transparent pixels\nui.add(\n    samples\n        .transparent\n        .to_image()\n        .bg_fill(theme.secondary)\n        .max_width(160.0),\n);\n\n// Error state: failed loads fall back to a 24 px box, so pin an exact\n// size with aspect maintenance off to leave room for the alt text\nui.add(\n    egui::Image::from_bytes(\"bytes://missing.png\", data)\n        .maintain_aspect_ratio(false)\n        .fit_to_exact_size(egui::vec2(300.0, 64.0))\n        .alt_text(\"Blue checkerboard, red circle\"),\n);",
+// bg_fill shows through transparent pixels while opaque pixels cover it)\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Rotate about a relative origin (leave room: tilted corners extend past the box)\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))\n        .fit_to_exact_size(egui::vec2(80.0, 80.0)),\n);\n\n// Fractional sizing needs real available height, so show it in a row;\n// cap it so wide viewports stay sane\nfunctora_egui::Flex::row().gap(8.0).show(ui, |f| {\n    f.ui(|tile| {\n        tile.add(\n            egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n                .fit_to_fraction(egui::vec2(0.5, 0.5))\n                .max_size(egui::vec2(280.0, 180.0)),\n        );\n    });\n});\n\n// View-adaptive width (exact box: bare max_width collapses without available height)\nlet viewport_max = if ui.on_mobile() { 160.0 } else { 400.0 };\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(viewport_max, viewport_max)),\n);\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));\n\n// Bundled fixtures: ImageSamples carries every encoding plus a transparent PNG\nlet samples = functora_egui::image_samples().expect(\"fixtures must encode\");\n\n// to_image bakes in the routing URI; clone one builder across many widgets\nlet png = samples.png.to_image();\nui.add(\n    png.clone()\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"Blue and sky checkerboard with a red circle\"),\n);\n\n// Transparent fixture: the fill shows through transparent pixels\nui.add(\n    samples\n        .transparent\n        .to_image()\n        .bg_fill(theme.secondary)\n        .max_width(160.0),\n);\n\n// Error state: failed loads fall back to a 24 px box, so pin an exact\n// size with aspect maintenance off to leave room for the alt text\nui.add(\n    egui::Image::from_bytes(\"bytes://missing.png\", data)\n        .maintain_aspect_ratio(false)\n        .fit_to_exact_size(egui::vec2(300.0, 64.0))\n        .alt_text(\"Blue checkerboard, red circle\"),\n);",
         );
     }
 }

@@ -2,12 +2,12 @@
 
 use std::sync::OnceLock;
 
-const WIDTH: u32 = 48;
-const HEIGHT: u32 = 48;
-const CIRCLE_RADIUS: u32 = 11;
+const WIDTH: u32 = 256;
+const HEIGHT: u32 = 256;
+const CIRCLE_RADIUS: u32 = 59;
 const CIRCLE_RADIUS_SQUARED: u32 = CIRCLE_RADIUS * CIRCLE_RADIUS;
-const CENTER: u32 = 24;
-const CHECKER_CELL: u32 = 6;
+const CENTER: u32 = 128;
+const CHECKER_CELL: u32 = 32;
 const JPEG_QUALITY: u8 = 85;
 const SKY: [u8; 3] = [56, 189, 248];
 const BLUE: [u8; 3] = [45, 120, 200];

@@ -1008,8 +1008,8 @@ fn image_sample_fixtures_decode_successfully() {
         match image::load_from_memory(&sample.bytes) {
             Ok(decoded) => assert_eq!(
                 (decoded.width(), decoded.height()),
-                (48, 48),
-                "{label} fixture must decode to 48x48",
+                (256, 256),
+                "{label} fixture must decode to 256x256",
             ),
             Err(error) => panic!("{label} fixture must decode: {error:?}"),
         }
@@ -1021,13 +1021,13 @@ fn image_sample_fixtures_decode_successfully() {
                 "svg fixture must be an svg document",
             );
             assert!(
-                text.contains("<circle cx=\"24\" cy=\"24\" r=\"11\""),
-                "svg circle must match the raster motif (center 24,24 radius 11), got {text}",
+                text.contains("<circle cx=\"128\" cy=\"128\" r=\"59\""),
+                "svg circle must match the raster motif (center 128,128 radius 59), got {text}",
             );
-            let checker_cells = text.matches("width=\"6\" height=\"6\"").count();
+            let checker_cells = text.matches("width=\"32\" height=\"32\"").count();
             assert_eq!(
                 checker_cells, 32,
-                "svg checker must use 6px squares like the raster fixtures (8x8 grid, half filled), found {checker_cells} in {text}",
+                "svg checker must use 32px squares like the raster fixtures (8x8 grid, half filled), found {checker_cells} in {text}",
             );
         }
         Err(error) => panic!("svg fixture must be utf-8: {error:?}"),

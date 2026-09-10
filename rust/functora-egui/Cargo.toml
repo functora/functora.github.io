@@ -11,6 +11,7 @@ documentation = "https://docs.rs/functora-egui"
 
 [dependencies]
 egui = "0.36.1"
+egui_extras = { version = "0.36.1", default-features = false, optional = true }
 egui_flex = "0.8"
 log = "0.4"
 num-traits = "0.2"
@@ -23,7 +24,7 @@ functora-core = { path = "../functora-core" }
  form_urlencoded = "1.2"
  tracing = "0.1.43"
 zeroize = "1"
-image = { version = "0.25", default-features = false, features = ["png", "jpeg"], optional = true }
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "gif", "webp", "bmp", "ico", "qoi", "ff", "tiff", "pnm"], optional = true }
 pollster = "0.3"
 threadpool = "1.8"
 
@@ -142,6 +143,7 @@ android = [
     "dep:winit",
 ]
 build = ["dep:askama", "dep:toml"]
+images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif", "egui_extras/webp", "egui_extras/svg", "egui_extras/file", "egui_extras/http"]
 qr = ["functora-core/qr"]
 camera = ["qr", "dep:image"]
 router = ["dep:egui_router"]

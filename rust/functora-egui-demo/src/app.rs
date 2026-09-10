@@ -383,6 +383,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("Kbd", LucideIcon::Keyboard),
             ComponentDef::new("Item", LucideIcon::Rows3),
             ComponentDef::new("Icons", LucideIcon::Component),
+            ComponentDef::new("Image", LucideIcon::Image),
         ],
     ),
     (
@@ -775,6 +776,7 @@ impl ShowcaseApp {
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
+        functora_egui::setup_image_loaders(&cc.egui_ctx);
         let persistent =
             PersistentState::load_or_default(&cc.egui_ctx, "functora_egui_demo_persistent", ());
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
@@ -1044,6 +1046,7 @@ impl ShowcaseApp {
             "Kbd" => Self::demo_kbd(ui),
             "Item" => self.demo_item(ui),
             "Icons" => self.demo_icons(ui),
+            "Image" => self.demo_image(ui),
             "FieldGroup" => self.demo_field_group(ui),
             "FieldSet" => self.demo_field_set(ui),
             "FieldLegend" => Self::demo_field_legend(ui),

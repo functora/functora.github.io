@@ -18,6 +18,8 @@ pub use files::is_cancelled;
 pub use files::new_cancel_token;
 
 pub mod icons;
+#[cfg(feature = "images")]
+pub mod image_samples;
 pub mod layout;
 pub mod nav;
 pub mod paint;
@@ -84,6 +86,8 @@ pub use egui_flex::FlexJustify;
 pub use icons::lucide_icon::LucideIcon;
 pub use icons::paint_icon::paint_icon;
 pub use icons::paint_icon::paint_icon_svg;
+#[cfg(feature = "images")]
+pub use image_samples::{ImageBytes, ImageSamples, ImageType, image_samples};
 pub use layout::center::center;
 pub use layout::flex::Flex;
 pub use layout::flex_instance::FlexInst;
@@ -94,6 +98,7 @@ pub use route::RouteKind;
 pub use route::RouteMetadata;
 pub use route::breadcrumbs_for;
 pub use theme::setup_fonts::setup_fonts;
+pub use theme::setup_image_loaders::setup_image_loaders;
 pub use theme::shadcn_theme::ShadcnTheme;
 pub use theme::shadcn_theme_ext::ShadcnThemeExt;
 pub use tokens::alert_variant::AlertVariant;

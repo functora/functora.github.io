@@ -545,7 +545,7 @@
               clippy
               wasmtime
               license-generator
-              dioxusCli08
+              # dioxusCli08
               tailwindcss_4
               simple-http-server
               strace

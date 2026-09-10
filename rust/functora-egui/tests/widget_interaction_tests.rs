@@ -943,3 +943,253 @@ fn toast_vertical_spacing_is_consistent() {
         "toast gap should be 8.0, got {gap:.2} for rects {rects:?}"
     );
 }
+
+#[test]
+fn image_builder_sources_construct_without_panic() {
+    let _img = egui::Image::from_bytes("bytes://test", vec![0u8; 4]);
+    let _uri = egui::Image::from_uri("file:///tmp/x.png");
+}
+
+#[test]
+fn image_builder_options_render_without_panic() {
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut |ui| {
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://a", vec![])
+                .bg_fill(egui::Color32::RED)
+                .tint(egui::Color32::BLUE)
+                .alt_text("missing")
+                .maintain_aspect_ratio(true)
+                .fit_to_exact_size(egui::vec2(200.0, 120.0)),
+        );
+    });
+}
+
+#[cfg(feature = "images")]
+fn image_samples() -> &'static functora_egui::ImageSamples {
+    match functora_egui::image_samples() {
+        Ok(samples) => samples,
+        Err(error) => panic!("sample fixtures must encode: {error:?}"),
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_sample_fixtures_encode_successfully() {
+    let samples = image_samples();
+    for (label, expected_ext, sample) in [
+        ("svg", ".svg", &samples.svg),
+        ("png", ".png", &samples.png),
+        ("jpeg", ".jpg", &samples.jpeg),
+        ("gif", ".gif", &samples.gif),
+        ("webp", ".webp", &samples.webp),
+        ("bmp", ".bmp", &samples.bmp),
+        ("ico", ".ico", &samples.ico),
+        ("qoi", ".qoi", &samples.qoi),
+        ("farbfeld", ".ff", &samples.farbfeld),
+        ("tiff", ".tiff", &samples.tiff),
+        ("ppm", ".ppm", &samples.pnm),
+        ("transparent", ".png", &samples.transparent),
+    ] {
+        assert!(
+            !sample.bytes.is_empty(),
+            "{label} fixture must not be empty"
+        );
+        assert!(
+            sample.uri().ends_with(expected_ext),
+            "{label} uri must end with {expected_ext} for loader routing, got {}",
+            sample.uri(),
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_sample_fixtures_decode_successfully() {
+    let samples = image_samples();
+    for (label, sample) in [
+        ("png", &samples.png),
+        ("jpeg", &samples.jpeg),
+        ("gif", &samples.gif),
+        ("webp", &samples.webp),
+        ("bmp", &samples.bmp),
+        ("ico", &samples.ico),
+        ("qoi", &samples.qoi),
+        ("farbfeld", &samples.farbfeld),
+        ("tiff", &samples.tiff),
+        ("ppm", &samples.pnm),
+        ("transparent", &samples.transparent),
+    ] {
+        match image::load_from_memory(&sample.bytes) {
+            Ok(decoded) => assert_eq!(
+                (decoded.width(), decoded.height()),
+                (48, 48),
+                "{label} fixture must decode to 48x48",
+            ),
+            Err(error) => panic!("{label} fixture must decode: {error:?}"),
+        }
+    }
+    match std::str::from_utf8(&samples.svg.bytes) {
+        Ok(text) => assert!(
+            text.starts_with("<svg") && text.ends_with("</svg>"),
+            "svg fixture must be an svg document",
+        ),
+        Err(error) => panic!("svg fixture must be utf-8: {error:?}"),
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_fit_variants_render_without_panic() {
+    let bytes = image_samples().png.bytes.clone();
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut |ui| {
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://f-contain", bytes.clone())
+                .maintain_aspect_ratio(true)
+                .max_width(200.0)
+                .max_height(120.0),
+        );
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://f-cover", bytes.clone())
+                .maintain_aspect_ratio(true)
+                .fit_to_exact_size(egui::vec2(200.0, 120.0)),
+        );
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://f-width", bytes.clone())
+                .maintain_aspect_ratio(true)
+                .max_width(200.0),
+        );
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://f-fill", bytes.clone())
+                .fit_to_exact_size(egui::vec2(200.0, 120.0)),
+        );
+    });
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_all_formats_render_without_panic() {
+    let samples = image_samples();
+    let formats: [&functora_egui::ImageBytes; 11] = [
+        &samples.svg,
+        &samples.png,
+        &samples.jpeg,
+        &samples.gif,
+        &samples.webp,
+        &samples.bmp,
+        &samples.ico,
+        &samples.qoi,
+        &samples.farbfeld,
+        &samples.tiff,
+        &samples.pnm,
+    ];
+    let mut app = App::new();
+    for sample in formats {
+        let _ = app.step(vec![], &mut |ui| {
+            let _ = ui.add(sample.to_image().max_width(96.0).alt_text(sample.uri()));
+        });
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_to_image_preserves_uri() {
+    let samples = image_samples();
+    for sample in [
+        &samples.svg,
+        &samples.png,
+        &samples.jpeg,
+        &samples.gif,
+        &samples.webp,
+        &samples.bmp,
+        &samples.ico,
+        &samples.qoi,
+        &samples.farbfeld,
+        &samples.tiff,
+        &samples.pnm,
+        &samples.transparent,
+    ] {
+        assert_eq!(sample.to_image().uri(), Some(sample.uri().as_str()));
+    }
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_unbounded_render_without_panic() {
+    let bytes = image_samples().png.bytes.clone();
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut |ui| {
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://t-bounds", bytes.clone()).maintain_aspect_ratio(true),
+        );
+    });
+}
+
+#[test]
+fn image_corrupt_bytes_render_without_panic() {
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut |ui| {
+        let _ = ui.add(
+            egui::Image::from_bytes("bytes://t-corrupt", b"corrupt".to_vec())
+                .alt_text("Image unavailable")
+                .max_width(120.0),
+        );
+    });
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_renders_non_empty_rect() {
+    let bytes = image_samples().png.bytes.clone();
+    let mut app = App::new();
+    let out = app.step(vec![], &mut |ui| {
+        let _ = ui.add(egui::Image::from_bytes("bytes://demo", bytes.clone()).max_width(50.0));
+    });
+    let rects = App::rects(&out);
+    assert!(
+        rects.iter().any(|r| r.width() > 1.0 && r.height() > 1.0),
+        "image should paint a sizable rect, got {rects:?}"
+    );
+}
+
+#[test]
+#[cfg(feature = "images")]
+fn image_sense_click_detected() {
+    let bytes = image_samples().png.bytes.clone();
+    let mut app = App::new();
+    let mut clicked = false;
+    let mut body = |ui: &mut egui::Ui| {
+        if ui
+            .add(
+                egui::Image::from_bytes("bytes://c", bytes.clone())
+                    .sense(egui::Sense::click())
+                    .max_width(50.0),
+            )
+            .clicked()
+        {
+            clicked = true;
+        }
+    };
+    // First frame: establish the image rect under the cursor.
+    let _ = app.step(vec![], &mut body);
+    // Press, then release on the image to trigger a click.
+    let press = vec![egui::Event::PointerButton {
+        pos: Pos2::new(25.0, 25.0),
+        button: egui::PointerButton::Primary,
+        pressed: true,
+        modifiers: egui::Modifiers::default(),
+    }];
+    let _ = app.step(press, &mut body);
+    let release = vec![egui::Event::PointerButton {
+        pos: Pos2::new(25.0, 25.0),
+        button: egui::PointerButton::Primary,
+        pressed: false,
+        modifiers: egui::Modifiers::default(),
+    }];
+    let _ = app.step(release, &mut body);
+    assert!(
+        clicked,
+        "press+release on the image should register a click"
+    );
+}

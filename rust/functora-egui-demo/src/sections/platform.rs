@@ -595,13 +595,32 @@ impl crate::app::ShowcaseApp {
                                 .show(ui3);
                             }
                             functora_egui::files::Preview::Image(_) => {
-                                let source = format!("bytes://{name}");
-                                _ = ui3.add(
-                                    egui::Image::from_bytes(source, data.clone())
+                                let theme = ui3.ctx().shadcn_theme();
+                                let clicked = ui3
+                                    .add(
+                                        egui::Image::from_bytes(
+                                            format!("bytes://{name}"),
+                                            data.clone(),
+                                        )
+                                        .bg_fill(theme.secondary)
+                                        .sense(egui::Sense::click())
                                         .max_width(220.0)
                                         .max_height(220.0)
-                                        .corner_radius(8),
-                                );
+                                        .corner_radius(egui::CornerRadius::same(8)),
+                                    )
+                                    .on_hover_text(if name.is_empty() {
+                                        "Image preview".to_owned()
+                                    } else {
+                                        format!("Click to {name}")
+                                    })
+                                    .clicked();
+                                if clicked {
+                                    self.toast.add(
+                                        format!("Image: {name}"),
+                                        functora_egui::ToastVariant::Default,
+                                        ui3.ctx().input(|i| i.time),
+                                    );
+                                }
                                 _ = Typography::small(format!("Image: {name} ({size})")).show(ui3);
                             }
                             functora_egui::files::Preview::Video(ref url) => {

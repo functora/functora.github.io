@@ -6,25 +6,17 @@ use crate::progress::{Stage, claim_job, clear_progress};
 use crate::state::External;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Alert, Button, ButtonVariant, Flex, Input, Label, Progress};
+use functora_egui::{Button, ButtonVariant, Flex, Input, Label, Progress, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn screen_open(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
         let is_encrypted = match &self.temporary.external {
             External::Note(n) => matches!(n.data, NoteData::CipherText(_)),
             External::Archive(_) => true,
             External::Nothing => false,
         };
-        if let Some(msg) = self.temporary.message.clone() {
-            _ = Alert::new()
-                .title(msg.render(lang))
-                .variant(functora_egui::AlertVariant::Destructive)
-                .show(ui, |inner| {
-                    _ = inner.label(msg.render(lang));
-                });
-            let () = ui.add_space(8.0);
-        }
         if is_encrypted {
             _ = Label::new(Msg::EncryptedNote.render(lang)).show(ui);
             let () = ui.add_space(4.0);
@@ -38,7 +30,7 @@ impl CryptonoteApp {
                     .password(),
             );
             if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                self.decrypt_current();
+                self.decrypt_current(toast_time);
             }
             let () = ui.add_space(12.0);
             _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
@@ -50,7 +42,7 @@ impl CryptonoteApp {
                 .inner
                 .clicked()
                 {
-                    self.decrypt_current();
+                    self.decrypt_current(toast_time);
                 }
                 if f.add(
                     Button::new(BaseMsg::Paste.render(lang))
@@ -95,9 +87,14 @@ impl CryptonoteApp {
         }
     }
 
-    pub(crate) fn decrypt_current(&mut self) {
+    pub(crate) fn decrypt_current(&mut self, now: f64) {
         if self.temporary.password.is_empty() {
-            self.temporary.message = Some(Msg::Base(functora_egui::messages::Msg::PasswordRequired));
+            let lang = self.lang();
+            self.toast.add(
+                Msg::Base(functora_egui::messages::Msg::PasswordRequired).render(lang),
+                ToastVariant::Error,
+                now,
+            );
             return;
         }
         if claim_job(&mut self.temporary.progress, Stage::Decrypt).is_none() {

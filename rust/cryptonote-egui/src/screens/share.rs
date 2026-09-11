@@ -7,7 +7,7 @@ use crate::state::ActionMode;
 use crate::state::External;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Alert, Button, ButtonVariant, Flex, Progress, Textarea};
+use functora_egui::{Button, ButtonVariant, Flex, Progress, Textarea};
 
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
@@ -17,15 +17,6 @@ impl CryptonoteApp {
             _ => (String::new(), String::new()),
         };
         let pkg_ready = matches!(self.temporary.external, External::Archive(_));
-        if let Some(msg) = self.temporary.message.clone() {
-            _ = Alert::new()
-                .title(msg.render(lang))
-                .variant(functora_egui::AlertVariant::Default)
-                .show(ui, |inner| {
-                    _ = inner.label(msg.render(lang));
-                });
-            let () = ui.add_space(8.0);
-        }
         if pkg_ready {
             _ = ui.label(egui::RichText::new(Msg::ArchiveReady.render(lang)).size(16.0).strong());
             let () = ui.add_space(12.0);
@@ -52,8 +43,6 @@ impl CryptonoteApp {
                 self.clipboard_write_rx = Some(rx);
             }
             let () = ui.add_space(8.0);
-        } else if self.temporary.message.is_some() {
-            // already shown
         } else {
             _ = ui.label(Msg::Base(functora_egui::messages::Msg::Loading).render(lang));
             let () = ui.add_space(8.0);

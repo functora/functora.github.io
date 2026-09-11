@@ -70,9 +70,10 @@ pub enum Msg {
     PwaInstallUnavailable,
     PwaInstallIos,
     PwaInstallMac,
-    Dismiss,
     CipherAesLabel,
     CipherChaChaLabel,
+    PickingFiles,
+    FilesAttached(usize),
 }
 
 impl I18N for Msg {
@@ -202,9 +203,10 @@ If you have any questions regarding privacy while using the Application, or have
             Self::PwaInstallUnavailable => "PWA installation not available in this browser".into(),
             Self::PwaInstallIos => "To install: tap Share, then 'Add to Home Screen'.".into(),
             Self::PwaInstallMac => "To install: tap Share, then 'Add to Dock'.".into(),
-            Self::Dismiss => "Dismiss".into(),
             Self::CipherAesLabel => "AES-256-GCM (encryption)".into(),
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (encryption)".into(),
+            Self::PickingFiles => "Picking files...".into(),
+            Self::FilesAttached(count) => format!("Attached {count} file(s)"),
         }
     }
 
@@ -335,9 +337,10 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::PwaInstallUnavailable => "La instalación PWA no está disponible en este navegador".into(),
             Self::PwaInstallIos => "Para instalar: toca Compartir y luego «Añadir a pantalla de inicio».".into(),
             Self::PwaInstallMac => "Para instalar: toca Compartir y luego «Añadir al Dock».".into(),
-            Self::Dismiss => "Descartar".into(),
             Self::CipherAesLabel => "AES-256-GCM (cifrado)".into(),
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (cifrado)".into(),
+            Self::PickingFiles => "Seleccionando archivos...".into(),
+            Self::FilesAttached(count) => format!("Archivo(s) adjuntado(s): {count}"),
         }
     }
 
@@ -470,9 +473,10 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::PwaInstallUnavailable => "Установка PWA недоступна в этом браузере".into(),
             Self::PwaInstallIos => "Чтобы установить: нажмите «Поделиться», затем «На экран \"Домой\"».".into(),
             Self::PwaInstallMac => "Чтобы установить: нажмите «Поделиться», затем «Добавить в Dock».".into(),
-            Self::Dismiss => "Закрыть".into(),
             Self::CipherAesLabel => "AES-256-GCM (шифрование)".into(),
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (шифрование)".into(),
+            Self::PickingFiles => "Выбор файлов...".into(),
+            Self::FilesAttached(count) => format!("Прикреплено файлов: {count}"),
         }
     }
 }

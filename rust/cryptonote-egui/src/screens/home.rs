@@ -6,36 +6,15 @@ use crate::progress::{Stage, claim_job};
 use crate::route::Screen;
 use crate::state::{ActionMode, AttachmentIdx};
 use functora_egui::files::format_size;
-use functora_egui::i18n::I18N;
+use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Alert, Button, ButtonVariant, ComponentSize, Flex, Input, Label, Progress, Separator, Textarea};
+use functora_egui::{
+    Button, ButtonVariant, ComponentSize, Flex, Input, Label, Progress, Separator, Textarea, ToastVariant,
+};
 
 impl CryptonoteApp {
     pub(crate) fn screen_home(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        let message = self.temporary.message.clone();
-        let has_message = message.is_some();
-        if let Some(msg) = message.clone() {
-            let variant = match &msg {
-                Msg::Error(_) => functora_egui::AlertVariant::Destructive,
-                _ => functora_egui::AlertVariant::Default,
-            };
-            _ = Alert::new().title(msg.render(lang)).variant(variant).show(ui, |inner| {
-                _ = inner.label(msg.render(lang));
-            });
-            let () = ui.add_space(8.0);
-            if ui
-                .add(
-                    Button::new(BaseMsg::Dismiss.render(lang))
-                        .variant(ButtonVariant::Outline)
-                        .size(ComponentSize::Sm),
-                )
-                .clicked()
-            {
-                self.temporary.message = None;
-            }
-            let () = ui.add_space(12.0);
-        }
         // Action selector
         let () = ui.add_space(4.0);
         _ = Label::new(Msg::ActionLabel.render(lang)).show(ui);
@@ -69,7 +48,6 @@ impl CryptonoteApp {
                     .clicked()
                 {
                     self.temporary.action = mode;
-                    self.temporary.message = None;
                 }
             }
         });
@@ -87,11 +65,28 @@ impl CryptonoteApp {
             let () = ui.add_space(4.0);
             _ = Label::new(format!("{:?} {} / {}", job.stage, job.done, job.total)).show(ui);
         }
-        let _ = has_message;
+    }
+
+    fn show_pick_overlay(&mut self, ctx: &egui::Context, lang: Language) {
+        if self.pick_rx.is_none() {
+            return;
+        }
+        if let Some(cancel) = self.pick_cancel.clone() {
+            let mut open = self.pick_overlay_open;
+            functora_egui::BlockingOverlay::new(BaseMsg::PickingFiles.render(lang)).show(
+                ctx,
+                &mut open,
+                self.temporary.progress.as_ref(),
+                &cancel,
+            );
+            self.pick_overlay_open = open;
+        }
     }
 
     pub(crate) fn home_create(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
+        self.show_pick_overlay(ui.ctx(), lang);
         _ = Label::new(Msg::Mode.render(lang)).show(ui);
         let () = ui.add_space(4.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
@@ -155,7 +150,7 @@ impl CryptonoteApp {
             .clicked()
             {
                 if let Some(err) = share_error(self.temporary.cipher, &self.temporary.password) {
-                    self.temporary.message = Some(err);
+                    self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else {
                     let note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
@@ -185,6 +180,7 @@ impl CryptonoteApp {
             {
                 let cancel = functora_egui::new_cancel_token();
                 self.pick_cancel = Some(cancel.clone());
+                self.pick_overlay_open = true;
                 let rx = functora_egui::spawn_async(async move {
                     functora_egui::files::pick_files_with_cancel(true, None, Some(&cancel))
                         .await
@@ -230,6 +226,7 @@ impl CryptonoteApp {
 
     pub(crate) fn home_open(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
         _ = Label::new(Msg::OpenUrlLabel.render(lang)).show(ui);
         let () = ui.add_space(4.0);
         _ = ui.add(
@@ -250,11 +247,19 @@ impl CryptonoteApp {
             {
                 let url = self.temporary.url_input.trim().to_string();
                 if url.is_empty() {
-                    self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)));
+                    self.toast.add(
+                        Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang),
+                        ToastVariant::Error,
+                        toast_time,
+                    );
                 } else {
                     match handle_open_url(&url, &mut self.temporary) {
                         Ok(screen) => self.navigate(screen),
-                        Err(e) => self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e))),
+                        Err(e) => self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            toast_time,
+                        ),
                     }
                 }
             }
@@ -323,6 +328,7 @@ impl CryptonoteApp {
 
     pub(crate) fn home_scan(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
         let () = ui.add_space(8.0);
         _ = functora_egui::QrScanner::new()
             .continuous(true)
@@ -331,14 +337,20 @@ impl CryptonoteApp {
             self.qr_state.clear_decoded();
             match handle_open_url(&text, &mut self.temporary) {
                 Ok(screen) => self.navigate(screen),
-                Err(e) => self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e))),
+                Err(e) => self.toast.add(
+                    Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                    ToastVariant::Error,
+                    toast_time,
+                ),
             }
         }
         if let Some(err) = self.qr_state.error() {
-            self.qr_state.clear_error();
-            self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(AppError::InvalidFormat(
-                err.to_string(),
-            ))));
+            let text = Msg::Error(crate::error::MsgError::from(AppError::InvalidFormat(err.to_string()))).render(lang);
+            if self.unseen_qr_error(&text) {
+                self.toast.add(text, ToastVariant::Error, toast_time);
+            }
+        } else {
+            self.qr_error_notified = None;
         }
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {

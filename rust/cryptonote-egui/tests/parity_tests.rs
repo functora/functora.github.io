@@ -1,6 +1,6 @@
 //! Content parity with `cryptonote` (dioxus): no hardcoded English UI text
-//! in `screens`/shell, full `WhiteLabel` footer sentence, and complete
-//! About/Donate content. Mirrors the dioxus screen/message catalog.
+//! in `screens`/shell, full `WhiteLabel` footer sentence, complete
+//! About/Donate content, and toast-only feedback (no message banners).
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -62,6 +62,8 @@ const BANNED: &[(&str, &str)] = &[
     ("\"Audio: \"", "PreviewUnavailable fallback"),
     ("\"PDF: \"", "PreviewUnavailable fallback"),
     ("can't render SVG directly", "QR image"),
+    ("Uploading...", "Base::PickingFiles overlay title"),
+    ("temporary.message", "toast feedback"),
     ("\"Open\"", "Msg::ViewButton/Msg::OpenButton"),
     ("\"Download\"", "Msg::Download"),
     ("\"Copy\"", "Base::Copy"),
@@ -169,6 +171,25 @@ fn license_and_privacy_use_full_texts() {
     );
 }
 
+#[test]
+fn pick_flow_reports_progress_and_completion() {
+    assert!(
+        HOME_SRC.contains("BlockingOverlay"),
+        "attach flow must show a blocking overlay like the demo"
+    );
+    assert!(
+        HOME_SRC.contains("PickingFiles"),
+        "overlay title must render from the catalog"
+    );
+    assert!(
+        APP_SRC.contains("FilesAttached"),
+        "pick completion must toast the attached count"
+    );
+    assert!(
+        APP_SRC.contains("pick_overlay_open = false"),
+        "terminal pick states must close the overlay"
+    );
+}
 #[test]
 fn route_labels_are_localized() {
     assert!(

@@ -38,11 +38,13 @@ pub struct CryptonoteApp {
     pub(crate) download_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
     pub(crate) pick_rx: Option<std::sync::mpsc::Receiver<Result<Vec<(String, Vec<u8>)>, AppError>>>,
     pub(crate) pick_cancel: Option<functora_egui::CancelToken>,
+    pub(crate) pick_overlay_open: bool,
     pub(crate) generate_rx: Option<std::sync::mpsc::Receiver<Result<External, AppError>>>,
     pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
     pub(crate) qr_state: functora_egui::QrScannerState,
+    pub(crate) qr_error_notified: Option<String>,
     pub(crate) md_cache: functora_egui::CommonMarkCache,
 }
 
@@ -60,11 +62,13 @@ impl Default for CryptonoteApp {
             download_rx: None,
             pick_rx: None,
             pick_cancel: None,
+            pick_overlay_open: false,
             generate_rx: None,
             decrypt_rx: None,
             archive_rx: None,
             pwa_rx: None,
             qr_state: functora_egui::QrScannerState::new(),
+            qr_error_notified: None,
             md_cache: functora_egui::CommonMarkCache::default(),
         }
     }
@@ -117,6 +121,18 @@ impl CryptonoteApp {
         self.temporary.screen = Screen::Home;
     }
 
+    /// Edge-trigger for scanner errors: true only the first time a message
+    /// appears. The scanner holds its error until the user retries, so a
+    /// level-triggered toast here would spam every frame.
+    pub(crate) fn unseen_qr_error(&mut self, message: &str) -> bool {
+        if self.qr_error_notified.as_deref() == Some(message) {
+            false
+        } else {
+            self.qr_error_notified = Some(message.to_owned());
+            true
+        }
+    }
+
     fn poll_receivers(&mut self, ctx: &egui::Context) {
         let lang = self.lang();
         let mut needs_repaint = false;
@@ -152,7 +168,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_rx = Some(rx),
@@ -170,7 +190,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_write_rx = Some(rx),
@@ -186,7 +210,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.share_rx = Some(rx),
@@ -196,7 +224,6 @@ impl CryptonoteApp {
         if let Some(rx) = self.download_rx.take() {
             match rx.try_recv() {
                 Ok(Ok(name)) => {
-                    self.temporary.message = Some(Msg::Downloaded(name.clone()));
                     self.toast.add(
                         Msg::Downloaded(name).render(lang),
                         ToastVariant::Success,
@@ -208,7 +235,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                     clear_progress(&mut self.temporary.progress);
                 }
@@ -219,6 +250,7 @@ impl CryptonoteApp {
         if let Some(rx) = self.pick_rx.take() {
             match rx.try_recv() {
                 Ok(Ok(files)) => {
+                    let before = self.temporary.attachments.len();
                     for (name, data) in files {
                         let att = functora_egui::files::Attachment {
                             name: name.clone(),
@@ -226,22 +258,38 @@ impl CryptonoteApp {
                         };
                         crate::hooks::add_attachment(&mut self.temporary.attachments, att);
                     }
+                    let added = self.temporary.attachments.len() - before;
+                    self.toast.add(
+                        BaseMsg::FilesAttached(added).render(lang),
+                        ToastVariant::Success,
+                        ctx.input(|i| i.time),
+                    );
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.pick_overlay_open = false;
                 }
                 Ok(Err(e)) => {
-                    if !matches!(&e, AppError::Cancelled)
-                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+                    if matches!(&e, AppError::Cancelled)
+                        || matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast
+                            .add(e.render(lang), ToastVariant::Default, ctx.input(|i| i.time));
+                    } else {
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.pick_overlay_open = false;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.pick_rx = Some(rx),
                 Err(_) => {
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.pick_overlay_open = false;
                 }
             }
         }
@@ -256,7 +304,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                     clear_progress(&mut self.temporary.progress);
                 }
@@ -276,7 +328,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                     clear_progress(&mut self.temporary.progress);
                 }
@@ -301,7 +357,11 @@ impl CryptonoteApp {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
@@ -313,13 +373,23 @@ impl CryptonoteApp {
         if let Some(rx) = self.pwa_rx.take() {
             match rx.try_recv() {
                 Ok(Ok(msg)) => {
-                    self.temporary.message = Some(Msg::Base(msg));
+                    let variant = if matches!(msg, BaseMsg::PwaInstallSuccess) {
+                        ToastVariant::Success
+                    } else {
+                        ToastVariant::Default
+                    };
+                    self.toast
+                        .add(Msg::Base(msg).render(lang), variant, ctx.input(|i| i.time));
                 }
                 Ok(Err(e)) => {
                     if !matches!(&e, AppError::Cancelled)
                         && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
                     {
-                        self.temporary.message = Some(Msg::Error(crate::error::MsgError::from(e)));
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            ctx.input(|i| i.time),
+                        );
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.pwa_rx = Some(rx),
@@ -552,5 +622,125 @@ impl eframe::App for CryptonoteApp {
                     bottom_ui.add_space(4.0);
                 });
         }
+    }
+}
+
+#[cfg(test)]
+mod qr_scan_toast_tests {
+    use super::CryptonoteApp;
+
+    /// Drives the scan screen across frames with no camera available: the
+    /// scanner holds its error, so at most one error toast may fire no
+    /// matter how many frames render.
+    #[test]
+    fn scan_error_toasts_once_across_frames() {
+        let ctx = egui::Context::default();
+        let mut app = CryptonoteApp::default();
+        let toasts_before = app.toast.next_id();
+        for frame in 0..30 {
+            let raw = egui::RawInput {
+                screen_rect: Some(egui::Rect::from_min_size(
+                    egui::Pos2::ZERO,
+                    egui::Vec2::new(1280.0, 800.0),
+                )),
+                time: Some(f64::from(frame) / 60.0),
+                ..Default::default()
+            };
+            let mut out = ctx.run_ui(raw, |ui| {
+                let _ = egui::CentralPanel::default().show(ui, |inner| app.home_scan(inner));
+            });
+            out.textures_delta.clear();
+        }
+        assert!(
+            app.toast.next_id() - toasts_before <= 1,
+            "scan failures must toast at most once, got {}",
+            app.toast.next_id() - toasts_before
+        );
+    }
+
+    #[test]
+    fn unseen_qr_error_dedups_repeats() {
+        let mut app = CryptonoteApp::default();
+        assert!(app.unseen_qr_error("boom"));
+        assert!(!app.unseen_qr_error("boom"));
+        assert!(app.unseen_qr_error("different"));
+    }
+}
+
+#[cfg(test)]
+mod pick_feedback_tests {
+    use super::CryptonoteApp;
+    use crate::error::AppError;
+
+    fn ctx() -> egui::Context {
+        egui::Context::default()
+    }
+
+    fn send_pick(app: &mut CryptonoteApp, result: Result<Vec<(String, Vec<u8>)>, AppError>) {
+        let (tx, rx) = std::sync::mpsc::channel();
+        app.pick_rx = Some(rx);
+        app.pick_overlay_open = true;
+        assert!(tx.send(result).is_ok());
+        app.poll_receivers(&ctx());
+    }
+
+    #[test]
+    fn pick_completion_adds_attachments_and_toasts() {
+        let mut app = CryptonoteApp::default();
+        let toasts_before = app.toast.next_id();
+        send_pick(
+            &mut app,
+            Ok(vec![
+                ("a.txt".to_owned(), b"hello".to_vec()),
+                ("b.bin".to_owned(), vec![0u8, 1u8]),
+            ]),
+        );
+        assert_eq!(app.temporary.attachments.len(), 2);
+        assert!(app.pick_rx.is_none(), "slot must clear");
+        assert!(!app.pick_overlay_open, "overlay must close");
+        assert!(app.temporary.progress.is_none());
+        assert_eq!(
+            app.toast.next_id(),
+            toasts_before + 1,
+            "completion must fire exactly one toast"
+        );
+    }
+
+    #[test]
+    fn pick_completion_dedups_by_name() {
+        let mut app = CryptonoteApp::default();
+        send_pick(&mut app, Ok(vec![("a.txt".to_owned(), b"old".to_vec())]));
+        send_pick(&mut app, Ok(vec![("a.txt".to_owned(), b"new".to_vec())]));
+        assert_eq!(app.temporary.attachments.len(), 1);
+        let data = app.temporary.attachments[0].data.to_vec();
+        assert_eq!(data, b"new".to_vec(), "re-pick must refresh bytes");
+    }
+
+    #[test]
+    fn pick_cancel_toasts_silently() {
+        let mut app = CryptonoteApp::default();
+        let toasts_before = app.toast.next_id();
+        send_pick(&mut app, Err(AppError::Cancelled));
+        assert!(app.pick_rx.is_none());
+        assert!(!app.pick_overlay_open);
+        assert_eq!(
+            app.toast.next_id(),
+            toasts_before + 1,
+            "cancel must fire exactly one toast"
+        );
+    }
+
+    #[test]
+    fn pick_error_toasts() {
+        let mut app = CryptonoteApp::default();
+        let toasts_before = app.toast.next_id();
+        send_pick(&mut app, Err(AppError::NoFileSelected));
+        assert!(app.pick_rx.is_none());
+        assert!(!app.pick_overlay_open);
+        assert_eq!(
+            app.toast.next_id(),
+            toasts_before + 1,
+            "real errors must fire exactly one error toast"
+        );
     }
 }

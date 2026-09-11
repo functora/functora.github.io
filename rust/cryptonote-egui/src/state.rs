@@ -80,7 +80,6 @@ pub struct TemporaryState {
     pub external: External,
     pub progress: Option<Job<Stage>>,
     pub attachment: Option<AttachmentIdx>,
-    pub message: Option<crate::messages::Msg>,
 }
 
 impl Default for TemporaryState {
@@ -96,7 +95,6 @@ impl Default for TemporaryState {
             external: External::Nothing,
             progress: None,
             attachment: None,
-            message: None,
         }
     }
 }

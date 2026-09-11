@@ -8,22 +8,12 @@ use crate::state::{ActionMode, AttachmentIdx, External};
 use functora_egui::files::{Preview, format_size, preview};
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Alert, Button, ButtonVariant, Card, ComponentSize, Flex, Progress, Separator};
+use functora_egui::{Alert, Button, ButtonVariant, Card, ComponentSize, Flex, Progress, Separator, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn screen_view(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        if let Some(msg) = self.temporary.message.clone()
-            && matches!(msg, Msg::Error(_))
-        {
-            _ = Alert::new()
-                .title(msg.render(lang))
-                .variant(functora_egui::AlertVariant::Destructive)
-                .show(ui, |inner| {
-                    _ = inner.label(msg.render(lang));
-                });
-            let () = ui.add_space(8.0);
-        }
+        let toast_time = ui.ctx().input(|i| i.time);
         if self.temporary.note.is_empty() && self.temporary.attachments.is_empty() {
             _ = Alert::new()
                 .title(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang))
@@ -147,7 +137,7 @@ impl CryptonoteApp {
             .clicked()
             {
                 if let Some(err) = share_error(self.temporary.cipher, &self.temporary.password) {
-                    self.temporary.message = Some(err);
+                    self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else if !matches!(self.temporary.external, External::Nothing) {
                     self.navigate(Screen::Share);
                 } else if claim_job(&mut self.temporary.progress, Stage::Encrypt).is_some() {

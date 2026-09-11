@@ -125,14 +125,8 @@ fn footer_is_one_uniform_hypertext_layout() {
         !APP_SRC.contains("horizontal_wrapped"),
         "footer must not hand-roll a mixed-widget row"
     );
-    assert!(
-        !APP_SRC.contains("footer_link"),
-        "footer must not use per-link buttons"
-    );
-    assert!(
-        APP_SRC.contains(".centered()"),
-        "footer paragraph must be centered"
-    );
+    assert!(!APP_SRC.contains("footer_link"), "footer must not use per-link buttons");
+    assert!(APP_SRC.contains(".centered()"), "footer paragraph must be centered");
 }
 
 #[test]

@@ -1,5 +1,14 @@
 //! Show method for Sidebar -- renders a fixed sidebar panel.
 
+/// X of the sidebar divider: 1px inside the clip edge, never the frame
+/// edge. The frame origin jitters against the clip origin with subpixel
+/// rounding as content width changes, which used to clip the 1px line away
+/// entirely on some widths (e.g. wide translated labels hiding the
+/// desktop sidebar's left border).
+fn divider_x(ui: &egui::Ui, frame: egui::Rect) -> f32 {
+    ui.clip_rect().min.x.max(frame.min.x) + 1.0
+}
+
 impl super::widget::Sidebar {
     /// Shows the sidebar. `collapsed` controls collapsed state if collapsible.
     /// By default, on mobile it renders as a slide-in overlay drawer that is
@@ -223,7 +232,7 @@ impl super::widget::Sidebar {
             }
         });
         _ = ui.painter().vline(
-            inner.response.rect.min.x + 0.5,
+            divider_x(ui, inner.response.rect),
             inner.response.rect.y_range(),
             egui::Stroke::new(1.0, theme.border),
         );
@@ -357,7 +366,7 @@ impl super::widget::Sidebar {
                     }
                 });
                 _ = inner_ui.painter().vline(
-                    inner.response.rect.min.x + 0.5,
+                    divider_x(inner_ui, inner.response.rect),
                     inner.response.rect.y_range(),
                     egui::Stroke::new(1.0, theme.border),
                 );

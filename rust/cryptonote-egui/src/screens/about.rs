@@ -17,21 +17,12 @@ impl CryptonoteApp {
         _ = functora_egui::Hypertext::new()
             .text(BaseMsg::AboutAndroidBeta1.render(lang))
             .text(" ")
-            .link(
-                BaseMsg::AboutAndroidBetaLink1.render(lang),
-                APP_ATTRS.beta_url(),
-            )
+            .link(BaseMsg::AboutAndroidBetaLink1.render(lang), APP_ATTRS.beta_url())
             .text(format!(" {} ", BaseMsg::AboutAndroidBeta2.render(lang)))
-            .link(
-                BaseMsg::AboutAndroidBetaLink2.render(lang),
-                APP_ATTRS.google_play_url(),
-            )
+            .link(BaseMsg::AboutAndroidBetaLink2.render(lang), APP_ATTRS.google_play_url())
             .text(BaseMsg::AboutAndroidBeta3.render(lang))
             .text(" ")
-            .link(
-                BaseMsg::AboutAndroidBetaLink3.render(lang),
-                APP_ATTRS.apk_url(),
-            )
+            .link(BaseMsg::AboutAndroidBetaLink3.render(lang), APP_ATTRS.apk_url())
             .text(format!(" {} ", BaseMsg::AboutAndroidBeta4.render(lang)))
             .size(12.0)
             .show(ui);

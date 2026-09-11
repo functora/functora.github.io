@@ -12,7 +12,7 @@ type FooterFn<'a> = Box<dyn FnOnce(&mut egui::Ui) + 'a>;
 #[must_use]
 pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
     let spacing = ctx.responsive_spacing();
-    labels
+    let max_text = labels
         .iter()
         .map(|name| {
             let font_id = egui::FontId::proportional(14.0);
@@ -23,19 +23,39 @@ pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
                     .width()
             })
         })
-        .fold(0.0, f32::max)
-        .pipe(|max_text| {
-            let icon = spacing.touch_height * 0.5;
-            max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
-        })
+        .fold(0.0, f32::max);
+    let icon = spacing.touch_height * 0.5;
+    max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
 }
 
-trait Pipe: Sized {
-    fn pipe<U>(self, f: impl FnOnce(Self) -> U) -> U {
-        f(self)
+/// Clamps the sidebar width to the viewport: full label width where it fits,
+/// shrunk instead of overflowing on narrow screens.
+fn clamped_sidebar_width(ctx: &egui::Context, sidebar_labels: &[&str]) -> f32 {
+    let spacing = ctx.responsive_spacing();
+    let screen_width = ctx.input(|i| i.viewport_rect().width());
+    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
+    sidebar_effective_width(ctx, sidebar_labels).min((max_allowed_outer - 16.0).max(0.0))
+}
+
+/// Renders the collapsible sidebar and folds a mobile close request back
+/// into `collapsed`. Shared by the desktop side panel and the mobile drawer.
+fn render_sidebar(
+    ui: &mut egui::Ui,
+    effective: f32,
+    collapsed: &mut bool,
+    sidebar: &mut dyn FnMut(&mut egui::Ui) -> bool,
+) {
+    let close = std::cell::Cell::new(false);
+    let _ = crate::widgets::sidebar::widget::Sidebar::new()
+        .width(effective)
+        .collapsible()
+        .show(ui, collapsed, |side_ui| {
+            close.set(sidebar(side_ui));
+        });
+    if close.get() {
+        *collapsed = true;
     }
 }
-impl<T> Pipe for T {}
 
 pub struct Shell<'a, R>
 where
@@ -247,13 +267,10 @@ where
         if !ctx.on_mobile() {
             let is_rail = collapsed_val;
             let spacing = ctx.responsive_spacing();
-            let screen_width = ctx.input(|i| i.viewport_rect().width());
-            let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
             let effective = if is_rail {
                 spacing.touch_height
             } else {
-                sidebar_effective_width(&ctx, &sidebar_labels)
-                    .min((max_allowed_outer - 16.0).max(0.0))
+                clamped_sidebar_width(&ctx, &sidebar_labels)
             };
             let panel_outer = effective + 16.0;
             let panel_fill = if is_rail {
@@ -267,19 +284,10 @@ where
                 .resizable(false)
                 .show_separator_line(false)
                 .show(ui, |panel_ui| {
-                    let close = std::cell::Cell::new(false);
                     let mut tmp = collapsed_val;
                     let _ = egui::ScrollArea::vertical().show(panel_ui, |scroll_ui| {
-                        let _ = crate::widgets::sidebar::widget::Sidebar::new()
-                            .width(effective)
-                            .collapsible()
-                            .show(scroll_ui, &mut tmp, |side_ui| {
-                                close.set(sidebar(side_ui));
-                            });
+                        render_sidebar(scroll_ui, effective, &mut tmp, &mut sidebar);
                     });
-                    if close.get() {
-                        tmp = true;
-                    }
                     collapsed_val = tmp;
                 });
         }
@@ -287,22 +295,9 @@ where
             .frame(egui::Frame::NONE.fill(theme_bg.background))
             .show(ui, |central_ui| {
                 if central_ui.on_mobile() {
-                    let spacing = central_ui.responsive_spacing();
-                    let screen_width = central_ui.ctx().input(|i| i.viewport_rect().width());
-                    let max_allowed_outer = (screen_width - spacing.page_padding * 2.0).max(0.0);
-                    let effective = sidebar_effective_width(central_ui.ctx(), &sidebar_labels)
-                        .min((max_allowed_outer - 16.0).max(0.0));
-                    let close = std::cell::Cell::new(false);
+                    let effective = clamped_sidebar_width(central_ui.ctx(), &sidebar_labels);
                     let mut tmp = collapsed_val;
-                    let _ = crate::widgets::sidebar::widget::Sidebar::new()
-                        .width(effective)
-                        .collapsible()
-                        .show(central_ui, &mut tmp, |side_ui| {
-                            close.set(sidebar(side_ui));
-                        });
-                    if close.get() {
-                        tmp = true;
-                    }
+                    render_sidebar(central_ui, effective, &mut tmp, &mut sidebar);
                     collapsed_val = tmp;
                     central_ui.add_space(-central_ui.spacing().item_spacing.y);
                 }

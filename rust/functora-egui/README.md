@@ -93,17 +93,9 @@ functora_egui::Flex::row()
 
 ## Examples
 
-Run locally:
-
-```sh
-cargo run --example demo
-cargo run --example shadcn_demo
-cargo run --example component_dashboard
-```
-
 The `functora-egui-demo` crate in this repository is a full interactive
 showcase of every layout, component, widget, and feature, with light/dark
-theming and responsive mobile behavior:
+theming and responsive mobile behavior. Run it locally (from `rust/`):
 
 ```sh
 cargo run -p functora-egui-demo

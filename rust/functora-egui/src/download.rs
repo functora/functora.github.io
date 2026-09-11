@@ -17,25 +17,10 @@ pub async fn download_with_progress(
         crate::platform::android::save_to_downloads(&data, &name, on_progress)?;
         return Ok(name);
     }
-    #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
-    {
-        #[cfg(feature = "web")]
-        {
-            let _ = on_progress;
-            return crate::platform::web::download(data, filename).await;
-        }
-        #[cfg(not(feature = "web"))]
-        {
-            let _ = (data, on_progress);
-            return Err(Error::JS(
-                "Download not available (web feature disabled)".into(),
-            ));
-        }
-    }
-    #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+    #[cfg(not(target_os = "android"))]
     {
         let _ = on_progress;
-        return crate::platform::desktop::download(data, filename).await;
+        return crate::platform::backend::download(data, filename).await;
     }
     #[allow(unreachable_code)]
     {

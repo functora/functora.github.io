@@ -57,9 +57,16 @@ pub fn usize_to_u32(value: usize) -> u32 {
     u32::try_from(value).unwrap_or(u32::MAX)
 }
 
+/// Total `u32` pixel-area product. Uses `u64` math so hostile dimensions
+/// saturate instead of overflowing (which would panic in debug builds).
+#[must_use]
+pub fn pixel_area_len(width: u32, height: u32) -> usize {
+    usize::try_from(u64::from(width) * u64::from(height)).unwrap_or(usize::MAX)
+}
+
 #[must_use]
 pub fn nv21_luma(nv21: &[u8], width: u32, height: u32) -> Vec<u8> {
-    let len = (width * height) as usize;
+    let len = pixel_area_len(width, height);
     nv21.get(..len).map_or_else(Vec::new, <[u8]>::to_vec)
 }
 
@@ -68,7 +75,7 @@ pub fn nv21_luma(nv21: &[u8], width: u32, height: u32) -> Vec<u8> {
 pub fn nv21_to_rgba(nv21: &[u8], width: u32, height: u32) -> Vec<u8> {
     let cols = width.max(1);
     let rows = height.max(1);
-    let y_len = (cols * rows) as usize;
+    let y_len = pixel_area_len(cols, rows);
     let clamp = |value: i32| u8::try_from(value.clamp(0, 255)).unwrap_or(u8::MAX);
     let uv_offset = |row: usize, plane: usize, stride: u32| plane + (row / 2) * stride as usize;
     (0..rows as usize)
@@ -224,5 +231,20 @@ mod tests {
         assert_eq!(super::fps_to_interval_ms(15.0), 67);
         assert_eq!(super::fps_to_interval_ms(120.0), 17); // 1000/60 rounded
         assert_eq!(super::fps_to_interval_ms(0.0), 1000);
+    }
+
+    #[test]
+    fn pixel_area_len_multiplies_without_overflow() {
+        assert_eq!(super::pixel_area_len(2, 2), 4);
+        assert_eq!(super::pixel_area_len(0, u32::MAX), 0);
+        assert_eq!(
+            super::pixel_area_len(u32::MAX, u32::MAX),
+            usize::try_from(u64::from(u32::MAX) * u64::from(u32::MAX)).unwrap_or(usize::MAX)
+        );
+    }
+
+    #[test]
+    fn nv21_luma_hostile_dimensions_return_empty() {
+        assert!(super::nv21_luma(&[1, 2, 3], u32::MAX, u32::MAX).is_empty());
     }
 }

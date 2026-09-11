@@ -6,7 +6,7 @@ use crate::route::Screen;
 use crate::storage::APP_ATTRS;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex, Hyperlink};
+use functora_egui::{Button, ButtonVariant, Flex};
 
 impl CryptonoteApp {
     pub(crate) fn screen_about(&mut self, ui: &mut egui::Ui) {
@@ -14,22 +14,27 @@ impl CryptonoteApp {
         let note = Msg::AboutText.render(lang);
         _ = functora_egui::markdown_view::show(ui, &mut self.md_cache, &note);
         let () = ui.add_space(12.0);
-        _ = ui.horizontal_wrapped(|inner| {
-            inner.spacing_mut().item_spacing.x = 4.0;
-            _ = inner.label(BaseMsg::AboutAndroidBeta1.render(lang));
-            _ = Hyperlink::new(BaseMsg::AboutAndroidBetaLink1.render(lang))
-                .url(APP_ATTRS.beta_url())
-                .show(inner);
-            _ = inner.label(BaseMsg::AboutAndroidBeta2.render(lang));
-            _ = Hyperlink::new(BaseMsg::AboutAndroidBetaLink2.render(lang))
-                .url(APP_ATTRS.google_play_url())
-                .show(inner);
-            _ = inner.label(BaseMsg::AboutAndroidBeta3.render(lang));
-            _ = Hyperlink::new(BaseMsg::AboutAndroidBetaLink3.render(lang))
-                .url(APP_ATTRS.apk_url())
-                .show(inner);
-            _ = inner.label(BaseMsg::AboutAndroidBeta4.render(lang));
-        });
+        _ = functora_egui::Hypertext::new()
+            .text(BaseMsg::AboutAndroidBeta1.render(lang))
+            .text(" ")
+            .link(
+                BaseMsg::AboutAndroidBetaLink1.render(lang),
+                APP_ATTRS.beta_url(),
+            )
+            .text(format!(" {} ", BaseMsg::AboutAndroidBeta2.render(lang)))
+            .link(
+                BaseMsg::AboutAndroidBetaLink2.render(lang),
+                APP_ATTRS.google_play_url(),
+            )
+            .text(BaseMsg::AboutAndroidBeta3.render(lang))
+            .text(" ")
+            .link(
+                BaseMsg::AboutAndroidBetaLink3.render(lang),
+                APP_ATTRS.apk_url(),
+            )
+            .text(format!(" {} ", BaseMsg::AboutAndroidBeta4.render(lang)))
+            .size(12.0)
+            .show(ui);
         let () = ui.add_space(12.0);
         let app_url = APP_ATTRS.app_url();
         let ctx = ui.ctx().clone();

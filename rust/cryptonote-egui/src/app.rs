@@ -371,52 +371,41 @@ impl CryptonoteApp {
         }
     }
 
-    fn footer_link(ui: &mut egui::Ui, label: String) -> bool {
-        ui.add(
-            Button::new(label)
-                .variant(ButtonVariant::Link)
-                .size(functora_egui::ComponentSize::Sm),
-        )
-        .clicked()
-    }
-
     fn footer(&mut self, ui: &mut egui::Ui, lang: Language) {
-        let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let muted = |text: String| egui::RichText::new(text).size(11.0).color(theme.muted_foreground);
         _ = Separator::horizontal().show(ui);
         let () = ui.add_space(8.0);
-        _ = ui.horizontal_wrapped(|ui| {
-            ui.spacing_mut().item_spacing.x = 4.0;
-            _ = ui.label(muted(BaseMsg::Copyright.render(lang)));
-            _ = ui.label(muted(functora_egui::FUNCTORA_CORE_YEAR.to_string()));
-            _ = functora_egui::Hyperlink::new("Functora")
-                .url(APP_ATTRS.author_url())
-                .show(ui);
-            _ = ui.label(muted(".".to_string()));
-            _ = ui.label(muted(BaseMsg::AllRightsReserved.render(lang)));
-            _ = ui.label(muted(BaseMsg::ByContinuing.render(lang)));
-            if Self::footer_link(ui, BaseMsg::TermsOfService.render(lang)) {
-                self.navigate(Screen::License);
-            }
-            _ = ui.label(muted(BaseMsg::YouAgree.render(lang)));
-            if Self::footer_link(ui, BaseMsg::PrivacyPolicyAnd.render(lang)) {
-                self.navigate(Screen::Privacy);
-            }
-            _ = ui.label(muted(".".to_string()));
-            if Self::footer_link(ui, BaseMsg::DonateLink.render(lang)) {
-                self.navigate(Screen::Donate);
-            }
-            _ = ui.label(muted(BaseMsg::And.render(lang)));
-            if Self::footer_link(ui, BaseMsg::FooterShareWord.render(lang)) {
-                self.navigate(Screen::About);
-            }
-            _ = ui.label(muted(BaseMsg::FooterAppWord.render(lang)));
-            _ = ui.label(muted(format!(
-                "{} {}.",
+        // One text layout for the whole sentence: identical font, size and
+        // baseline for plain text, the author link and the navigation
+        // actions, on every screen width.
+        let (_, clicked) = functora_egui::Hypertext::new()
+            .text(BaseMsg::Copyright.render(lang))
+            .text(format!("{} ", functora_egui::FUNCTORA_CORE_YEAR))
+            .link("Functora", APP_ATTRS.author_url())
+            .text(format!(". {} ", BaseMsg::AllRightsReserved.render(lang)))
+            .text(format!("{} ", BaseMsg::ByContinuing.render(lang)))
+            .action(BaseMsg::TermsOfService.render(lang), "license")
+            .text(format!(" {} ", BaseMsg::YouAgree.render(lang)))
+            .action(BaseMsg::PrivacyPolicyAnd.render(lang), "privacy")
+            .text(". ")
+            .action(BaseMsg::DonateLink.render(lang), "donate")
+            .text(format!(" {} ", BaseMsg::And.render(lang)))
+            .action(BaseMsg::FooterShareWord.render(lang), "about")
+            .text(format!(
+                " {} {} {}.",
+                BaseMsg::FooterAppWord.render(lang),
                 BaseMsg::VersionLabel.render(lang),
                 APP_ATTRS.vsn
-            )));
-        });
+            ))
+            .size(11.0)
+            .centered()
+            .show_action(ui);
+        match clicked.as_deref() {
+            Some("license") => self.navigate(Screen::License),
+            Some("privacy") => self.navigate(Screen::Privacy),
+            Some("donate") => self.navigate(Screen::Donate),
+            Some("about") => self.navigate(Screen::About),
+            _ => {}
+        }
     }
 }
 

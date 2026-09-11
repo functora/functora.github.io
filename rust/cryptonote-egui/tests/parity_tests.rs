@@ -114,6 +114,28 @@ fn footer_matches_whitelabel_sentence() {
 }
 
 #[test]
+fn footer_is_one_uniform_hypertext_layout() {
+    // Mixed labels, buttons and hyperlinks in one row render at different
+    // sizes and baselines; a single Hypertext layout stays uniform.
+    assert!(
+        APP_SRC.contains("show_action"),
+        "footer must use Hypertext::show_action for navigation"
+    );
+    assert!(
+        !APP_SRC.contains("horizontal_wrapped"),
+        "footer must not hand-roll a mixed-widget row"
+    );
+    assert!(
+        !APP_SRC.contains("footer_link"),
+        "footer must not use per-link buttons"
+    );
+    assert!(
+        APP_SRC.contains(".centered()"),
+        "footer paragraph must be centered"
+    );
+}
+
+#[test]
 fn about_screen_has_full_content() {
     for fragment in [
         "AboutText",

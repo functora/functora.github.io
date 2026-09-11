@@ -6,8 +6,14 @@ use egui::{Align, FontId, Stroke, WidgetInfo, WidgetType};
 
 impl egui::Widget for super::widget::Hypertext {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        self.show_inner(ui).0
+    }
+}
+
+impl super::widget::Hypertext {
+    pub(crate) fn show_inner(self, ui: &mut egui::Ui) -> (egui::Response, Option<String>) {
         let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let font_id = FontId::proportional(12.0);
+        let font_id = FontId::proportional(self.size);
         let mut job = egui::text::LayoutJob::default();
         job.wrap.max_width = ui.available_width();
         job.halign = if self.centered {
@@ -31,7 +37,8 @@ impl egui::Widget for super::widget::Hypertext {
                         },
                     );
                 }
-                super::widget::Segment::Link { label, .. } => {
+                super::widget::Segment::Link { label, .. }
+                | super::widget::Segment::Action { label, .. } => {
                     job.append(
                         label,
                         0.0,
@@ -47,7 +54,10 @@ impl egui::Widget for super::widget::Hypertext {
             segment_ranges.push(start..end);
         }
         if job.is_empty() {
-            return ui.allocate_response(egui::vec2(0.0, 0.0), egui::Sense::hover());
+            return (
+                ui.allocate_response(egui::vec2(0.0, 0.0), egui::Sense::hover()),
+                None,
+            );
         }
         let galley = ui.fonts_mut(|fonts| fonts.layout_job(job.clone()));
         let available_w = ui.available_width();
@@ -72,7 +82,7 @@ impl egui::Widget for super::widget::Hypertext {
             ));
             if let Some(hover_pos) = ui.ctx().input(|i| i.pointer.hover_pos())
                 && response.contains_pointer()
-                && let Some(hovered) = find_hovered_link(
+                && let Some(hovered) = find_hovered_target(
                     &galley,
                     &job,
                     galley_pos,
@@ -93,9 +103,10 @@ impl egui::Widget for super::widget::Hypertext {
                 );
             }
         }
+        let mut clicked_action: Option<String> = None;
         if response.clicked()
             && let Some(hover_pos) = ui.ctx().pointer_interact_pos()
-            && let Some(idx) = find_hovered_link(
+            && let Some(idx) = find_hovered_target(
                 &galley,
                 &job,
                 galley_pos,
@@ -103,12 +114,19 @@ impl egui::Widget for super::widget::Hypertext {
                 &segment_ranges,
                 &self.segments,
             )
-            && let super::widget::Segment::Link { url, .. } = &self.segments[idx]
         {
-            ui.ctx().open_url(egui::OpenUrl::new_tab(url.clone()));
+            match &self.segments[idx] {
+                super::widget::Segment::Link { url, .. } => {
+                    ui.ctx().open_url(egui::OpenUrl::new_tab(url.clone()));
+                }
+                super::widget::Segment::Action { id, .. } => {
+                    clicked_action = Some(id.clone());
+                }
+                super::widget::Segment::Text(_) => {}
+            }
         }
         if response.hovered()
-            && find_hovered_link(
+            && find_hovered_target(
                 &galley,
                 &job,
                 galley_pos,
@@ -121,11 +139,11 @@ impl egui::Widget for super::widget::Hypertext {
         {
             response = response.on_hover_cursor(egui::CursorIcon::PointingHand);
         }
-        response
+        (response, clicked_action)
     }
 }
 
-fn find_hovered_link(
+fn find_hovered_target(
     galley: &egui::Galley,
     job: &egui::text::LayoutJob,
     galley_pos: egui::Pos2,
@@ -164,7 +182,7 @@ fn find_hovered_link(
     }
     let idx = seg_idx?;
     match &segments[idx] {
-        super::widget::Segment::Link { .. } => Some(idx),
+        super::widget::Segment::Link { .. } | super::widget::Segment::Action { .. } => Some(idx),
         super::widget::Segment::Text(_) => None,
     }
 }

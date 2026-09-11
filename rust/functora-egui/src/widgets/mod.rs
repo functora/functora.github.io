@@ -44,6 +44,7 @@ pub mod navigation_menu;
 pub mod number_input;
 pub(crate) mod overlay_common;
 pub mod pagination;
+pub(crate) mod paste_clear_core;
 pub mod popover;
 pub mod progress;
 pub mod property_grid;

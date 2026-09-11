@@ -1,25 +1,11 @@
-use std::sync::{Arc, Mutex};
-
 use crate::icons::lucide_icon::LucideIcon;
-use crate::utils::f32_to_u8_clamped;
+use crate::widgets::paste_clear_core::{
+    apply_clear, copy_pending, disabled_color, hover_color, paint_focused, paint_outer,
+    paint_tool_icon, paste_pending, pending_color, poll_copy, poll_paste, request_copy,
+    request_paste, respond, take_slots,
+};
 
-type PasteRx = std::sync::mpsc::Receiver<Result<String, crate::error::Error>>;
-type CopyRx = std::sync::mpsc::Receiver<Result<(), crate::error::Error>>;
-
-#[derive(Clone)]
-pub(crate) struct PasteSlot(pub Arc<Mutex<Option<PasteRx>>>);
-
-#[derive(Clone)]
-pub(crate) struct CopySlot(pub Arc<Mutex<Option<CopyRx>>>);
-
-#[derive(Debug)]
-pub struct PasteClearResponse {
-    pub response: egui::Response,
-    pub pasted: bool,
-    pub copied: bool,
-    pub cleared: bool,
-    pub clipboard_error: Option<crate::error::Error>,
-}
+pub use crate::widgets::paste_clear_core::PasteClearResponse;
 
 pub(crate) fn show_input_paste_clear(
     ui: &mut egui::Ui,
@@ -38,7 +24,6 @@ pub(crate) fn show_input_paste_clear(
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
     let height = spacing.touch_height;
-    let cr = egui::CornerRadius::same(f32_to_u8_clamped(theme.radius));
     let h_padding = spacing.touch_padding;
 
     let width = ui.available_width();
@@ -46,23 +31,7 @@ pub(crate) fn show_input_paste_clear(
     let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
-    let bg = if outer_hovered {
-        crate::paint::interpolate_color::interpolate_color(theme.background, theme.accent, 0.35)
-    } else {
-        theme.background
-    };
-    let border_color = if outer_hovered {
-        theme.input
-    } else {
-        theme.border
-    };
-    let _ = ui.painter().rect_filled(outer_rect, cr, bg);
-    let _ = ui.painter().rect_stroke(
-        outer_rect,
-        cr,
-        egui::Stroke::new(1.0, border_color),
-        egui::epaint::StrokeKind::Inside,
-    );
+    paint_outer(ui, outer_rect, &theme, outer_hovered);
 
     let copy_width: f32 = if copy { 40.0 } else { 0.0 };
     let paste_width: f32 = 40.0;
@@ -77,72 +46,16 @@ pub(crate) fn show_input_paste_clear(
     let left_reserve = copy_width + paste_width;
 
     let base_id = ui.auto_id_with("input_paste_clear");
-    let slot_id = base_id.with("slot");
     let paste_id = base_id.with("paste_btn");
     let clear_id = base_id.with("clear_btn");
     let reveal_id = base_id.with("reveal");
     let eye_id = base_id.with("eye_btn");
-    let copy_slot_id = base_id.with("copy_slot");
     let copy_id = base_id.with("copy_btn");
 
-    let slot = ui
-        .data(|d| d.get_temp::<PasteSlot>(slot_id))
-        .unwrap_or_else(|| PasteSlot(Arc::new(Mutex::new(None))));
-    let _ = ui.data_mut(|d| d.insert_temp(slot_id, slot.clone()));
+    let slots = take_slots(ui, base_id);
 
-    let copy_slot = ui
-        .data(|d| d.get_temp::<CopySlot>(copy_slot_id))
-        .unwrap_or_else(|| CopySlot(Arc::new(Mutex::new(None))));
-    let _ = ui.data_mut(|d| d.insert_temp(copy_slot_id, copy_slot.clone()));
-
-    let mut pasted = false;
-    let mut copied = false;
-    let mut clipboard_error: Option<crate::error::Error> = None;
-
-    if let Ok(mut guard) = slot.0.lock()
-        && let Some(rx) = guard.take()
-    {
-        match rx.try_recv() {
-            Ok(Ok(txt)) => {
-                txt.clone_into(text);
-                pasted = true;
-            }
-            Ok(Err(e)) => {
-                clipboard_error = Some(e);
-            }
-            Err(std::sync::mpsc::TryRecvError::Empty) => {
-                *guard = Some(rx);
-                ui.ctx().request_repaint();
-            }
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                clipboard_error = Some(crate::error::Error::JS(
-                    "Clipboard channel disconnected".into(),
-                ));
-            }
-        }
-    }
-
-    if let Ok(mut guard) = copy_slot.0.lock()
-        && let Some(rx) = guard.take()
-    {
-        match rx.try_recv() {
-            Ok(Ok(())) => {
-                copied = true;
-            }
-            Ok(Err(e)) => {
-                clipboard_error = Some(e);
-            }
-            Err(std::sync::mpsc::TryRecvError::Empty) => {
-                *guard = Some(rx);
-                ui.ctx().request_repaint();
-            }
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                clipboard_error = Some(crate::error::Error::JS(
-                    "Clipboard channel disconnected".into(),
-                ));
-            }
-        }
-    }
+    let (pasted, paste_error) = poll_paste(ui, &slots.paste, &mut *text);
+    let (copied, copy_error) = poll_copy(ui, &slots.copy);
 
     let revealed = if has_eye {
         ui.data(|d| d.get_temp::<bool>(reveal_id)).unwrap_or(false)
@@ -186,34 +99,22 @@ pub(crate) fn show_input_paste_clear(
     let clear_resp = ui.interact(clear_rect, clear_id, egui::Sense::click());
     let eye_resp = eye_rect.map(|r| ui.interact(r, eye_id, egui::Sense::click()));
 
-    let is_paste_pending = slot.0.lock().ok().is_some_and(|g| g.is_some());
-    let is_copy_pending = copy_slot.0.lock().ok().is_some_and(|g| g.is_some());
+    let is_paste_pending = paste_pending(&slots.paste);
+    let is_copy_pending = copy_pending(&slots.copy);
 
-    if paste_resp.clicked() && !is_paste_pending {
-        let rx = crate::utils::spawn_async(async move { crate::clipboard::read().await });
-        if let Ok(mut guard) = slot.0.lock() {
-            *guard = Some(rx);
-        }
-        ui.ctx().request_repaint();
+    if paste_resp.clicked() {
+        request_paste(ui, &slots.paste);
     }
 
     if let Some(resp) = &copy_resp
         && resp.clicked()
-        && !is_copy_pending
-        && !text.is_empty()
     {
-        let to_copy = text.clone();
-        let rx = crate::utils::spawn_async(async move { crate::clipboard::write(to_copy).await });
-        if let Ok(mut guard) = copy_slot.0.lock() {
-            *guard = Some(rx);
-        }
-        ui.ctx().request_repaint();
+        request_copy(ui, &slots.copy, text);
     }
 
     let mut cleared = false;
-    if clear_resp.clicked() && *text != default_value {
-        default_value.clone_into(text);
-        cleared = true;
+    if clear_resp.clicked() {
+        cleared = apply_clear(text, &default_value);
     }
     if let Some(resp) = &eye_resp
         && resp.clicked()
@@ -276,124 +177,62 @@ pub(crate) fn show_input_paste_clear(
         && let Some(resp) = &copy_resp
         && ui.is_rect_visible(rect)
     {
-        let icon_rect = egui::Rect::from_center_size(rect.center(), egui::vec2(16.0, 16.0));
-        let empty = text.is_empty();
-        let base_color = if empty {
-            egui::Color32::from_rgba_unmultiplied(
-                theme.muted_foreground.r(),
-                theme.muted_foreground.g(),
-                theme.muted_foreground.b(),
-                90,
-            )
-        } else if resp.hovered() {
-            theme.foreground
+        let base_color = if text.is_empty() {
+            disabled_color(&theme)
         } else {
-            theme.muted_foreground
+            hover_color(&theme, resp.hovered())
         };
         let display_color = if is_copy_pending {
-            egui::Color32::from_rgba_unmultiplied(
-                base_color.r(),
-                base_color.g(),
-                base_color.b(),
-                120,
-            )
+            pending_color(base_color)
         } else {
             base_color
         };
-        crate::icons::paint_icon::paint_icon(ui.painter(), icon_rect, &copy_icon, display_color);
+        paint_tool_icon(ui.painter(), rect, copy_icon, display_color);
     }
 
     if ui.is_rect_visible(paste_rect) {
-        let paste_icon_rect =
-            egui::Rect::from_center_size(paste_rect.center(), egui::vec2(16.0, 16.0));
-        let base_paste_color = if paste_resp.hovered() {
-            theme.foreground
-        } else {
-            theme.muted_foreground
-        };
+        let base_paste_color = hover_color(&theme, paste_resp.hovered());
         let display_paste_color = if is_paste_pending {
-            egui::Color32::from_rgba_unmultiplied(
-                base_paste_color.r(),
-                base_paste_color.g(),
-                base_paste_color.b(),
-                120,
-            )
+            pending_color(base_paste_color)
         } else {
             base_paste_color
         };
-        crate::icons::paint_icon::paint_icon(
-            ui.painter(),
-            paste_icon_rect,
-            &paste_icon,
-            display_paste_color,
-        );
+        paint_tool_icon(ui.painter(), paste_rect, paste_icon, display_paste_color);
     }
 
     if let (Some(rect), Some(resp)) = (eye_rect, &eye_resp)
         && ui.is_rect_visible(rect)
     {
-        let icon_rect = egui::Rect::from_center_size(rect.center(), egui::vec2(16.0, 16.0));
-        let eye_color = if resp.hovered() {
-            theme.foreground
-        } else {
-            theme.muted_foreground
-        };
-        crate::icons::paint_icon::paint_icon(
+        paint_tool_icon(
             ui.painter(),
-            icon_rect,
+            rect,
             if revealed {
-                &LucideIcon::EyeOff
+                LucideIcon::EyeOff
             } else {
-                &LucideIcon::Eye
+                LucideIcon::Eye
             },
-            eye_color,
+            hover_color(&theme, resp.hovered()),
         );
     }
 
     if ui.is_rect_visible(clear_rect) {
-        let clear_icon_rect =
-            egui::Rect::from_center_size(clear_rect.center(), egui::vec2(16.0, 16.0));
         let clear_enabled = *text != default_value;
-        let clear_color = if !clear_enabled {
-            egui::Color32::from_rgba_unmultiplied(
-                theme.muted_foreground.r(),
-                theme.muted_foreground.g(),
-                theme.muted_foreground.b(),
-                90,
-            )
-        } else if clear_resp.hovered() {
-            theme.foreground
+        let clear_color = if clear_enabled {
+            hover_color(&theme, clear_resp.hovered())
         } else {
-            theme.muted_foreground
+            disabled_color(&theme)
         };
         let icon = if clear_enabled {
             clear_icon
         } else {
             LucideIcon::X
         };
-        crate::icons::paint_icon::paint_icon(ui.painter(), clear_icon_rect, &icon, clear_color);
+        paint_tool_icon(ui.painter(), clear_rect, icon, clear_color);
     }
 
     if response.has_focus() {
-        let _ = ui.painter().rect_stroke(
-            outer_rect,
-            cr,
-            egui::Stroke::new(1.0, theme.ring),
-            egui::epaint::StrokeKind::Inside,
-        );
-        crate::paint::paint_focus_ring::paint_focus_ring(
-            ui.painter(),
-            outer_rect,
-            theme.radius,
-            theme.ring,
-        );
+        paint_focused(ui, outer_rect, &theme);
     }
 
-    PasteClearResponse {
-        response,
-        pasted,
-        copied,
-        cleared,
-        clipboard_error,
-    }
+    respond(response, pasted, copied, cleared, paste_error, copy_error)
 }

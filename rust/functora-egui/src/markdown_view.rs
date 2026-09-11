@@ -15,7 +15,7 @@ pub fn show(
     visuals.weak_text_color = Some(theme.muted_foreground);
     visuals.extreme_bg_color = theme.secondary;
     visuals.code_bg_color = theme.accent;
-    visuals.faint_bg_color = theme.muted;
+    visuals.faint_bg_color = theme.secondary;
     visuals.selection.bg_fill = theme.primary;
     visuals.selection.stroke = egui::Stroke::new(1.0, theme.primary_foreground);
     visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(1.0, theme.border);

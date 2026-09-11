@@ -110,7 +110,7 @@ impl Default for PlatformState {
             crypto_output: String::new(),
             worker_rx: None,
             platform_info: String::new(),
-            md_source: "# Showcase\n\nCommonMark **rendering** with *emphasis*, ~~strikethrough~~, `inline code` and [links](https://example.com).\n\n## Lists\n\n- Unordered item one\n- Unordered item two\n\n1. Ordered item one\n2. Ordered item two\n\n- [x] Completed task\n- [ ] Open task\n\n> Blockquote with **nested** emphasis.\n\n```rust\nfn main() {\n    println!(\"Hello\");\n}\n```\n\n| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n\n![Red dot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4o6ZGEmIY1TCqYfhqAAATqigQ9JeO5gAAAABJRU5ErkJggg==)\n\nHere is a footnote[^1].\n\n[^1]: Footnote text.\n\n---"
+            md_source: "# Showcase\n\nCommonMark **rendering** with *emphasis*, ~~strikethrough~~, `inline code` and [links](https://example.com).\n\n## Lists\n\n- Unordered item one\n- Unordered item two\n\n1. Ordered item one\n2. Ordered item two\n\n- [x] Completed task\n- [ ] Open task\n\n> Blockquote with **nested** emphasis.\n\n```rust\nfn main() {\n    println!(\"Hello\");\n}\n```\n\n| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n\n![Red dot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4o6ZGEmIY1TCqYfhqAAATqigQ9JeO5gAAAABJRU5ErkJggg==)\n\nHere is a footnote[^1].\n\n---\n\n[^1]: Footnote text."
                 .to_owned(),
             md_cache: functora_egui::CommonMarkCache::default(),
         }

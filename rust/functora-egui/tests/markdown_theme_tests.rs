@@ -93,6 +93,42 @@ fn light_theme_code_block_uses_shadcn_secondary_bg() {
 }
 
 #[test]
+fn dark_theme_table_stripe_uses_shadcn_secondary_bg() {
+    let dark = functora_egui::theme::shadcn_theme_dark::dark();
+    let shapes = rendered_shapes(
+        Theme::Dark,
+        "| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n| Gamma | 3 |\n| Delta | 4 |\n",
+    );
+    let fills = fills(&shapes);
+    assert!(
+        fills.contains(&dark.secondary),
+        "markdown table stripe must paint shadcn secondary bg in dark theme, got fills {fills:?}",
+    );
+    assert!(
+        !fills.contains(&dark.muted),
+        "markdown table stripe must not paint overly dark muted bg in dark theme, got fills {fills:?}",
+    );
+}
+
+#[test]
+fn light_theme_table_stripe_uses_shadcn_secondary_bg() {
+    let light = functora_egui::theme::shadcn_theme_light::light();
+    let shapes = rendered_shapes(
+        Theme::Light,
+        "| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n| Gamma | 3 |\n| Delta | 4 |\n",
+    );
+    let fills = fills(&shapes);
+    assert!(
+        fills.contains(&light.secondary),
+        "markdown table stripe must paint shadcn secondary bg in light theme, got fills {fills:?}",
+    );
+    assert!(
+        !fills.contains(&light.muted),
+        "markdown table stripe must not paint muted bg in light theme, got fills {fills:?}",
+    );
+}
+
+#[test]
 fn dark_theme_inline_code_uses_shadcn_accent_bg() {
     let dark = functora_egui::theme::shadcn_theme_dark::dark();
     let shapes = rendered_shapes(Theme::Dark, "inline `code` here");

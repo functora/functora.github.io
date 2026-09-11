@@ -106,3 +106,14 @@ impl TemporaryState {
         *self = Self::default();
     }
 }
+
+/// A fully loaded `.cryptonote` archive, computed off the UI thread and
+/// applied to `TemporaryState` by the poll arm. Keeps file IO and zip/crypto
+/// work out of the frame loop.
+#[derive(Debug, Clone)]
+pub struct OpenedArchive {
+    pub screen: crate::route::Screen,
+    pub external: External,
+    pub note: String,
+    pub attachments: Vec<functora_egui::files::Attachment>,
+}

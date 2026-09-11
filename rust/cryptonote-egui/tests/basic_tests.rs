@@ -51,7 +51,29 @@ fn route_metadata_children() {
 #[test]
 fn route_label() {
     assert_eq!(Screen::Home.label(Language::Eng).as_ref(), "Home");
-    assert_eq!(Screen::Open.label(Language::Eng).as_ref(), "Open");
+    assert_eq!(Screen::Open.label(Language::Eng).as_ref(), "Open URL");
+    assert_eq!(Screen::View.label(Language::Eng).as_ref(), "View");
+    assert_eq!(Screen::Share.label(Language::Eng).as_ref(), "Share");
+    assert_eq!(Screen::File.label(Language::Eng).as_ref(), "File");
+    assert_eq!(Screen::About.label(Language::Eng).as_ref(), "Application");
+    assert_eq!(Screen::Donate.label(Language::Eng).as_ref(), "Donate");
+    assert_eq!(Screen::License.label(Language::Eng).as_ref(), "Terms of Service");
+    assert_eq!(Screen::Privacy.label(Language::Eng).as_ref(), "Privacy Policy");
+    for screen in [
+        Screen::Home,
+        Screen::Open,
+        Screen::View,
+        Screen::Share,
+        Screen::About,
+        Screen::Donate,
+        Screen::License,
+        Screen::Privacy,
+        Screen::File,
+    ] {
+        for lang in [Language::Eng, Language::Spa, Language::Rus] {
+            assert!(!screen.label(lang).is_empty());
+        }
+    }
 }
 
 #[test]

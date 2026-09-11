@@ -5,7 +5,7 @@ use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::{Job, Stage, clear_progress};
 use crate::route::Screen;
-use crate::state::{External, ExternalNote, TemporaryState};
+use crate::state::{External, ExternalNote, OpenedArchive, TemporaryState};
 use crate::storage::APP_ATTRS;
 use functora_egui::Routable;
 use functora_tagged::InfallibleInto;
@@ -38,22 +38,29 @@ pub fn extract_note_param_or_err(url: &str) -> Result<String, AppError> {
     extract_note_param(url)
 }
 
-pub async fn open_archive_async(source: ArchiveSource, state: &mut TemporaryState) -> Result<Screen, AppError> {
+pub async fn load_archive_async(source: ArchiveSource) -> Result<OpenedArchive, AppError> {
+    use crate::state::OpenedArchive;
     let meta = crate::archive::read_archive_metadata(&source)?;
-    let screen = if meta.cipher.is_some() {
-        state.external = External::Archive(crate::crypto::ExternalArchive::new(source.into_bytes()?).infallible());
-        state.password.clear();
-        clear_progress(&mut state.progress);
-        Screen::Open
+    if meta.cipher.is_some() {
+        let bytes = match source {
+            ArchiveSource::Bytes(bytes) => bytes,
+            ArchiveSource::Path(path) => std::fs::read(&path).map_err(|e| AppError::Archive(e.to_string()))?,
+        };
+        Ok(OpenedArchive {
+            screen: Screen::Open,
+            external: External::Archive(crate::crypto::ExternalArchive::new(bytes).infallible()),
+            note: String::new(),
+            attachments: Vec::new(),
+        })
     } else {
         let (text, files) = crate::archive::extract_archive_package_async(source, "", |_| {}).await?;
-        clear_progress(&mut state.progress);
-        state.note = text;
-        state.attachments = files;
-        state.external = External::Nothing;
-        Screen::View
-    };
-    Ok(screen)
+        Ok(OpenedArchive {
+            screen: Screen::View,
+            external: External::Nothing,
+            note: text,
+            attachments: files,
+        })
+    }
 }
 
 async fn build_note(

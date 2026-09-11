@@ -10,6 +10,7 @@ pub mod markdown;
 pub mod messages;
 pub mod progress;
 pub mod route;
+pub mod screens;
 pub mod state;
 pub mod storage;
 #[cfg(target_arch = "wasm32")]

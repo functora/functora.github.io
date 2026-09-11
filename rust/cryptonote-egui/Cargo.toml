@@ -24,7 +24,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
 ] }
 egui = "0.36.1"
 egui_flex = "0.8"
-functora-egui = { path = "../functora-egui", features = ["web", "android", "qr", "camera", "router"] }
+functora-egui = { path = "../functora-egui", features = ["web", "android", "qr", "camera", "router", "images", "markdown"] }
 functora-core = { path = "../functora-core" }
 functora = { path = "../functora" }
 functora-tagged = { path = "../functora-tagged" }

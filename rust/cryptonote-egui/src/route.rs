@@ -1,9 +1,12 @@
 use std::borrow::Cow;
 
 use functora_egui::Routable;
-use functora_egui::i18n::Language;
+use functora_egui::i18n::{I18N, Language};
+use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::route::{RouteKind, RouteMetadata};
 use strum::{Display, EnumString};
+
+use crate::messages::Msg;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, Display, EnumString)]
 #[strum(serialize_all = "lowercase", ascii_case_insensitive)]
@@ -21,17 +24,17 @@ pub enum Screen {
 }
 
 impl RouteMetadata for Screen {
-    fn label(&self, _lang: Language) -> Cow<'static, str> {
+    fn label(&self, lang: Language) -> Cow<'static, str> {
         match self {
-            Self::Home => "Home".into(),
-            Self::Open => "Open".into(),
-            Self::View => "View".into(),
-            Self::Share => "Share".into(),
-            Self::About => "About".into(),
-            Self::Donate => "Donate".into(),
-            Self::License => "License".into(),
-            Self::Privacy => "Privacy".into(),
-            Self::File => "File".into(),
+            Self::Home => BaseMsg::Home.render(lang).into(),
+            Self::Open => Msg::OpenButton.render(lang).into(),
+            Self::View => Msg::ViewButton.render(lang).into(),
+            Self::Share => Msg::Share.render(lang).into(),
+            Self::About => BaseMsg::Application.render(lang).into(),
+            Self::Donate => BaseMsg::Donate.render(lang).into(),
+            Self::License => BaseMsg::TermsOfServiceTitle.render(lang).into(),
+            Self::Privacy => BaseMsg::PrivacyPolicyTitle.render(lang).into(),
+            Self::File => Msg::File.render(lang).into(),
         }
     }
 

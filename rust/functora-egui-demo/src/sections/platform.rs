@@ -6,6 +6,7 @@ use functora_egui::{
 };
 use std::sync::mpsc;
 
+use base64::Engine as _;
 use functora_egui::ToastState;
 use functora_egui::snippet;
 
@@ -45,7 +46,105 @@ impl crate::app::ShowcaseApp {
             || self.platform.camera_rx.is_some()
             || self.platform.qr_rx.is_some()
             || self.platform.thumbnail_rx.is_some()
+            || self.platform.zip_rx.is_some()
+            || self.platform.crypto_rx.is_some()
             || self.platform.worker_rx.is_some()
+    }
+
+    /// Builds a `(uri, jpeg bytes)` thumbnail pair from a data URL via the
+    /// real `files::video_thumbnail` (mp4 decode + cache). Pure and sync so
+    /// tests can exercise it; the demo runs it inside `spawn_async`. The uri
+    /// keeps a `.jpg` extension so the image loader routes correctly.
+    pub fn make_thumbnail(url: &str) -> Result<(String, Vec<u8>), String> {
+        let data_url = functora_egui::files::video_thumbnail(url).ok_or_else(|| {
+            "No thumbnail available: input is not a supported mp4 data URL".to_owned()
+        })?;
+        let payload = data_url.split_once(',').map_or("", |(_, rest)| rest);
+        let jpeg = base64::engine::general_purpose::STANDARD
+            .decode(payload)
+            .map_err(|_| "Thumbnail decode failed".to_owned())?;
+        if jpeg.is_empty() {
+            return Err("Thumbnail decode failed".to_owned());
+        }
+        Ok(("bytes://thumb.jpg".to_owned(), jpeg))
+    }
+
+    /// Checks an unzipped listing against the original files by name and
+    /// bytes. Pure so tests can exercise it without running the worker.
+    pub fn verify_zip_roundtrip(
+        original: &[(String, Vec<u8>)],
+        unzipped: &[(String, Vec<u8>)],
+    ) -> Result<String, String> {
+        if original.len() != unzipped.len() {
+            return Err(format!(
+                "Zip verify failed: expected {} files, got {}",
+                original.len(),
+                unzipped.len()
+            ));
+        }
+        for (name, data) in original {
+            match unzipped.iter().find(|(back_name, _)| back_name == name) {
+                Some((_, back_data)) if back_data == data => {}
+                Some(_) => {
+                    return Err(format!("Zip verify failed: content mismatch for {name}"));
+                }
+                None => return Err(format!("Zip verify failed: missing {name}")),
+            }
+        }
+        let total: usize = original.iter().map(|(_, data)| data.len()).sum();
+        Ok(format!(
+            "Zip ok: {} files, {total} bytes, round-trip verified",
+            original.len()
+        ))
+    }
+
+    /// Encrypts `input` with `password` (`ChaCha20Poly1305` + Argon2id) and
+    /// returns the note as JSON for the output card. Runs inside
+    /// `spawn_async` in the demo because key derivation blocks.
+    pub fn encrypt_output(input: &str, password: &str) -> Result<String, String> {
+        functora_egui::crypto::encrypt_symmetric(
+            input.as_bytes(),
+            password,
+            functora_egui::crypto::CipherType::ChaCha20Poly1305,
+            &[],
+        )
+        .map_err(|e| e.to_string())
+        .and_then(|note| serde_json::to_string(&note).map_err(|e| e.to_string()))
+    }
+
+    /// Parses an `encrypt_output` JSON note and decrypts it with `password`.
+    pub fn decrypt_output(json: &str, password: &str) -> Result<String, String> {
+        serde_json::from_str::<functora_egui::crypto::EncryptedNote>(json)
+            .map_err(|e| format!("Not an encrypted note: {e}"))
+            .and_then(|note| {
+                functora_egui::crypto::decrypt_symmetric(&note, password, &[])
+                    .map_err(|e| e.to_string())
+            })
+            .and_then(|bytes| {
+                String::from_utf8(bytes).map_err(|e| format!("Decrypted bytes are not text: {e}"))
+            })
+    }
+
+    async fn zip_roundtrip_async(files: Vec<(String, Vec<u8>)>) -> Result<String, String> {
+        let attachments = files
+            .iter()
+            .map(|(name, data)| functora_egui::files::Attachment {
+                name: name.clone(),
+                data: std::sync::Arc::from(data.clone()),
+            })
+            .collect::<Vec<_>>();
+        let zipped = functora_egui::zip::create_zip_async(
+            &attachments,
+            |_| {},
+            functora_egui::progress::Stage::Zip,
+        )
+        .await
+        .map_err(|e| e.to_string())?;
+        let unzipped =
+            functora_egui::zip::unzip_async(zipped, |_| {}, functora_egui::progress::Stage::Unzip)
+                .await
+                .map_err(|e| e.to_string())?;
+        Self::verify_zip_roundtrip(&files, &unzipped)
     }
 
     pub fn poll_platform_promises(&mut self, ctx: &egui::Context) {
@@ -182,14 +281,71 @@ impl crate::app::ShowcaseApp {
         ) {
             self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(msg) = poll_ok(
-            &mut self.platform.thumbnail_rx,
+        if let Some(rx) = self.platform.thumbnail_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok((uri, jpeg))) => {
+                    let len = jpeg.len();
+                    self.platform.thumbnail_image = Some((uri, jpeg));
+                    self.toast.add(
+                        format!("Thumbnail ready ({len} bytes)"),
+                        ToastVariant::Success,
+                        now,
+                    );
+                }
+                Ok(Err(error)) => {
+                    self.toast.add(
+                        format!("Thumbnail error: {error}"),
+                        ToastVariant::Error,
+                        now,
+                    );
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    self.platform.thumbnail_rx = Some(rx);
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    self.toast
+                        .add("Thumbnail disconnected", ToastVariant::Error, now);
+                }
+            }
+        }
+        if let Some(summary) = poll_ok(
+            &mut self.platform.zip_rx,
             &mut self.toast,
             now,
-            "Thumbnail error",
-            "Thumbnail disconnected",
+            "Zip error",
+            "Zip disconnected",
         ) {
-            self.toast.add(msg, ToastVariant::Success, now);
+            self.toast.add(summary, ToastVariant::Success, now);
+        }
+        if let Some(rx) = self.platform.crypto_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(text)) => {
+                    let label = match self.platform.crypto_op.take() {
+                        Some(crate::app::CryptoOp::Decrypt) => "Decrypted text",
+                        _ => "Encrypted note",
+                    };
+                    let len = text.len();
+                    self.platform.crypto_output = text;
+                    self.toast.add(
+                        format!("{label} ready ({len} bytes)"),
+                        ToastVariant::Success,
+                        now,
+                    );
+                }
+                Ok(Err(error)) => {
+                    self.platform.crypto_op = None;
+                    self.toast
+                        .add(format!("Crypto error: {error}"), ToastVariant::Error, now);
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    self.platform.crypto_rx = Some(rx);
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    self.platform.crypto_op = None;
+                    self.toast
+                        .add("Crypto disconnected", ToastVariant::Error, now);
+                }
+            }
         }
         if let Some(msg) = poll_ok(
             &mut self.platform.worker_rx,
@@ -1181,10 +1337,10 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_thumbnail(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_thumbnail(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
-            "Thumbnail: video_thumbnail (mp4→jpeg) + jpeg_data_url + cache. Web via canvas, native via mp4+rust_h264.",
+            "Thumbnail: files::video_thumbnail (mp4 data URL -> jpeg data URL) + cache. Native decodes via mp4+rust_h264; web reports unavailable.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -1194,32 +1350,50 @@ impl crate::app::ShowcaseApp {
         );
         ui.add_space(8.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("Generate thumbnail").icon(functora_egui::LucideIcon::Image))
-                .inner
-                .clicked()
+            let busy = self.platform.thumbnail_rx.is_some();
+            if f.add(
+                Button::new(if busy {
+                    "Generating..."
+                } else {
+                    "Generate thumbnail"
+                })
+                .icon(functora_egui::LucideIcon::Image)
+                .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 let url = self.platform.thumbnail_input.clone();
-                self.platform.thumbnail_rx = Some(spawn_async(async move {
-                    Ok(format!("Thumbnail placeholder for len {}", url.len()))
-                }));
+                self.platform.thumbnail_rx =
+                    Some(spawn_async(async move { Self::make_thumbnail(&url) }));
             }
         });
         ui.add_space(8.0);
+        if let Some((uri, jpeg)) = self.platform.thumbnail_image.clone() {
+            _ = Typography::small(format!("Thumbnail: {} bytes", jpeg.len())).show(ui);
+            ui.add_space(4.0);
+            _ = ui.add(
+                egui::Image::from_bytes(uri, jpeg)
+                    .maintain_aspect_ratio(true)
+                    .max_height(240.0),
+            );
+            ui.add_space(4.0);
+        }
         _ = Typography::small(
-            "Tip: pick a video file in Files demo, then paste its data URL here.",
+            "Tip: pick a video file in Files demo, then paste its data URL here. Non-video input reports an honest error.",
         )
         .show(ui);
 
         snippet(
             ui,
-            "// Thumbnail: video_thumbnail (mp4 -> jpeg)\nuse functora_egui::thumbnail::video_thumbnail;\n\n// Input: video bytes (mp4)\nlet video_bytes: Vec<u8> = ...;\n\n// Generate thumbnail\nlet jpeg = video_thumbnail(&video_bytes)?;\n// Returns JPEG bytes\n\n// Convert to data URL for display\nlet data_url = format!(\"data:image/jpeg;base64,{}\", base64::encode(&jpeg));\n// Use with egui::Image::new(data_url)",
+            "// Thumbnail: files::video_thumbnail (mp4 data URL -> jpeg) + from_bytes display\nuse functora_egui::{spawn_async, files::video_thumbnail};\n\n// Pure helper (runs inside spawn_async so mp4 decode never blocks paint)\nfn make_thumbnail(url: &str) -> Result<(String, Vec<u8>), String> {\n    let data_url = video_thumbnail(url)\n        .ok_or_else(|| \"No thumbnail available\".to_owned())?;\n    let payload = data_url.split_once(',').map(|(_, rest)| rest).unwrap_or(\"\");\n    let jpeg = base64_decode(payload)?;\n    Ok((\"bytes://thumb.jpg\".to_owned(), jpeg))\n}\n\nlet url = thumbnail_input.clone();\nthumbnail_rx = Some(spawn_async(async move { make_thumbnail(&url) }));\n\n// Render the stored bytes (bytes:// keeps the extension for loader routing)\nif let Some((uri, jpeg)) = &thumbnail_image {\n    ui.add(\n        egui::Image::from_bytes(uri.clone(), jpeg.clone())\n            .maintain_aspect_ratio(true)\n            .max_height(240.0),\n    );\n}",
         );
     }
 
     pub(crate) fn demo_zip(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
-            "Zip: create_zip_async / unzip_async via worker::run with progress Job<Stage>. Uses picked files from Files demo.",
+            "Zip: zip::create_zip_async / unzip_async over the picked files from Files demo, then verify_zip_roundtrip compares names and bytes.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -1231,33 +1405,43 @@ impl crate::app::ShowcaseApp {
         ui.add_space(8.0);
         let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("Create zip")).inner.clicked() {
-                let count = self.platform.picked.len();
-                if count == 0 {
+            let busy = self.platform.zip_rx.is_some();
+            if f.add(
+                Button::new(if busy {
+                    "Zipping..."
+                } else {
+                    "Create zip + verify"
+                })
+                .enabled(!busy),
+            )
+            .inner
+            .clicked()
+            {
+                let files = self.platform.picked.clone();
+                if files.is_empty() {
                     self.toast.add(
                         "No files picked (go to Files)",
                         ToastVariant::Error,
                         ctx.input(|i| i.time),
                     );
                 } else {
-                    self.toast.add(
-                        format!("Zip would include {count} files (demo placeholder)"),
-                        ToastVariant::Success,
-                        ctx.input(|i| i.time),
-                    );
+                    self.platform.zip_rx = Some(spawn_async(async move {
+                        Self::zip_roundtrip_async(files).await
+                    }));
                 }
             }
         });
 
         snippet(
             ui,
-            "// Zip: create_zip_async + unzip_async with progress\nuse functora_egui::zip::{create_zip_async, unzip_async};\nuse functora_egui::progress::{Job, Stage};\n\n// Create zip from picked files\nlet files: Vec<(String, Vec<u8>)> = ...;\nlet mut job = Job { stage: Stage::Zip, done: 0, total: files.len(), name: None };\n\nlet zip_bytes = create_zip_async(&files, &mut job, Stage::Zip).await?;\n// zip_bytes: Vec<u8>\n\n// Unzip\nlet mut job = Job { stage: Stage::Unzip, done: 0, total: 0, name: None };\nlet files = unzip_async(&zip_bytes, &mut job, Stage::Unzip).await?;\n// files: Vec<(String, Vec<u8>)>",
+            "// Zip: create_zip_async + unzip_async + verify_zip_roundtrip\nuse functora_egui::zip::{create_zip_async, unzip_async};\nuse functora_egui::progress::Stage;\nuse functora_egui::files::Attachment;\n\nlet attachments = picked\n    .iter()\n    .map(|(name, data)| Attachment { name: name.clone(), data: data.clone().into() })\n    .collect::<Vec<_>>();\n\nlet zipped = create_zip_async(&attachments, |_| {}, Stage::Zip).await?;\nlet unzipped = unzip_async(zipped, |_| {}, Stage::Unzip).await?;\nlet summary = Self::verify_zip_roundtrip(&picked, unzipped)?;\n// \"Zip ok: 2 files, 42 bytes, round-trip verified\"",
         );
     }
 
     pub(crate) fn demo_crypto(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
-            "Crypto: functora_core::crypto encrypt_symmetric / decrypt_symmetric (ChaCha20Poly1305/AES-GCM) + KDF.",
+            "Crypto: encrypt_output / decrypt_output (ChaCha20Poly1305 + Argon2id via crypto::encrypt_symmetric). Key derivation runs in spawn_async so paint never blocks.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -1266,22 +1450,44 @@ impl crate::app::ShowcaseApp {
         _ = ui.add(Input::new(&mut self.platform.crypto_password).placeholder("password"));
         ui.add_space(8.0);
         _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(Button::new("Encrypt").icon(functora_egui::LucideIcon::Lock))
-                .inner
-                .clicked()
+            let busy = self.platform.crypto_rx.is_some();
+            if f.add(
+                Button::new(if busy { "Working..." } else { "Encrypt" })
+                    .icon(functora_egui::LucideIcon::Lock)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 let input = self.platform.crypto_input.clone();
-                self.platform.crypto_output = format!("Encrypted placeholder for '{input}'");
+                let password = self.platform.crypto_password.clone();
+                self.platform.crypto_op = Some(crate::app::CryptoOp::Encrypt);
+                self.platform.crypto_rx = Some(spawn_async(async move {
+                    Self::encrypt_output(&input, &password)
+                }));
             }
-            if f.add(Button::new("Decrypt").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new("Decrypt")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
-                self.platform.crypto_output = "Decrypted placeholder".to_string();
+                let json = self.platform.crypto_output.clone();
+                let password = self.platform.crypto_password.clone();
+                self.platform.crypto_op = Some(crate::app::CryptoOp::Decrypt);
+                self.platform.crypto_rx = Some(spawn_async(async move {
+                    Self::decrypt_output(&json, &password)
+                }));
             }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
+            if f.add(
+                Button::new("Clear")
+                    .variant(ButtonVariant::Outline)
+                    .enabled(!busy),
+            )
+            .inner
+            .clicked()
             {
                 self.platform.crypto_output.clear();
             }
@@ -1295,7 +1501,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Crypto: encrypt_symmetric / decrypt_symmetric (ChaCha20Poly1305)\nuse functora_egui::crypto::{encrypt_symmetric, decrypt_symmetric};\n\nlet data = b\"secret message\";\nlet password = \"my-password\";\n\n// Encrypt\nlet encrypted = encrypt_symmetric(data, password)?;\n// Returns Vec<u8> (nonce + ciphertext + tag)\n\n// Decrypt\nlet decrypted = decrypt_symmetric(&encrypted, password)?;\nassert_eq!(decrypted, data);",
+            "// Crypto: encrypt_output / decrypt_output (ChaCha20Poly1305 + Argon2id)\nuse functora_egui::crypto::{CipherType, EncryptedNote, encrypt_symmetric, decrypt_symmetric};\n\n// Pure helpers (run inside spawn_async: Argon2id blocks)\nfn encrypt_output(input: &str, password: &str) -> Result<String, String> {\n    let note = encrypt_symmetric(input.as_bytes(), password, CipherType::ChaCha20Poly1305, &[])?;\n    Ok(serde_json::to_string(&note)?)\n}\nfn decrypt_output(json: &str, password: &str) -> Result<String, String> {\n    let note: EncryptedNote = serde_json::from_str(json)?;\n    let bytes = decrypt_symmetric(&note, password, &[])?;\n    Ok(String::from_utf8(bytes)?)\n}\n\ncrypto_op = Some(CryptoOp::Encrypt);\ncrypto_rx = Some(spawn_async(async move { encrypt_output(&input, &password) }));\n// poll arm stores the output and toasts \"Encrypted note ready (N bytes)\"",
         );
     }
 

@@ -12,8 +12,18 @@ use functora_egui::{
 
 pub use functora_egui::PickResult;
 pub(crate) type PickReceiver = std::sync::mpsc::Receiver<PickResult>;
+/// Ready thumbnail from `make_thumbnail`: image URI plus jpeg bytes.
+pub type ThumbnailResult = Result<(String, Vec<u8>), String>;
 
 use crate::route::AppRoute;
+
+/// Which crypto operation a pending `crypto_rx` task performs, so the shared
+/// poll arm can label the result without guessing from the payload.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CryptoOp {
+    Encrypt,
+    Decrypt,
+}
 
 pub struct PlatformState {
     pub storage_key: String,
@@ -54,10 +64,14 @@ pub struct PlatformState {
     pub qr_input: String,
     pub qr_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub thumbnail_input: String,
-    pub thumbnail_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
+    pub thumbnail_rx: Option<std::sync::mpsc::Receiver<ThumbnailResult>>,
+    pub thumbnail_image: Option<(String, Vec<u8>)>,
+    pub zip_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub crypto_input: String,
     pub crypto_password: String,
     pub crypto_output: String,
+    pub crypto_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
+    pub crypto_op: Option<CryptoOp>,
     pub worker_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub platform_info: String,
     pub md_source: String,
@@ -105,9 +119,13 @@ impl Default for PlatformState {
             qr_rx: None,
             thumbnail_input: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD".to_owned(),
             thumbnail_rx: None,
+            thumbnail_image: None,
+            zip_rx: None,
             crypto_input: "hello world".to_owned(),
             crypto_password: "s3cret".to_owned(),
             crypto_output: String::new(),
+            crypto_rx: None,
+            crypto_op: None,
             worker_rx: None,
             platform_info: String::new(),
             md_source: "# Showcase\n\nCommonMark **rendering** with *emphasis*, ~~strikethrough~~, `inline code` and [links](https://example.com).\n\n## Lists\n\n- Unordered item one\n- Unordered item two\n\n1. Ordered item one\n2. Ordered item two\n\n- [x] Completed task\n- [ ] Open task\n\n> Blockquote with **nested** emphasis.\n\n```rust\nfn main() {\n    println!(\"Hello\");\n}\n```\n\n| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n\n![Red dot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4o6ZGEmIY1TCqYfhqAAATqigQ9JeO5gAAAABJRU5ErkJggg==)\n\nHere is a footnote[^1].\n\n---\n\n[^1]: Footnote text."

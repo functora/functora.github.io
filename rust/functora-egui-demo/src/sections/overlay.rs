@@ -200,7 +200,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Command: searchable command palette\nuse functora_egui::{Command, LucideIcon};\n\nlet items: Vec<(String, String)> = vec![\n    (\"File\".to_owned(), \"New File\".to_owned()),\n    (\"Edit\".to_owned(), \"Copy\".to_owned()),\n    (\"Edit\".to_owned(), \"Paste\".to_owned()),\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(idx) = Command::new(items)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {}\", items[idx].1);\n}",
+            "// Command: searchable command palette\nuse functora_egui::{Command, CommandItem, LucideIcon};\n\nlet items = vec![\n    CommandItem { group: \"File\".to_owned(), group_icon: LucideIcon::File, label: \"New File\".to_owned(), icon: LucideIcon::FilePlus },\n    CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Copy\".to_owned(), icon: LucideIcon::Copy },\n    CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Paste\".to_owned(), icon: LucideIcon::ClipboardPaste },\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(idx) = Command::with_items(items)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {idx}\");\n}",
         );
     }
 

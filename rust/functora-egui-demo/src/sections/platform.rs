@@ -6,17 +6,37 @@ use functora_egui::{
 };
 use std::sync::mpsc;
 
+use functora_egui::ToastState;
 use functora_egui::snippet;
 
-impl crate::app::ShowcaseApp {
-    pub(crate) fn poll_platform_promises(&mut self, ctx: &egui::Context) {
-        if let Some(shared) = self.platform.pick_progress.clone()
-            && let Ok(guard) = shared.lock()
-        {
-            self.platform.pick_job.clone_from(&guard);
+fn poll_ok<T>(
+    slot: &mut Option<mpsc::Receiver<Result<T, String>>>,
+    toast: &mut ToastState,
+    now: f64,
+    err_prefix: &str,
+    disconnected: &str,
+) -> Option<T> {
+    let rx = slot.take()?;
+    match rx.try_recv() {
+        Ok(Ok(value)) => Some(value),
+        Ok(Err(error)) => {
+            toast.add(format!("{err_prefix}: {error}"), ToastVariant::Error, now);
+            None
         }
-        let now = ctx.input(|i| i.time);
-        if self.platform.clipboard_rx.is_some()
+        Err(mpsc::TryRecvError::Empty) => {
+            *slot = Some(rx);
+            None
+        }
+        Err(mpsc::TryRecvError::Disconnected) => {
+            toast.add(disconnected, ToastVariant::Error, now);
+            None
+        }
+    }
+}
+
+impl crate::app::ShowcaseApp {
+    fn has_pending_promises(&self) -> bool {
+        self.platform.clipboard_rx.is_some()
             || self.platform.clipboard_write_rx.is_some()
             || self.platform.share_rx.is_some()
             || self.platform.pick_rx.is_some()
@@ -26,49 +46,45 @@ impl crate::app::ShowcaseApp {
             || self.platform.qr_rx.is_some()
             || self.platform.thumbnail_rx.is_some()
             || self.platform.worker_rx.is_some()
+    }
+
+    pub fn poll_platform_promises(&mut self, ctx: &egui::Context) {
+        if let Some(shared) = self.platform.pick_progress.clone()
+            && let Ok(guard) = shared.lock()
         {
+            self.platform.pick_job.clone_from(&guard);
+        }
+        let now = ctx.input(|i| i.time);
+        if self.has_pending_promises() {
             ctx.request_repaint();
         }
-        if let Some(rx) = self.platform.clipboard_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(text)) => {
-                    self.platform.clipboard_read = text;
-                    self.toast.add("Read ok", ToastVariant::Success, now);
-                }
-                Ok(Err(e)) => self
-                    .toast
-                    .add(format!("Read failed: {e}"), ToastVariant::Error, now),
-                Err(mpsc::TryRecvError::Empty) => self.platform.clipboard_rx = Some(rx),
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.toast
-                        .add("Read disconnected", ToastVariant::Error, now);
-                }
-            }
+        if let Some(text) = poll_ok(
+            &mut self.platform.clipboard_rx,
+            &mut self.toast,
+            now,
+            "Read failed",
+            "Read disconnected",
+        ) {
+            self.platform.clipboard_read = text;
+            self.toast.add("Read ok", ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.clipboard_write_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(())) => self.toast.add("Copy ok", ToastVariant::Success, now),
-                Ok(Err(e)) => self
-                    .toast
-                    .add(format!("Copy failed: {e}"), ToastVariant::Error, now),
-                Err(mpsc::TryRecvError::Empty) => self.platform.clipboard_write_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Copy disconnected", ToastVariant::Error, now),
-            }
+        if let Some(()) = poll_ok(
+            &mut self.platform.clipboard_write_rx,
+            &mut self.toast,
+            now,
+            "Copy failed",
+            "Copy disconnected",
+        ) {
+            self.toast.add("Copy ok", ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.share_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(())) => self.toast.add("Shared ok", ToastVariant::Success, now),
-                Ok(Err(e)) => {
-                    self.toast
-                        .add(format!("Share failed: {e}"), ToastVariant::Error, now)
-                }
-                Err(mpsc::TryRecvError::Empty) => self.platform.share_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Share disconnected", ToastVariant::Error, now),
-            }
+        if let Some(()) = poll_ok(
+            &mut self.platform.share_rx,
+            &mut self.toast,
+            now,
+            "Share failed",
+            "Share disconnected",
+        ) {
+            self.toast.add("Shared ok", ToastVariant::Success, now);
         }
         if let Some(rx) = self.platform.pick_rx.take() {
             match rx.try_recv() {
@@ -129,92 +145,62 @@ impl crate::app::ShowcaseApp {
         if self.platform.pick_rx.is_none() {
             self.platform.pick_overlay_open = false;
         }
-        if let Some(rx) = self.platform.download_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(name)) => {
-                    self.toast
-                        .add(format!("Downloaded {name}"), ToastVariant::Success, now)
-                }
-                Ok(Err(e)) => {
-                    self.toast
-                        .add(format!("Download failed: {e}"), ToastVariant::Error, now)
-                }
-                Err(mpsc::TryRecvError::Empty) => self.platform.download_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Download disconnected", ToastVariant::Error, now),
-            }
+        if let Some(name) = poll_ok(
+            &mut self.platform.download_rx,
+            &mut self.toast,
+            now,
+            "Download failed",
+            "Download disconnected",
+        ) {
+            self.toast
+                .add(format!("Downloaded {name}"), ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.pwa_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => self
-                    .toast
-                    .add(format!("PWA error: {e}"), ToastVariant::Error, now),
-                Err(mpsc::TryRecvError::Empty) => self.platform.pwa_rx = Some(rx),
-                Err(_) => self.toast.add("PWA disconnected", ToastVariant::Error, now),
-            }
+        if let Some(msg) = poll_ok(
+            &mut self.platform.pwa_rx,
+            &mut self.toast,
+            now,
+            "PWA error",
+            "PWA disconnected",
+        ) {
+            self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.camera_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => {
-                    self.toast
-                        .add(format!("Camera error: {e}"), ToastVariant::Error, now)
-                }
-                Err(mpsc::TryRecvError::Empty) => self.platform.camera_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Camera disconnected", ToastVariant::Error, now),
-            }
+        if let Some(msg) = poll_ok(
+            &mut self.platform.camera_rx,
+            &mut self.toast,
+            now,
+            "Camera error",
+            "Camera disconnected",
+        ) {
+            self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.qr_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => self
-                    .toast
-                    .add(format!("QR error: {e}"), ToastVariant::Error, now),
-                Err(mpsc::TryRecvError::Empty) => self.platform.qr_rx = Some(rx),
-                Err(_) => self.toast.add("QR disconnected", ToastVariant::Error, now),
-            }
+        if let Some(msg) = poll_ok(
+            &mut self.platform.qr_rx,
+            &mut self.toast,
+            now,
+            "QR error",
+            "QR disconnected",
+        ) {
+            self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.thumbnail_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => {
-                    self.toast
-                        .add(format!("Thumbnail error: {e}"), ToastVariant::Error, now)
-                }
-                Err(mpsc::TryRecvError::Empty) => self.platform.thumbnail_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Thumbnail disconnected", ToastVariant::Error, now),
-            }
+        if let Some(msg) = poll_ok(
+            &mut self.platform.thumbnail_rx,
+            &mut self.toast,
+            now,
+            "Thumbnail error",
+            "Thumbnail disconnected",
+        ) {
+            self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.worker_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => self.toast.add(msg, ToastVariant::Success, now),
-                Ok(Err(e)) => {
-                    self.toast
-                        .add(format!("Worker error: {e}"), ToastVariant::Error, now)
-                }
-                Err(mpsc::TryRecvError::Empty) => self.platform.worker_rx = Some(rx),
-                Err(_) => self
-                    .toast
-                    .add("Worker disconnected", ToastVariant::Error, now),
-            }
+        if let Some(msg) = poll_ok(
+            &mut self.platform.worker_rx,
+            &mut self.toast,
+            now,
+            "Worker error",
+            "Worker disconnected",
+        ) {
+            self.toast.add(msg, ToastVariant::Success, now);
         }
-        if self.platform.clipboard_rx.is_some()
-            || self.platform.clipboard_write_rx.is_some()
-            || self.platform.share_rx.is_some()
-            || self.platform.pick_rx.is_some()
-            || self.platform.download_rx.is_some()
-            || self.platform.pwa_rx.is_some()
-            || self.platform.camera_rx.is_some()
-            || self.platform.qr_rx.is_some()
-            || self.platform.thumbnail_rx.is_some()
-            || self.platform.worker_rx.is_some()
-        {
+        if self.has_pending_promises() {
             ctx.request_repaint();
         }
     }

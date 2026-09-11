@@ -54,7 +54,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Label::new("Your email address").show(ui);
         ui.add_space(8.0);
-        _ = functora_egui::Input::new(&mut self.flex_email)
+        _ = functora_egui::Input::new(&mut self.label_email)
             .placeholder("you@example.com")
             .show(ui);
         ui.add_space(8.0);

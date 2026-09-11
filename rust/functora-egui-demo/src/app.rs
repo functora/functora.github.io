@@ -11,7 +11,7 @@ use functora_egui::{
 };
 
 pub use functora_egui::PickResult;
-pub type PickReceiver = std::sync::mpsc::Receiver<PickResult>;
+pub(crate) type PickReceiver = std::sync::mpsc::Receiver<PickResult>;
 
 use crate::route::AppRoute;
 
@@ -531,9 +531,6 @@ fn initial_selected() -> usize {
 }
 
 #[derive(Default)]
-pub struct NavState {}
-
-#[derive(Default)]
 pub struct DialogState {
     pub command_open: bool,
     pub dialog_open: bool,
@@ -624,7 +621,6 @@ impl Default for FormState {
 
 /// All state for the showcase demos, one field per interactive demo.
 pub struct ShowcaseApp {
-    pub nav: NavState,
     pub persistent: PersistentState<()>,
     pub sidebar_collapsed: bool,
     pub sidebar_init_done: bool,
@@ -647,7 +643,8 @@ pub struct ShowcaseApp {
     pub number_f64: f64,
     pub number_f32: f32,
     pub number_i32: i32,
-    pub input_group_text: String,
+    pub input_group_url: String,
+    pub input_group_search: String,
     pub input_paste_clear_text: String,
     pub input_paste_clear_password: String,
     pub input_paste_clear_custom_default: String,
@@ -661,6 +658,7 @@ pub struct ShowcaseApp {
     pub textarea_paste_clear_copy_custom: String,
     pub select_val: Option<String>,
     pub select_blend: String,
+    pub property_blend: String,
     pub combobox_selected: Option<usize>,
     pub combobox_search: String,
     pub otp_value: String,
@@ -680,6 +678,9 @@ pub struct ShowcaseApp {
     pub flex_last: String,
     pub flex_email: String,
     pub flex_phone: String,
+    pub label_email: String,
+    pub field_set_email: String,
+    pub field_description_password: String,
     pub toolbar: ToolbarState,
     // feedback
     pub progress_val: f32,
@@ -704,7 +705,6 @@ pub struct ShowcaseApp {
 impl Default for ShowcaseApp {
     fn default() -> Self {
         Self {
-            nav: NavState::default(),
             persistent: PersistentState::default(),
             sidebar_collapsed: true,
             sidebar_init_done: false,
@@ -726,7 +726,8 @@ impl Default for ShowcaseApp {
             number_f64: 42.0,
             number_f32: std::f32::consts::PI,
             number_i32: 10,
-            input_group_text: String::new(),
+            input_group_url: String::new(),
+            input_group_search: String::new(),
             input_paste_clear_text: String::new(),
             input_paste_clear_password: String::new(),
             input_paste_clear_custom_default: "default value".to_owned(),
@@ -740,6 +741,7 @@ impl Default for ShowcaseApp {
             textarea_paste_clear_copy_custom: String::new(),
             select_val: None,
             select_blend: "Normal".to_owned(),
+            property_blend: "Normal".to_owned(),
             combobox_selected: None,
             combobox_search: String::new(),
             otp_value: String::new(),
@@ -758,6 +760,9 @@ impl Default for ShowcaseApp {
             flex_last: String::new(),
             flex_email: String::new(),
             flex_phone: String::new(),
+            label_email: String::new(),
+            field_set_email: String::new(),
+            field_description_password: String::new(),
             toolbar: ToolbarState::default(),
             progress_val: 0.66,
             carousel_idx: 0,
@@ -855,7 +860,7 @@ impl ShowcaseApp {
         }
     }
 
-    pub(crate) fn navigate_to(&mut self, idx: usize) {
+    pub fn navigate_to(&mut self, idx: usize) {
         self.selected = idx;
         self.router.navigate(&mut (), AppRoute::from_flat(idx));
     }
@@ -1119,15 +1124,14 @@ impl eframe::App for ShowcaseApp {
         let history = self.router.history().clone();
         let needs_reset = std::cell::Cell::new(false);
         let needs_search = std::cell::Cell::new(false);
-        let selected_ptr: *mut usize = &raw mut self.selected;
-        let router_ptr: *mut functora_egui::route::AppRouter<AppRoute, ()> = &raw mut self.router;
+        let pending_nav = std::cell::Cell::new(None::<usize>);
+        let selected_snapshot = self.selected;
         let lang_cell = std::cell::Cell::new(persistent.language);
         let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, {
             let lang_ref = &lang_cell;
+            let pending_ref = &pending_nav;
             move |side_ui| {
                 let cur_lang = lang_ref.get();
-                let selected_ref = unsafe { &mut *selected_ptr };
-                let router_ref = unsafe { &mut *router_ptr };
                 let mut close = false;
                 for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {
                     let is_overview = *cat_id == CategoryId::Overview;
@@ -1139,13 +1143,13 @@ impl eframe::App for ShowcaseApp {
                     }
                     for (item_idx, def) in items.iter().enumerate() {
                         let flat = flat_index(cat_idx, item_idx);
-                        let is_selected = flat == *selected_ref;
+                        let is_selected = flat == selected_snapshot
+                            && pending_ref.get().is_none_or(|next| next == flat);
                         if side_ui
                             .add(section_button(def, is_selected).full_width())
                             .clicked()
                         {
-                            *selected_ref = flat;
-                            router_ref.navigate(&mut (), AppRoute::from_flat(flat));
+                            pending_ref.set(Some(flat));
                             close |= side_ui.on_mobile();
                             side_ui.ctx().request_repaint();
                         }
@@ -1189,6 +1193,10 @@ impl eframe::App for ShowcaseApp {
         persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
+        if let Some(flat) = pending_nav.get() {
+            self.navigate_to(flat);
+            ctx.request_repaint();
+        }
         if prev_persistent != self.persistent {
             persist_value("functora_egui_demo_persistent", &self.persistent);
         }

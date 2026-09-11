@@ -383,7 +383,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = InputGroup::show(
             ui,
-            &mut self.input_group_text,
+            &mut self.input_group_url,
             "example.com",
             Some("https://"),
             None::<fn(&mut egui::Ui)>,
@@ -394,7 +394,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = InputGroup::show(
             ui,
-            &mut self.input_group_text,
+            &mut self.input_group_search,
             "Search...",
             None,
             Some(|ui68: &mut egui::Ui| {

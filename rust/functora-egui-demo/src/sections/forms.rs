@@ -88,7 +88,7 @@ impl crate::app::ShowcaseApp {
             ui31.add_space(8.0);
             _ = Label::new("Email").show(ui31);
             ui31.add_space(8.0);
-            _ = Input::new(&mut self.flex_email)
+            _ = Input::new(&mut self.field_set_email)
                 .placeholder("ada@example.com")
                 .show(ui31);
         });
@@ -121,7 +121,9 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Label::new("Password").show(ui);
         ui.add_space(8.0);
-        _ = Input::new(&mut self.flex_input).password().show(ui);
+        _ = Input::new(&mut self.field_description_password)
+            .password()
+            .show(ui);
         ui.add_space(8.0);
         FieldDescription::show(ui, "Use at least 8 characters with numbers and symbols.");
 
@@ -207,7 +209,7 @@ impl crate::app::ShowcaseApp {
                     "Overlay".to_owned(),
                 ];
                 _ = ui43.add(functora_egui::SelectValue::new(
-                    &mut self.select_blend,
+                    &mut self.property_blend,
                     &blend_modes,
                 ));
             });

@@ -1,5 +1,4 @@
 use crate::app::CryptonoteApp;
-use crate::encoding::generate_qr_code;
 use crate::error::AppError;
 use crate::route::Screen;
 use functora_egui::i18n::I18N;
@@ -19,14 +18,8 @@ impl CryptonoteApp {
             _ = Card::new().show(ui, |inner| {
                 _ = inner.label(egui::RichText::new(&block.label).strong());
                 let () = inner.add_space(4.0);
-                if let Ok(svg) = generate_qr_code(&block.address) {
-                    _ = inner.add(
-                        egui::Image::from_bytes(format!("bytes://donate-{}.svg", block.label), svg.into_bytes())
-                            .maintain_aspect_ratio(true)
-                            .max_width(200.0),
-                    );
-                    let () = inner.add_space(4.0);
-                }
+                _ = functora_egui::QrImage::new(&block.address).show(inner);
+                let () = inner.add_space(4.0);
                 _ = inner.label(&block.address);
                 let () = inner.add_space(4.0);
                 if inner

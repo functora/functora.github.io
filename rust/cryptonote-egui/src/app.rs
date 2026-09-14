@@ -85,12 +85,7 @@ impl CryptonoteApp {
             persistent,
             ..Default::default()
         };
-        let width = cc.egui_ctx.input(|i| i.viewport_rect().width());
-        this.sidebar_collapsed = if width == 0.0 {
-            true
-        } else {
-            width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
-        };
+        this.sidebar_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         #[cfg(target_arch = "wasm32")]
         {
             let mut tmp = ();
@@ -442,8 +437,6 @@ impl CryptonoteApp {
     }
 
     fn footer(&mut self, ui: &mut egui::Ui, lang: Language) {
-        _ = Separator::horizontal().show(ui);
-        let () = ui.add_space(8.0);
         // One text layout for the whole sentence: identical font, size and
         // baseline for plain text, the author link and the navigation
         // actions, on every screen width.
@@ -579,7 +572,6 @@ impl eframe::App for CryptonoteApp {
             }
             content_ui.add_space(16.0);
             self.footer(content_ui, content_lang);
-            content_ui.add_space(48.0);
         });
         persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;

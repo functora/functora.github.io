@@ -641,7 +641,6 @@ impl Default for FormState {
 pub struct ShowcaseApp {
     pub persistent: PersistentState<()>,
     pub sidebar_collapsed: bool,
-    pub sidebar_init_done: bool,
     pub selected: usize,
     pub prev_selected: usize,
     pub router: functora_egui::route::AppRouter<AppRoute, ()>,
@@ -725,7 +724,6 @@ impl Default for ShowcaseApp {
         Self {
             persistent: PersistentState::default(),
             sidebar_collapsed: true,
-            sidebar_init_done: false,
             selected: 0,
             prev_selected: 0,
             router: functora_egui::route::AppRouter::new(&mut (), AppRoute::default()),
@@ -808,27 +806,12 @@ impl ShowcaseApp {
         let persistent =
             PersistentState::load_or_default(&cc.egui_ctx, "functora_egui_demo_persistent", ());
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
-        let startup_width = {
-            #[cfg(target_arch = "wasm32")]
-            {
-                functora_egui::web::startup::startup_width(cc)
-            }
-            #[cfg(not(target_arch = "wasm32"))]
-            {
-                functora_egui::web::startup::startup_width(&cc.egui_ctx)
-            }
-        };
-        let initial_collapsed = if startup_width == 0.0 {
-            true
-        } else {
-            startup_width < functora_egui::Breakpoint::MOBILE_MAX_WIDTH
-        };
+        let initial_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         let mut this = Self {
             persistent,
             sidebar_collapsed: initial_collapsed,
             ..Default::default()
         };
-        this.sidebar_init_done = false;
         this.apply_theme(&cc.egui_ctx);
         #[cfg(target_arch = "wasm32")]
         {
@@ -862,7 +845,6 @@ impl ShowcaseApp {
             persist_value("functora_egui_demo_persistent", &self.persistent);
         }
         self.sidebar_collapsed = ctx.on_mobile();
-        self.sidebar_init_done = true;
         self.prev_selected = usize::MAX;
         self.router.reset(&mut (), AppRoute::default());
         self.selected = 0;
@@ -1117,13 +1099,6 @@ impl ShowcaseApp {
 impl eframe::App for ShowcaseApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let ctx = ui.ctx().clone();
-        if !self.sidebar_init_done {
-            let width = ctx.input(|i| i.viewport_rect().width());
-            if width != 0.0 {
-                self.sidebar_collapsed = ctx.on_mobile();
-                self.sidebar_init_done = true;
-            }
-        }
         self.apply_theme(&ctx);
         self.handle_shortcuts(&ctx);
         self.poll_platform_promises(&ctx);

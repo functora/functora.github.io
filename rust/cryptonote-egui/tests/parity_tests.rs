@@ -146,7 +146,7 @@ fn about_screen_has_full_content() {
         "JoinTestingButton",
         "GooglePlayButton",
         "DownloadApkButton",
-        "from_bytes",
+        "QrImage",
     ] {
         assert!(ABOUT_SRC.contains(fragment), "about screen must include {fragment}");
     }
@@ -154,9 +154,18 @@ fn about_screen_has_full_content() {
 
 #[test]
 fn donate_screen_uses_greeting_and_blocks() {
-    for fragment in ["DonateGreeting", "DonateIntro", "donate_blocks", "generate_qr_code"] {
+    for fragment in ["DonateGreeting", "DonateIntro", "donate_blocks", "QrImage"] {
         assert!(DONATE_SRC.contains(fragment), "donate screen must include {fragment}");
     }
+}
+
+#[test]
+fn share_screen_uses_full_width_qr() {
+    assert!(SHARE_SRC.contains("QrImage"), "share screen must render QrImage");
+    assert!(
+        !SHARE_SRC.contains("max_width"),
+        "share QR must be full width without max_width caps"
+    );
 }
 
 #[test]
@@ -169,6 +178,19 @@ fn license_and_privacy_use_full_texts() {
         PRIVACY_SRC.contains("PrivacyText"),
         "privacy screen must render Base::PrivacyText"
     );
+}
+
+#[test]
+fn document_screens_have_no_nested_scroll() {
+    // Whole-screen document text must flow in the single page scroll:
+    // a nested scroll container fragments scrolling (inner box plus page
+    // box) and shares persisted offsets across screens.
+    for (name, src) in [("license", LICENSE_SRC), ("privacy", PRIVACY_SRC)] {
+        assert!(
+            !src.contains("ScrollArea"),
+            "{name} screen must not nest a scroll container"
+        );
+    }
 }
 
 #[test]

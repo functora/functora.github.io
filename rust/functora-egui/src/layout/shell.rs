@@ -10,6 +10,67 @@ use crate::widgets::breadcrumb::{Breadcrumb, NavAction};
 type FooterFn<'a> = Box<dyn FnOnce(&mut egui::Ui) + 'a>;
 
 #[must_use]
+pub fn initial_sidebar_collapsed(ctx: &egui::Context) -> bool {
+    let width = sidebar_startup_width(ctx);
+    if width == 0.0 {
+        true
+    } else {
+        width < crate::responsive::breakpoint::Breakpoint::MOBILE_MAX_WIDTH
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "web"))]
+fn sidebar_startup_width(ctx: &egui::Context) -> f32 {
+    web_sys::window()
+        .and_then(|win| {
+            win.visual_viewport()
+                .map(|vp| crate::utils::f64_to_f32(vp.width()))
+                .or_else(|| {
+                    win.inner_width()
+                        .ok()
+                        .and_then(|v| v.as_f64())
+                        .map(crate::utils::f64_to_f32)
+                })
+        })
+        .unwrap_or_else(|| ctx.input(|i| i.viewport_rect().width()))
+}
+
+#[cfg(not(all(target_arch = "wasm32", feature = "web")))]
+fn sidebar_startup_width(ctx: &egui::Context) -> f32 {
+    ctx.input(|i| i.viewport_rect().width())
+}
+
+fn sync_sidebar_collapsed(ctx: &egui::Context, collapsed: bool) -> bool {
+    let width = ctx.input(|i| i.viewport_rect().width());
+    let is_mobile = ctx.on_mobile();
+    let init_id = egui::Id::new("shell_sidebar_init_done");
+    let prev_id = egui::Id::new("shell_prev_is_mobile");
+    let init_done = ctx.data(|d| d.get_temp::<bool>(init_id).unwrap_or(false));
+    if !init_done {
+        if width == 0.0 {
+            let _ = ctx.data_mut(|d| d.insert_temp(prev_id, true));
+            true
+        } else {
+            let _ = ctx.data_mut(|d| {
+                let _ = d.insert_temp(init_id, true);
+                d.insert_temp(prev_id, is_mobile)
+            });
+            is_mobile
+        }
+    } else if width == 0.0 {
+        collapsed
+    } else {
+        let prev = ctx.data(|d| d.get_temp::<bool>(prev_id).unwrap_or(is_mobile));
+        let _ = ctx.data_mut(|d| d.insert_temp(prev_id, is_mobile));
+        match (is_mobile, prev) {
+            (true, false) => true,
+            (false, true) => false,
+            _ => collapsed,
+        }
+    }
+}
+
+#[must_use]
 pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
     let spacing = ctx.responsive_spacing();
     let max_text = labels
@@ -195,19 +256,8 @@ where
             footer,
             system_back,
         } = self;
-        let mut collapsed_val = *collapsed;
         let ctx = ui.ctx().clone();
-        let is_mobile = ctx.on_mobile();
-        let prev_is_mobile = ctx.data(|d| {
-            d.get_temp::<bool>(egui::Id::new("shell_prev_is_mobile"))
-                .unwrap_or(is_mobile)
-        });
-        if is_mobile && !prev_is_mobile {
-            collapsed_val = true;
-        } else if !is_mobile && prev_is_mobile {
-            collapsed_val = false;
-        }
-        let _ = ctx.data_mut(|d| d.insert_temp(egui::Id::new("shell_prev_is_mobile"), is_mobile));
+        let mut collapsed_val = sync_sidebar_collapsed(&ctx, *collapsed);
         let mut breadcrumb_action: Option<NavAction<R>> = None;
         if system_back {
             if let Some((_, history)) = breadcrumb {

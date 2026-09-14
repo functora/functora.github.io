@@ -1,6 +1,5 @@
 use crate::app::CryptonoteApp;
 use crate::route::Screen;
-use egui::ScrollArea;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{Button, ButtonVariant};
@@ -14,9 +13,10 @@ impl CryptonoteApp {
                 .strong(),
         );
         let () = ui.add_space(8.0);
-        _ = ScrollArea::vertical().show(ui, |inner| {
-            _ = inner.label(BaseMsg::LicenseText.render(lang));
-        });
+        // Whole-screen document text flows in the page scroll: no nested
+        // scroll container, so there is exactly one scrollbar and no scroll
+        // offset shared with other screens.
+        _ = ui.label(BaseMsg::LicenseText.render(lang));
         let () = ui.add_space(8.0);
         if ui
             .add(

@@ -1,5 +1,4 @@
 use crate::app::CryptonoteApp;
-use crate::encoding::generate_qr_code;
 use crate::error::AppError;
 use crate::messages::Msg;
 use crate::route::Screen;
@@ -29,14 +28,8 @@ impl CryptonoteApp {
         let () = ui.add_space(12.0);
         let app_url = APP_ATTRS.app_url();
         let ctx = ui.ctx().clone();
-        if let Ok(svg) = generate_qr_code(&app_url) {
-            _ = ui.add(
-                egui::Image::from_bytes("bytes://app-qr.svg", svg.into_bytes())
-                    .maintain_aspect_ratio(true)
-                    .max_width(ui.available_width().min(280.0)),
-            );
-            let () = ui.add_space(8.0);
-        }
+        _ = functora_egui::QrImage::new(&app_url).show(ui);
+        let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             if f.add(
                 Button::new(BaseMsg::CopyAppLink.render(lang))

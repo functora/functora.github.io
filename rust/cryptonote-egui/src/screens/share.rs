@@ -12,23 +12,17 @@ use functora_egui::{Button, ButtonVariant, Flex, Progress, Textarea};
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        let (url, qr) = match &self.temporary.external {
-            External::Note(n) => (n.url.clone(), n.qr.clone()),
-            _ => (String::new(), String::new()),
+        let url = match &self.temporary.external {
+            External::Note(n) => n.url.clone(),
+            _ => String::new(),
         };
         let pkg_ready = matches!(self.temporary.external, External::Archive(_));
         if pkg_ready {
             _ = ui.label(egui::RichText::new(Msg::ArchiveReady.render(lang)).size(16.0).strong());
             let () = ui.add_space(12.0);
         } else if !url.is_empty() {
-            if !qr.is_empty() {
-                _ = ui.add(
-                    egui::Image::from_bytes("bytes://share-qr.svg", qr.as_bytes().to_vec())
-                        .maintain_aspect_ratio(true)
-                        .max_width(ui.available_width().min(320.0)),
-                );
-                let () = ui.add_space(8.0);
-            }
+            _ = functora_egui::QrImage::new(&url).show(ui);
+            let () = ui.add_space(8.0);
             _ = ui.add(
                 Textarea::new(&mut url.clone())
                     .min_height(60.0)

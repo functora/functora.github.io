@@ -83,6 +83,7 @@ pub use responsive::responsive_ext::ResponsiveExt;
 pub use responsive::spacing::Spacing;
 
 pub use layout::shell::Shell;
+pub use layout::shell::initial_sidebar_collapsed;
 pub use layout::shell::sidebar_effective_width;
 pub use platform::android_back::BackOutcome;
 pub use platform::android_back::{handle_system_back, is_back_pressed};
@@ -174,6 +175,7 @@ pub use widgets::popover::widget::Popover;
 pub use widgets::progress::widget::Progress;
 pub use widgets::property_grid::property_row::PropertyRow;
 pub use widgets::property_grid::widget::PropertyGrid;
+pub use widgets::qr_image::widget::QrImage;
 pub use widgets::qr_scanner::qr_scanner_state::QrScannerState;
 pub use widgets::qr_scanner::widget::QrScanner;
 pub use widgets::radio::widget::Radio;

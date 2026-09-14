@@ -48,6 +48,7 @@ pub(crate) mod paste_clear_core;
 pub mod popover;
 pub mod progress;
 pub mod property_grid;
+pub mod qr_image;
 pub mod qr_scanner;
 pub mod radio;
 pub mod radio_group;

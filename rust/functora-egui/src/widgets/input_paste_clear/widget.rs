@@ -19,7 +19,7 @@ impl<'a> InputPasteClear<'a> {
             password: false,
             paste_icon: crate::icons::lucide_icon::LucideIcon::ClipboardPaste,
             clear_icon: crate::icons::lucide_icon::LucideIcon::X,
-            copy: false,
+            copy: true,
             copy_icon: crate::icons::lucide_icon::LucideIcon::Copy,
         }
     }

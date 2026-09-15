@@ -311,3 +311,93 @@ fn input_paste_clear_password_eye_does_not_clear() {
     assert!(!cleared);
     assert_eq!(text, "secret123");
 }
+
+fn painted_icon_shapes_in(output: &egui::FullOutput, region: Rect) -> usize {
+    output
+        .shapes
+        .iter()
+        .filter(|clipped| {
+            !matches!(clipped.shape, Shape::Text(_))
+                && region.contains_rect(clipped.shape.visual_bounding_rect())
+        })
+        .count()
+}
+
+#[test]
+fn input_copy_button_paints_by_default() {
+    let mut text = "hello".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut text).show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    let copy_region = Rect::from_min_max(
+        Pos2::new(outer.min.x + 40.0, outer.min.y),
+        Pos2::new(outer.min.x + 80.0, outer.max.y),
+    );
+    assert!(
+        painted_icon_shapes_in(&out, copy_region) > 0,
+        "copy icon must paint by default"
+    );
+
+    let mut plain = "hello".to_owned();
+    let mut without_copy = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut plain)
+            .with_copy(false)
+            .show(ui);
+    };
+    let _ = app.step(vec![], &mut without_copy);
+    let cleared_out = app.step(vec![], &mut without_copy);
+    assert_eq!(
+        painted_icon_shapes_in(&cleared_out, copy_region),
+        0,
+        "opted-out copy button must paint nothing"
+    );
+}
+
+#[test]
+fn textarea_copy_button_paints_by_default() {
+    let mut text = "hello".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TextareaPasteClear::new(&mut text)
+            .min_height(80.0)
+            .show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    let copy_region = Rect::from_min_max(
+        Pos2::new(outer.min.x + 36.0, outer.min.y),
+        Pos2::new(outer.min.x + 64.0, outer.min.y + 28.0),
+    );
+    assert!(
+        painted_icon_shapes_in(&out, copy_region) > 0,
+        "copy icon must paint by default"
+    );
+
+    let mut plain = "hello".to_owned();
+    let mut without_copy = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TextareaPasteClear::new(&mut plain)
+            .min_height(80.0)
+            .with_copy(false)
+            .show(ui);
+    };
+    let _ = app.step(vec![], &mut without_copy);
+    let cleared_out = app.step(vec![], &mut without_copy);
+    assert_eq!(
+        painted_icon_shapes_in(&cleared_out, copy_region),
+        0,
+        "opted-out copy button must paint nothing"
+    );
+}

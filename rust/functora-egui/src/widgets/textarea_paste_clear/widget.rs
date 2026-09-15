@@ -19,7 +19,7 @@ impl<'a> TextareaPasteClear<'a> {
             min_height: 192.0,
             paste_icon: crate::icons::lucide_icon::LucideIcon::ClipboardPaste,
             clear_icon: crate::icons::lucide_icon::LucideIcon::X,
-            copy: false,
+            copy: true,
             copy_icon: crate::icons::lucide_icon::LucideIcon::Copy,
         }
     }

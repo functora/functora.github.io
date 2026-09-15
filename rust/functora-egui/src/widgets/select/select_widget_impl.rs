@@ -6,6 +6,44 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     for super::widget::Select<'_, T>
 {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let entries: Vec<(T, String)> = self
+            .options
+            .iter()
+            .map(|option| (option.clone(), option.to_string()))
+            .collect();
+        super::widget::SelectLabeled::show_labeled(
+            ui,
+            self.selected,
+            &entries,
+            &self.placeholder,
+            self.width,
+            self.selected_text_override.as_deref(),
+        )
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> egui::Widget for super::widget::SelectLabeled<'_, T> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        Self::show_labeled(
+            ui,
+            self.selected,
+            self.entries,
+            &self.placeholder,
+            self.width,
+            None,
+        )
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
+    fn show_labeled(
+        ui: &mut egui::Ui,
+        selected: &mut Option<T>,
+        entries: &[(T, String)],
+        placeholder: &str,
+        width_opt: Option<f32>,
+        text_override: Option<&str>,
+    ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::select_style::resolve_select_style(&theme);
         let spacing =
@@ -13,7 +51,7 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = self.width.unwrap_or_else(|| {
+        let width = width_opt.unwrap_or_else(|| {
             if ui.on_mobile() {
                 ui.available_width()
             } else {
@@ -54,17 +92,20 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
                 egui::epaint::StrokeKind::Inside,
             );
 
-            // Display text — use override if provided
-            let display_text = if let Some(ref override_text) = self.selected_text_override {
-                override_text.clone()
+            // Display text — explicit override first, then the selected entry label.
+            let display_text = if let Some(override_text) = text_override {
+                override_text.to_owned()
             } else {
-                match &self.selected {
-                    Some(val) => val.to_string(),
-                    None => self.placeholder.clone(),
+                match selected {
+                    Some(val) => entries
+                        .iter()
+                        .find(|entry| entry.0 == *val)
+                        .map_or_else(|| placeholder.to_owned(), |(_, label)| label.clone()),
+                    None => placeholder.to_owned(),
                 }
             };
 
-            let text_color = if self.selected.is_some() || self.selected_text_override.is_some() {
+            let text_color = if selected.is_some() || text_override.is_some() {
                 style.trigger_text
             } else {
                 theme.muted_foreground
@@ -122,11 +163,11 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let popup_cr = crate::utils::f32_to_u8_clamped(style.corner_radius);
         let content_w = {
             let mut max_w: f32 = 144.0;
-            for option in self.options {
+            for (_, label) in entries {
                 let w = ui
                     .painter()
                     .layout_no_wrap(
-                        option.to_string(),
+                        label.clone(),
                         egui::FontId::proportional(14.0),
                         egui::Color32::PLACEHOLDER,
                     )
@@ -165,9 +206,8 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             popup_ui.set_max_width(popup_width);
             let check_icon_size: f32 = 12.0;
 
-            for option in self.options {
-                let is_selected = self.selected.as_ref() == Some(option);
-                let label = option.to_string();
+            for (value, label) in entries {
+                let is_selected = selected.as_ref().is_some_and(|current| current == value);
 
                 let galley = popup_ui.painter().layout_no_wrap(
                     label.clone(),
@@ -219,7 +259,7 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
                 }
 
                 if item_response.clicked() {
-                    *self.selected = Some(option.clone());
+                    *selected = Some(value.clone());
                     egui::Popup::close_id(popup_ui.ctx(), popup_id);
                     popup_ui.ctx().request_repaint();
                 }
@@ -238,6 +278,35 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     for super::widget::SelectValue<'_, T>
 {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let entries: Vec<(T, String)> = self
+            .options
+            .iter()
+            .map(|option| (option.clone(), option.to_string()))
+            .collect();
+        super::widget::SelectValueLabeled::show_labeled(
+            ui,
+            self.selected,
+            &entries,
+            self.width,
+            self.selected_text_override.as_deref(),
+        )
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> egui::Widget for super::widget::SelectValueLabeled<'_, T> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        Self::show_labeled(ui, self.selected, self.entries, self.width, None)
+    }
+}
+
+impl<T: Clone + PartialEq + 'static> super::widget::SelectValueLabeled<'_, T> {
+    fn show_labeled(
+        ui: &mut egui::Ui,
+        selected: &mut T,
+        entries: &[(T, String)],
+        width_opt: Option<f32>,
+        text_override: Option<&str>,
+    ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::select_style::resolve_select_style(&theme);
         let spacing =
@@ -245,7 +314,7 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = self.width.unwrap_or_else(|| {
+        let width = width_opt.unwrap_or_else(|| {
             if ui.on_mobile() {
                 ui.available_width()
             } else {
@@ -286,10 +355,13 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
                 egui::epaint::StrokeKind::Inside,
             );
 
-            let display_text = if let Some(ref override_text) = self.selected_text_override {
-                override_text.clone()
+            let display_text = if let Some(override_text) = text_override {
+                override_text.to_owned()
             } else {
-                self.selected.to_string()
+                entries
+                    .iter()
+                    .find(|entry| entry.0 == *selected)
+                    .map_or_else(String::new, |(_, label)| label.clone())
             };
 
             let galley = painter.layout_no_wrap(
@@ -338,11 +410,11 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
         let popup_cr = crate::utils::f32_to_u8_clamped(style.corner_radius);
         let content_w = {
             let mut max_w: f32 = 144.0;
-            for option in self.options {
+            for (_, label) in entries {
                 let w = ui
                     .painter()
                     .layout_no_wrap(
-                        option.to_string(),
+                        label.clone(),
                         egui::FontId::proportional(14.0),
                         egui::Color32::PLACEHOLDER,
                     )
@@ -381,9 +453,8 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             popup_ui.set_max_width(popup_width);
             let check_icon_size: f32 = 12.0;
 
-            for option in self.options {
-                let is_selected = self.selected == option;
-                let label = option.to_string();
+            for (value, label) in entries {
+                let is_selected = *selected == *value;
 
                 let galley = popup_ui.painter().layout_no_wrap(
                     label.clone(),
@@ -435,7 +506,7 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
                 }
 
                 if item_response.clicked() {
-                    *self.selected = option.clone();
+                    *selected = value.clone();
                     egui::Popup::close_id(popup_ui.ctx(), popup_id);
                     popup_ui.ctx().request_repaint();
                 }

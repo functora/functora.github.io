@@ -1,11 +1,12 @@
 //! Inputs: buttons, checkboxes, switches, radios, toggles, sliders,
 //! text fields, selects, comboboxes, OTP, date picker, color swatch.
 
+use crate::app::{Align, Framework};
 use functora_egui::{
-    Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, Combobox, ComponentSize, DatePicker,
-    Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio, RadioGroup,
-    Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle, ToggleGroup,
-    ToggleVariant, Typography,
+    Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, ComboboxValue, ComponentSize,
+    DatePicker, Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio,
+    RadioGroup, Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle,
+    ToggleGroupValue, ToggleVariant, Typography,
 };
 
 use functora_egui::snippet;
@@ -254,18 +255,18 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_toggle_group(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Exclusive toggle group: only one active at a time.").show(ui);
         ui.add_space(12.0);
-        _ = ToggleGroup::new(vec![
-            "Left".to_owned(),
-            "Center".to_owned(),
-            "Right".to_owned(),
-        ])
-        .show(ui, &mut self.toggle_group_idx);
+        let entries = [
+            (Align::Left, "Left".to_owned()),
+            (Align::Center, "Center".to_owned()),
+            (Align::Right, "Right".to_owned()),
+        ];
+        _ = ToggleGroupValue::new(&entries).show(ui, &mut self.toggle_group_align);
         ui.add_space(4.0);
-        _ = Typography::small(format!("Selected index: {}", self.toggle_group_idx)).show(ui);
+        _ = Typography::small(format!("Selected: {:?}", self.toggle_group_align)).show(ui);
 
         snippet(
             ui,
-            "// ToggleGroup: exclusive selection (only one active)\nuse functora_egui::ToggleGroup;\n\nlet items = vec![\"Left\", \"Center\", \"Right\"];\nlet mut selected_idx = 0;\n\nToggleGroup::new(items).show(ui, &mut selected_idx);\n\n// selected_idx now contains the chosen index",
+            "// ToggleGroupValue: exclusive selection bound to an enum\nuse functora_egui::ToggleGroupValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Align { Left, Center, Right }\n\nlet entries = [(Align::Left, \"Left\".to_owned()), (Align::Center, \"Center\".to_owned()), (Align::Right, \"Right\".to_owned())];\nlet mut align = Align::Left;\n\nToggleGroupValue::new(&entries).show(ui, &mut align);\n\n// align now holds the chosen variant",
         );
     }
 
@@ -692,22 +693,22 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_combobox(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Searchable dropdown with type-ahead filtering.").show(ui);
         ui.add_space(12.0);
-        let frameworks = vec![
-            "React".to_owned(),
-            "Vue".to_owned(),
-            "Angular".to_owned(),
-            "Svelte".to_owned(),
-            "Solid".to_owned(),
+        let entries = [
+            (Framework::React, "React".to_owned()),
+            (Framework::Vue, "Vue".to_owned()),
+            (Framework::Angular, "Angular".to_owned()),
+            (Framework::Svelte, "Svelte".to_owned()),
+            (Framework::Solid, "Solid".to_owned()),
         ];
-        _ = Combobox::new(frameworks)
+        _ = ComboboxValue::new(&entries)
             .placeholder("Select framework...")
-            .show(ui, &mut self.combobox_selected, &mut self.combobox_search);
+            .show(ui, &mut self.combobox_framework, &mut self.combobox_search);
         ui.add_space(4.0);
-        _ = Typography::small(format!("Selected index: {:?}", self.combobox_selected)).show(ui);
+        _ = Typography::small(format!("Selected: {:?}", self.combobox_framework)).show(ui);
 
         snippet(
             ui,
-            "// Combobox: searchable dropdown with type-ahead filtering\nuse functora_egui::Combobox;\n\nlet frameworks = vec![\"React\", \"Vue\", \"Angular\", \"Svelte\", \"Solid\"];\nlet mut selected_idx: Option<usize> = None;\nlet mut search = String::new();\n\nCombobox::new(frameworks)\n    .placeholder(\"Select framework...\")\n    .show(ui, &mut selected_idx, &mut search);\n\n// selected_idx is Some(index) or None",
+            "// ComboboxValue: searchable dropdown bound to an enum\nuse functora_egui::ComboboxValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Framework { React, Vue, Angular, Svelte, Solid }\n\nlet entries = [(Framework::React, \"React\".to_owned()), (Framework::Vue, \"Vue\".to_owned())];\nlet mut selected: Option<Framework> = None;\nlet mut search = String::new();\n\nComboboxValue::new(&entries)\n    .placeholder(\"Select framework...\")\n    .show(ui, &mut selected, &mut search);\n\n// selected is Some(Framework) or None",
         );
     }
 

@@ -4,31 +4,17 @@ impl super::widget::ToggleGroup {
     /// Shows the toggle group. `selected` is the index of the active item.
     /// Returns the new selected index if changed.
     pub fn show(self, ui: &mut egui::Ui, selected: &mut usize) -> egui::Response {
-        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
-
-        let outer_frame = egui::Frame::NONE
-            .fill(theme.muted)
-            .inner_margin(egui::Margin::same(2))
-            .corner_radius(egui::CornerRadius::same(cr));
-
-        outer_frame
-            .show(ui, |inner_ui| {
-                let _ = inner_ui.horizontal(|content_ui| {
-                    content_ui.spacing_mut().item_spacing.x = 2.0;
-                    for (idx, label) in self.items.iter().enumerate() {
-                        let is_selected = idx == *selected;
-                        let icon = self.icons.get(idx).copied().flatten();
-                        let response =
-                            Self::render_item(content_ui, &theme, label, icon, is_selected, cr);
-                        if response.clicked() {
-                            *selected = idx;
-                            content_ui.ctx().request_repaint();
-                        }
-                    }
-                });
-            })
-            .response
+        let entries: Vec<(usize, String)> = self.items.into_iter().enumerate().collect();
+        let icons: Vec<(usize, crate::icons::lucide_icon::LucideIcon)> = self
+            .icons
+            .into_iter()
+            .enumerate()
+            .filter_map(|(idx, icon)| icon.map(|inner| (idx, inner)))
+            .collect();
+        super::widget::ToggleGroupValue::new(&entries)
+            .icons(&icons)
+            .variant(self.variant)
+            .show(ui, selected)
     }
 
     fn render_item(
@@ -111,5 +97,47 @@ impl super::widget::ToggleGroup {
         }
 
         response
+    }
+}
+
+impl<T: Clone + PartialEq> super::widget::ToggleGroupValue<'_, T> {
+    /// Shows the toggle group. `selected` holds the active value.
+    /// A value missing from `entries` keeps the current selection.
+    pub fn show(self, ui: &mut egui::Ui, selected: &mut T) -> egui::Response {
+        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
+
+        let outer_frame = egui::Frame::NONE
+            .fill(theme.muted)
+            .inner_margin(egui::Margin::same(2))
+            .corner_radius(egui::CornerRadius::same(cr));
+
+        outer_frame
+            .show(ui, |inner_ui| {
+                let _ = inner_ui.horizontal(|content_ui| {
+                    content_ui.spacing_mut().item_spacing.x = 2.0;
+                    for (value, label) in self.entries {
+                        let is_selected = *value == *selected;
+                        let icon = self
+                            .icons
+                            .iter()
+                            .find(|entry| entry.0 == *value)
+                            .map(|(_, icon)| *icon);
+                        let response = super::widget::ToggleGroup::render_item(
+                            content_ui,
+                            &theme,
+                            label,
+                            icon,
+                            is_selected,
+                            cr,
+                        );
+                        if response.clicked() {
+                            *selected = value.clone();
+                            content_ui.ctx().request_repaint();
+                        }
+                    }
+                });
+            })
+            .response
     }
 }

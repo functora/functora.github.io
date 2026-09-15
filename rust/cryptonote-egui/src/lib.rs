@@ -29,7 +29,7 @@ pub use markdown::*;
 pub use messages::*;
 pub use progress::*;
 pub use route::Screen;
-pub use state::{ActionMode, External, ExternalNote, TemporaryState};
+pub use state::{ActionMode, CipherChoice, External, ExternalNote, TemporaryState};
 pub use storage::{APP_ATTRS, PersistentState};
 pub use worker::*;
 

@@ -1,10 +1,12 @@
 //! Layout: flex, aspect ratio, cards, collapsible, resizable, scroll areas,
 //! separators, status bars, tabs, toolbars, accordions.
 
+use crate::app::{ProfileTab, SettingsTab};
 use functora_egui::{
     Accordion, AspectRatio, Badge, BadgeVariant, Button, ButtonGroup, ButtonVariant, Card,
-    Collapsible, ComponentSize, Flex, FlexAlign, FlexItem, IconTabs, Input, Kbd, Label, LucideIcon,
-    Resizable, ScrollArea, Separator, StatusBar, TabEntry, Tabs, Toolbar, Typography,
+    Collapsible, ComponentSize, Flex, FlexAlign, FlexItem, IconTabsValue, Input, Kbd, Label,
+    LucideIcon, Resizable, ScrollArea, Separator, StatusBar, TabEntry, TabsValue, Toolbar,
+    Typography,
 };
 
 use functora_egui::snippet;
@@ -356,68 +358,80 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_tabs(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Tabbed content panels.").show(ui);
         ui.add_space(12.0);
-        _ = Tabs::new(vec![
-            "Account".to_owned(),
-            "Password".to_owned(),
-            "Settings".to_owned(),
-        ])
-        .show(ui, &mut self.tabs_idx, |ui76, idx| match idx {
-            0 => {
+        let entries = [
+            (SettingsTab::Account, "Account".to_owned()),
+            (SettingsTab::Password, "Password".to_owned()),
+            (SettingsTab::Settings, "Settings".to_owned()),
+        ];
+        _ = TabsValue::new(&entries).show(ui, &mut self.settings_tab, |ui76, tab| match tab {
+            SettingsTab::Account => {
                 _ = ui76.label("Manage your account settings and preferences.");
             }
-            1 => {
+            SettingsTab::Password => {
                 _ = ui76.label("Change your password and security settings.");
             }
-            _ => {
+            SettingsTab::Settings => {
                 _ = ui76.label("Configure application settings.");
             }
         });
 
         snippet(
             ui,
-            "// Tabs: tabbed content panels\nuse functora_egui::Tabs;\n\nlet titles = vec![\"Account\", \"Password\", \"Settings\"];\nlet mut active = 0;\n\nTabs::new(titles).show(ui, &mut active, |content, idx| {\n    match idx {\n        0 => content.label(\"Account settings...\"),\n        1 => content.label(\"Password settings...\"),\n        _ => content.label(\"App settings...\"),\n    }\n});",
+            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Account settings...\"),\n        SettingsTab::Password => content.label(\"Password settings...\"),\n        SettingsTab::Settings => content.label(\"App settings...\"),\n    }\n});",
         );
     }
 
     pub(crate) fn demo_icon_tabs(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Icon-based tabs with tooltips.").show(ui);
         ui.add_space(12.0);
-        _ = IconTabs::new(vec![
-            TabEntry::Icon {
-                icon: LucideIcon::House,
-                tooltip: "Home".to_owned(),
-            },
-            TabEntry::Icon {
-                icon: LucideIcon::Settings,
-                tooltip: "Settings".to_owned(),
-            },
-            TabEntry::Icon {
-                icon: LucideIcon::CircleUser,
-                tooltip: "Profile".to_owned(),
-            },
-            TabEntry::Icon {
-                icon: LucideIcon::Bell,
-                tooltip: "Notifications".to_owned(),
-            },
-        ])
-        .show(ui, &mut self.icon_tabs_idx, |ui77, idx| match idx {
-            0 => {
+        let entries = [
+            (
+                ProfileTab::Home,
+                TabEntry::Icon {
+                    icon: LucideIcon::House,
+                    tooltip: "Home".to_owned(),
+                },
+            ),
+            (
+                ProfileTab::Settings,
+                TabEntry::Icon {
+                    icon: LucideIcon::Settings,
+                    tooltip: "Settings".to_owned(),
+                },
+            ),
+            (
+                ProfileTab::Profile,
+                TabEntry::Icon {
+                    icon: LucideIcon::CircleUser,
+                    tooltip: "Profile".to_owned(),
+                },
+            ),
+            (
+                ProfileTab::Notifications,
+                TabEntry::Icon {
+                    icon: LucideIcon::Bell,
+                    tooltip: "Notifications".to_owned(),
+                },
+            ),
+        ];
+        _ = IconTabsValue::new(&entries).show(ui, &mut self.profile_tab, |ui77, tab| match tab {
+            ProfileTab::Home => {
                 _ = ui77.label("Home content");
             }
-            1 => {
+            ProfileTab::Settings => {
                 _ = ui77.label("Settings content");
             }
-            2 => {
+            ProfileTab::Profile => {
                 _ = ui77.label("Profile content");
             }
-            _ => {
+            ProfileTab::Notifications => {
                 _ = ui77.label("Notifications content");
             }
         });
 
         snippet(
             ui,
-            "// IconTabs: icon-only tabs with tooltips\nuse functora_egui::{IconTabs, TabEntry, LucideIcon};\n\nlet entries = vec![\n    TabEntry::Icon { icon: LucideIcon::House, tooltip: \"Home\".to_owned() },\n    TabEntry::Icon { icon: LucideIcon::Settings, tooltip: \"Settings\".to_owned() },\n    TabEntry::Icon { icon: LucideIcon::CircleUser, tooltip: \"Profile\".to_owned() },\n    TabEntry::Icon { icon: LucideIcon::Bell, tooltip: \"Notifications\".to_owned() },\n];\nlet mut active = 0;\nIconTabs::new(entries).show(ui, &mut active, |content, idx| {\n    match idx {\n        0 => content.label(\"Home content\"),\n        1 => content.label(\"Settings content\"),\n        2 => content.label(\"Profile content\"),\n        _ => content.label(\"Notifications content\"),\n    }\n});",
+            "// IconTabsValue: icon-only tabs bound to an enum\nuse functora_egui::{IconTabsValue, TabEntry, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ProfileTab { Home, Settings, Profile, Notifications }\n\nlet entries = [\n    (ProfileTab::Home, TabEntry::Icon { icon: LucideIcon::House, tooltip: \"Home\".to_owned() }),\n    (ProfileTab::Settings, TabEntry::Icon { icon: LucideIcon::Settings, tooltip: \"Settings\".to_owned() }),\n];\nlet mut active = ProfileTab::Home;\nIconTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        ProfileTab::Home => content.label(\"Home content\"),\n        _ => content.label(\"Other content\"),\n    }\n});",
         );
     }
 

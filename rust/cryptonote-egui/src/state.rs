@@ -30,6 +30,34 @@ pub enum ActionMode {
     Scan,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CipherChoice {
+    Plain,
+    #[default]
+    Aes256Gcm,
+    ChaCha20Poly1305,
+}
+
+impl From<Option<CipherType>> for CipherChoice {
+    fn from(cipher: Option<CipherType>) -> Self {
+        match cipher {
+            None => Self::Plain,
+            Some(CipherType::Aes256Gcm) => Self::Aes256Gcm,
+            Some(CipherType::ChaCha20Poly1305) => Self::ChaCha20Poly1305,
+        }
+    }
+}
+
+impl From<CipherChoice> for Option<CipherType> {
+    fn from(choice: CipherChoice) -> Self {
+        match choice {
+            CipherChoice::Plain => None,
+            CipherChoice::Aes256Gcm => Some(CipherType::Aes256Gcm),
+            CipherChoice::ChaCha20Poly1305 => Some(CipherType::ChaCha20Poly1305),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct ExternalNote {
     pub data: NoteData,

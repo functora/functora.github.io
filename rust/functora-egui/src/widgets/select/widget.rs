@@ -79,3 +79,65 @@ impl<'a, T: Clone + std::fmt::Display + PartialEq + 'static> SelectValue<'a, T> 
         ui.add(self)
     }
 }
+
+/// A dropdown select bound to enum values with explicit labels instead of
+/// `Display`: each entry pairs a value with its (possibly localized) label.
+#[must_use]
+pub struct SelectLabeled<'a, T: Clone + PartialEq + 'static> {
+    pub(crate) selected: &'a mut Option<T>,
+    pub(crate) entries: &'a [(T, String)],
+    pub(crate) placeholder: String,
+    pub(crate) width: Option<f32>,
+}
+
+impl<'a, T: Clone + PartialEq + 'static> SelectLabeled<'a, T> {
+    pub fn new(selected: &'a mut Option<T>, entries: &'a [(T, String)]) -> Self {
+        Self {
+            selected,
+            entries,
+            placeholder: "Select...".to_owned(),
+            width: None,
+        }
+    }
+
+    pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
+        self.placeholder = placeholder.into();
+        self
+    }
+
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = Some(width);
+        self
+    }
+
+    pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
+        ui.add(self)
+    }
+}
+
+/// Non-Option labeled variant: takes `&mut T` directly with explicit labels.
+#[must_use]
+pub struct SelectValueLabeled<'a, T: Clone + PartialEq + 'static> {
+    pub(crate) selected: &'a mut T,
+    pub(crate) entries: &'a [(T, String)],
+    pub(crate) width: Option<f32>,
+}
+
+impl<'a, T: Clone + PartialEq + 'static> SelectValueLabeled<'a, T> {
+    pub fn new(selected: &'a mut T, entries: &'a [(T, String)]) -> Self {
+        Self {
+            selected,
+            entries,
+            width: None,
+        }
+    }
+
+    pub fn width(mut self, width: f32) -> Self {
+        self.width = Some(width);
+        self
+    }
+
+    pub fn show(self, ui: &mut egui::Ui) -> egui::Response {
+        ui.add(self)
+    }
+}

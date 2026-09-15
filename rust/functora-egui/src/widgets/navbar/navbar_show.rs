@@ -37,6 +37,24 @@ impl super::widget::Navbar<'_> {
                             let _ = left_ui.horizontal(|inner_ui| {
                                 let ctx = inner_ui.ctx().clone();
                                 let th = ShadcnThemeExt::shadcn_theme(&ctx);
+                                let icon_clicked = if let Some(icon) = self.brand_icon {
+                                    let (rect, icon_alloc) = inner_ui.allocate_exact_size(
+                                        egui::vec2(20.0, 20.0),
+                                        egui::Sense::click(),
+                                    );
+                                    let icon_response = icon_alloc
+                                        .on_hover_cursor(egui::CursorIcon::PointingHand);
+                                    crate::icons::paint_icon::paint_icon(
+                                        inner_ui.painter(),
+                                        rect,
+                                        &icon,
+                                        th.foreground,
+                                    );
+                                    inner_ui.add_space(6.0);
+                                    icon_response.clicked()
+                                } else {
+                                    false
+                                };
                                 let brand_resp = inner_ui
                                     .add(
                                         egui::Label::new(
@@ -49,7 +67,7 @@ impl super::widget::Navbar<'_> {
                                         .sense(egui::Sense::click()),
                                     )
                                     .on_hover_cursor(egui::CursorIcon::PointingHand);
-                                if brand_resp.clicked()
+                                if (icon_clicked || brand_resp.clicked())
                                     && let Some(cb) = on_brand.as_mut()
                                 {
                                     cb();

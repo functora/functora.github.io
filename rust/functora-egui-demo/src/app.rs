@@ -233,6 +233,51 @@ impl I18N for CategoryId {
     }
 }
 
+/// Selection values for the typed showcase demos: widgets bind these
+/// enum variants directly instead of blind `usize` indexes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Align {
+    #[default]
+    Left,
+    Center,
+    Right,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Framework {
+    #[default]
+    React,
+    Vue,
+    Angular,
+    Svelte,
+    Solid,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SettingsTab {
+    #[default]
+    Account,
+    Password,
+    Settings,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ProfileTab {
+    #[default]
+    Home,
+    Settings,
+    Profile,
+    Notifications,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum NavSection {
+    #[default]
+    Overview,
+    Integrations,
+    Settings,
+}
+
 pub struct OverviewBody;
 impl I18N for OverviewBody {
     fn render_eng(&self) -> String {
@@ -653,7 +698,7 @@ pub struct ShowcaseApp {
     pub radios: RadioState,
     pub radio_group_val: String,
     pub text_style: TextStyleState,
-    pub toggle_group_idx: usize,
+    pub toggle_group_align: Align,
     pub slider_val: f64,
     pub slider_price: f64,
     pub input_text: String,
@@ -676,16 +721,16 @@ pub struct ShowcaseApp {
     pub select_val: Option<String>,
     pub select_blend: String,
     pub property_blend: String,
-    pub combobox_selected: Option<usize>,
+    pub combobox_framework: Option<Framework>,
     pub combobox_search: String,
     pub otp_value: String,
     pub date_picker: functora_egui::DatePickerState,
     pub color_swatch_idx: usize,
     // layout
     pub accordion_open: Vec<usize>,
-    pub tabs_idx: usize,
-    pub icon_tabs_idx: usize,
-    pub navmenu_idx: usize,
+    pub settings_tab: SettingsTab,
+    pub profile_tab: ProfileTab,
+    pub nav_section: NavSection,
     pub button_selected: bool,
     pub input_password: String,
     pub pagination_page: usize,
@@ -735,7 +780,7 @@ impl Default for ShowcaseApp {
             radios: RadioState::default(),
             radio_group_val: "Option A".to_owned(),
             text_style: TextStyleState::default(),
-            toggle_group_idx: 0,
+            toggle_group_align: Align::default(),
             slider_val: 50.0,
             slider_price: 200.0,
             input_text: String::new(),
@@ -758,15 +803,15 @@ impl Default for ShowcaseApp {
             select_val: None,
             select_blend: "Normal".to_owned(),
             property_blend: "Normal".to_owned(),
-            combobox_selected: None,
+            combobox_framework: None,
             combobox_search: String::new(),
             otp_value: String::new(),
             date_picker: functora_egui::DatePickerState::default(),
             color_swatch_idx: 0,
             accordion_open: vec![0],
-            tabs_idx: 0,
-            icon_tabs_idx: 0,
-            navmenu_idx: 0,
+            settings_tab: SettingsTab::default(),
+            profile_tab: ProfileTab::default(),
+            nav_section: NavSection::default(),
             button_selected: false,
             input_password: String::new(),
             pagination_page: 0,

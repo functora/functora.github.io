@@ -551,7 +551,7 @@ impl eframe::App for CryptonoteApp {
                 close
             }
         })
-        .version(APP_ATTRS.vsn)
+        .brand_icon(None)
         .theme(&mut persistent.theme)
         .language(&lang_cell)
         .on_brand(|| needs_reset.set(true))

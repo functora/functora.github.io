@@ -2,7 +2,7 @@
 use cryptonote_egui::crypto::{CipherType, decrypt_symmetric, encrypt_symmetric};
 use cryptonote_egui::encoding::{NoteData, decode_note, encode_note};
 use cryptonote_egui::route::Screen;
-use cryptonote_egui::state::TemporaryState;
+use cryptonote_egui::state::{CipherChoice, TemporaryState};
 use functora_egui::i18n::Language;
 use functora_egui::route::RouteMetadata;
 use std::str::FromStr;
@@ -73,6 +73,28 @@ fn route_label() {
         for lang in [Language::Eng, Language::Spa, Language::Rus] {
             assert!(!screen.label(lang).is_empty());
         }
+    }
+}
+
+#[test]
+fn cipher_choice_roundtrip() {
+    assert_eq!(CipherChoice::from(None), CipherChoice::Plain);
+    assert_eq!(CipherChoice::from(Some(CipherType::Aes256Gcm)), CipherChoice::Aes256Gcm);
+    assert_eq!(
+        CipherChoice::from(Some(CipherType::ChaCha20Poly1305)),
+        CipherChoice::ChaCha20Poly1305
+    );
+    assert_eq!(Option::<CipherType>::from(CipherChoice::Plain), None);
+    assert_eq!(
+        Option::<CipherType>::from(CipherChoice::Aes256Gcm),
+        Some(CipherType::Aes256Gcm)
+    );
+    assert_eq!(
+        Option::<CipherType>::from(CipherChoice::ChaCha20Poly1305),
+        Some(CipherType::ChaCha20Poly1305)
+    );
+    for cipher in [None, Some(CipherType::Aes256Gcm), Some(CipherType::ChaCha20Poly1305)] {
+        assert_eq!(Option::<CipherType>::from(CipherChoice::from(cipher)), cipher);
     }
 }
 

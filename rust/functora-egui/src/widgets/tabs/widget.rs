@@ -12,6 +12,19 @@ impl Tabs {
     }
 }
 
+/// A tabbed container bound to enum values instead of blind indexes:
+/// each entry pairs a value with its label.
+#[must_use]
+pub struct TabsValue<'a, T: Clone + PartialEq> {
+    pub(crate) entries: &'a [(T, String)],
+}
+
+impl<'a, T: Clone + PartialEq> TabsValue<'a, T> {
+    pub fn new(entries: &'a [(T, String)]) -> Self {
+        Self { entries }
+    }
+}
+
 /// Tab entry that can be a text label or icon with tooltip.
 pub enum TabEntry {
     Text(String),
@@ -29,6 +42,19 @@ pub struct IconTabs {
 
 impl IconTabs {
     pub fn new(entries: Vec<TabEntry>) -> Self {
+        Self { entries }
+    }
+}
+
+/// Icon-based tabs bound to enum values instead of blind indexes:
+/// each entry pairs a value with its tab entry.
+#[must_use]
+pub struct IconTabsValue<'a, T: Clone + PartialEq> {
+    pub(crate) entries: &'a [(T, TabEntry)],
+}
+
+impl<'a, T: Clone + PartialEq> IconTabsValue<'a, T> {
+    pub fn new(entries: &'a [(T, TabEntry)]) -> Self {
         Self { entries }
     }
 }

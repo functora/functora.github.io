@@ -4,61 +4,35 @@ use crate::hooks::{handle_open_url, remove_attachment, share_error};
 use crate::messages::Msg;
 use crate::progress::{Stage, claim_job};
 use crate::route::Screen;
-use crate::state::{ActionMode, AttachmentIdx};
+use crate::state::{ActionMode, AttachmentIdx, CipherChoice};
 use functora_egui::files::format_size;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Flex, Input, Label, Progress, Separator, Textarea, ToastVariant,
+    Button, ButtonVariant, ComponentSize, Flex, Input, Label, Progress, SelectValueLabeled, TabsValue, Textarea,
+    ToastVariant,
 };
 
 impl CryptonoteApp {
     pub(crate) fn screen_home(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        // Action selector
         let () = ui.add_space(4.0);
         _ = Label::new(Msg::ActionLabel.render(lang)).show(ui);
         let () = ui.add_space(4.0);
-        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-            for (mode, label, icon) in [
-                (
-                    ActionMode::Create,
-                    Msg::ActionCreate.render(lang),
-                    functora_egui::LucideIcon::SquarePlus,
-                ),
-                (
-                    ActionMode::Open,
-                    Msg::ActionOpen.render(lang),
-                    functora_egui::LucideIcon::FolderOpen,
-                ),
-                (
-                    ActionMode::Scan,
-                    Msg::ActionScan.render(lang),
-                    functora_egui::LucideIcon::QrCode,
-                ),
-            ] {
-                let selected = self.temporary.action == mode;
-                let variant = if selected {
-                    ButtonVariant::Default
-                } else {
-                    ButtonVariant::Outline
-                };
-                if f.add(Button::new(label).icon(icon).variant(variant).selected(selected))
-                    .inner
-                    .clicked()
-                {
-                    self.temporary.action = mode;
-                }
+        let mut tab = self.temporary.action;
+        let entries = [
+            (ActionMode::Create, Msg::ActionCreate.render(lang)),
+            (ActionMode::Open, Msg::ActionOpen.render(lang)),
+            (ActionMode::Scan, Msg::ActionScan.render(lang)),
+        ];
+        _ = TabsValue::new(&entries).show(ui, &mut tab, |tab_ui, mode| {
+            self.temporary.action = *mode;
+            match self.temporary.action {
+                ActionMode::Create => self.home_create(tab_ui),
+                ActionMode::Open => self.home_open(tab_ui),
+                ActionMode::Scan => self.home_scan(tab_ui),
             }
         });
-        let () = ui.add_space(12.0);
-        _ = Separator::horizontal().show(ui);
-        let () = ui.add_space(12.0);
-        match self.temporary.action {
-            ActionMode::Create => self.home_create(ui),
-            ActionMode::Open => self.home_open(ui),
-            ActionMode::Scan => self.home_scan(ui),
-        }
         let () = ui.add_space(12.0);
         if let Some(job) = self.temporary.progress.clone() {
             _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
@@ -89,32 +63,14 @@ impl CryptonoteApp {
         self.show_pick_overlay(ui.ctx(), lang);
         _ = Label::new(Msg::Mode.render(lang)).show(ui);
         let () = ui.add_space(4.0);
-        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-            for (cipher_opt, label) in [
-                (None, Msg::NoEncryption.render(lang)),
-                (
-                    Some(crate::crypto::CipherType::Aes256Gcm),
-                    BaseMsg::CipherAesLabel.render(lang),
-                ),
-                (
-                    Some(crate::crypto::CipherType::ChaCha20Poly1305),
-                    BaseMsg::CipherChaChaLabel.render(lang),
-                ),
-            ] {
-                let selected = self.temporary.cipher == cipher_opt;
-                let variant = if selected {
-                    ButtonVariant::Default
-                } else {
-                    ButtonVariant::Outline
-                };
-                if f.add(Button::new(label).variant(variant).selected(selected))
-                    .inner
-                    .clicked()
-                {
-                    self.temporary.cipher = cipher_opt;
-                }
-            }
-        });
+        let options = [
+            (CipherChoice::Plain, Msg::NoEncryption.render(lang)),
+            (CipherChoice::Aes256Gcm, BaseMsg::CipherAesLabel.render(lang)),
+            (CipherChoice::ChaCha20Poly1305, BaseMsg::CipherChaChaLabel.render(lang)),
+        ];
+        let mut choice = CipherChoice::from(self.temporary.cipher);
+        _ = SelectValueLabeled::new(&mut choice, &options).show(ui);
+        self.temporary.cipher = choice.into();
         let () = ui.add_space(8.0);
         if self.temporary.cipher.is_some() {
             _ = Label::new(BaseMsg::Password.render(lang)).show(ui);

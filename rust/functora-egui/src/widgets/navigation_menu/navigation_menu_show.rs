@@ -4,13 +4,23 @@ impl super::widget::NavigationMenu {
     /// Shows the navigation menu. `active` is the currently selected item index.
     /// Returns the index of the clicked item, if any.
     pub fn show(self, ui: &mut egui::Ui, active: &mut usize) -> Option<usize> {
+        let entries: Vec<(usize, String)> = self.items.into_iter().enumerate().collect();
+        super::widget::NavigationMenuValue::new(&entries).show(ui, active)
+    }
+}
+
+impl<T: Clone + PartialEq> super::widget::NavigationMenuValue<'_, T> {
+    /// Shows the navigation menu. `active` holds the currently selected value.
+    /// Returns the clicked value, if any.
+    /// A value missing from `entries` keeps the current selection.
+    pub fn show(self, ui: &mut egui::Ui, active: &mut T) -> Option<T> {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let mut clicked = None;
 
         let _ = ui.horizontal(|inner_ui| {
             inner_ui.spacing_mut().item_spacing.x = 2.0;
-            for (idx, label) in self.items.iter().enumerate() {
-                let is_active = idx == *active;
+            for (value, label) in self.entries {
+                let is_active = *value == *active;
                 let font_size: f32 = 14.0;
                 let h_pad: f32 = 12.0;
                 let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(
@@ -61,8 +71,8 @@ impl super::widget::NavigationMenu {
                 }
 
                 if response.clicked() {
-                    *active = idx;
-                    clicked = Some(idx);
+                    *active = value.clone();
+                    clicked = Some(value.clone());
                     inner_ui.ctx().request_repaint();
                 }
 

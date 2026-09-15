@@ -1,9 +1,10 @@
 //! Overlays: dialogs, sheets, popovers, hover cards, tooltips,
 //! context menus, dropdowns, command palette, menubars, navigation menus.
 
+use crate::app::NavSection;
 use functora_egui::{
     Button, ButtonVariant, ContextMenu, DropdownMenu, Flex, HoverCard, Label, LucideIcon, Menubar,
-    NavigationMenu, Popover, Tooltip, Typography,
+    NavigationMenuValue, Popover, Tooltip, Typography,
 };
 
 use functora_egui::snippet;
@@ -255,15 +256,15 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_navigation_menu(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Top-level navigation with active item tracking.").show(ui);
         ui.add_space(12.0);
-        let clicked = NavigationMenu::new(vec![
-            "Overview".to_owned(),
-            "Integrations".to_owned(),
-            "Settings".to_owned(),
-        ])
-        .show(ui, &mut self.navmenu_idx);
-        if let Some(idx) = clicked {
+        let entries = [
+            (NavSection::Overview, "Overview".to_owned()),
+            (NavSection::Integrations, "Integrations".to_owned()),
+            (NavSection::Settings, "Settings".to_owned()),
+        ];
+        let clicked = NavigationMenuValue::new(&entries).show(ui, &mut self.nav_section);
+        if let Some(section) = clicked {
             self.toast.add(
-                format!("Navigation: item {idx}"),
+                format!("Navigation: {section:?}"),
                 functora_egui::ToastVariant::Default,
                 ui.ctx().input(|i| i.time),
             );
@@ -271,7 +272,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// NavigationMenu: top-level navigation with active tracking\nuse functora_egui::NavigationMenu;\n\nlet items = vec![\"Overview\", \"Integrations\", \"Settings\"];\nlet mut active = 0;\n\nif let Some(idx) = NavigationMenu::new(items).show(ui, &mut active) {\n    eprintln!(\"Navigated to: {}\", idx);\n}",
+            "// NavigationMenuValue: top-level navigation bound to an enum\nuse functora_egui::NavigationMenuValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum NavSection { Overview, Integrations, Settings }\n\nlet entries = [(NavSection::Overview, \"Overview\".to_owned()), (NavSection::Integrations, \"Integrations\".to_owned()), (NavSection::Settings, \"Settings\".to_owned())];\nlet mut active = NavSection::Overview;\n\nif let Some(section) = NavigationMenuValue::new(&entries).show(ui, &mut active) {\n    eprintln!(\"Navigated to: {section:?}\");\n}",
         );
     }
 }

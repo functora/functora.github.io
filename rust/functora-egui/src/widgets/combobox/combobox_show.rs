@@ -11,11 +11,35 @@ impl super::widget::Combobox {
         selected: &mut Option<usize>,
         search_text: &mut String,
     ) -> egui::Response {
+        let entries: Vec<(usize, String)> = self.items.into_iter().enumerate().collect();
+        let mut typed = super::widget::ComboboxValue::new(&entries).placeholder(self.placeholder);
+        if let Some(width) = self.width {
+            typed = typed.width(width);
+        }
+        typed.show(ui, selected, search_text)
+    }
+}
+
+impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
+    /// Shows the combobox. `selected` holds the selected value (or None).
+    /// `search_text` holds the filter text state.
+    /// A value missing from `entries` renders the placeholder.
+    pub fn show(
+        self,
+        ui: &mut egui::Ui,
+        selected: &mut Option<T>,
+        search_text: &mut String,
+    ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let display = selected
-            .and_then(|idx| self.items.get(idx))
-            .cloned()
+            .as_ref()
+            .and_then(|value| {
+                self.entries
+                    .iter()
+                    .find(|entry| entry.0 == *value)
+                    .map(|(_, label)| label.clone())
+            })
             .unwrap_or_else(|| self.placeholder.clone());
 
         let text_color = if selected.is_some() {
@@ -130,7 +154,7 @@ impl super::widget::Combobox {
                 crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
             let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
             let mut content_w: f32 = 200.0;
-            for label in &self.items {
+            for (_, label) in self.entries {
                 let w = ui
                     .painter()
                     .layout_no_wrap(
@@ -168,11 +192,11 @@ impl super::widget::Combobox {
 
             // Filtered items
             let query = search_text.to_lowercase();
-            let filtered: Vec<(usize, &String)> = self
-                .items
+            let filtered: Vec<(&T, &String)> = self
+                .entries
                 .iter()
-                .enumerate()
-                .filter(|(_, item)| query.is_empty() || item.to_lowercase().contains(&query))
+                .filter(|(_, label)| query.is_empty() || label.to_lowercase().contains(&query))
+                .map(|(value, label)| (value, label))
                 .collect();
 
             if filtered.is_empty() {
@@ -185,8 +209,8 @@ impl super::widget::Combobox {
                 let check_icon_size: f32 = 12.0;
                 let item_left_pad: f32 = check_icon_size + 6.0;
 
-                for (idx, label) in filtered {
-                    let is_selected = *selected == Some(idx);
+                for (value, label) in filtered {
+                    let is_selected = selected.as_ref().is_some_and(|current| current == value);
                     let item_galley = popup_ui.painter().layout_no_wrap(
                         label.clone(),
                         egui::FontId::proportional(14.0),
@@ -244,7 +268,7 @@ impl super::widget::Combobox {
                     }
 
                     if r.clicked() {
-                        *selected = Some(idx);
+                        *selected = Some(value.clone());
                         search_text.clear();
                         close = true;
                     }

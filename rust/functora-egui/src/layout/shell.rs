@@ -123,6 +123,7 @@ where
     R: RouteMetadata,
 {
     brand: &'a str,
+    brand_icon: Option<crate::icons::lucide_icon::LucideIcon>,
     version: Option<&'a str>,
     collapsed: &'a mut bool,
     theme: Option<&'a mut Theme>,
@@ -150,6 +151,7 @@ where
     ) -> Self {
         Self {
             brand,
+            brand_icon: None,
             version: None,
             collapsed,
             theme: None,
@@ -165,6 +167,12 @@ where
             footer: None,
             system_back: true,
         }
+    }
+
+    #[must_use]
+    pub fn brand_icon(mut self, icon: Option<crate::icons::lucide_icon::LucideIcon>) -> Self {
+        self.brand_icon = icon;
+        self
     }
 
     #[must_use]
@@ -241,6 +249,7 @@ where
     ) -> Option<NavAction<R>> {
         let Self {
             brand,
+            brand_icon,
             version,
             collapsed,
             theme,
@@ -282,6 +291,7 @@ where
             .show_separator_line(false)
             .show(ui, |top_ui| {
                 let mut navbar = crate::widgets::navbar::widget::Navbar::new(brand);
+                navbar = navbar.brand_icon(brand_icon);
                 if let Some(v) = version {
                     navbar = navbar.version(v);
                 }

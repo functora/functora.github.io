@@ -9,36 +9,10 @@ impl super::widget::Tabs {
         selected: &mut usize,
         content: impl FnOnce(&mut egui::Ui, usize),
     ) -> egui::Response {
-        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
-
-        ui.vertical(|inner_ui| {
-            // Tab bar
-            let tab_frame = egui::Frame::NONE
-                .fill(theme.muted)
-                .inner_margin(egui::Margin::same(2))
-                .corner_radius(egui::CornerRadius::same(cr));
-
-            let _ = tab_frame.show(inner_ui, |content_ui| {
-                let _ = content_ui.horizontal(|inner_ui3| {
-                    inner_ui3.spacing_mut().item_spacing.x = 2.0;
-                    for (idx, label) in self.labels.iter().enumerate() {
-                        let is_active = idx == *selected;
-                        let response = Self::render_tab(inner_ui3, &theme, label, is_active, cr);
-                        if response.clicked() {
-                            *selected = idx;
-                            inner_ui3.ctx().request_repaint();
-                        }
-                    }
-                });
-            });
-
-            inner_ui.add_space(8.0);
-
-            // Content area
-            content(inner_ui, *selected);
+        let entries: Vec<(usize, String)> = self.labels.into_iter().enumerate().collect();
+        super::widget::TabsValue::new(&entries).show(ui, selected, |tab_ui, value| {
+            content(tab_ui, *value);
         })
-        .response
     }
 
     fn render_tab(
@@ -126,15 +100,18 @@ impl super::widget::Tabs {
 }
 
 // ---------------------------------------------------------------------------
-// IconTabs — icon+tooltip variant
+// TabsValue — enum-bound tabs
 // ---------------------------------------------------------------------------
 
-impl super::widget::IconTabs {
+impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
+    /// Shows the tab bar and content. `selected` holds the active value.
+    /// Calls `content(ui, selected_value)` for the active tab's body.
+    /// A value missing from `entries` keeps the current selection.
     pub fn show(
         self,
         ui: &mut egui::Ui,
-        selected: &mut usize,
-        content: impl FnOnce(&mut egui::Ui, usize),
+        selected: &mut T,
+        content: impl FnOnce(&mut egui::Ui, &T),
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = crate::utils::f32_to_u8_clamped(theme.radius);
@@ -148,12 +125,13 @@ impl super::widget::IconTabs {
             let _ = tab_frame.show(inner_ui, |content_ui| {
                 let _ = content_ui.horizontal(|inner_ui3| {
                     inner_ui3.spacing_mut().item_spacing.x = 2.0;
-                    for (idx, entry) in self.entries.iter().enumerate() {
-                        let is_active = idx == *selected;
-                        let response =
-                            Self::render_icon_tab(inner_ui3, &theme, entry, is_active, cr);
+                    for (value, label) in self.entries {
+                        let is_active = *value == *selected;
+                        let response = super::widget::Tabs::render_tab(
+                            inner_ui3, &theme, label, is_active, cr,
+                        );
                         if response.clicked() {
-                            *selected = idx;
+                            *selected = value.clone();
                             inner_ui3.ctx().request_repaint();
                         }
                     }
@@ -161,9 +139,29 @@ impl super::widget::IconTabs {
             });
 
             inner_ui.add_space(8.0);
-            content(inner_ui, *selected);
+
+            content(inner_ui, selected);
         })
         .response
+    }
+}
+
+// ---------------------------------------------------------------------------
+// IconTabs — icon+tooltip variant
+// ---------------------------------------------------------------------------
+
+impl super::widget::IconTabs {
+    pub fn show(
+        self,
+        ui: &mut egui::Ui,
+        selected: &mut usize,
+        content: impl FnOnce(&mut egui::Ui, usize),
+    ) -> egui::Response {
+        let entries: Vec<(usize, super::widget::TabEntry)> =
+            self.entries.into_iter().enumerate().collect();
+        super::widget::IconTabsValue::new(&entries).show(ui, selected, |tab_ui, value| {
+            content(tab_ui, *value);
+        })
     }
 
     fn render_icon_tab(
@@ -258,5 +256,51 @@ impl super::widget::IconTabs {
         }
 
         response
+    }
+}
+
+// ---------------------------------------------------------------------------
+// IconTabsValue — enum-bound icon tabs
+// ---------------------------------------------------------------------------
+
+impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
+    /// Shows the icon tab bar and content. `selected` holds the active value.
+    /// Calls `content(ui, selected_value)` for the active tab's body.
+    /// A value missing from `entries` keeps the current selection.
+    pub fn show(
+        self,
+        ui: &mut egui::Ui,
+        selected: &mut T,
+        content: impl FnOnce(&mut egui::Ui, &T),
+    ) -> egui::Response {
+        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let cr = crate::utils::f32_to_u8_clamped(theme.radius);
+
+        ui.vertical(|inner_ui| {
+            let tab_frame = egui::Frame::NONE
+                .fill(theme.muted)
+                .inner_margin(egui::Margin::same(2))
+                .corner_radius(egui::CornerRadius::same(cr));
+
+            let _ = tab_frame.show(inner_ui, |content_ui| {
+                let _ = content_ui.horizontal(|inner_ui3| {
+                    inner_ui3.spacing_mut().item_spacing.x = 2.0;
+                    for (value, entry) in self.entries {
+                        let is_active = *value == *selected;
+                        let response = super::widget::IconTabs::render_icon_tab(
+                            inner_ui3, &theme, entry, is_active, cr,
+                        );
+                        if response.clicked() {
+                            *selected = value.clone();
+                            inner_ui3.ctx().request_repaint();
+                        }
+                    }
+                });
+            });
+
+            inner_ui.add_space(8.0);
+            content(inner_ui, selected);
+        })
+        .response
     }
 }

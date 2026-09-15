@@ -212,6 +212,14 @@
 - Avoid boolean blindness: when the meaning of a `Bool` depends on the surrounding field or call site, replace it with a precise two-variant enum (`FilterResult = Discard | Keep`, `TimeKind = WorkingTime | BreakTime`, `Strictness = Strict | NotStrict`); a bare boolean loses its context outside the data model.
 - When a function takes multiple scalars that denote distinct domain concepts, wrap them in named types instead of passing a positional sequence of same-typed scalars, so the compiler rejects misplaced or meaningless argument combinations.
 
+### Exhaustive Matching
+
+- **Always match on typed enum values, never on blind strings or numbers.** Selection state, menu choices, routes, and dispatch keys must be enum variants (e.g. `ActionMode::Create`, `ComponentId::Button`), not `usize` indexes into an option list and not `&str` ids compared by value. Widget and callback APIs must bind enum values directly (e.g. entries as `&[(T, String)]` pairs carrying the value alongside its display label), so invalid selections cannot even be constructed and no positional or string lookup can drift out of sync.
+- **Every `match` on a closed enum must be complete and exhaustive: list each variant explicitly and never use a catch-all `_` arm.** A wildcard silently swallows unhandled variants, so adding a variant later still compiles while quietly dropping behavior at runtime. An exhaustive match turns every enum change into a compile error at exactly the sites that must decide what to do, which is the point.
+- Grouping is fine when several variants genuinely share behavior: use explicit or-patterns (e.g. `Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) => ...`), never `_`. Or-patterns stay exhaustive: adding a variant still fails compilation until it is placed.
+- Reserve `_` strictly for open domains the type system cannot enumerate: `&str`/`char`/`i32` from external input (parsers, wire formats, OS statuses), huge foreign enums, or numeric fallbacks (e.g. month lengths). Even there, name the meaningful cases explicitly and map the remainder to an explicit `None` or fallback rather than silently doing work.
+- Rationale: **compile-time safety during changes, refactorings, and improvements.** An exhaustive match shows the complete set of possibilities explicitly at every decision site, so a reader never loses context about what can happen, and an author extending an enum cannot forget to handle the new case somewhere: the compiler lists every site. A `_` arm defeats this: it compiles today and silently misbehaves tomorrow.
+
 ### Complexity and Structure
 
 - Prefer simple, composable expressions over deeply nested control flow.

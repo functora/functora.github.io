@@ -12,10 +12,7 @@ use functora_egui::{Button, ButtonVariant, Flex, Progress, Textarea};
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        let url = match &self.temporary.external {
-            External::Note(n) => n.url.clone(),
-            _ => String::new(),
-        };
+        let url = self.temporary.external.clone().note_url();
         let pkg_ready = matches!(self.temporary.external, External::Archive(_));
         if pkg_ready {
             _ = ui.label(egui::RichText::new(Msg::ArchiveReady.render(lang)).size(16.0).strong());
@@ -88,10 +85,7 @@ impl CryptonoteApp {
                     .inner
                     .clicked()
                 {
-                    let bytes = match &self.temporary.external {
-                        External::Archive(a) => a.clone().untag(),
-                        _ => Vec::new(),
-                    };
+                    let bytes = self.temporary.external.clone().archive_bytes();
                     if !bytes.is_empty() && claim_job(&mut self.temporary.progress, Stage::Download).is_some() {
                         let rx = functora_egui::spawn_async(async move {
                             functora_egui::download::download(bytes, "archive.cryptonote")

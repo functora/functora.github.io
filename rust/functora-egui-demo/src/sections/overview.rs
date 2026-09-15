@@ -9,10 +9,9 @@ impl crate::app::ShowcaseApp {
         _ = Typography::new(OverviewBody.render(lang)).show(ui);
         ui.add_space(12.0);
 
-        for (cat_idx, (cat_id, _, items)) in CATEGORIES
+        for (cat_id, _, items) in CATEGORIES
             .iter()
-            .enumerate()
-            .filter(|(_, (id, _, _))| *id != CategoryId::Overview)
+            .filter(|(id, _, _)| *id != CategoryId::Overview)
         {
             _ = Separator::horizontal()
                 .text(cat_id.render(lang))
@@ -20,15 +19,18 @@ impl crate::app::ShowcaseApp {
                 .show(ui);
             ui.add_space(8.0);
             let ctx = ui.ctx().clone();
+            let current = self.selected;
             _ = Flex::row().gap(4.0).wrap().show(ui, |f| {
-                for (item_idx, def) in items.iter().enumerate() {
-                    let flat = crate::app::flat_index(cat_idx, item_idx);
-                    let selected = flat == self.selected;
+                for def in *items {
+                    let Some(id) = def.id else {
+                        continue;
+                    };
+                    let selected = Some(id) == current;
                     if f.add(crate::app::section_button(def, selected))
                         .inner
                         .clicked()
                     {
-                        self.navigate_to(flat);
+                        self.navigate_to(Some(id));
                         ctx.request_repaint();
                     }
                 }

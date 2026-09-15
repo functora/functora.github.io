@@ -1,28 +1,28 @@
 //! Regression tests for demo snippet accuracy (plan steps 2-3).
 //!
 //! Snippet strings duplicate live code and drift. The command palette snippet
-//! must use the same `Command::with_items` + `CommandItem` API as the live
-//! overlay in `app.rs`, not the stale tuple `Command::new` form. The
-//! thumbnail/zip/crypto snippets must show the real wiring used by the live
-//! demos, not aspirational lib calls with wrong signatures.
+//! must use the same `CommandValue` + `CommandItem` API as the live
+//! overlay in `app.rs`. The thumbnail/zip/crypto snippets must show the real
+//! wiring used by the live demos, not aspirational lib calls with wrong
+//! signatures.
 
 const OVERLAY_SRC: &str = include_str!("../src/sections/overlay.rs");
 const APP_SRC: &str = include_str!("../src/app.rs");
 const PLATFORM_SRC: &str = include_str!("../src/sections/platform.rs");
 
 #[test]
-fn live_overlay_uses_with_items_api() {
+fn live_overlay_uses_value_api() {
     assert!(
-        APP_SRC.contains("Command::with_items"),
-        "live app.rs must build the palette with Command::with_items"
+        APP_SRC.contains("CommandValue::new"),
+        "live app.rs must build the palette with CommandValue::new"
     );
 }
 
 #[test]
-fn command_snippet_matches_live_with_items_api() {
+fn command_snippet_matches_live_value_api() {
     assert!(
-        OVERLAY_SRC.contains("Command::with_items"),
-        "demo_command snippet must use Command::with_items like live app.rs"
+        OVERLAY_SRC.contains("CommandValue::new"),
+        "demo_command snippet must use CommandValue::new like live app.rs"
     );
     assert!(
         OVERLAY_SRC.contains("CommandItem"),

@@ -1,10 +1,8 @@
-//! Catalog invariants for the showcase app: names, counts, and lookups.
+//! Catalog invariants for the showcase app: ids, names, counts, and slugs.
 
-use functora_egui_demo::{
-    CATEGORIES, component_count, component_index, component_name, flat_index,
-};
+use functora_egui_demo::{CATEGORIES, CategoryId, ComponentId, component_count};
 
-fn names() -> impl Iterator<Item = &'static str> {
+fn catalog_names() -> impl Iterator<Item = &'static str> {
     CATEGORIES
         .iter()
         .flat_map(|(_, _, items)| items.iter().map(|def| def.name))
@@ -13,7 +11,7 @@ fn names() -> impl Iterator<Item = &'static str> {
 #[test]
 fn names_are_unique_and_non_empty() {
     let mut seen = std::collections::HashSet::new();
-    for name in names() {
+    for name in catalog_names() {
         assert!(!name.is_empty());
         assert!(seen.insert(name), "duplicate component name: {name}");
     }
@@ -27,45 +25,62 @@ fn count_matches_catalog() {
 }
 
 #[test]
-fn flat_index_roundtrips_through_names() {
-    for (cat, (_, _, items)) in CATEGORIES.iter().enumerate() {
-        for (item, def) in items.iter().enumerate() {
-            let flat = flat_index(cat, item);
-            assert_eq!(component_name(flat), def.name);
-            assert_eq!(component_index(def.name), Some(flat));
+fn every_id_matches_exactly_one_catalog_entry() {
+    let mut seen = std::collections::HashSet::new();
+    for id in ComponentId::ALL {
+        assert!(seen.insert(id), "duplicate component id: {id:?}");
+        let matches = catalog_names().filter(|name| *name == id.name()).count();
+        assert_eq!(matches, 1, "id {id:?} must match exactly one catalog name");
+    }
+}
+
+#[test]
+fn every_catalog_component_has_an_id() {
+    let mut covered = 0;
+    for (cat_id, _, items) in CATEGORIES {
+        for def in *items {
+            if *cat_id == CategoryId::Overview {
+                assert_eq!(def.id, None, "overview entry must stay id-less");
+            } else {
+                assert!(
+                    def.id.is_some(),
+                    "catalog entry {} must have an id",
+                    def.name
+                );
+                covered += 1;
+            }
         }
     }
+    assert_eq!(covered, ComponentId::ALL.len());
 }
 
 #[test]
-fn every_flat_index_is_named() {
-    for flat in 0..component_count() {
-        let name = component_name(flat);
-        assert!(!name.is_empty());
-        assert_eq!(component_index(name), Some(flat));
+fn slugs_roundtrip_through_from_slug() {
+    for id in ComponentId::ALL {
+        assert_eq!(ComponentId::from_slug(&id.slug()), Some(id));
     }
 }
 
 #[test]
-fn flat_index_bounds() {
-    assert_eq!(flat_index(0, 0), 0);
-    let last_cat = CATEGORIES.len() - 1;
-    let last_item = CATEGORIES[last_cat].2.len() - 1;
-    assert_eq!(flat_index(last_cat, last_item), component_count() - 1);
-    assert_eq!(flat_index(1, 0), flat_index(0, CATEGORIES[0].2.len()));
+fn slugs_are_unique_and_lowercase() {
+    let mut seen = std::collections::HashSet::new();
+    for id in ComponentId::ALL {
+        let slug = id.slug();
+        assert_eq!(slug, slug.to_ascii_lowercase());
+        assert!(seen.insert(slug.clone()), "duplicate slug: {slug}");
+    }
 }
 
 #[test]
-fn lookups_are_case_insensitive_and_trimmed() {
-    let button = component_index("Button");
-    assert_eq!(button, component_index("  button "));
-    assert_eq!(button, component_index("BUTTON"));
-    assert_eq!(component_index("Definitely Not A Component"), None);
-    assert_eq!(component_index(""), None);
-}
-
-#[test]
-fn out_of_range_names_are_empty() {
-    assert_eq!(component_name(component_count()), "");
-    assert_eq!(component_name(component_count() + 100), "");
+fn from_slug_is_case_insensitive_and_trimmed() {
+    assert_eq!(
+        ComponentId::from_slug("Button"),
+        ComponentId::from_slug("  button ")
+    );
+    assert_eq!(
+        ComponentId::from_slug("Button"),
+        ComponentId::from_slug("BUTTON")
+    );
+    assert_eq!(ComponentId::from_slug("Definitely Not A Component"), None);
+    assert_eq!(ComponentId::from_slug(""), None);
 }

@@ -35,10 +35,15 @@ pub fn resolve_badge_style(
                 border: Some(theme.border),
             }
         }
-        _ => super::resolved_badge_style::ResolvedBadgeStyle {
-            bg: egui::Color32::TRANSPARENT,
-            fg: theme.foreground,
-            border: None,
-        },
+        crate::tokens::badge_variant::BadgeVariant::Destructive
+        | crate::tokens::badge_variant::BadgeVariant::Success
+        | crate::tokens::badge_variant::BadgeVariant::Warning
+        | crate::tokens::badge_variant::BadgeVariant::Info => {
+            super::resolved_badge_style::ResolvedBadgeStyle {
+                bg: egui::Color32::TRANSPARENT,
+                fg: theme.foreground,
+                border: None,
+            }
+        }
     }
 }

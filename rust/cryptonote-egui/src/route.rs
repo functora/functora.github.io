@@ -60,7 +60,14 @@ impl RouteMetadata for Screen {
                 Self::License,
                 Self::Privacy,
             ],
-            _ => vec![],
+            Self::Open
+            | Self::View
+            | Self::Share
+            | Self::About
+            | Self::Donate
+            | Self::License
+            | Self::Privacy
+            | Self::File => vec![],
         }
     }
 

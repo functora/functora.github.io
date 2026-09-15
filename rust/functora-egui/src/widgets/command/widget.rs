@@ -51,3 +51,25 @@ impl Command {
         self
     }
 }
+
+/// A command palette bound to enum values instead of blind indexes:
+/// each entry pairs a value with its palette item.
+#[must_use]
+pub struct CommandValue<T: Clone> {
+    pub(crate) entries: Vec<(T, CommandItem)>,
+    pub(crate) placeholder: String,
+}
+
+impl<T: Clone> CommandValue<T> {
+    pub fn new(entries: Vec<(T, CommandItem)>) -> Self {
+        Self {
+            entries,
+            placeholder: "Type a command or search...".to_owned(),
+        }
+    }
+
+    pub fn placeholder(mut self, text: impl Into<String>) -> Self {
+        self.placeholder = text.into();
+        self
+    }
+}

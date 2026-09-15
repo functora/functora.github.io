@@ -8,11 +8,27 @@ impl super::widget::DropdownMenu {
         items: &[&str],
         on_select: impl FnOnce(usize),
     ) {
-        let menu_items: Vec<super::widget::MenuItem> = items
+        let entries: Vec<(usize, String)> = items
             .iter()
-            .map(|label| super::widget::MenuItem::label(*label))
+            .enumerate()
+            .map(|(idx, label)| (idx, (*label).to_owned()))
             .collect();
-        Self::show_rich(ui, trigger_response, &menu_items, on_select);
+        Self::show_value(ui, trigger_response, &entries, on_select);
+    }
+
+    /// Shows a dropdown menu bound to enum values instead of blind indexes:
+    /// each entry pairs a value with its label.
+    pub fn show_value<T: Clone>(
+        ui: &mut egui::Ui,
+        trigger_response: &egui::Response,
+        entries: &[(T, String)],
+        on_select: impl FnOnce(T),
+    ) {
+        let menu_items: Vec<(T, super::widget::MenuItem)> = entries
+            .iter()
+            .map(|(value, label)| (value.clone(), super::widget::MenuItem::label(label)))
+            .collect();
+        Self::show_rich_value(ui, trigger_response, &menu_items, on_select);
     }
 
     /// Shows a dropdown menu with rich `MenuItem`s (shortcuts, separators, disabled items).
@@ -21,6 +37,19 @@ impl super::widget::DropdownMenu {
         trigger_response: &egui::Response,
         items: &[super::widget::MenuItem],
         on_select: impl FnOnce(usize),
+    ) {
+        let entries: Vec<(usize, super::widget::MenuItem)> =
+            items.iter().cloned().enumerate().collect();
+        Self::show_rich_value(ui, trigger_response, &entries, on_select);
+    }
+
+    /// Shows a rich dropdown menu bound to enum values instead of blind indexes.
+    /// Separator entries carry an unused value and are never reported.
+    pub fn show_rich_value<T: Clone>(
+        ui: &mut egui::Ui,
+        trigger_response: &egui::Response,
+        entries: &[(T, super::widget::MenuItem)],
+        on_select: impl FnOnce(T),
     ) {
         let popup_id = trigger_response.id.with("dropdown");
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
@@ -48,14 +77,14 @@ impl super::widget::DropdownMenu {
             .open_memory(toggle_cmd)
             .frame(themed_frame);
 
-        let mut selected_idx = None;
+        let mut selected_value = None;
 
         let _ = popup.show(|popup_ui: &mut egui::Ui| {
             // Compute max text width
             let mut max_label_w: f32 = 0.0;
             let mut max_shortcut_w: f32 = 0.0;
 
-            for item in items {
+            for (_, item) in entries {
                 if let super::widget::MenuItem::Item {
                     label, shortcut, ..
                 } = item
@@ -91,9 +120,9 @@ impl super::widget::DropdownMenu {
             } else {
                 0.0
             };
-            let has_selected = items
+            let has_selected = entries
                 .iter()
-                .any(|it| matches!(it, super::widget::MenuItem::Item { selected: true, .. }));
+                .any(|(_, it)| matches!(it, super::widget::MenuItem::Item { selected: true, .. }));
             let trailing_check = if has_selected { 20.0 } else { 0.0 };
             let mut menu_width = (max_label_w + shortcut_space + 24.0 + trailing_check).max(120.0);
             let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(
@@ -110,8 +139,7 @@ impl super::widget::DropdownMenu {
             popup_ui.set_min_width(menu_width);
             popup_ui.set_max_width(menu_width);
 
-            let mut item_idx = 0;
-            for item in items {
+            for (value, item) in entries {
                 match item {
                     super::widget::MenuItem::Item {
                         label,
@@ -119,9 +147,6 @@ impl super::widget::DropdownMenu {
                         selected,
                         enabled,
                     } => {
-                        let current_idx = item_idx;
-                        item_idx += 1;
-
                         let fg = if *enabled {
                             theme.popover_foreground
                         } else {
@@ -183,7 +208,7 @@ impl super::widget::DropdownMenu {
                         }
 
                         if *enabled && r.clicked() {
-                            selected_idx = Some(current_idx);
+                            selected_value = Some(value.clone());
                             egui::Popup::close_id(popup_ui.ctx(), popup_id);
                             popup_ui.ctx().request_repaint();
                         }
@@ -203,8 +228,8 @@ impl super::widget::DropdownMenu {
             }
         });
 
-        if let Some(idx) = selected_idx {
-            on_select(idx);
+        if let Some(value) = selected_value {
+            on_select(value);
         }
     }
 }

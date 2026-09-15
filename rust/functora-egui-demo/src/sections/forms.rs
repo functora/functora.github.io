@@ -1,8 +1,10 @@
 //! Forms: field groups, field sets, legends, descriptions, property grids.
 
+use crate::app::{BlendMode, Month, Year};
 use functora_egui::{
     Badge, Button, ButtonVariant, FieldDescription, FieldGroup, FieldLegend, FieldSet, Flex, Input,
-    Label, NumberInput, PropertyGrid, PropertyRow, ResponsiveExt, Select, Typography,
+    Label, NumberInput, PropertyGrid, PropertyRow, ResponsiveExt, SelectLabeled,
+    SelectValueLabeled, Typography,
 };
 
 use functora_egui::snippet;
@@ -21,44 +23,29 @@ impl crate::app::ShowcaseApp {
             _ = Label::new("Expiry").show(ui27);
             ui27.add_space(8.0);
             if ui27.on_mobile() {
-                _ = Select::new(
-                    &mut self.form.form_month,
-                    &[
-                        "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12",
-                    ]
-                    .map(str::to_owned),
-                )
-                .placeholder("Month")
-                .show(ui27);
+                let months = Month::ALL.map(|month| (month, month.label()));
+                _ = SelectLabeled::new(&mut self.form.form_month, &months)
+                    .placeholder("Month")
+                    .show(ui27);
                 ui27.add_space(8.0);
-                _ = Select::new(
-                    &mut self.form.form_year,
-                    &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
-                )
-                .placeholder("Year")
-                .show(ui27);
+                let years = Year::ALL.map(|year| (year, year.label()));
+                _ = SelectLabeled::new(&mut self.form.form_year, &years)
+                    .placeholder("Year")
+                    .show(ui27);
             } else {
                 let half = (ui27.available_width() - 8.0) / 2.0;
                 _ = Flex::row().gap(8.0).show(ui27, |f3| {
+                    let months = Month::ALL.map(|month| (month, month.label()));
                     _ = f3.add(
-                        Select::new(
-                            &mut self.form.form_month,
-                            &[
-                                "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11",
-                                "12",
-                            ]
-                            .map(str::to_owned),
-                        )
-                        .placeholder("Month")
-                        .width(half),
+                        SelectLabeled::new(&mut self.form.form_month, &months)
+                            .placeholder("Month")
+                            .width(half),
                     );
+                    let years = Year::ALL.map(|year| (year, year.label()));
                     _ = f3.add(
-                        Select::new(
-                            &mut self.form.form_year,
-                            &["2026", "2027", "2028", "2029", "2030"].map(str::to_owned),
-                        )
-                        .placeholder("Year")
-                        .width(half),
+                        SelectLabeled::new(&mut self.form.form_year, &years)
+                            .placeholder("Year")
+                            .width(half),
                     );
                 });
             }
@@ -72,7 +59,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// FieldGroup: groups related fields in a card container\nuse functora_egui::{FieldGroup, Label, Input, Flex, Select, ResponsiveExt};\n\nFieldGroup::show(ui, |group| {\n    Label::new(\"Card number\").show(group);\n    Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(group);\n    Label::new(\"Expiry\").show(group);\n    if group.on_mobile() {\n        Select::new(&mut month, &months).placeholder(\"Month\").show(group);\n        Select::new(&mut year, &years).placeholder(\"Year\").show(group);\n    } else {\n        let half = (group.available_width() - 8.0) / 2.0;\n        Flex::row().gap(8.0).show(group, |f| {\n            f.add(Select::new(&mut month, &months).placeholder(\"Month\").width(half));\n            f.add(Select::new(&mut year, &years).placeholder(\"Year\").width(half));\n        });\n    }\n    Label::new(\"CVV\").show(group);\n    Input::new(&mut cvv).placeholder(\"123\").show(group);\n});",
+            "// FieldGroup: groups related fields in a card container\nuse functora_egui::{FieldGroup, Label, Input, Flex, SelectLabeled, ResponsiveExt};\n\n#[derive(Clone, Copy, PartialEq)]\nstruct Month(u8);\n\nFieldGroup::show(ui, |group| {\n    Label::new(\"Card number\").show(group);\n    Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(group);\n    Label::new(\"Expiry\").show(group);\n    let months = [Month(1), Month(2)].map(|m| (m, format!(\"{:02}\", m.0)));\n    let mut month: Option<Month> = None;\n    SelectLabeled::new(&mut month, &months).placeholder(\"Month\").show(group);\n    Label::new(\"CVV\").show(group);\n    Input::new(&mut cvv).placeholder(\"123\").show(group);\n});",
         );
     }
 
@@ -202,16 +189,8 @@ impl crate::app::ShowcaseApp {
                     .show(ui42);
             });
             _ = PropertyRow::new("Blend").show(ui41, |ui43| {
-                let blend_modes = vec![
-                    "Normal".to_owned(),
-                    "Multiply".to_owned(),
-                    "Screen".to_owned(),
-                    "Overlay".to_owned(),
-                ];
-                _ = ui43.add(functora_egui::SelectValue::new(
-                    &mut self.property_blend,
-                    &blend_modes,
-                ));
+                let entries = BlendMode::ALL.map(|(value, label)| (value, label.to_owned()));
+                _ = ui43.add(SelectValueLabeled::new(&mut self.property_blend, &entries));
             });
             _ = PropertyRow::new("Visible").show(ui41, |ui44| {
                 _ = ui44.add(functora_egui::Switch::new(&mut self.form.form_billing).label("Show"));
@@ -234,7 +213,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// PropertyRow: single labeled row (text, badges, inputs, switches)\nuse functora_egui::{PropertyGrid, PropertyRow, Badge, BadgeVariant, SelectValue, Switch, Flex, Button, ButtonVariant, LucideIcon, ComponentSize};\n\nPropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"Mode\").show(grid, |row| {\n        Badge::new(\"Auto\").variant(BadgeVariant::Secondary).show(row);\n    });\n    PropertyRow::new(\"Blend\").show(grid, |row| {\n        SelectValue::new(&mut blend, &modes).show(row);\n    });\n    PropertyRow::new(\"Visible\").show(grid, |row| {\n        Switch::new(&mut show).label(\"Show\").show(row);\n    });\n    PropertyRow::new(\"Actions\").show(grid, |row| {\n        Flex::row().gap(8.0).show(row, |f| {\n            f.add(Button::new(\"Reset\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            f.add(Button::new(\"Apply\").size(ComponentSize::Sm).icon(LucideIcon::Check));\n        });\n    });\n});",
+            "// PropertyRow: single labeled row (text, badges, inputs, switches)\nuse functora_egui::{PropertyGrid, PropertyRow, Badge, BadgeVariant, SelectValueLabeled, Switch, Flex, Button, ButtonVariant, LucideIcon, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply }\n\nPropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"Mode\").show(grid, |row| {\n        Badge::new(\"Auto\").variant(BadgeVariant::Secondary).show(row);\n    });\n    PropertyRow::new(\"Blend\").show(grid, |row| {\n        let entries = [(BlendMode::Normal, \"Normal\".to_owned())];\n        SelectValueLabeled::new(&mut blend, &entries).show(row);\n    });\n    PropertyRow::new(\"Visible\").show(grid, |row| {\n        Switch::new(&mut show).label(\"Show\").show(row);\n    });\n    PropertyRow::new(\"Actions\").show(grid, |row| {\n        Flex::row().gap(8.0).show(row, |f| {\n            f.add(Button::new(\"Reset\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            f.add(Button::new(\"Apply\").size(ComponentSize::Sm).icon(LucideIcon::Check));\n        });\n    });\n});",
         );
     }
 }

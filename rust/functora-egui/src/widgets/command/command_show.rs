@@ -4,61 +4,80 @@ impl super::widget::Command {
     /// Shows the command palette when `open` is true.
     /// `search` holds the filter text. Returns the index of selected command if any.
     pub fn show(self, ctx: &egui::Context, open: &mut bool, search: &mut String) -> Option<usize> {
-        if !*open {
-            return None;
-        }
+        let entries: Vec<(usize, super::widget::CommandItem)> =
+            self.items.into_iter().enumerate().collect();
+        show_core(ctx, open, search, &entries, &self.placeholder)
+    }
+}
 
-        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
-        let mut selected = None;
+impl<T: Clone> super::widget::CommandValue<T> {
+    /// Shows the command palette when `open` is true.
+    /// `search` holds the filter text. Returns the selected value if any.
+    pub fn show(self, ctx: &egui::Context, open: &mut bool, search: &mut String) -> Option<T> {
+        show_core(ctx, open, search, &self.entries, &self.placeholder)
+    }
+}
 
-        // Backdrop
-        let screen = ctx.input(egui::InputState::viewport_rect);
-        let backdrop_layer =
-            egui::LayerId::new(egui::Order::Middle, egui::Id::new("command_backdrop"));
-        let _ = ctx.layer_painter(backdrop_layer).rect_filled(
-            screen,
-            egui::CornerRadius::ZERO,
-            egui::Color32::from_black_alpha(60),
-        );
+fn show_core<T: Clone>(
+    ctx: &egui::Context,
+    open: &mut bool,
+    search: &mut String,
+    entries: &[(T, super::widget::CommandItem)],
+    placeholder: &str,
+) -> Option<T> {
+    if !*open {
+        return None;
+    }
 
-        // Backdrop click to close
-        let backdrop_resp = egui::Area::new(egui::Id::new("command_backdrop_sense"))
-            .order(egui::Order::Middle)
-            .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
-            .show(ctx, |inner_ui| {
-                let (_, response) =
-                    inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
-                response
-            });
+    let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
+    let mut selected: Option<T> = None;
 
-        if backdrop_resp.inner.clicked() {
-            *open = false;
-            search.clear();
-            ctx.request_repaint();
-            return None;
-        }
+    // Backdrop
+    let screen = ctx.input(egui::InputState::viewport_rect);
+    let backdrop_layer = egui::LayerId::new(egui::Order::Middle, egui::Id::new("command_backdrop"));
+    let _ = ctx.layer_painter(backdrop_layer).rect_filled(
+        screen,
+        egui::CornerRadius::ZERO,
+        egui::Color32::from_black_alpha(60),
+    );
 
-        // Escape to close
-        if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
-            *open = false;
-            search.clear();
-            ctx.request_repaint();
-            return None;
-        }
+    // Backdrop click to close
+    let backdrop_resp = egui::Area::new(egui::Id::new("command_backdrop_sense"))
+        .order(egui::Order::Middle)
+        .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
+        .show(ctx, |inner_ui| {
+            let (_, response) = inner_ui.allocate_exact_size(screen.size(), egui::Sense::click());
+            response
+        });
 
-        let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
-        let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
-        let is_mobile = spacing.is_mobile();
-        let screen_w = screen.width();
-        let screen_h = screen.height();
+    if backdrop_resp.inner.clicked() {
+        *open = false;
+        search.clear();
+        ctx.request_repaint();
+        return None;
+    }
 
-        let (anchor, offset) = if is_mobile {
-            (egui::Align2::CENTER_TOP, egui::vec2(0.0, 24.0))
-        } else {
-            (egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
-        };
+    // Escape to close
+    if ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+        *open = false;
+        search.clear();
+        ctx.request_repaint();
+        return None;
+    }
 
-        let _ = egui::Area::new(egui::Id::new("command_palette"))
+    let cr = crate::utils::f32_to_u8_clamped(theme.radius + 2.0);
+    let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
+    let is_mobile = spacing.is_mobile();
+    let screen_w = screen.width();
+    let screen_h = screen.height();
+
+    let (anchor, offset) = if is_mobile {
+        (egui::Align2::CENTER_TOP, egui::vec2(0.0, 24.0))
+    } else {
+        (egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
+    };
+
+    let _ = egui::Area::new(egui::Id::new("command_palette"))
             .order(egui::Order::Foreground)
             .anchor(anchor, offset)
             .show(ctx, |inner_ui| {
@@ -76,7 +95,7 @@ impl super::widget::Command {
 
                 let _ = frame.show(inner_ui, |content_ui| {
                     let mut content_w: f32 = 0.0;
-                    for item in &self.items {
+                    for (_, item) in entries {
                         let gw = content_ui
                             .painter()
                             .layout_no_wrap(
@@ -100,7 +119,7 @@ impl super::widget::Command {
                     let placeholder_w = content_ui
                         .painter()
                         .layout_no_wrap(
-                            self.placeholder.clone(),
+                            placeholder.to_owned(),
                             egui::FontId::proportional(14.0),
                             egui::Color32::PLACEHOLDER,
                         )
@@ -132,7 +151,7 @@ impl super::widget::Command {
 
                     let _ = input_frame.show(content_ui, |inner_ui3| {
                         let input_resp = crate::widgets::input::widget::Input::new(search)
-                            .placeholder(&self.placeholder)
+                            .placeholder(placeholder)
                             .desired_width(inner_ui3.available_width())
                             .show(inner_ui3);
                         input_resp.request_focus();
@@ -164,7 +183,7 @@ impl super::widget::Command {
                                 let mut current_group = String::new();
                                 let mut any_shown = false;
 
-                                for (idx, item) in self.items.iter().enumerate() {
+                                for (value, item) in entries {
                                     if !query.is_empty()
                                         && !item.label.to_lowercase().contains(&query)
                                         && !item.group.to_lowercase().contains(&query)
@@ -247,7 +266,7 @@ impl super::widget::Command {
                                     }
 
                                     if response.clicked() {
-                                        selected = Some(idx);
+                                        selected = Some(value.clone());
                                         *open = false;
                                         search.clear();
                                         ctx.request_repaint();
@@ -266,6 +285,5 @@ impl super::widget::Command {
                 });
             });
 
-        selected
-    }
+    selected
 }

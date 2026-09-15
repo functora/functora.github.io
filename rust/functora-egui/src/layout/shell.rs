@@ -65,7 +65,7 @@ fn sync_sidebar_collapsed(ctx: &egui::Context, collapsed: bool) -> bool {
         match (is_mobile, prev) {
             (true, false) => true,
             (false, true) => false,
-            _ => collapsed,
+            (true, true) | (false, false) => collapsed,
         }
     }
 }

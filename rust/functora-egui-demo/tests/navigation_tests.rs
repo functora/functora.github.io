@@ -2,24 +2,35 @@
 //! selection and the router in sync, and every catalog entry round-trips
 //! through its route string.
 
-use functora_egui_demo::{ShowcaseApp, component_count, component_index, component_name};
+use functora_egui_demo::{ComponentId, ShowcaseApp};
 use std::str::FromStr as _;
 
 #[test]
 fn navigate_to_syncs_selection_and_router() {
     let mut state = ShowcaseApp::default();
-    assert_eq!(state.selected, 0);
-    let button = component_index("Button").unwrap_or(1);
-    state.navigate_to(button);
-    assert_eq!(state.selected, button);
+    assert_eq!(state.selected, None);
+    state.navigate_to(Some(ComponentId::Button));
+    assert_eq!(state.selected, Some(ComponentId::Button));
     assert_eq!(
-        state.router.current().to_flat(),
-        Some(button),
+        state.router.current().component(),
+        Some(ComponentId::Button),
         "router must follow the sidebar selection"
     );
     assert_eq!(
         state.router.current().to_string(),
-        component_name(button).to_lowercase()
+        ComponentId::Button.slug()
+    );
+}
+
+#[test]
+fn navigate_home_clears_selection() {
+    let mut state = ShowcaseApp::default();
+    state.navigate_to(Some(ComponentId::Button));
+    state.navigate_to(None);
+    assert_eq!(state.selected, None);
+    assert_eq!(
+        state.router.current().clone(),
+        functora_egui_demo::route::AppRoute::Overview
     );
 }
 
@@ -38,12 +49,12 @@ fn overview_route_roundtrips_through_string() {
 #[test]
 fn every_component_navigates_and_reports_its_name() {
     let mut state = ShowcaseApp::default();
-    for flat in 0..component_count() {
-        state.navigate_to(flat);
-        assert_eq!(state.selected, flat);
-        assert_eq!(state.router.current().to_flat(), Some(flat));
-        let name = component_name(flat);
-        assert!(!name.is_empty());
-        assert_eq!(component_index(&name.to_lowercase()), Some(flat));
+    for id in ComponentId::ALL {
+        state.navigate_to(Some(id));
+        assert_eq!(state.selected, Some(id));
+        assert_eq!(state.router.current().component(), Some(id));
+        assert!(!id.name().is_empty());
+        assert_eq!(ComponentId::from_slug(&id.slug()), Some(id));
+        assert_eq!(ComponentId::from_slug(&id.name().to_lowercase()), Some(id));
     }
 }

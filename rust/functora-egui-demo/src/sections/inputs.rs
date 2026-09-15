@@ -1,12 +1,12 @@
 //! Inputs: buttons, checkboxes, switches, radios, toggles, sliders,
 //! text fields, selects, comboboxes, OTP, date picker, color swatch.
 
-use crate::app::{Align, Framework};
+use crate::app::{Align, BlendMode, Framework, Fruit, RadioOption, Swatch};
 use functora_egui::{
     Button, ButtonGroup, ButtonVariant, Checkbox, ColorSwatch, ComboboxValue, ComponentSize,
     DatePicker, Flex, Input, InputGroup, InputOtp, InputPasteClear, LucideIcon, NumberInput, Radio,
-    RadioGroup, Select, SelectValue, Slider, Switch, Textarea, TextareaPasteClear, Toggle,
-    ToggleGroupValue, ToggleVariant, Typography,
+    RadioGroupLabeled, SelectLabeled, SelectValueLabeled, Slider, Switch, Textarea,
+    TextareaPasteClear, Toggle, ToggleGroupValue, ToggleVariant, Typography,
 };
 
 use functora_egui::snippet;
@@ -206,18 +206,14 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A group of radio buttons managed together.").show(ui);
         ui.add_space(12.0);
-        let options = [
-            "Option A".to_owned(),
-            "Option B".to_owned(),
-            "Option C".to_owned(),
-        ];
-        _ = RadioGroup::new(&mut self.radio_group_val, &options).show(ui);
+        let entries = RadioOption::ALL.map(|(value, label)| (value, label.to_owned()));
+        _ = RadioGroupLabeled::new(&mut self.radio_group_val, &entries).show(ui);
         ui.add_space(4.0);
-        _ = Typography::small(format!("Selected: {}", self.radio_group_val)).show(ui);
+        _ = Typography::small(format!("Selected: {:?}", self.radio_group_val)).show(ui);
 
         snippet(
             ui,
-            "// RadioGroup: managed group of radio buttons\nuse functora_egui::RadioGroup;\n\nlet options = [\"Option A\", \"Option B\", \"Option C\"];\nlet mut selected = \"Option A\".to_owned();\n\nRadioGroup::new(&mut selected, &options).show(ui);\n\n// selected now contains the chosen option",
+            "// RadioGroupLabeled: managed group bound to an enum\nuse functora_egui::RadioGroupLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum RadioOption { A, B, C }\n\nlet entries = [(RadioOption::A, \"Option A\".to_owned()), (RadioOption::B, \"Option B\".to_owned())];\nlet mut selected = RadioOption::A;\n\nRadioGroupLabeled::new(&mut selected, &entries).show(ui);\n\n// selected now holds the chosen variant",
         );
     }
 
@@ -652,14 +648,8 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_select(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Dropdown selection from a list.").show(ui);
         ui.add_space(12.0);
-        let fruits = vec![
-            "Apple".to_owned(),
-            "Banana".to_owned(),
-            "Cherry".to_owned(),
-            "Grape".to_owned(),
-            "Mango".to_owned(),
-        ];
-        _ = Select::new(&mut self.select_val, &fruits)
+        let entries = Fruit::ALL.map(|(value, label)| (value, label.to_owned()));
+        _ = SelectLabeled::new(&mut self.select_val, &entries)
             .placeholder("Pick a fruit...")
             .show(ui);
         ui.add_space(4.0);
@@ -667,26 +657,21 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Select: dropdown selection from a list (Option value)\nuse functora_egui::Select;\n\nlet fruits = vec![\"Apple\", \"Banana\", \"Cherry\", \"Grape\", \"Mango\"];\nlet mut fruit: Option<String> = None;\n\nSelect::new(&mut fruit, &fruits)\n    .placeholder(\"Pick a fruit...\")\n    .show(ui);\n\n// fruit is now Some(\"Apple\") or None",
+            "// SelectLabeled: dropdown bound to an enum (Option value)\nuse functora_egui::SelectLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Fruit { Apple, Banana, Cherry }\n\nlet entries = [(Fruit::Apple, \"Apple\".to_owned()), (Fruit::Banana, \"Banana\".to_owned())];\nlet mut fruit: Option<Fruit> = None;\n\nSelectLabeled::new(&mut fruit, &entries)\n    .placeholder(\"Pick a fruit...\")\n    .show(ui);\n\n// fruit is now Some(Fruit) or None",
         );
     }
 
     pub(crate) fn demo_select_value(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Select bound to a non-Option string value.").show(ui);
+        _ = Typography::muted("Select bound to a non-Option enum value.").show(ui);
         ui.add_space(12.0);
-        let blend_modes = vec![
-            "Normal".to_owned(),
-            "Multiply".to_owned(),
-            "Screen".to_owned(),
-            "Overlay".to_owned(),
-        ];
-        _ = SelectValue::new(&mut self.select_blend, &blend_modes).show(ui);
+        let entries = BlendMode::ALL.map(|(value, label)| (value, label.to_owned()));
+        _ = SelectValueLabeled::new(&mut self.select_blend, &entries).show(ui);
         ui.add_space(4.0);
-        _ = Typography::small(format!("Blend mode: {}", self.select_blend)).show(ui);
+        _ = Typography::small(format!("Blend mode: {:?}", self.select_blend)).show(ui);
 
         snippet(
             ui,
-            "// SelectValue: dropdown bound to non-Option string\nuse functora_egui::SelectValue;\n\nlet blend_modes = vec![\"Normal\", \"Multiply\", \"Screen\", \"Overlay\"];\nlet mut blend_mode = \"Normal\".to_owned();\n\nSelectValue::new(&mut blend_mode, &blend_modes).show(ui);\n\n// blend_mode always has a valid value (never None)",
+            "// SelectValueLabeled: dropdown bound to a non-Option enum\nuse functora_egui::SelectValueLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply, Screen }\n\nlet entries = [(BlendMode::Normal, \"Normal\".to_owned()), (BlendMode::Multiply, \"Multiply\".to_owned())];\nlet mut blend_mode = BlendMode::Normal;\n\nSelectValueLabeled::new(&mut blend_mode, &entries).show(ui);\n\n// blend_mode always holds a valid variant (never None)",
         );
     }
 
@@ -748,27 +733,20 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("Clickable color swatches for palettes and style controls.").show(ui);
         ui.add_space(12.0);
 
-        let palette = [
-            ("Signal", egui::Color32::from_rgb(25, 113, 194)),
-            ("Mint", egui::Color32::from_rgb(18, 184, 134)),
-            ("Amber", egui::Color32::from_rgb(245, 159, 0)),
-            ("Rose", egui::Color32::from_rgb(224, 49, 49)),
-            ("Ink", egui::Color32::from_rgb(33, 37, 41)),
-        ];
         _ = Typography::small("Palette").show(ui);
         ui.add_space(4.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-            for (idx, (label, color)) in palette.iter().enumerate() {
+            for (swatch, label, color) in Swatch::ALL {
                 if f.add(
-                    ColorSwatch::new(*color)
-                        .label(*label)
-                        .selected(self.color_swatch_idx == idx)
+                    ColorSwatch::new(color)
+                        .label(label)
+                        .selected(self.color_swatch == swatch)
                         .show_hex(),
                 )
                 .inner
                 .clicked()
                 {
-                    self.color_swatch_idx = idx;
+                    self.color_swatch = swatch;
                 }
             }
         });
@@ -790,7 +768,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// ColorSwatch: clickable color swatches\nuse functora_egui::ColorSwatch;\nuse egui::Color32;\n\nlet palette = [\n    (\"Signal\", Color32::from_rgb(25, 113, 194)),\n    (\"Mint\", Color32::from_rgb(18, 184, 134)),\n    (\"Amber\", Color32::from_rgb(245, 159, 0)),\n    (\"Rose\", Color32::from_rgb(224, 49, 49)),\n    (\"Ink\", Color32::from_rgb(33, 37, 41)),\n];\n\nfor (idx, (label, color)) in palette.iter().enumerate() {\n    if ColorSwatch::new(*color)\n        .label(*label)\n        .selected(selected_idx == idx)\n        .show_hex()\n        .show(ui)\n        .clicked()\n    {\n        selected_idx = idx;\n    }\n}\n\n// Compact states\nColorSwatch::new(Color32::from_rgb(25, 113, 194)).selected(true).show(ui);\nColorSwatch::new(Color32::from_rgba_unmultiplied(25, 113, 194, 120)).show(ui);\nColorSwatch::new(Color32::TRANSPARENT).label(\"Transparent\").show_hex().show(ui);",
+            "// ColorSwatch: clickable color swatches bound to an enum\nuse functora_egui::ColorSwatch;\nuse egui::Color32;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Swatch { Signal, Mint, Amber }\n\nlet palette = [(Swatch::Signal, \"Signal\", Color32::from_rgb(25, 113, 194)), (Swatch::Mint, \"Mint\", Color32::from_rgb(18, 184, 134))];\nlet mut swatch = Swatch::Signal;\n\nfor (value, label, color) in palette {\n    if ColorSwatch::new(color)\n        .label(label)\n        .selected(swatch == value)\n        .show_hex()\n        .show(ui)\n        .clicked()\n    {\n        swatch = value;\n    }\n}\n\n// Compact states\nColorSwatch::new(Color32::from_rgb(25, 113, 194)).selected(true).show(ui);\nColorSwatch::new(Color32::from_rgba_unmultiplied(25, 113, 194, 120)).show(ui);\nColorSwatch::new(Color32::TRANSPARENT).label(\"Transparent\").show_hex().show(ui);",
         );
     }
 }

@@ -19,9 +19,32 @@ fn camera_error(msg: String) -> Error {
 /// Maps backend JS failures to camera errors. Backends that already report
 /// `CameraNotAvailable`/`CameraPermissionDenied` pass through unchanged.
 fn map_camera_error(error: Error) -> Error {
-    match &error {
-        Error::JS(msg) => camera_error(msg.clone()),
-        _ => error,
+    match error {
+        Error::JS(msg) => camera_error(msg),
+        Error::IO(_)
+        | Error::Json(_)
+        | Error::Base64(_)
+        | Error::Env(_)
+        | Error::Channel(_)
+        | Error::EvalFinished
+        | Error::Cipher(_)
+        | Error::KeyDerive(_)
+        | Error::Getrandom(_)
+        | Error::Encrypt(_)
+        | Error::Decrypt(_)
+        | Error::InvalidFormat(_)
+        | Error::Convert { .. }
+        | Error::CameraNotAvailable(_)
+        | Error::CameraPermissionDenied(_)
+        | Error::CameraStalled
+        | Error::NotJsonObject(_)
+        | Error::Archive(_)
+        | Error::Worker(_)
+        | Error::FileTooLarge { .. }
+        | Error::Cancelled
+        | Error::Qr(_) => error,
+        #[cfg(target_os = "android")]
+        Error::JNI(_) => error,
     }
 }
 

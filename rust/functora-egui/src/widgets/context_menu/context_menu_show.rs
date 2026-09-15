@@ -4,18 +4,33 @@ impl super::widget::ContextMenu {
     /// Attaches a context menu to `response`. Shows on right-click.
     /// Calls `on_select(index)` when an item is clicked.
     pub fn show(response: &egui::Response, items: &[&str], on_select: impl FnOnce(usize)) {
+        let entries: Vec<(usize, String)> = items
+            .iter()
+            .enumerate()
+            .map(|(idx, label)| (idx, (*label).to_owned()))
+            .collect();
+        Self::show_value(response, &entries, on_select);
+    }
+
+    /// Attaches a context menu bound to enum values instead of blind indexes:
+    /// each entry pairs a value with its label. Calls `on_select(value)`.
+    pub fn show_value<T: Clone>(
+        response: &egui::Response,
+        entries: &[(T, String)],
+        on_select: impl FnOnce(T),
+    ) {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(&response.ctx);
-        let mut selected_idx = None;
+        let mut selected_value = None;
 
         let _ = response.context_menu(|inner_ui| {
             // Compute max text width for a tight menu
-            let max_text_width: f32 = items
+            let max_text_width: f32 = entries
                 .iter()
-                .map(|label| {
+                .map(|(_, label)| {
                     inner_ui
                         .painter()
                         .layout_no_wrap(
-                            label.to_string(),
+                            label.clone(),
                             egui::FontId::proportional(14.0),
                             theme.popover_foreground,
                         )
@@ -44,7 +59,7 @@ impl super::widget::ContextMenu {
             inner_ui.set_min_width(menu_width);
             inner_ui.set_max_width(menu_width);
 
-            for (idx, &label) in items.iter().enumerate() {
+            for (value, label) in entries {
                 let galley = inner_ui.painter().layout_no_wrap(
                     label.to_owned(),
                     egui::FontId::proportional(14.0),
@@ -70,14 +85,14 @@ impl super::widget::ContextMenu {
                 }
 
                 if r.clicked() {
-                    selected_idx = Some(idx);
+                    selected_value = Some(value.clone());
                     inner_ui.close();
                 }
             }
         });
 
-        if let Some(idx) = selected_idx {
-            on_select(idx);
+        if let Some(value) = selected_value {
+            on_select(value);
         }
     }
 }

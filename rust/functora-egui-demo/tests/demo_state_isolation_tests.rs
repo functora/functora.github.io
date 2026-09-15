@@ -49,21 +49,22 @@ fn password_demos_do_not_share_state() {
 
 #[test]
 fn blend_demos_do_not_share_state() {
+    use functora_egui_demo::BlendMode;
     let mut state = ShowcaseApp {
-        select_blend: "Normal".to_owned(),
-        property_blend: "Multiply".to_owned(),
+        select_blend: BlendMode::Normal,
+        property_blend: BlendMode::Multiply,
         ..ShowcaseApp::default()
     };
-    assert_eq!(state.select_blend, "Normal");
-    assert_eq!(state.property_blend, "Multiply");
-    state.select_blend.push_str("-edited");
-    assert_eq!(state.property_blend, "Multiply");
+    assert_eq!(state.select_blend, BlendMode::Normal);
+    assert_eq!(state.property_blend, BlendMode::Multiply);
+    state.select_blend = BlendMode::Screen;
+    assert_eq!(state.property_blend, BlendMode::Multiply);
 }
 
 #[test]
 fn navigation_updates_selection_without_unsafe_aliasing() {
+    use functora_egui_demo::ComponentId;
     let mut state = ShowcaseApp::default();
-    let target = functora_egui_demo::component_index("Button").unwrap_or(1);
-    state.navigate_to(target);
-    assert_eq!(state.selected, target);
+    state.navigate_to(Some(ComponentId::Button));
+    assert_eq!(state.selected, Some(ComponentId::Button));
 }

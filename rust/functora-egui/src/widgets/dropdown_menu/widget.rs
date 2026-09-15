@@ -4,6 +4,7 @@
 pub struct DropdownMenu;
 
 /// A rich menu item with optional shortcut, enabled state, and separator support.
+#[derive(Clone)]
 pub enum MenuItem {
     /// A clickable item with label, optional shortcut, optional selected check, and optional enabled state.
     Item {

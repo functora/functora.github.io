@@ -210,19 +210,12 @@ impl crate::app::ShowcaseApp {
                                 now,
                             );
                         }
+                        Err(functora_egui::error::Error::Cancelled) => {
+                            self.toast.add("Pick cancelled", ToastVariant::Default, now);
+                        }
                         Err(e) => {
-                            if e == "Cancelled"
-                                || e.contains("cancelled")
-                                || e.contains("Cancelled")
-                            {
-                                self.toast.add("Pick cancelled", ToastVariant::Default, now);
-                            } else {
-                                self.toast.add(
-                                    format!("Pick failed: {e}"),
-                                    ToastVariant::Error,
-                                    now,
-                                );
-                            }
+                            self.toast
+                                .add(format!("Pick failed: {e}"), ToastVariant::Error, now);
                         }
                     }
                     self.platform.pick_cancel = None;
@@ -233,7 +226,7 @@ impl crate::app::ShowcaseApp {
                 Err(mpsc::TryRecvError::Empty) => {
                     self.platform.pick_rx = Some(rx);
                 }
-                Err(_) => {
+                Err(mpsc::TryRecvError::Disconnected) => {
                     self.platform.pick_cancel = None;
                     self.platform.pick_overlay_open = false;
                     self.platform.pick_job = None;
@@ -322,7 +315,7 @@ impl crate::app::ShowcaseApp {
                 Ok(Ok(text)) => {
                     let label = match self.platform.crypto_op.take() {
                         Some(crate::app::CryptoOp::Decrypt) => "Decrypted text",
-                        _ => "Encrypted note",
+                        Some(crate::app::CryptoOp::Encrypt) | None => "Encrypted note",
                     };
                     let len = text.len();
                     self.platform.crypto_output = text;
@@ -697,7 +690,6 @@ impl crate::app::ShowcaseApp {
                         Some(&cancel),
                     )
                     .await
-                    .map_err(|e| e.to_string())
                 });
                 self.platform.pick_rx = Some(rx);
             }
@@ -773,13 +765,15 @@ impl crate::app::ShowcaseApp {
                                 _ = Typography::small(format!("Video file: {name} ({size})"))
                                     .show(ui3);
                             }
+                            functora_egui::files::Preview::Audio(_)
+                            | functora_egui::files::Preview::Pdf(_)
+                            | functora_egui::files::Preview::Missing => {
+                                _ = Typography::small(format!("{preview:?}")).show(ui3);
+                            }
                             functora_egui::files::Preview::Download => {
                                 _ = ui3.add(Badge::new("Download"));
                                 _ = Typography::small(format!("Ready to download: {name}"))
                                     .show(ui3);
-                            }
-                            _ => {
-                                _ = Typography::small(format!("{preview:?}")).show(ui3);
                             }
                         });
                     });

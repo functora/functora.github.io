@@ -43,9 +43,7 @@ impl crate::app::ShowcaseApp {
                     _ = self.router.go_forward(&mut ());
                 }
                 NavAction::Route(route) => {
-                    if let Some(idx) = route.to_flat() {
-                        self.navigate_to(idx);
-                    }
+                    self.navigate_to(route.component());
                 }
             }
         }
@@ -64,9 +62,7 @@ impl crate::app::ShowcaseApp {
                     _ = self.router.go_forward(&mut ());
                 }
                 NavAction::Route(route) => {
-                    if let Some(idx) = route.to_flat() {
-                        self.navigate_to(idx);
-                    }
+                    self.navigate_to(route.component());
                 }
             }
         }
@@ -110,34 +106,36 @@ impl crate::app::ShowcaseApp {
     pub(crate) fn demo_carousel(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A slider with prev/next navigation and dots.").show(ui);
         ui.add_space(12.0);
-        let colors = [
-            egui::Color32::from_rgb(25, 113, 194),
-            egui::Color32::from_rgb(18, 184, 134),
-            egui::Color32::from_rgb(245, 159, 0),
-            egui::Color32::from_rgb(224, 49, 49),
+        let slides = [
+            ("Slide 1", egui::Color32::from_rgb(25, 113, 194)),
+            ("Slide 2", egui::Color32::from_rgb(18, 184, 134)),
+            ("Slide 3", egui::Color32::from_rgb(245, 159, 0)),
+            ("Slide 4", egui::Color32::from_rgb(224, 49, 49)),
         ];
-        let total = colors.len();
+        let total = slides.len();
         _ = Carousel::new(total).show(ui, &mut self.carousel_idx, |slide_ui, idx| {
-            let width = slide_ui.available_width().min(420.0);
-            let (rect, _) =
-                slide_ui.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());
-            if slide_ui.is_rect_visible(rect) {
-                let theme = functora_egui::ShadcnThemeExt::shadcn_theme(slide_ui.ctx());
-                let painter = slide_ui.painter();
-                _ = painter.rect_filled(rect, egui::CornerRadius::from(theme.radius), colors[idx]);
-                let galley = painter.layout_no_wrap(
-                    format!("Slide {}", idx + 1),
-                    egui::FontId::proportional(24.0),
-                    egui::Color32::WHITE,
-                );
-                painter.galley(
-                    egui::pos2(
-                        rect.center().x - galley.size().x / 2.0,
-                        rect.center().y - galley.size().y / 2.0,
-                    ),
-                    galley,
-                    egui::Color32::WHITE,
-                );
+            if let Some((name, color)) = slides.get(idx).copied() {
+                let width = slide_ui.available_width().min(420.0);
+                let (rect, _) =
+                    slide_ui.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());
+                if slide_ui.is_rect_visible(rect) {
+                    let theme = functora_egui::ShadcnThemeExt::shadcn_theme(slide_ui.ctx());
+                    let painter = slide_ui.painter();
+                    _ = painter.rect_filled(rect, egui::CornerRadius::from(theme.radius), color);
+                    let galley = painter.layout_no_wrap(
+                        name.to_owned(),
+                        egui::FontId::proportional(24.0),
+                        egui::Color32::WHITE,
+                    );
+                    painter.galley(
+                        egui::pos2(
+                            rect.center().x - galley.size().x / 2.0,
+                            rect.center().y - galley.size().y / 2.0,
+                        ),
+                        galley,
+                        egui::Color32::WHITE,
+                    );
+                }
             }
         });
         ui.add_space(4.0);
@@ -145,7 +143,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet items = [\"Slide 1\", \"Slide 2\", \"Slide 3\", \"Slide 4\"];\nlet mut index = 0;\n\nCarousel::new(items.len()).show(ui, &mut index, |slide, idx| {\n    let width = slide.available_width().min(420.0);\n    let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n    slide.painter().rect_filled(rect, theme.radius, colors[idx]);\n    slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n});",
+            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet slides = [(\"Slide 1\", Color32::from_rgb(25, 113, 194)), (\"Slide 2\", Color32::from_rgb(18, 184, 134))];\nlet mut index = 0;\n\nCarousel::new(slides.len()).show(ui, &mut index, |slide, idx| {\n    if let Some((name, color)) = slides.get(idx).copied() {\n        let width = slide.available_width().min(420.0);\n        let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n        slide.painter().rect_filled(rect, theme.radius, color);\n        slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n    }\n});",
         );
     }
 
@@ -178,7 +176,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_idx, (cat_id, _, items)) in CATEGORIES.iter().enumerate() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for (item_idx, def) in items.iter().enumerate() {\n            let selected = flat_index(cat_idx, item_idx) == selected_flat;\n            if side.add(section_button(def, selected).full_width()).clicked() {\n                selected_flat = flat_index(cat_idx, item_idx);\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
+            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_id, _, items) in CATEGORIES.iter() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for def in items.iter() {\n            if let Some(id) = def.id {\n                let selected = Some(id) == selected;\n                if side.add(section_button(def, selected).full_width()).clicked() {\n                    selected = Some(id);\n                }\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
         );
     }
 

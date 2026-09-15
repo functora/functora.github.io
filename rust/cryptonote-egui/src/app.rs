@@ -5,6 +5,8 @@
     clippy::type_complexity,
     clippy::too_many_lines
 )]
+use std::str::FromStr;
+
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
@@ -171,7 +173,7 @@ impl CryptonoteApp {
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_rx = Some(rx),
-                Err(_) => {}
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
             }
         }
         if let Some(rx) = self.clipboard_write_rx.take() {
@@ -193,7 +195,7 @@ impl CryptonoteApp {
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_write_rx = Some(rx),
-                Err(_) => {}
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
             }
         }
         if let Some(rx) = self.share_rx.take() {
@@ -213,7 +215,7 @@ impl CryptonoteApp {
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.share_rx = Some(rx),
-                Err(_) => {}
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
             }
         }
         if let Some(rx) = self.download_rx.take() {
@@ -239,7 +241,7 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.download_rx = Some(rx),
-                Err(_) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
             }
         }
         if let Some(rx) = self.pick_rx.take() {
@@ -281,7 +283,7 @@ impl CryptonoteApp {
                     self.pick_overlay_open = false;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.pick_rx = Some(rx),
-                Err(_) => {
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
                     self.pick_overlay_open = false;
@@ -308,7 +310,7 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.generate_rx = Some(rx),
-                Err(_) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
             }
         }
         if let Some(rx) = self.decrypt_rx.take() {
@@ -332,7 +334,7 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.decrypt_rx = Some(rx),
-                Err(_) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
             }
         }
         if let Some(rx) = self.archive_rx.take() {
@@ -362,7 +364,7 @@ impl CryptonoteApp {
                     self.pick_cancel = None;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.archive_rx = Some(rx),
-                Err(_) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
             }
         }
         if let Some(rx) = self.pwa_rx.take() {
@@ -388,7 +390,7 @@ impl CryptonoteApp {
                     }
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.pwa_rx = Some(rx),
-                Err(_) => {}
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
             }
         }
         if needs_repaint
@@ -446,13 +448,13 @@ impl CryptonoteApp {
             .link("Functora", APP_ATTRS.author_url())
             .text(format!(". {} ", BaseMsg::AllRightsReserved.render(lang)))
             .text(format!("{} ", BaseMsg::ByContinuing.render(lang)))
-            .action(BaseMsg::TermsOfService.render(lang), "license")
+            .action(BaseMsg::TermsOfService.render(lang), Screen::License.to_string())
             .text(format!(" {} ", BaseMsg::YouAgree.render(lang)))
-            .action(BaseMsg::PrivacyPolicyAnd.render(lang), "privacy")
+            .action(BaseMsg::PrivacyPolicyAnd.render(lang), Screen::Privacy.to_string())
             .text(". ")
-            .action(BaseMsg::DonateLink.render(lang), "donate")
+            .action(BaseMsg::DonateLink.render(lang), Screen::Donate.to_string())
             .text(format!(" {} ", BaseMsg::And.render(lang)))
-            .action(BaseMsg::FooterShareWord.render(lang), "about")
+            .action(BaseMsg::FooterShareWord.render(lang), Screen::About.to_string())
             .text(format!(
                 " {} {} {}.",
                 BaseMsg::FooterAppWord.render(lang),
@@ -462,12 +464,12 @@ impl CryptonoteApp {
             .size(11.0)
             .centered()
             .show_action(ui);
-        match clicked.as_deref() {
-            Some("license") => self.navigate(Screen::License),
-            Some("privacy") => self.navigate(Screen::Privacy),
-            Some("donate") => self.navigate(Screen::Donate),
-            Some("about") => self.navigate(Screen::About),
-            _ => {}
+        match clicked.as_deref().and_then(|id| Screen::from_str(id).ok()) {
+            Some(Screen::License) => self.navigate(Screen::License),
+            Some(Screen::Privacy) => self.navigate(Screen::Privacy),
+            Some(Screen::Donate) => self.navigate(Screen::Donate),
+            Some(Screen::About) => self.navigate(Screen::About),
+            Some(Screen::Home | Screen::Open | Screen::View | Screen::Share | Screen::File) | None => {}
         }
     }
 }

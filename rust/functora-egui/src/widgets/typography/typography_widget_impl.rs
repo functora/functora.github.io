@@ -8,7 +8,13 @@ impl egui::Widget for super::widget::Typography {
         let color = match self.variant {
             crate::tokens::typography_variant::TypographyVariant::Muted
             | crate::tokens::typography_variant::TypographyVariant::Lead => theme.muted_foreground,
-            _ => theme.foreground,
+            crate::tokens::typography_variant::TypographyVariant::H1
+            | crate::tokens::typography_variant::TypographyVariant::H2
+            | crate::tokens::typography_variant::TypographyVariant::H3
+            | crate::tokens::typography_variant::TypographyVariant::H4
+            | crate::tokens::typography_variant::TypographyVariant::P
+            | crate::tokens::typography_variant::TypographyVariant::Large
+            | crate::tokens::typography_variant::TypographyVariant::Small => theme.foreground,
         };
 
         let mut rich_text = egui::RichText::new(self.text).color(color).size(font_size);

@@ -82,7 +82,25 @@ impl super::widget::Menubar {
     /// `items` is a list of submenu item labels.
     /// `on_select` is called with the index of the clicked item.
     pub fn menu(ui: &mut egui::Ui, label: &str, items: &[&str], on_select: impl FnOnce(usize)) {
+        let entries: Vec<(usize, String)> = items
+            .iter()
+            .enumerate()
+            .map(|(idx, item)| (idx, (*item).to_owned()))
+            .collect();
+        Self::menu_value(ui, label, &entries, on_select);
+    }
+
+    /// Creates a menu bar item with a dropdown submenu bound to enum values
+    /// instead of blind indexes: each entry pairs a value with its label.
+    pub fn menu_value<T: Clone>(
+        ui: &mut egui::Ui,
+        label: &str,
+        entries: &[(T, String)],
+        on_select: impl FnOnce(T),
+    ) {
         let trigger = Self::item(ui, label);
-        crate::widgets::dropdown_menu::widget::DropdownMenu::show(ui, &trigger, items, on_select);
+        crate::widgets::dropdown_menu::widget::DropdownMenu::show_value(
+            ui, &trigger, entries, on_select,
+        );
     }
 }

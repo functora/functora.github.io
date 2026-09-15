@@ -439,22 +439,15 @@ impl crate::app::ShowcaseApp {
         _ = Typography::muted("Compact command container for editor and app controls.").show(ui);
         ui.add_space(12.0);
 
-        let tools = [
-            LucideIcon::MousePointer2,
-            LucideIcon::PenTool,
-            LucideIcon::Spline,
-            LucideIcon::Frame,
-            LucideIcon::Type,
-        ];
         _ = Toolbar::new().show(ui, |ui64| {
             _ = ButtonGroup::show(ui64, |ui65| {
-                for (idx, icon) in tools.iter().enumerate() {
-                    let response = Button::icon_only(*icon)
+                for (tool, icon) in crate::app::Tool::ALL {
+                    let response = Button::icon_only(icon)
                         .variant(ButtonVariant::Ghost)
-                        .selected(self.toolbar.toolbar_tool_idx == idx)
+                        .selected(self.toolbar.toolbar_tool == tool)
                         .show(ui65);
                     if response.clicked() {
-                        self.toolbar.toolbar_tool_idx = idx;
+                        self.toolbar.toolbar_tool = tool;
                     }
                 }
             });
@@ -497,7 +490,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Toolbar: compact command container\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\nlet tools = [LucideIcon::MousePointer2, LucideIcon::PenTool, LucideIcon::Spline];\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (idx, icon) in tools.iter().enumerate() {\n            Button::icon_only(*icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool_idx == idx)\n                .show(bg);\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
+            "// Toolbar: tool selection bound to an enum\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum Tool { Select, Pen, Spline }\n\nlet tools = [(Tool::Select, LucideIcon::MousePointer2), (Tool::Pen, LucideIcon::PenTool), (Tool::Spline, LucideIcon::Spline)];\nlet mut tool = Tool::Select;\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (value, icon) in tools {\n            if Button::icon_only(icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool == value)\n                .show(bg)\n                .clicked()\n            {\n                tool = value;\n            }\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
         );
     }
 

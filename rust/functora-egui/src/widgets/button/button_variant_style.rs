@@ -57,7 +57,10 @@ pub fn resolve_button_style(
                 bg = theme.accent;
                 fg = theme.accent_foreground;
             }
-            _ => {
+            crate::tokens::button_variant::ButtonVariant::Default
+            | crate::tokens::button_variant::ButtonVariant::Destructive
+            | crate::tokens::button_variant::ButtonVariant::Secondary
+            | crate::tokens::button_variant::ButtonVariant::Link => {
                 bg = with_alpha(bg, 204); // 80% = /80
             }
         }
@@ -69,7 +72,9 @@ pub fn resolve_button_style(
                 fg = theme.foreground;
             }
             crate::tokens::button_variant::ButtonVariant::Link => {}
-            _ => {
+            crate::tokens::button_variant::ButtonVariant::Default
+            | crate::tokens::button_variant::ButtonVariant::Destructive
+            | crate::tokens::button_variant::ButtonVariant::Secondary => {
                 bg = with_alpha(bg, 204); // 80% = /80
             }
         }

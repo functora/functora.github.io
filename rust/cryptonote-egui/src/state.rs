@@ -78,7 +78,7 @@ impl External {
     pub fn note_url(self) -> String {
         match self {
             Self::Note(n) => n.url,
-            _ => String::new(),
+            Self::Nothing | Self::Archive(_) => String::new(),
         }
     }
 
@@ -86,7 +86,7 @@ impl External {
     pub fn archive_bytes(self) -> Vec<u8> {
         match self {
             Self::Archive(a) => a.untag(),
-            _ => Vec::new(),
+            Self::Nothing | Self::Note(_) => Vec::new(),
         }
     }
 

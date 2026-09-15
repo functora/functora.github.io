@@ -9,6 +9,43 @@ use functora_egui::{
 
 use functora_egui::snippet;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ContextAction {
+    Cut,
+    Copy,
+    Paste,
+    SelectAll,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProfileAction {
+    Profile,
+    Settings,
+    LogOut,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum EditAction {
+    Undo,
+    Redo,
+    Cut,
+    Copy,
+    Paste,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ViewAction {
+    ZoomIn,
+    ZoomOut,
+    FullScreen,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum HelpAction {
+    Documentation,
+    About,
+}
+
 impl crate::app::ShowcaseApp {
     pub(crate) fn demo_dialog(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A modal dialog with a backdrop.").show(ui);
@@ -145,10 +182,15 @@ impl crate::app::ShowcaseApp {
             .icon(LucideIcon::MousePointerClick)
             .variant(ButtonVariant::Outline)
             .show(ui);
-        let items = ["Cut", "Copy", "Paste", "Select All"];
-        ContextMenu::show(&response, &items, |idx| {
+        let entries = [
+            (ContextAction::Cut, "Cut".to_owned()),
+            (ContextAction::Copy, "Copy".to_owned()),
+            (ContextAction::Paste, "Paste".to_owned()),
+            (ContextAction::SelectAll, "Select All".to_owned()),
+        ];
+        ContextMenu::show_value(&response, &entries, |action| {
             self.toast.add(
-                format!("Context menu: {}", items[idx]),
+                format!("Context menu: {action:?}"),
                 functora_egui::ToastVariant::Default,
                 ui.ctx().input(|i| i.time),
             );
@@ -156,7 +198,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// ContextMenu: right-click menu\nuse functora_egui::{ContextMenu, Button, ButtonVariant, LucideIcon};\n\nlet response = Button::new(\"Right-click me\")\n    .icon(LucideIcon::MousePointerClick)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet items = [\"Cut\", \"Copy\", \"Paste\", \"Select All\"];\nContextMenu::show(&response, &items, |idx| {\n    match items[idx] {\n        \"Cut\" => eprintln!(\"Cut\"),\n        \"Copy\" => eprintln!(\"Copy\"),\n        _ => {}\n    }\n});",
+            "// ContextMenu: right-click menu bound to an enum\nuse functora_egui::{ContextMenu, Button, ButtonVariant, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ContextAction { Cut, Copy, Paste }\n\nlet response = Button::new(\"Right-click me\")\n    .icon(LucideIcon::MousePointerClick)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet entries = [(ContextAction::Cut, \"Cut\".to_owned()), (ContextAction::Copy, \"Copy\".to_owned())];\nContextMenu::show_value(&response, &entries, |action| {\n    match action {\n        ContextAction::Cut => eprintln!(\"Cut\"),\n        ContextAction::Copy => eprintln!(\"Copy\"),\n        ContextAction::Paste => eprintln!(\"Paste\"),\n    }\n});",
         );
     }
 
@@ -167,11 +209,15 @@ impl crate::app::ShowcaseApp {
             .icon(LucideIcon::ChevronDown)
             .variant(ButtonVariant::Outline)
             .show(ui);
-        let items = ["Profile", "Settings", "Log out"];
+        let entries = [
+            (ProfileAction::Profile, "Profile".to_owned()),
+            (ProfileAction::Settings, "Settings".to_owned()),
+            (ProfileAction::LogOut, "Log out".to_owned()),
+        ];
         let ctx = ui.ctx().clone();
-        DropdownMenu::show(ui, &response, &items, |idx| {
+        DropdownMenu::show_value(ui, &response, &entries, |action| {
             self.toast.add(
-                format!("Dropdown menu: {}", items[idx]),
+                format!("Dropdown menu: {action:?}"),
                 functora_egui::ToastVariant::Default,
                 ctx.input(|i| i.time),
             );
@@ -179,7 +225,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// DropdownMenu: click-triggered action menu\nuse functora_egui::{DropdownMenu, Button, ButtonVariant, LucideIcon};\n\nlet response = Button::new(\"Open Menu\")\n    .icon(LucideIcon::ChevronDown)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet items = [\"Profile\", \"Settings\", \"Log out\"];\nDropdownMenu::show(ui, &response, &items, |idx| {\n    match items[idx] {\n        \"Profile\" => eprintln!(\"Open profile\"),\n        \"Settings\" => eprintln!(\"Open settings\"),\n        \"Log out\" => eprintln!(\"Log out\"),\n        _ => {}\n    }\n});",
+            "// DropdownMenu: click-triggered action menu bound to an enum\nuse functora_egui::{DropdownMenu, Button, ButtonVariant, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ProfileAction { Profile, Settings, LogOut }\n\nlet response = Button::new(\"Open Menu\")\n    .icon(LucideIcon::ChevronDown)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet entries = [(ProfileAction::Profile, \"Profile\".to_owned()), (ProfileAction::Settings, \"Settings\".to_owned()), (ProfileAction::LogOut, \"Log out\".to_owned())];\nDropdownMenu::show_value(ui, &response, &entries, |action| {\n    match action {\n        ProfileAction::Profile => eprintln!(\"Open profile\"),\n        ProfileAction::Settings => eprintln!(\"Open settings\"),\n        ProfileAction::LogOut => eprintln!(\"Log out\"),\n    }\n});",
         );
     }
 
@@ -201,7 +247,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Command: searchable command palette\nuse functora_egui::{Command, CommandItem, LucideIcon};\n\nlet items = vec![\n    CommandItem { group: \"File\".to_owned(), group_icon: LucideIcon::File, label: \"New File\".to_owned(), icon: LucideIcon::FilePlus },\n    CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Copy\".to_owned(), icon: LucideIcon::Copy },\n    CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Paste\".to_owned(), icon: LucideIcon::ClipboardPaste },\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(idx) = Command::with_items(items)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {idx}\");\n}",
+            "// CommandValue: searchable palette bound to an enum\nuse functora_egui::{CommandValue, CommandItem, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum DemoCommand { NewFile, Copy, Paste }\n\nlet entries = vec![\n    (DemoCommand::NewFile, CommandItem { group: \"File\".to_owned(), group_icon: LucideIcon::File, label: \"New File\".to_owned(), icon: LucideIcon::FilePlus }),\n    (DemoCommand::Copy, CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Copy\".to_owned(), icon: LucideIcon::Copy }),\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(command) = CommandValue::new(entries)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {command:?}\");\n}",
         );
     }
 
@@ -211,36 +257,39 @@ impl crate::app::ShowcaseApp {
         let ctx = ui.ctx().clone();
         _ = Menubar::new().show(ui, |ui69| {
             _ = Menubar::item(ui69, "File");
-            Menubar::menu(
-                ui69,
-                "Edit",
-                &["Undo", "Redo", "Cut", "Copy", "Paste"],
-                |idx| {
-                    self.toast.add(
-                        format!(
-                            "Edit menu: {}",
-                            ["Undo", "Redo", "Cut", "Copy", "Paste"][idx]
-                        ),
-                        functora_egui::ToastVariant::Default,
-                        ctx.input(|i| i.time),
-                    );
-                },
-            );
-            Menubar::menu(
-                ui69,
-                "View",
-                &["Zoom In", "Zoom Out", "Full Screen"],
-                |idx| {
-                    self.toast.add(
-                        format!("View menu: {}", ["Zoom In", "Zoom Out", "Full Screen"][idx]),
-                        functora_egui::ToastVariant::Default,
-                        ctx.input(|i| i.time),
-                    );
-                },
-            );
-            Menubar::menu(ui69, "Help", &["Documentation", "About"], |idx| {
+            let edit_entries = [
+                (EditAction::Undo, "Undo".to_owned()),
+                (EditAction::Redo, "Redo".to_owned()),
+                (EditAction::Cut, "Cut".to_owned()),
+                (EditAction::Copy, "Copy".to_owned()),
+                (EditAction::Paste, "Paste".to_owned()),
+            ];
+            Menubar::menu_value(ui69, "Edit", &edit_entries, |action| {
                 self.toast.add(
-                    format!("Help menu: {}", ["Documentation", "About"][idx]),
+                    format!("Edit menu: {action:?}"),
+                    functora_egui::ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
+            });
+            let view_entries = [
+                (ViewAction::ZoomIn, "Zoom In".to_owned()),
+                (ViewAction::ZoomOut, "Zoom Out".to_owned()),
+                (ViewAction::FullScreen, "Full Screen".to_owned()),
+            ];
+            Menubar::menu_value(ui69, "View", &view_entries, |action| {
+                self.toast.add(
+                    format!("View menu: {action:?}"),
+                    functora_egui::ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
+            });
+            let help_entries = [
+                (HelpAction::Documentation, "Documentation".to_owned()),
+                (HelpAction::About, "About".to_owned()),
+            ];
+            Menubar::menu_value(ui69, "Help", &help_entries, |action| {
+                self.toast.add(
+                    format!("Help menu: {action:?}"),
                     functora_egui::ToastVariant::Default,
                     ctx.input(|i| i.time),
                 );
@@ -249,7 +298,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Menubar: horizontal menu bar with dropdowns\nuse functora_egui::{Menubar, Button, LucideIcon, ToastVariant};\n\nMenubar::new().show(ui, |bar| {\n    Menubar::item(bar, \"File\");\n    Menubar::menu(bar, \"Edit\", &[\"Undo\", \"Redo\", \"Cut\", \"Copy\", \"Paste\"], |idx| {\n        match idx {\n            0 => eprintln!(\"Undo\"),\n            1 => eprintln!(\"Redo\"),\n            _ => {}\n        }\n    });\n    Menubar::menu(bar, \"View\", &[\"Zoom In\", \"Zoom Out\", \"Full Screen\"], |idx| {\n        // ...\n    });\n    Menubar::menu(bar, \"Help\", &[\"Documentation\", \"About\"], |idx| {\n        // ...\n    });\n});",
+            "// Menubar: menu bar with enum-bound dropdowns\nuse functora_egui::{Menubar, Button, LucideIcon, ToastVariant};\n\n#[derive(Clone, Copy, PartialEq)]\nenum EditAction { Undo, Redo, Cut }\n\nMenubar::new().show(ui, |bar| {\n    Menubar::item(bar, \"File\");\n    let entries = [(EditAction::Undo, \"Undo\".to_owned()), (EditAction::Redo, \"Redo\".to_owned()), (EditAction::Cut, \"Cut\".to_owned())];\n    Menubar::menu_value(bar, \"Edit\", &entries, |action| {\n        match action {\n            EditAction::Undo => eprintln!(\"Undo\"),\n            EditAction::Redo => eprintln!(\"Redo\"),\n            EditAction::Cut => eprintln!(\"Cut\"),\n        }\n    });\n});",
         );
     }
 

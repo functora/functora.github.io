@@ -103,42 +103,39 @@ impl super::widget::Navbar<'_> {
                                                 .variant(ButtonVariant::Outline)
                                                 .size(ComponentSize::Sm),
                                         );
-                                        let items: Vec<
+                                        let entries: Vec<(
+                                            crate::i18n::Language,
                                             crate::widgets::dropdown_menu::widget::MenuItem,
-                                        > = crate::i18n::SUPPORTED_LANGUAGES
+                                        )> = crate::i18n::SUPPORTED_LANGUAGES
                                             .iter()
-                                            .map(|l| {
-                                                let code = l
+                                            .map(|lang| {
+                                                let code = lang
                                                     .to_639_1()
                                                     .unwrap_or("en")
                                                     .to_ascii_uppercase();
-                                                let flag = match *l {
+                                                let flag = match *lang {
                                                     crate::i18n::Language::Eng => "🇬🇧",
                                                     crate::i18n::Language::Spa => "🇪🇸",
                                                     crate::i18n::Language::Rus => "🇷🇺",
                                                     _ => "🌐",
                                                 };
                                                 let label = format!("{flag} {code}");
-                                                let selected = *l == current_lang;
-                                                crate::widgets::dropdown_menu::widget::MenuItem::label(
-                                                    label,
+                                                let selected = *lang == current_lang;
+                                                (
+                                                    *lang,
+                                                    crate::widgets::dropdown_menu::widget::MenuItem::label(
+                                                        label,
+                                                    )
+                                                    .selected(selected),
                                                 )
-                                                .selected(selected)
                                             })
                                             .collect();
-                                        let mut chosen: Option<usize> = None;
-                                        crate::widgets::dropdown_menu::widget::DropdownMenu::show_rich(
+                                        crate::widgets::dropdown_menu::widget::DropdownMenu::show_rich_value(
                                             group_ui,
                                             &trigger,
-                                            &items,
-                                            |idx| chosen = Some(idx),
+                                            &entries,
+                                            |new_lang| lang_cell.set(new_lang),
                                         );
-                                        if let Some(idx) = chosen
-                                            && let Some(new_lang) =
-                                                crate::i18n::SUPPORTED_LANGUAGES.get(idx)
-                                        {
-                                            lang_cell.set(*new_lang);
-                                        }
                                     }
                                     if let Some(label) = self.search_label {
                                         let search = if group_ui.on_mobile() {

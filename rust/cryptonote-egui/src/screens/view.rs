@@ -86,7 +86,16 @@ impl CryptonoteApp {
                                     .max_width(200.0),
                             );
                         }
-                        _ => {}
+                        Preview::Markdown(t) => {
+                            let rendered = crate::markdown::render_markdown(&t);
+                            _ = ui.label(rendered);
+                        }
+                        Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
+                            _ = ui.label(Msg::PreviewUnavailable.render(lang));
+                        }
+                        Preview::Missing => {
+                            _ = ui.label(Msg::FileNotFound.render(lang));
+                        }
                     }
                     let () = ui.add_space(4.0);
                 }

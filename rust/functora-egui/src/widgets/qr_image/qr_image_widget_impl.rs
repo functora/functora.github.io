@@ -3,29 +3,36 @@ use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 #[cfg(feature = "qr")]
 const TEX_SIDE: u32 = 256;
 const FALLBACK_SIDE: f32 = 320.0;
+const MAX_SIDE: f32 = 480.0;
 
 impl egui::Widget for super::widget::QrImage<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = ui.ctx().shadcn_theme();
         let outer = ui.available_width();
-        egui::Frame::new()
-            .fill(egui::Color32::WHITE)
-            .stroke(egui::Stroke::new(1.0, theme.border))
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius,
-            )))
-            .inner_margin(egui::Margin::same(12))
-            .show(ui, |inner| {
-                let side = [inner.available_width(), outer, FALLBACK_SIDE]
-                    .into_iter()
-                    .find(|side| side.is_finite() && *side > 0.0)
-                    .unwrap_or(FALLBACK_SIDE);
-                match cached_texture(inner.ctx(), self.content) {
-                    Some(tex) => inner.add(egui::Image::new((tex.id(), egui::Vec2::splat(side)))),
-                    None => fallback(inner, side),
-                }
-            })
-            .response
+        ui.with_layout(egui::Layout::top_down(egui::Align::Center), |centered| {
+            egui::Frame::new()
+                .fill(egui::Color32::WHITE)
+                .stroke(egui::Stroke::new(1.0, theme.border))
+                .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
+                    theme.radius,
+                )))
+                .inner_margin(egui::Margin::same(12))
+                .show(centered, |inner| {
+                    let side = [inner.available_width(), outer, FALLBACK_SIDE]
+                        .into_iter()
+                        .find(|side| side.is_finite() && *side > 0.0)
+                        .unwrap_or(FALLBACK_SIDE)
+                        .min(MAX_SIDE);
+                    match cached_texture(inner.ctx(), self.content) {
+                        Some(tex) => {
+                            inner.add(egui::Image::new((tex.id(), egui::Vec2::splat(side))))
+                        }
+                        None => fallback(inner, side),
+                    }
+                })
+                .response
+        })
+        .response
     }
 }
 

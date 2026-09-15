@@ -1,15 +1,18 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
-use egui::{Context, Pos2, RawInput, Rect, Vec2};
+use egui::{FullOutput, Pos2, RawInput, Rect, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(800.0, 600.0);
+const WIDE_SCREEN: Vec2 = Vec2::new(1440.0, 900.0);
+const NARROW_SCREEN: Vec2 = Vec2::new(390.0, 844.0);
 
-fn run_once(
+fn run_on(
+    screen: Vec2,
     body: &mut dyn FnMut(&mut egui::Ui) -> egui::Response,
-) -> (Context, egui::Response, f32) {
-    let ctx = Context::default();
+) -> (egui::Response, f32, FullOutput) {
+    let ctx = egui::Context::default();
     let mut captured: Option<(egui::Response, f32)> = None;
     let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
         ..Default::default()
     };
     let mut out = ctx.run_ui(raw, |ui| {
@@ -21,23 +24,48 @@ fn run_once(
     });
     out.textures_delta.clear();
     let (response, available) = captured.expect("body must run");
-    (ctx, response, available)
+    (response, available, out)
+}
+
+fn run_once(
+    body: &mut dyn FnMut(&mut egui::Ui) -> egui::Response,
+) -> (egui::Response, f32, FullOutput) {
+    run_on(SCREEN, body)
+}
+
+fn textured_rects(out: &FullOutput) -> Vec<Rect> {
+    out.shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            egui::Shape::Rect(rect_shape)
+                if rect_shape
+                    .brush
+                    .as_ref()
+                    .is_some_and(|brush| brush.fill_texture_id != egui::TextureId::default()) =>
+            {
+                Some(rect_shape.rect)
+            }
+            _ => None,
+        })
+        .collect()
 }
 
 #[test]
 fn qr_image_uses_full_width() {
     let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
-    let (_ctx, response, available) = run_once(&mut body);
+    let (response, available, out) = run_once(&mut body);
     assert!(
         (response.rect.width() - available).abs() < 2.0,
         "QrImage must be full width, got {} expected {available}",
         response.rect.width()
     );
-    assert!(
-        (response.rect.width() - response.rect.height()).abs() < 2.0,
-        "QrImage must stay square, got {:?}",
-        response.rect
-    );
+    #[cfg(feature = "qr")]
+    for rect in textured_rects(&out) {
+        assert!(
+            (rect.width() - rect.height()).abs() < 2.0,
+            "QrImage must stay square, got {rect:?}"
+        );
+    }
 }
 
 #[test]
@@ -47,7 +75,7 @@ fn qr_image_donate_addresses_render_full_width() {
         "48sTw2TvjuWKkaomi9J7gLExRUJLJCvUHLrbf8M8qmayQ9zkho1GYdCXVtpTPawNWH7mNS49N4E6HNDF95dtggMMCigrVyG",
     ] {
         let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new(address).show(ui);
-        let (_ctx, response, available) = run_once(&mut body);
+        let (response, available, _) = run_once(&mut body);
         assert!(
             (response.rect.width() - available).abs() < 2.0,
             "donate QR for {address} must be full width, got {} expected {available}",
@@ -57,9 +85,65 @@ fn qr_image_donate_addresses_render_full_width() {
 }
 
 #[test]
+#[cfg(feature = "qr")]
+fn qr_image_caps_width_on_wide_desktop() {
+    let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
+    let (_, available, out) = run_on(WIDE_SCREEN, &mut body);
+    assert!(
+        available > 1000.0,
+        "wide fixture must offer desktop-class width, got {available}"
+    );
+    let rendered = textured_rects(&out);
+    assert!(
+        !rendered.is_empty(),
+        "wide desktop must still render the QR image"
+    );
+    for rect in &rendered {
+        assert!(
+            rect.width() <= 481.0,
+            "QR image must be capped on wide desktop, got {rect:?}"
+        );
+        assert!(
+            (rect.width() - rect.height()).abs() < 2.0,
+            "capped QR image must stay square, got {rect:?}"
+        );
+        assert!(
+            (rect.center().x - WIDE_SCREEN.x * 0.5).abs() < 8.0,
+            "capped QR image must stay centered, got {rect:?}"
+        );
+    }
+}
+
+#[test]
+#[cfg(feature = "qr")]
+fn qr_image_stays_large_on_narrow_phone() {
+    let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
+    let (_, available, out) = run_on(NARROW_SCREEN, &mut body);
+    let rendered = textured_rects(&out);
+    assert!(
+        !rendered.is_empty(),
+        "narrow phone must still render the QR image"
+    );
+    for rect in &rendered {
+        assert!(
+            rect.width() > 280.0,
+            "QR image must stay large on narrow phone, got {rect:?}"
+        );
+        assert!(
+            rect.width() <= available + 1.0,
+            "QR image must not overflow narrow phone, got {rect:?} for {available}"
+        );
+        assert!(
+            (rect.width() - rect.height()).abs() < 2.0,
+            "phone QR image must stay square, got {rect:?}"
+        );
+    }
+}
+
+#[test]
 fn qr_image_empty_content_does_not_panic() {
     let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("").show(ui);
-    let (_ctx, response, _available) = run_once(&mut body);
+    let (response, _available, _) = run_once(&mut body);
     assert!(response.rect.width() >= 0.0);
 }
 

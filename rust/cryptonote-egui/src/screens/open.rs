@@ -6,7 +6,7 @@ use crate::progress::{Stage, claim_job, clear_progress};
 use crate::state::External;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex, Input, Label, Progress, ToastVariant};
+use functora_egui::{Button, ButtonVariant, Flex, InputPasteClear, Label, Progress, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn screen_open(&mut self, ui: &mut egui::Ui) {
@@ -24,14 +24,14 @@ impl CryptonoteApp {
             let () = ui.add_space(8.0);
             _ = Label::new(BaseMsg::Password.render(lang)).show(ui);
             let () = ui.add_space(4.0);
-            let resp = ui.add(
-                Input::new(&mut self.temporary.password)
-                    .placeholder(BaseMsg::PasswordPlaceholder.render(lang))
-                    .password(),
-            );
-            if resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+            let resp = InputPasteClear::new(&mut self.temporary.password)
+                .placeholder(BaseMsg::PasswordPlaceholder.render(lang))
+                .password()
+                .show(ui);
+            if resp.response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                 self.decrypt_current(toast_time);
             }
+            self.paste_clear_feedback(resp, toast_time);
             let () = ui.add_space(12.0);
             _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
                 if f.add(
@@ -43,29 +43,6 @@ impl CryptonoteApp {
                 .clicked()
                 {
                     self.decrypt_current(toast_time);
-                }
-                if f.add(
-                    Button::new(BaseMsg::Paste.render(lang))
-                        .icon(functora_egui::LucideIcon::ClipboardPaste)
-                        .variant(ButtonVariant::Outline),
-                )
-                .inner
-                .clicked()
-                {
-                    let rx = functora_egui::spawn_async(async move {
-                        functora_egui::clipboard::read().await.map_err(AppError::from)
-                    });
-                    self.clipboard_rx = Some(rx);
-                }
-                if f.add(
-                    Button::new(Msg::Clear.render(lang))
-                        .icon(functora_egui::LucideIcon::X)
-                        .variant(ButtonVariant::Ghost),
-                )
-                .inner
-                .clicked()
-                {
-                    self.temporary.password.clear();
                 }
                 if f.add(
                     Button::new(Msg::CreateNewNote.render(lang))

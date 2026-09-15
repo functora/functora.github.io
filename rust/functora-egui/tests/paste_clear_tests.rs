@@ -323,6 +323,17 @@ fn painted_icon_shapes_in(output: &egui::FullOutput, region: Rect) -> usize {
         .count()
 }
 
+fn rendered_texts(output: &egui::FullOutput) -> Vec<String> {
+    output
+        .shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            Shape::Text(text) => Some(text.galley.text().to_owned()),
+            _ => None,
+        })
+        .collect()
+}
+
 #[test]
 fn input_copy_button_paints_by_default() {
     let mut text = "hello".to_owned();
@@ -399,5 +410,115 @@ fn textarea_copy_button_paints_by_default() {
         painted_icon_shapes_in(&cleared_out, copy_region),
         0,
         "opted-out copy button must paint nothing"
+    );
+}
+
+#[test]
+fn input_readonly_hides_paste_and_clear_keeps_copy() {
+    let mut text = "hello".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut text)
+            .readonly()
+            .show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    let left_band = Rect::from_min_max(
+        Pos2::new(outer.min.x, outer.min.y),
+        Pos2::new(outer.min.x + 40.0, outer.max.y),
+    );
+    assert!(
+        painted_icon_shapes_in(&out, left_band) > 0,
+        "copy icon must paint in readonly mode"
+    );
+    let clear_band = Rect::from_min_max(
+        Pos2::new(outer.max.x - 40.0, outer.min.y),
+        Pos2::new(outer.max.x, outer.max.y),
+    );
+    assert_eq!(
+        painted_icon_shapes_in(&out, clear_band),
+        0,
+        "clear icon must stay hidden in readonly mode"
+    );
+
+    let mut plain = "hello".to_owned();
+    let mut bare = |ui: &mut egui::Ui| {
+        let _ = functora_egui::InputPasteClear::new(&mut plain)
+            .readonly()
+            .with_copy(false)
+            .show(ui);
+    };
+    let _ = app.step(vec![], &mut bare);
+    let bare_out = app.step(vec![], &mut bare);
+    assert_eq!(
+        painted_icon_shapes_in(&bare_out, left_band),
+        0,
+        "paste icon must stay hidden in readonly mode"
+    );
+}
+
+#[test]
+fn textarea_readonly_hides_paste_and_clear_keeps_copy() {
+    let mut text = "hello".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TextareaPasteClear::new(&mut text)
+            .min_height(80.0)
+            .readonly()
+            .show(ui);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    assert!(
+        rendered_texts(&out).iter().any(|t| t.contains("hello")),
+        "readonly field must still render its text"
+    );
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    let copy_band = Rect::from_min_max(
+        Pos2::new(outer.min.x, outer.min.y),
+        Pos2::new(outer.min.x + 32.0, outer.min.y + 24.0),
+    );
+    assert!(
+        painted_icon_shapes_in(&out, copy_band) > 0,
+        "copy icon must paint in readonly mode"
+    );
+    let clear_band = Rect::from_min_max(
+        Pos2::new(outer.max.x - 32.0, outer.min.y),
+        Pos2::new(outer.max.x, outer.min.y + 24.0),
+    );
+    assert_eq!(
+        painted_icon_shapes_in(&out, clear_band),
+        0,
+        "clear icon must stay hidden in readonly mode"
+    );
+
+    let mut plain = "hello".to_owned();
+    let mut bare = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TextareaPasteClear::new(&mut plain)
+            .min_height(80.0)
+            .readonly()
+            .with_copy(false)
+            .show(ui);
+    };
+    let _ = app.step(vec![], &mut bare);
+    let bare_out = app.step(vec![], &mut bare);
+    let bare_band = Rect::from_min_max(
+        Pos2::new(outer.min.x, outer.min.y),
+        Pos2::new(outer.min.x + 80.0, outer.min.y + 24.0),
+    );
+    assert_eq!(
+        painted_icon_shapes_in(&bare_out, bare_band),
+        0,
+        "paste icon must stay hidden in readonly mode"
     );
 }

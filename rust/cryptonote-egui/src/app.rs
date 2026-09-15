@@ -20,7 +20,7 @@ use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::{Stage, claim_job, clear_progress};
 use crate::route::Screen;
-use crate::state::{ActionMode, External, TemporaryState};
+use crate::state::{External, TemporaryState};
 use crate::storage::{APP_ATTRS, PersistentState};
 use functora_egui::messages::Msg as BaseMsg;
 
@@ -34,7 +34,6 @@ pub struct CryptonoteApp {
     pub(crate) toast: ToastState,
     pub(crate) sidebar_collapsed: bool,
     // async receivers
-    pub(crate) clipboard_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
     pub(crate) clipboard_write_rx: Option<std::sync::mpsc::Receiver<Result<(), AppError>>>,
     pub(crate) share_rx: Option<std::sync::mpsc::Receiver<Result<(), AppError>>>,
     pub(crate) download_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
@@ -58,7 +57,6 @@ impl Default for CryptonoteApp {
             temporary: TemporaryState::default(),
             toast: ToastState::new(),
             sidebar_collapsed: true,
-            clipboard_rx: None,
             clipboard_write_rx: None,
             share_rx: None,
             download_rx: None,
@@ -130,11 +128,29 @@ impl CryptonoteApp {
         }
     }
 
+    pub(crate) fn paste_clear_feedback(&mut self, resp: functora_egui::InputPasteClearResponse, now: f64) {
+        let lang = self.lang();
+        if resp.pasted || resp.copied {
+            self.toast.add(BaseMsg::Copied.render(lang), ToastVariant::Success, now);
+        }
+        if let Some(error) = resp.clipboard_error {
+            let error = AppError::from(error);
+            if !matches!(&error, AppError::Cancelled)
+                && !matches!(&error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+            {
+                self.toast.add(
+                    Msg::Error(crate::error::MsgError::from(error)).render(lang),
+                    ToastVariant::Error,
+                    now,
+                );
+            }
+        }
+    }
+
     fn poll_receivers(&mut self, ctx: &egui::Context) {
         let lang = self.lang();
         let mut needs_repaint = false;
-        if self.clipboard_rx.is_some()
-            || self.clipboard_write_rx.is_some()
+        if self.clipboard_write_rx.is_some()
             || self.share_rx.is_some()
             || self.download_rx.is_some()
             || self.pick_rx.is_some()
@@ -144,37 +160,6 @@ impl CryptonoteApp {
             || self.pwa_rx.is_some()
         {
             needs_repaint = true;
-        }
-        if let Some(rx) = self.clipboard_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(text)) => {
-                    if self.temporary.screen == Screen::Home && self.temporary.action == ActionMode::Create {
-                        self.temporary.note = text;
-                    } else if self.temporary.action == ActionMode::Open {
-                        self.temporary.url_input = text;
-                    } else if matches!(self.temporary.external, External::Note(_)) {
-                        self.temporary.password = text;
-                    }
-                    self.toast.add(
-                        BaseMsg::Copied.render(lang),
-                        ToastVariant::Success,
-                        ctx.input(|i| i.time),
-                    );
-                }
-                Ok(Err(e)) => {
-                    if !matches!(&e, AppError::Cancelled)
-                        && !matches!(&e, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
-                    {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            ctx.input(|i| i.time),
-                        );
-                    }
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
-            }
         }
         if let Some(rx) = self.clipboard_write_rx.take() {
             match rx.try_recv() {
@@ -394,7 +379,6 @@ impl CryptonoteApp {
             }
         }
         if needs_repaint
-            || self.clipboard_rx.is_some()
             || self.clipboard_write_rx.is_some()
             || self.share_rx.is_some()
             || self.download_rx.is_some()

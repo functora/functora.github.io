@@ -20,6 +20,7 @@ pub(crate) fn show_textarea_paste_clear(
         clear_icon,
         copy,
         copy_icon,
+        readonly,
     } = widget;
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
@@ -56,31 +57,45 @@ pub(crate) fn show_textarea_paste_clear(
     let (pasted, paste_error) = poll_paste(ui, &slots.paste, &mut *text);
     let (copied, copy_error) = poll_copy(ui, &slots.copy);
 
-    let paste_rect = egui::Rect::from_min_max(
-        egui::pos2(toolbar_rect.min.x + 4.0, toolbar_rect.min.y + 4.0),
-        egui::pos2(toolbar_rect.min.x + 32.0, toolbar_rect.max.y - 4.0),
-    );
+    let paste_rect = if readonly {
+        None
+    } else {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(toolbar_rect.min.x + 4.0, toolbar_rect.min.y + 4.0),
+            egui::pos2(toolbar_rect.min.x + 32.0, toolbar_rect.max.y - 4.0),
+        ))
+    };
+    let copy_left = if readonly { 4.0 } else { 36.0 };
     let copy_rect = if copy {
         Some(egui::Rect::from_min_max(
-            egui::pos2(toolbar_rect.min.x + 36.0, toolbar_rect.min.y + 4.0),
-            egui::pos2(toolbar_rect.min.x + 64.0, toolbar_rect.max.y - 4.0),
+            egui::pos2(toolbar_rect.min.x + copy_left, toolbar_rect.min.y + 4.0),
+            egui::pos2(
+                toolbar_rect.min.x + copy_left + 28.0,
+                toolbar_rect.max.y - 4.0,
+            ),
         ))
     } else {
         None
     };
-    let clear_rect = egui::Rect::from_min_max(
-        egui::pos2(toolbar_rect.max.x - 32.0, toolbar_rect.min.y + 4.0),
-        egui::pos2(toolbar_rect.max.x - 4.0, toolbar_rect.max.y - 4.0),
-    );
+    let clear_rect = if readonly {
+        None
+    } else {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(toolbar_rect.max.x - 32.0, toolbar_rect.min.y + 4.0),
+            egui::pos2(toolbar_rect.max.x - 4.0, toolbar_rect.max.y - 4.0),
+        ))
+    };
 
     let copy_resp = copy_rect.map(|r| ui.interact(r, copy_id, egui::Sense::click()));
-    let paste_resp = ui.interact(paste_rect, paste_id, egui::Sense::click());
-    let clear_resp = ui.interact(clear_rect, clear_id, egui::Sense::click());
+    let paste_resp = paste_rect.map(|r| ui.interact(r, paste_id, egui::Sense::click()));
+    let clear_resp = clear_rect.map(|r| ui.interact(r, clear_id, egui::Sense::click()));
 
     let is_paste_pending = paste_pending(&slots.paste);
     let is_copy_pending = copy_pending(&slots.copy);
 
-    if paste_resp.clicked() {
+    if let Some(resp) = paste_resp.as_ref()
+        && resp.clicked()
+    {
         request_paste(ui, &slots.paste);
     }
 
@@ -91,7 +106,9 @@ pub(crate) fn show_textarea_paste_clear(
     }
 
     let mut cleared = false;
-    if clear_resp.clicked() {
+    if let Some(resp) = clear_resp.as_ref()
+        && resp.clicked()
+    {
         cleared = apply_clear(text, &default_value);
     }
 
@@ -118,20 +135,26 @@ pub(crate) fn show_textarea_paste_clear(
         paint_tool_icon(ui.painter(), rect, copy_icon, display_color);
     }
 
-    if ui.is_rect_visible(paste_rect) {
-        let base_paste_color = hover_color(&theme, paste_resp.hovered());
+    if let Some(rect) = paste_rect
+        && let Some(resp) = &paste_resp
+        && ui.is_rect_visible(rect)
+    {
+        let base_paste_color = hover_color(&theme, resp.hovered());
         let display_paste_color = if is_paste_pending {
             pending_color(base_paste_color)
         } else {
             base_paste_color
         };
-        paint_tool_icon(ui.painter(), paste_rect, paste_icon, display_paste_color);
+        paint_tool_icon(ui.painter(), rect, paste_icon, display_paste_color);
     }
 
-    if ui.is_rect_visible(clear_rect) {
+    if let Some(rect) = clear_rect
+        && let Some(resp) = &clear_resp
+        && ui.is_rect_visible(rect)
+    {
         let clear_enabled = *text != default_value;
         let clear_color = if clear_enabled {
-            hover_color(&theme, clear_resp.hovered())
+            hover_color(&theme, resp.hovered())
         } else {
             disabled_color(&theme)
         };
@@ -140,7 +163,7 @@ pub(crate) fn show_textarea_paste_clear(
         } else {
             LucideIcon::X
         };
-        paint_tool_icon(ui.painter(), clear_rect, icon, clear_color);
+        paint_tool_icon(ui.painter(), rect, icon, clear_color);
     }
 
     let mut child_ui = ui.new_child(
@@ -156,6 +179,7 @@ pub(crate) fn show_textarea_paste_clear(
                 .frame(egui::Frame::NONE)
                 .hint_text(&placeholder)
                 .text_color(theme.foreground)
+                .interactive(!readonly)
                 .desired_width(content_rect.width())
                 .desired_rows(8);
             inner_ui.add(text_edit)
@@ -163,7 +187,7 @@ pub(crate) fn show_textarea_paste_clear(
 
     let response = scroll_resp.inner;
 
-    if outer_response.clicked() && !response.has_focus() {
+    if !readonly && outer_response.clicked() && !response.has_focus() {
         response.request_focus();
     }
 

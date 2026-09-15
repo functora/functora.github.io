@@ -8,6 +8,7 @@ pub struct InputPasteClear<'a> {
     pub(crate) clear_icon: crate::icons::lucide_icon::LucideIcon,
     pub(crate) copy: bool,
     pub(crate) copy_icon: crate::icons::lucide_icon::LucideIcon,
+    pub(crate) readonly: bool,
 }
 
 impl<'a> InputPasteClear<'a> {
@@ -21,6 +22,7 @@ impl<'a> InputPasteClear<'a> {
             clear_icon: crate::icons::lucide_icon::LucideIcon::X,
             copy: true,
             copy_icon: crate::icons::lucide_icon::LucideIcon::Copy,
+            readonly: false,
         }
     }
 
@@ -62,6 +64,11 @@ impl<'a> InputPasteClear<'a> {
     pub fn copy_icon(mut self, icon: crate::icons::lucide_icon::LucideIcon) -> Self {
         self.copy_icon = icon;
         self.copy = true;
+        self
+    }
+
+    pub fn readonly(mut self) -> Self {
+        self.readonly = true;
         self
     }
 

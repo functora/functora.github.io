@@ -20,6 +20,7 @@ pub(crate) fn show_input_paste_clear(
         clear_icon,
         copy,
         copy_icon,
+        readonly,
     } = widget;
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
@@ -34,8 +35,8 @@ pub(crate) fn show_input_paste_clear(
     paint_outer(ui, outer_rect, &theme, outer_hovered);
 
     let copy_width: f32 = if copy { 40.0 } else { 0.0 };
-    let paste_width: f32 = 40.0;
-    let clear_width: f32 = 40.0;
+    let paste_width: f32 = if readonly { 0.0 } else { 40.0 };
+    let clear_width: f32 = if readonly { 0.0 } else { 40.0 };
     let eye_width: f32 = 32.0;
     let has_eye = password;
     let right_reserve = if has_eye {
@@ -63,10 +64,14 @@ pub(crate) fn show_input_paste_clear(
         false
     };
 
-    let paste_rect = egui::Rect::from_min_max(
-        egui::pos2(outer_rect.min.x + 2.0, outer_rect.min.y + 2.0),
-        egui::pos2(outer_rect.min.x + paste_width - 2.0, outer_rect.max.y - 2.0),
-    );
+    let paste_rect = if readonly {
+        None
+    } else {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(outer_rect.min.x + 2.0, outer_rect.min.y + 2.0),
+            egui::pos2(outer_rect.min.x + paste_width - 2.0, outer_rect.max.y - 2.0),
+        ))
+    };
     let copy_rect = if copy {
         Some(egui::Rect::from_min_max(
             egui::pos2(outer_rect.min.x + paste_width + 2.0, outer_rect.min.y + 2.0),
@@ -78,10 +83,14 @@ pub(crate) fn show_input_paste_clear(
     } else {
         None
     };
-    let clear_rect = egui::Rect::from_min_max(
-        egui::pos2(outer_rect.max.x - clear_width + 2.0, outer_rect.min.y + 2.0),
-        egui::pos2(outer_rect.max.x - 2.0, outer_rect.max.y - 2.0),
-    );
+    let clear_rect = if readonly {
+        None
+    } else {
+        Some(egui::Rect::from_min_max(
+            egui::pos2(outer_rect.max.x - clear_width + 2.0, outer_rect.min.y + 2.0),
+            egui::pos2(outer_rect.max.x - 2.0, outer_rect.max.y - 2.0),
+        ))
+    };
     let eye_rect = if has_eye {
         Some(egui::Rect::from_min_max(
             egui::pos2(
@@ -95,14 +104,16 @@ pub(crate) fn show_input_paste_clear(
     };
 
     let copy_resp = copy_rect.map(|r| ui.interact(r, copy_id, egui::Sense::click()));
-    let paste_resp = ui.interact(paste_rect, paste_id, egui::Sense::click());
-    let clear_resp = ui.interact(clear_rect, clear_id, egui::Sense::click());
+    let paste_resp = paste_rect.map(|r| ui.interact(r, paste_id, egui::Sense::click()));
+    let clear_resp = clear_rect.map(|r| ui.interact(r, clear_id, egui::Sense::click()));
     let eye_resp = eye_rect.map(|r| ui.interact(r, eye_id, egui::Sense::click()));
 
     let is_paste_pending = paste_pending(&slots.paste);
     let is_copy_pending = copy_pending(&slots.copy);
 
-    if paste_resp.clicked() {
+    if let Some(resp) = paste_resp.as_ref()
+        && resp.clicked()
+    {
         request_paste(ui, &slots.paste);
     }
 
@@ -113,7 +124,9 @@ pub(crate) fn show_input_paste_clear(
     }
 
     let mut cleared = false;
-    if clear_resp.clicked() {
+    if let Some(resp) = clear_resp.as_ref()
+        && resp.clicked()
+    {
         cleared = apply_clear(text, &default_value);
     }
     if let Some(resp) = &eye_resp
@@ -122,11 +135,13 @@ pub(crate) fn show_input_paste_clear(
         let _ = ui.data_mut(|d| d.insert_temp(reveal_id, !revealed));
     }
 
-    let _ = ui.painter().vline(
-        outer_rect.min.x + paste_width,
-        outer_rect.y_range(),
-        egui::Stroke::new(1.0, theme.border),
-    );
+    if !readonly {
+        let _ = ui.painter().vline(
+            outer_rect.min.x + paste_width,
+            outer_rect.y_range(),
+            egui::Stroke::new(1.0, theme.border),
+        );
+    }
     if copy {
         let _ = ui.painter().vline(
             outer_rect.min.x + left_reserve,
@@ -134,11 +149,13 @@ pub(crate) fn show_input_paste_clear(
             egui::Stroke::new(1.0, theme.border),
         );
     }
-    let _ = ui.painter().vline(
-        outer_rect.max.x - clear_width,
-        outer_rect.y_range(),
-        egui::Stroke::new(1.0, theme.border),
-    );
+    if !readonly {
+        let _ = ui.painter().vline(
+            outer_rect.max.x - clear_width,
+            outer_rect.y_range(),
+            egui::Stroke::new(1.0, theme.border),
+        );
+    }
     if has_eye {
         let _ = ui.painter().vline(
             outer_rect.max.x - right_reserve,
@@ -169,6 +186,7 @@ pub(crate) fn show_input_paste_clear(
         .password(password && !revealed)
         .hint_text(&placeholder)
         .text_color(theme.foreground)
+        .interactive(!readonly)
         .desired_width(input_rect.width());
 
     let response = child_ui.add(text_edit);
@@ -190,14 +208,17 @@ pub(crate) fn show_input_paste_clear(
         paint_tool_icon(ui.painter(), rect, copy_icon, display_color);
     }
 
-    if ui.is_rect_visible(paste_rect) {
-        let base_paste_color = hover_color(&theme, paste_resp.hovered());
+    if let Some(rect) = paste_rect
+        && let Some(resp) = &paste_resp
+        && ui.is_rect_visible(rect)
+    {
+        let base_paste_color = hover_color(&theme, resp.hovered());
         let display_paste_color = if is_paste_pending {
             pending_color(base_paste_color)
         } else {
             base_paste_color
         };
-        paint_tool_icon(ui.painter(), paste_rect, paste_icon, display_paste_color);
+        paint_tool_icon(ui.painter(), rect, paste_icon, display_paste_color);
     }
 
     if let (Some(rect), Some(resp)) = (eye_rect, &eye_resp)
@@ -215,10 +236,13 @@ pub(crate) fn show_input_paste_clear(
         );
     }
 
-    if ui.is_rect_visible(clear_rect) {
+    if let Some(rect) = clear_rect
+        && let Some(resp) = &clear_resp
+        && ui.is_rect_visible(rect)
+    {
         let clear_enabled = *text != default_value;
         let clear_color = if clear_enabled {
-            hover_color(&theme, clear_resp.hovered())
+            hover_color(&theme, resp.hovered())
         } else {
             disabled_color(&theme)
         };
@@ -227,7 +251,7 @@ pub(crate) fn show_input_paste_clear(
         } else {
             LucideIcon::X
         };
-        paint_tool_icon(ui.painter(), clear_rect, icon, clear_color);
+        paint_tool_icon(ui.painter(), rect, icon, clear_color);
     }
 
     if response.has_focus() {

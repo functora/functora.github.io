@@ -6,12 +6,12 @@ use crate::route::Screen;
 use crate::state::ActionMode;
 use crate::state::External;
 use functora_egui::i18n::I18N;
-use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex, Progress, Textarea};
+use functora_egui::{Button, ButtonVariant, Flex, Progress, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
         let url = self.temporary.external.clone().note_url();
         let pkg_ready = matches!(self.temporary.external, External::Archive(_));
         if pkg_ready {
@@ -20,19 +20,12 @@ impl CryptonoteApp {
         } else if !url.is_empty() {
             _ = functora_egui::QrImage::new(&url).show(ui);
             let () = ui.add_space(8.0);
-            _ = ui.add(
-                Textarea::new(&mut url.clone())
-                    .min_height(60.0)
-                    .desired_width(ui.available_width()),
-            );
-            let () = ui.add_space(4.0);
-            if ui.input(|i| i.pointer.any_click()) {
-                let u = url.clone();
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(u).await.map_err(AppError::from)
-                });
-                self.clipboard_write_rx = Some(rx);
-            }
+            let mut url_text = url.clone();
+            let resp = TextareaPasteClear::new(&mut url_text)
+                .readonly()
+                .min_height(60.0)
+                .show(ui);
+            self.paste_clear_feedback(resp, toast_time);
             let () = ui.add_space(8.0);
         } else {
             _ = ui.label(Msg::Base(functora_egui::messages::Msg::Loading).render(lang));
@@ -42,39 +35,24 @@ impl CryptonoteApp {
         let () = ui.add_space(12.0);
         if pkg_ready || !url.is_empty() {
             _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
-                if !url.is_empty() {
-                    if f.add(
-                        Button::new(BaseMsg::Copy.render(lang))
-                            .icon(functora_egui::LucideIcon::Copy)
-                            .variant(ButtonVariant::Default),
-                    )
-                    .inner
-                    .clicked()
-                    {
-                        let u = url.clone();
-                        let rx = functora_egui::spawn_async(async move {
-                            functora_egui::clipboard::write(u).await.map_err(AppError::from)
-                        });
-                        self.clipboard_write_rx = Some(rx);
-                    }
-                    if f.add(
+                if !url.is_empty()
+                    && f.add(
                         Button::new(Msg::Share.render(lang))
                             .icon(functora_egui::LucideIcon::Share2)
                             .variant(ButtonVariant::Default),
                     )
                     .inner
                     .clicked()
-                    {
-                        let data = functora_egui::share::ShareData {
-                            title: "Cryptonote".to_string(),
-                            text: Msg::SharedNoteText.render(lang),
-                            url: url.clone(),
-                        };
-                        let rx = functora_egui::spawn_async(async move {
-                            functora_egui::share::share(data).await.map_err(AppError::from)
-                        });
-                        self.share_rx = Some(rx);
-                    }
+                {
+                    let data = functora_egui::share::ShareData {
+                        title: "Cryptonote".to_string(),
+                        text: Msg::SharedNoteText.render(lang),
+                        url: url.clone(),
+                    };
+                    let rx = functora_egui::spawn_async(async move {
+                        functora_egui::share::share(data).await.map_err(AppError::from)
+                    });
+                    self.share_rx = Some(rx);
                 }
                 if pkg_ready
                     && f.add(

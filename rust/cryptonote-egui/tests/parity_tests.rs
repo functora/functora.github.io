@@ -222,3 +222,42 @@ fn route_labels_are_localized() {
         assert!(ROUTE_SRC.contains(fragment), "route labels must include {fragment}");
     }
 }
+
+#[test]
+fn text_fields_use_paste_clear_widgets() {
+    for (name, src) in [("home", HOME_SRC), ("open", OPEN_SRC), ("share", SHARE_SRC)] {
+        assert!(
+            !src.contains("clipboard::read"),
+            "{name} screen must not hand-roll clipboard reads"
+        );
+    }
+    assert!(
+        HOME_SRC.contains("InputPasteClear"),
+        "home password field must be an InputPasteClear"
+    );
+    assert!(
+        HOME_SRC.contains("TextareaPasteClear"),
+        "home note and url fields must be TextareaPasteClear"
+    );
+    assert!(
+        OPEN_SRC.contains("InputPasteClear"),
+        "open password field must be an InputPasteClear"
+    );
+    assert!(
+        SHARE_SRC.contains("TextareaPasteClear"),
+        "share url box must be a TextareaPasteClear"
+    );
+    assert!(SHARE_SRC.contains(".readonly()"), "share url box must be readonly");
+    assert!(
+        !SHARE_SRC.contains("any_click"),
+        "share tap-to-copy must go through the widget copy button"
+    );
+    assert!(
+        !APP_SRC.contains("clipboard_rx:"),
+        "orphaned clipboard read channel must be removed"
+    );
+    assert!(
+        !APP_SRC.contains("self.clipboard_rx"),
+        "orphaned clipboard read polling must be removed"
+    );
+}

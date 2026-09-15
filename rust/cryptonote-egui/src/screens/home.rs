@@ -9,8 +9,8 @@ use functora_egui::files::format_size;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Flex, Input, Label, Progress, SelectValueLabeled, TabsValue, Textarea,
-    ToastVariant,
+    Button, ButtonVariant, ComponentSize, Flex, InputPasteClear, Label, Progress, SelectValueLabeled, TabsValue,
+    TextareaPasteClear, ToastVariant,
 };
 
 impl CryptonoteApp {
@@ -75,21 +75,20 @@ impl CryptonoteApp {
         if self.temporary.cipher.is_some() {
             _ = Label::new(BaseMsg::Password.render(lang)).show(ui);
             let () = ui.add_space(4.0);
-            _ = ui.add(
-                Input::new(&mut self.temporary.password)
-                    .placeholder(BaseMsg::PasswordPlaceholder.render(lang))
-                    .password(),
-            );
+            let resp = InputPasteClear::new(&mut self.temporary.password)
+                .placeholder(BaseMsg::PasswordPlaceholder.render(lang))
+                .password()
+                .show(ui);
+            self.paste_clear_feedback(resp, toast_time);
             let () = ui.add_space(8.0);
         }
         _ = Label::new(Msg::Note.render(lang)).show(ui);
         let () = ui.add_space(4.0);
-        _ = ui.add(
-            Textarea::new(&mut self.temporary.note)
-                .placeholder(Msg::NotePlaceholder.render(lang))
-                .desired_width(ui.available_width())
-                .min_height(120.0),
-        );
+        let resp = TextareaPasteClear::new(&mut self.temporary.note)
+            .placeholder(Msg::NotePlaceholder.render(lang))
+            .min_height(120.0)
+            .show(ui);
+        self.paste_clear_feedback(resp, toast_time);
         let () = ui.add_space(8.0);
         // attachments
         self.show_attachments(ui);
@@ -145,19 +144,6 @@ impl CryptonoteApp {
                 self.pick_rx = Some(rx);
             }
             if f.add(
-                Button::new(BaseMsg::Paste.render(lang))
-                    .icon(functora_egui::LucideIcon::ClipboardPaste)
-                    .variant(ButtonVariant::Outline),
-            )
-            .inner
-            .clicked()
-            {
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::read().await.map_err(AppError::from)
-                });
-                self.clipboard_rx = Some(rx);
-            }
-            if f.add(
                 Button::new(Msg::ViewButton.render(lang))
                     .icon(functora_egui::LucideIcon::Eye)
                     .variant(ButtonVariant::Outline),
@@ -185,12 +171,11 @@ impl CryptonoteApp {
         let toast_time = ui.ctx().input(|i| i.time);
         _ = Label::new(Msg::OpenUrlLabel.render(lang)).show(ui);
         let () = ui.add_space(4.0);
-        _ = ui.add(
-            Textarea::new(&mut self.temporary.url_input)
-                .placeholder(Msg::OpenUrlPlaceholder.render(lang))
-                .desired_width(ui.available_width())
-                .min_height(90.0),
-        );
+        let resp = TextareaPasteClear::new(&mut self.temporary.url_input)
+            .placeholder(Msg::OpenUrlPlaceholder.render(lang))
+            .min_height(90.0)
+            .show(ui);
+        self.paste_clear_feedback(resp, toast_time);
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             if f.add(
@@ -241,29 +226,6 @@ impl CryptonoteApp {
                     crate::hooks::load_archive_async(source).await
                 });
                 self.archive_rx = Some(rx);
-            }
-            if f.add(
-                Button::new(BaseMsg::Paste.render(lang))
-                    .icon(functora_egui::LucideIcon::ClipboardPaste)
-                    .variant(ButtonVariant::Outline),
-            )
-            .inner
-            .clicked()
-            {
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::read().await.map_err(AppError::from)
-                });
-                self.clipboard_rx = Some(rx);
-            }
-            if f.add(
-                Button::new(Msg::Clear.render(lang))
-                    .icon(functora_egui::LucideIcon::X)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .inner
-            .clicked()
-            {
-                self.temporary.url_input.clear();
             }
             if f.add(
                 Button::new(Msg::CreateNewNote.render(lang))

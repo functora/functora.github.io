@@ -154,6 +154,30 @@ pub(crate) fn apply_clear(text: &mut String, default_value: &str) -> bool {
     }
 }
 
+/// A `TextEdit` layouter that wraps at `wrap_width` and breaks anywhere
+/// inside a token, so a long unbroken URL/base64 payload never paints
+/// outside the field's border. Falls back to egui's default word wrapping
+/// for normal text; the break-anywhere bit only matters for single-token
+/// overflows.
+pub(crate) fn wrap_anywhere_layouter(
+    ui: &egui::Ui,
+    text: &dyn egui::TextBuffer,
+    wrap_width: f32,
+) -> std::sync::Arc<egui::Galley> {
+    let mut job = egui::text::LayoutJob::single_section(
+        text.as_str().to_owned(),
+        egui::TextFormat {
+            font_id: egui::FontId::proportional(14.0),
+            color: ui.visuals().text_color(),
+            ..Default::default()
+        },
+    );
+    job.wrap.max_width = wrap_width;
+    job.wrap.max_rows = usize::MAX;
+    job.wrap.break_anywhere = true;
+    ui.fonts_mut(|fonts| fonts.layout_job(job))
+}
+
 /// Idle tool-icon color: foreground on hover, muted otherwise.
 pub(crate) fn hover_color(theme: &ShadcnTheme, hovered: bool) -> egui::Color32 {
     if hovered {

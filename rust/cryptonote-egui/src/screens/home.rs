@@ -86,7 +86,6 @@ impl CryptonoteApp {
         let () = ui.add_space(4.0);
         let resp = TextareaPasteClear::new(&mut self.temporary.note)
             .placeholder(Msg::NotePlaceholder.render(lang))
-            .min_height(120.0)
             .show(ui);
         self.paste_clear_feedback(resp, toast_time);
         let () = ui.add_space(8.0);
@@ -173,7 +172,7 @@ impl CryptonoteApp {
         let () = ui.add_space(4.0);
         let resp = TextareaPasteClear::new(&mut self.temporary.url_input)
             .placeholder(Msg::OpenUrlPlaceholder.render(lang))
-            .min_height(90.0)
+            .min_height(120.0)
             .show(ui);
         self.paste_clear_feedback(resp, toast_time);
         let () = ui.add_space(8.0);

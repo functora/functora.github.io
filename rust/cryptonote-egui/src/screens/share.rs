@@ -21,10 +21,7 @@ impl CryptonoteApp {
             _ = functora_egui::QrImage::new(&url).show(ui);
             let () = ui.add_space(8.0);
             let mut url_text = url.clone();
-            let resp = TextareaPasteClear::new(&mut url_text)
-                .readonly()
-                .min_height(60.0)
-                .show(ui);
+            let resp = TextareaPasteClear::new(&mut url_text).readonly().show(ui);
             self.paste_clear_feedback(resp, toast_time);
             let () = ui.add_space(8.0);
         } else {

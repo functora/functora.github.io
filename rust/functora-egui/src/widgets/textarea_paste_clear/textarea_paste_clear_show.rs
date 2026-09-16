@@ -2,7 +2,7 @@ use crate::icons::lucide_icon::LucideIcon;
 use crate::widgets::paste_clear_core::{
     apply_clear, copy_pending, disabled_color, hover_color, paint_focused, paint_outer,
     paint_tool_icon, paste_pending, pending_color, poll_copy, poll_paste, request_copy,
-    request_paste, respond, take_slots,
+    request_paste, respond, take_slots, wrap_anywhere_layouter,
 };
 
 pub use crate::widgets::paste_clear_core::PasteClearResponse;
@@ -175,13 +175,15 @@ pub(crate) fn show_textarea_paste_clear(
     let scroll_resp = egui::ScrollArea::vertical()
         .max_height(content_rect.height())
         .show(&mut child_ui, |inner_ui| {
+            let mut wrap = wrap_anywhere_layouter;
             let text_edit = egui::TextEdit::multiline(text)
                 .frame(egui::Frame::NONE)
                 .hint_text(&placeholder)
                 .text_color(theme.foreground)
                 .interactive(!readonly)
                 .desired_width(content_rect.width())
-                .desired_rows(8);
+                .desired_rows(8)
+                .layouter(&mut wrap);
             inner_ui.add(text_edit)
         });
 

@@ -55,12 +55,14 @@ impl egui::Widget for super::widget::Textarea<'_> {
             .max_height(inner_rect.height())
             .min_scrolled_height(inner_rect.height())
             .show(&mut child_ui, |inner_ui| {
+                let mut wrap = crate::widgets::paste_clear_core::wrap_anywhere_layouter;
                 let text_edit = egui::TextEdit::multiline(self.text)
                     .frame(egui::Frame::NONE)
                     .hint_text(&self.placeholder)
                     .text_color(theme.foreground)
                     .desired_width(inner_rect.width())
-                    .desired_rows(8);
+                    .desired_rows(8)
+                    .layouter(&mut wrap);
 
                 inner_ui.add(text_edit)
             });

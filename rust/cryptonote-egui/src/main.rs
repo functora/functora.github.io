@@ -17,15 +17,3 @@ fn main() -> eframe::Result {
 
 #[cfg(any(target_arch = "wasm32", target_os = "android"))]
 fn main() {}
-
-#[cfg(target_os = "android")]
-mod android {
-    use android_activity::AndroidApp;
-
-    #[unsafe(export_name = "android_main")]
-    pub fn android_main(app: AndroidApp) {
-        functora_egui::android::run(app, "Cryptonote", |cc| {
-            Ok(Box::new(cryptonote_egui::CryptonoteApp::new(cc)) as Box<dyn eframe::App>)
-        });
-    }
-}

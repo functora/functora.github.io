@@ -37,3 +37,15 @@ pub mod qr_decode {
     pub use functora_egui::qr::*;
 }
 pub use qr_decode::*;
+
+#[cfg(target_os = "android")]
+pub(crate) mod android {
+    use android_activity::AndroidApp;
+
+    #[unsafe(export_name = "android_main")]
+    pub fn android_main(app: AndroidApp) {
+        functora_egui::android::run(app, "Cryptonote", |cc| {
+            Ok(Box::new(crate::CryptonoteApp::new(cc)) as Box<dyn eframe::App>)
+        });
+    }
+}

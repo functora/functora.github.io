@@ -417,3 +417,68 @@ fn radio_group_labeled_renders_labels_and_keeps_selection() {
         );
     }
 }
+
+#[test]
+fn tabs_value_fill_width_stretches_tabs_equally() {
+    let all = [
+        (Fruit::Apple, "A".to_owned()),
+        (Fruit::Banana, "Medium label".to_owned()),
+        (Fruit::Cherry, "Very long label text here".to_owned()),
+    ];
+    let tab_rects = |out: &egui::FullOutput| {
+        let mut rects: Vec<Rect> = Harness::filled_rects(out)
+            .into_iter()
+            .filter(|r| (r.height() - 32.0).abs() < 1.0 && r.width() > 20.0)
+            .collect();
+        rects.sort_by(|a, b| {
+            a.min
+                .x
+                .partial_cmp(&b.min.x)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        rects.dedup();
+        rects
+    };
+    let mut selected = Fruit::Apple;
+    let mut app = Harness::new();
+    let mut natural_body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TabsValue::new(&all).show(ui, &mut selected, |_, _| {});
+    };
+    let natural_out = app.step(vec![], &mut natural_body);
+    let natural_tabs = tab_rects(&natural_out);
+    assert_eq!(natural_tabs.len(), 3, "expected three tab rects");
+    let natural_span = natural_tabs.iter().map(|r| r.max.x).fold(0.0, f32::max)
+        - natural_tabs
+            .iter()
+            .map(|r| r.min.x)
+            .fold(f32::MAX, f32::min);
+    let natural_widths: Vec<f32> = natural_tabs.iter().map(Rect::width).collect();
+    let natural_spread = natural_widths.iter().copied().fold(0.0, f32::max)
+        - natural_widths.iter().copied().fold(f32::MAX, f32::min);
+    assert!(
+        natural_spread > 10.0,
+        "natural tabs must size to content, got {natural_widths:?}"
+    );
+
+    let mut fill_body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TabsValue::new(&all)
+            .fill_width()
+            .show(ui, &mut selected, |_, _| {});
+    };
+    let fill_out = app.step(vec![], &mut fill_body);
+    let fill_tabs = tab_rects(&fill_out);
+    assert_eq!(fill_tabs.len(), 3, "expected three tab rects");
+    let fill_span = fill_tabs.iter().map(|r| r.max.x).fold(0.0, f32::max)
+        - fill_tabs.iter().map(|r| r.min.x).fold(f32::MAX, f32::min);
+    let fill_widths: Vec<f32> = fill_tabs.iter().map(Rect::width).collect();
+    let fill_spread = fill_widths.iter().copied().fold(0.0, f32::max)
+        - fill_widths.iter().copied().fold(f32::MAX, f32::min);
+    assert!(
+        fill_spread < 2.0,
+        "fill_width tabs must share equal widths, got {fill_widths:?}"
+    );
+    assert!(
+        fill_span > natural_span + 200.0,
+        "fill_width bar must stretch beyond natural size, natural {natural_span} fill {fill_span}"
+    );
+}

@@ -1,4 +1,6 @@
 pub mod config;
+#[cfg(any(feature = "build", feature = "android"))]
+pub mod icons;
 #[cfg(target_os = "android")]
 pub mod ime;
 #[cfg(target_os = "android")]

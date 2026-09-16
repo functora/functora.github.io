@@ -1,7 +1,5 @@
 //! Show method for Combobox — renders a searchable dropdown.
 
-use crate::responsive::responsive_ext::ResponsiveExt;
-
 impl super::widget::Combobox {
     /// Shows the combobox. `selected` is the index of the selected item (or None).
     /// `search_text` holds the filter text state.
@@ -54,13 +52,17 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
         let spacing =
             crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
         let height = spacing.touch_height;
-        let width = self.width.unwrap_or_else(|| {
-            if ui.on_mobile() {
-                ui.available_width()
-            } else {
-                220.0_f32.min(ui.available_width())
-            }
-        });
+        let width = crate::widgets::select::select_sizing::trigger_width(
+            ui,
+            self.width,
+            self.entries
+                .iter()
+                .map(|(_, label)| label.as_str())
+                .chain([self.placeholder.as_str()]),
+            h_padding,
+            icon_size + 4.0,
+            220.0,
+        );
         let galley =
             ui.painter()
                 .layout_no_wrap(display, egui::FontId::proportional(14.0), text_color);

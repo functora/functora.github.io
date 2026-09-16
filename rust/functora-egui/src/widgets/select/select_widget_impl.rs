@@ -1,7 +1,5 @@
 //! Widget trait implementation for Select and `SelectValue`.
 
-use crate::responsive::responsive_ext::ResponsiveExt;
-
 impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
     for super::widget::Select<'_, T>
 {
@@ -51,13 +49,18 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = width_opt.unwrap_or_else(|| {
-            if ui.on_mobile() {
-                ui.available_width()
-            } else {
-                ui.available_width().min(200.0)
-            }
-        });
+        let width = super::select_sizing::trigger_width(
+            ui,
+            width_opt,
+            entries
+                .iter()
+                .map(|(_, label)| label.as_str())
+                .chain([placeholder])
+                .chain(text_override),
+            h_padding,
+            chevron_width,
+            200.0,
+        );
         let desired = egui::vec2(width, height);
 
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
@@ -161,30 +164,13 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
         };
 
         let popup_cr = crate::utils::f32_to_u8_clamped(style.corner_radius);
-        let content_w = {
-            let mut max_w: f32 = 144.0;
-            for (_, label) in entries {
-                let w = ui
-                    .painter()
-                    .layout_no_wrap(
-                        label.clone(),
-                        egui::FontId::proportional(14.0),
-                        egui::Color32::PLACEHOLDER,
-                    )
-                    .size()
-                    .x
-                    + 32.0;
-                max_w = max_w.max(w);
-            }
-            max_w
-        };
-        let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
-        let screen_cap = (screen_w - 2.0 * spacing.page_padding - 16.0).max(0.0);
-        let popup_width = if spacing.is_mobile() {
-            crate::utils::clamp_overlay_width(width.max(content_w), 200.0, screen_cap)
-        } else {
-            crate::utils::clamp_overlay_width(content_w.max(width), 144.0, screen_cap)
-        };
+        let popup_width = super::select_sizing::popup_width(
+            ui,
+            width,
+            entries.iter().map(|(_, label)| label.as_str()),
+            200.0,
+            144.0,
+        );
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)
             .frame(
@@ -251,7 +237,14 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
                         );
                     }
 
-                    popup_ui.painter().galley(
+                    let text_region = egui::Rect::from_min_max(
+                        egui::pos2(text_x, item_rect.min.y),
+                        egui::pos2(
+                            (item_rect.max.x - check_icon_size - 12.0).max(text_x),
+                            item_rect.max.y,
+                        ),
+                    );
+                    popup_ui.painter().with_clip_rect(text_region).galley(
                         egui::pos2(text_x, item_rect.center().y - galley.size().y / 2.0),
                         galley,
                         style.item_text,
@@ -314,13 +307,17 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectValueLabeled<'_, T> {
         let height = spacing.touch_height;
         let h_padding: f32 = spacing.touch_padding;
         let chevron_width: f32 = 20.0;
-        let width = width_opt.unwrap_or_else(|| {
-            if ui.on_mobile() {
-                ui.available_width()
-            } else {
-                ui.available_width().min(200.0)
-            }
-        });
+        let width = super::select_sizing::trigger_width(
+            ui,
+            width_opt,
+            entries
+                .iter()
+                .map(|(_, label)| label.as_str())
+                .chain(text_override),
+            h_padding,
+            chevron_width,
+            200.0,
+        );
         let desired = egui::vec2(width, height);
 
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
@@ -373,7 +370,16 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectValueLabeled<'_, T> {
                 rect.min.x + h_padding,
                 rect.center().y - galley.size().y / 2.0,
             );
-            painter.galley(text_pos, galley, style.trigger_text);
+            let text_region = egui::Rect::from_min_max(
+                egui::pos2(rect.min.x + h_padding, rect.min.y),
+                egui::pos2(
+                    (rect.max.x - h_padding - chevron_width).max(rect.min.x),
+                    rect.max.y,
+                ),
+            );
+            painter
+                .with_clip_rect(text_region)
+                .galley(text_pos, galley, style.trigger_text);
 
             let icon_size: f32 = 14.0;
             let chevron_rect = egui::Rect::from_center_size(
@@ -408,30 +414,13 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectValueLabeled<'_, T> {
         };
 
         let popup_cr = crate::utils::f32_to_u8_clamped(style.corner_radius);
-        let content_w = {
-            let mut max_w: f32 = 144.0;
-            for (_, label) in entries {
-                let w = ui
-                    .painter()
-                    .layout_no_wrap(
-                        label.clone(),
-                        egui::FontId::proportional(14.0),
-                        egui::Color32::PLACEHOLDER,
-                    )
-                    .size()
-                    .x
-                    + 32.0;
-                max_w = max_w.max(w);
-            }
-            max_w
-        };
-        let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
-        let screen_cap = (screen_w - 2.0 * spacing.page_padding - 16.0).max(0.0);
-        let popup_width = if spacing.is_mobile() {
-            crate::utils::clamp_overlay_width(width.max(content_w), 200.0, screen_cap)
-        } else {
-            crate::utils::clamp_overlay_width(content_w.max(width), 144.0, screen_cap)
-        };
+        let popup_width = super::select_sizing::popup_width(
+            ui,
+            width,
+            entries.iter().map(|(_, label)| label.as_str()),
+            200.0,
+            144.0,
+        );
         let popup = egui::Popup::new(popup_id, ui.ctx().clone(), &response, ui.layer_id())
             .open_memory(toggle_cmd)
             .frame(
@@ -498,7 +487,14 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectValueLabeled<'_, T> {
                         );
                     }
 
-                    popup_ui.painter().galley(
+                    let text_region = egui::Rect::from_min_max(
+                        egui::pos2(text_x, item_rect.min.y),
+                        egui::pos2(
+                            (item_rect.max.x - check_icon_size - 12.0).max(text_x),
+                            item_rect.max.y,
+                        ),
+                    );
+                    popup_ui.painter().with_clip_rect(text_region).galley(
                         egui::pos2(text_x, item_rect.center().y - galley.size().y / 2.0),
                         galley,
                         style.item_text,

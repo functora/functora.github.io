@@ -10,7 +10,11 @@ impl super::widget::Tabs {
         content: impl FnOnce(&mut egui::Ui, usize),
     ) -> egui::Response {
         let entries: Vec<(usize, String)> = self.labels.into_iter().enumerate().collect();
-        super::widget::TabsValue::new(&entries).show(ui, selected, |tab_ui, value| {
+        let mut typed = super::widget::TabsValue::new(&entries);
+        if self.fill_width {
+            typed = typed.fill_width();
+        }
+        typed.show(ui, selected, |tab_ui, value| {
             content(tab_ui, *value);
         })
     }
@@ -21,6 +25,7 @@ impl super::widget::Tabs {
         label: &str,
         is_active: bool,
         cr: u8,
+        width_opt: Option<f32>,
     ) -> egui::Response {
         let font_size: f32 = 13.0;
         let h_pad: f32 = 12.0;
@@ -33,7 +38,10 @@ impl super::widget::Tabs {
             theme.foreground,
         );
 
-        let desired = egui::vec2(galley.size().x + h_pad * 2.0, height);
+        let desired = egui::vec2(
+            width_opt.unwrap_or_else(|| galley.size().x + h_pad * 2.0),
+            height,
+        );
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(rect) {
@@ -88,7 +96,7 @@ impl super::widget::Tabs {
                 rect.center().x - galley.size().x / 2.0,
                 rect.center().y - galley.size().y / 2.0,
             );
-            painter.galley(text_pos, galley, fg);
+            painter.with_clip_rect(rect).galley(text_pos, galley, fg);
         }
 
         if response.hovered() && !is_active {
@@ -115,8 +123,19 @@ impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = crate::utils::f32_to_u8_clamped(theme.radius);
+        let Self {
+            entries,
+            fill_width,
+        } = self;
+        let count = entries.len();
+        let fill = fill_width && count > 0;
 
         ui.vertical(|inner_ui| {
+            let avail_outer = inner_ui.available_width().max(0.0);
+            let share = fill.then(|| {
+                let gaps = crate::utils::usize_to_f32(count.saturating_sub(1)) * 2.0;
+                (avail_outer - 4.0 - gaps).max(0.0) / crate::utils::usize_to_f32(count).max(1.0)
+            });
             let tab_frame = egui::Frame::NONE
                 .fill(theme.muted)
                 .inner_margin(egui::Margin::same(2))
@@ -125,10 +144,10 @@ impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
             let _ = tab_frame.show(inner_ui, |content_ui| {
                 let _ = content_ui.horizontal(|inner_ui3| {
                     inner_ui3.spacing_mut().item_spacing.x = 2.0;
-                    for (value, label) in self.entries {
+                    for (value, label) in entries {
                         let is_active = *value == *selected;
                         let response = super::widget::Tabs::render_tab(
-                            inner_ui3, &theme, label, is_active, cr,
+                            inner_ui3, &theme, label, is_active, cr, share,
                         );
                         if response.clicked() {
                             *selected = value.clone();
@@ -157,9 +176,14 @@ impl super::widget::IconTabs {
         selected: &mut usize,
         content: impl FnOnce(&mut egui::Ui, usize),
     ) -> egui::Response {
+        let fill = self.fill_width;
         let entries: Vec<(usize, super::widget::TabEntry)> =
             self.entries.into_iter().enumerate().collect();
-        super::widget::IconTabsValue::new(&entries).show(ui, selected, |tab_ui, value| {
+        let mut typed = super::widget::IconTabsValue::new(&entries);
+        if fill {
+            typed = typed.fill_width();
+        }
+        typed.show(ui, selected, |tab_ui, value| {
             content(tab_ui, *value);
         })
     }
@@ -170,12 +194,13 @@ impl super::widget::IconTabs {
         entry: &super::widget::TabEntry,
         is_active: bool,
         cr: u8,
+        width_opt: Option<f32>,
     ) -> egui::Response {
         let size = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let icon_size: f32 = 14.0;
 
-        let desired = egui::vec2(size, size);
+        let desired = egui::vec2(width_opt.unwrap_or(size), size);
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(rect) {
@@ -234,7 +259,7 @@ impl super::widget::IconTabs {
                         rect.center().x - galley.size().x / 2.0,
                         rect.center().y - galley.size().y / 2.0,
                     );
-                    painter.galley(text_pos, galley, fg);
+                    painter.with_clip_rect(rect).galley(text_pos, galley, fg);
                 }
                 super::widget::TabEntry::Icon { icon, .. } => {
                     let icon_rect = egui::Rect::from_center_size(
@@ -275,8 +300,19 @@ impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let cr = crate::utils::f32_to_u8_clamped(theme.radius);
+        let Self {
+            entries,
+            fill_width,
+        } = self;
+        let count = entries.len();
+        let fill = fill_width && count > 0;
 
         ui.vertical(|inner_ui| {
+            let avail_outer = inner_ui.available_width().max(0.0);
+            let share = fill.then(|| {
+                let gaps = crate::utils::usize_to_f32(count.saturating_sub(1)) * 2.0;
+                (avail_outer - 4.0 - gaps).max(0.0) / crate::utils::usize_to_f32(count).max(1.0)
+            });
             let tab_frame = egui::Frame::NONE
                 .fill(theme.muted)
                 .inner_margin(egui::Margin::same(2))
@@ -285,10 +321,10 @@ impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
             let _ = tab_frame.show(inner_ui, |content_ui| {
                 let _ = content_ui.horizontal(|inner_ui3| {
                     inner_ui3.spacing_mut().item_spacing.x = 2.0;
-                    for (value, entry) in self.entries {
+                    for (value, entry) in entries {
                         let is_active = *value == *selected;
                         let response = super::widget::IconTabs::render_icon_tab(
-                            inner_ui3, &theme, entry, is_active, cr,
+                            inner_ui3, &theme, entry, is_active, cr, share,
                         );
                         if response.clicked() {
                             *selected = value.clone();

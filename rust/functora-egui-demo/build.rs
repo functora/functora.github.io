@@ -22,6 +22,11 @@ fn main() {
     println!(
         "cargo:rerun-if-changed=../functora-egui/templates/android/app/src/main/java/Waker.java"
     );
+    println!("cargo:rerun-if-changed=assets/favicon/mipmap-mdpi.png");
+    println!("cargo:rerun-if-changed=assets/favicon/mipmap-hdpi.png");
+    println!("cargo:rerun-if-changed=assets/favicon/mipmap-xhdpi.png");
+    println!("cargo:rerun-if-changed=assets/favicon/mipmap-xxhdpi.png");
+    println!("cargo:rerun-if-changed=assets/favicon/mipmap-xxxhdpi.png");
 
     let android_cfg = functora_egui::android::config::load_android_config("Cargo.toml");
     let web_cfg = functora_egui::web::config::load_config("Cargo.toml");
@@ -96,6 +101,11 @@ fn main() {
             eprintln!("failed to remove stale camera helper: {e}");
         }
     }
+    let _ = functora_egui::android::icons::copy_launcher_icons(
+        std::path::Path::new("android"),
+        std::path::Path::new("assets/favicon"),
+    )
+    .expect("copy launcher icons");
 
     if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default() != "wasm32" {
         return;

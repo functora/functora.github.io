@@ -1,6 +1,0 @@
-<resources>
-    <style name="Theme.GameActivity" parent="Theme.AppCompat.NoActionBar">
-        <item name="android:windowLayoutInDisplayCutoutMode">shortEdges</item>
-        <item name="android:windowBackground">@android:color/black</item>
-    </style>
-</resources>

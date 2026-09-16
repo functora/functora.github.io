@@ -25,14 +25,16 @@ impl CryptonoteApp {
             (ActionMode::Open, Msg::ActionOpen.render(lang)),
             (ActionMode::Scan, Msg::ActionScan.render(lang)),
         ];
-        _ = TabsValue::new(&entries).show(ui, &mut tab, |tab_ui, mode| {
-            self.temporary.action = *mode;
-            match self.temporary.action {
-                ActionMode::Create => self.home_create(tab_ui),
-                ActionMode::Open => self.home_open(tab_ui),
-                ActionMode::Scan => self.home_scan(tab_ui),
-            }
-        });
+        _ = TabsValue::new(&entries)
+            .fill_width()
+            .show(ui, &mut tab, |tab_ui, mode| {
+                self.temporary.action = *mode;
+                match self.temporary.action {
+                    ActionMode::Create => self.home_create(tab_ui),
+                    ActionMode::Open => self.home_open(tab_ui),
+                    ActionMode::Scan => self.home_scan(tab_ui),
+                }
+            });
         let () = ui.add_space(12.0);
         if let Some(job) = self.temporary.progress.clone() {
             _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));

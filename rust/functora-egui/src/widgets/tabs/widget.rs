@@ -4,11 +4,21 @@
 #[must_use]
 pub struct Tabs {
     pub(crate) labels: Vec<String>,
+    pub(crate) fill_width: bool,
 }
 
 impl Tabs {
     pub fn new(labels: Vec<String>) -> Self {
-        Self { labels }
+        Self {
+            labels,
+            fill_width: false,
+        }
+    }
+
+    /// Stretch the tab bar to the available width with equal-width tabs.
+    pub fn fill_width(mut self) -> Self {
+        self.fill_width = true;
+        self
     }
 }
 
@@ -17,11 +27,21 @@ impl Tabs {
 #[must_use]
 pub struct TabsValue<'a, T: Clone + PartialEq> {
     pub(crate) entries: &'a [(T, String)],
+    pub(crate) fill_width: bool,
 }
 
 impl<'a, T: Clone + PartialEq> TabsValue<'a, T> {
     pub fn new(entries: &'a [(T, String)]) -> Self {
-        Self { entries }
+        Self {
+            entries,
+            fill_width: false,
+        }
+    }
+
+    /// Stretch the tab bar to the available width with equal-width tabs.
+    pub fn fill_width(mut self) -> Self {
+        self.fill_width = true;
+        self
     }
 }
 
@@ -38,11 +58,21 @@ pub enum TabEntry {
 #[must_use]
 pub struct IconTabs {
     pub(crate) entries: Vec<TabEntry>,
+    pub(crate) fill_width: bool,
 }
 
 impl IconTabs {
     pub fn new(entries: Vec<TabEntry>) -> Self {
-        Self { entries }
+        Self {
+            entries,
+            fill_width: false,
+        }
+    }
+
+    /// Stretch the tab bar to the available width with equal-width tabs.
+    pub fn fill_width(mut self) -> Self {
+        self.fill_width = true;
+        self
     }
 }
 
@@ -51,10 +81,20 @@ impl IconTabs {
 #[must_use]
 pub struct IconTabsValue<'a, T: Clone + PartialEq> {
     pub(crate) entries: &'a [(T, TabEntry)],
+    pub(crate) fill_width: bool,
 }
 
 impl<'a, T: Clone + PartialEq> IconTabsValue<'a, T> {
     pub fn new(entries: &'a [(T, TabEntry)]) -> Self {
-        Self { entries }
+        Self {
+            entries,
+            fill_width: false,
+        }
+    }
+
+    /// Stretch the tab bar to the available width with equal-width tabs.
+    pub fn fill_width(mut self) -> Self {
+        self.fill_width = true;
+        self
     }
 }

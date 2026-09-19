@@ -465,6 +465,8 @@ impl eframe::App for CryptonoteApp {
         self.poll_receivers(&ctx);
         self.handle_deep_link();
         self.router.ui(ui, &mut ());
+        #[cfg(target_os = "android")]
+        functora_egui::android::poll_ime(&ctx);
         let routed = *self.router.current();
         if routed != self.temporary.screen {
             self.temporary.screen = routed;

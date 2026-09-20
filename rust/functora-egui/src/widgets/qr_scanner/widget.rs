@@ -14,7 +14,7 @@ type ErrorFn = Arc<dyn Fn(&Error) + Send + Sync>;
 /// for every distinct code, rate-limited by `.dedupe_ms`.
 #[must_use]
 pub struct QrScanner {
-    desired_size: egui::Vec2,
+    desired_size: Option<egui::Vec2>,
     fps: f32,
     decode_fps: f32,
     dedupe_ms: u64,
@@ -27,7 +27,7 @@ pub struct QrScanner {
 impl Default for QrScanner {
     fn default() -> Self {
         Self {
-            desired_size: egui::vec2(320.0, 240.0),
+            desired_size: None,
             fps: 15.0,
             decode_fps: 5.0,
             dedupe_ms: 1500,
@@ -45,7 +45,7 @@ impl QrScanner {
     }
 
     pub fn desired_size(mut self, size: egui::Vec2) -> Self {
-        self.desired_size = size;
+        self.desired_size = Some(size);
         self
     }
 
@@ -112,13 +112,29 @@ impl QrScanner {
             )))
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
-                let desired = self.desired_size;
+                let desired_opt = self.desired_size;
                 if let Some((rgba, w, h)) = state.drain_rgba() {
                     state.store_preview(inner.ctx(), &rgba, w, h);
                 }
-                let fitted = state.preview_size().map_or(desired, |(fw, fh)| {
-                    crate::utils::fit_preview_size(desired, fw, fh)
-                });
+                let viewport = inner.ctx().input(egui::InputState::viewport_rect);
+                let fitted = desired_opt.map_or_else(
+                    || {
+                        let (frame_w, frame_h) = state.preview_size().unwrap_or((4, 3));
+                        crate::utils::responsive_preview_size(
+                            inner.available_width(),
+                            inner.available_height(),
+                            viewport.width(),
+                            viewport.height(),
+                            frame_w,
+                            frame_h,
+                        )
+                    },
+                    |desired| {
+                        state.preview_size().map_or(desired, |(frame_w, frame_h)| {
+                            crate::utils::fit_preview_size(desired, frame_w, frame_h)
+                        })
+                    },
+                );
                 let running = state.is_scanning();
                 match state.preview_texture() {
                     Some(tex) => {

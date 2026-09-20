@@ -209,6 +209,45 @@ pub fn rotate_rgba(
     }
 }
 
+pub const RESPONSIVE_PREVIEW_MAX_SIDE: f32 = 480.0;
+pub const RESPONSIVE_PREVIEW_FALLBACK_WIDTH: f32 = 320.0;
+pub const RESPONSIVE_PREVIEW_FALLBACK_ASPECT: f32 = 4.0 / 3.0;
+
+#[must_use]
+pub fn responsive_preview_size(
+    available_w: f32,
+    available_h: f32,
+    viewport_w: f32,
+    viewport_h: f32,
+    frame_width: u32,
+    frame_height: u32,
+) -> egui::Vec2 {
+    let width = (if available_w.is_finite() && available_w > 0.0 {
+        available_w
+    } else {
+        RESPONSIVE_PREVIEW_FALLBACK_WIDTH
+    })
+    .clamp(1.0, RESPONSIVE_PREVIEW_MAX_SIDE);
+    let aspect = if frame_width == 0 || frame_height == 0 {
+        RESPONSIVE_PREVIEW_FALLBACK_ASPECT
+    } else {
+        u32_to_f32(frame_width) / u32_to_f32(frame_height).max(1.0)
+    }
+    .max(0.01);
+    let driven_h = (width / aspect).max(1.0);
+    let portrait = viewport_w.is_finite()
+        && viewport_h.is_finite()
+        && viewport_w > 0.0
+        && viewport_h > viewport_w;
+    if portrait || !(available_h.is_finite() && available_h > 0.0) {
+        egui::vec2(width, driven_h)
+    } else {
+        let height_cap = available_h.min(RESPONSIVE_PREVIEW_MAX_SIDE);
+        let capped_h = driven_h.min(height_cap.max(1.0));
+        egui::vec2((capped_h * aspect).max(1.0), capped_h)
+    }
+}
+
 #[must_use]
 pub fn fit_preview_size(desired: egui::Vec2, frame_width: u32, frame_height: u32) -> egui::Vec2 {
     if frame_width == 0 || frame_height == 0 || desired.x <= 0.0 || desired.y <= 0.0 {

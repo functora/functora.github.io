@@ -5,7 +5,7 @@ use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 /// platform frame pump.
 #[must_use]
 pub struct CameraView {
-    desired_size: egui::Vec2,
+    desired_size: Option<egui::Vec2>,
     fps: f32,
     auto_start: bool,
     controls: bool,
@@ -14,7 +14,7 @@ pub struct CameraView {
 impl Default for CameraView {
     fn default() -> Self {
         Self {
-            desired_size: egui::vec2(320.0, 240.0),
+            desired_size: None,
             fps: 15.0,
             auto_start: true,
             controls: false,
@@ -28,7 +28,7 @@ impl CameraView {
     }
 
     pub fn desired_size(mut self, size: egui::Vec2) -> Self {
-        self.desired_size = size;
+        self.desired_size = Some(size);
         self
     }
 
@@ -66,9 +66,25 @@ impl CameraView {
                 if let Some((rgba, w, h)) = state.drain_rgba() {
                     state.store_texture(inner.ctx(), &rgba, w, h);
                 }
-                let fitted = state.preview_size().map_or(self.desired_size, |(fw, fh)| {
-                    crate::utils::fit_preview_size(self.desired_size, fw, fh)
-                });
+                let viewport = inner.ctx().input(egui::InputState::viewport_rect);
+                let fitted = self.desired_size.map_or_else(
+                    || {
+                        let (frame_w, frame_h) = state.preview_size().unwrap_or((4, 3));
+                        crate::utils::responsive_preview_size(
+                            inner.available_width(),
+                            inner.available_height(),
+                            viewport.width(),
+                            viewport.height(),
+                            frame_w,
+                            frame_h,
+                        )
+                    },
+                    |desired| {
+                        state.preview_size().map_or(desired, |(frame_w, frame_h)| {
+                            crate::utils::fit_preview_size(desired, frame_w, frame_h)
+                        })
+                    },
+                );
                 let running = state.is_running();
                 let error = state.error();
                 match state.take_texture().clone() {

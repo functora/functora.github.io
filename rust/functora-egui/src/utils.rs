@@ -64,6 +64,166 @@ pub fn pixel_area_len(width: u32, height: u32) -> usize {
     usize::try_from(u64::from(width) * u64::from(height)).unwrap_or(usize::MAX)
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum FrameRotation {
+    Zero,
+    Cw90,
+    Cw180,
+    Cw270,
+}
+
+impl FrameRotation {
+    #[must_use]
+    pub fn from_degrees_cw(degrees: u32) -> Self {
+        if degrees == 90 {
+            Self::Cw90
+        } else if degrees == 180 {
+            Self::Cw180
+        } else if degrees == 270 {
+            Self::Cw270
+        } else {
+            Self::Zero
+        }
+    }
+
+    #[must_use]
+    pub fn degrees_cw(self) -> u32 {
+        match self {
+            Self::Zero => 0,
+            Self::Cw90 => 90,
+            Self::Cw180 => 180,
+            Self::Cw270 => 270,
+        }
+    }
+
+    #[must_use]
+    pub fn swaps_dimensions(self) -> bool {
+        match self {
+            Self::Cw90 | Self::Cw270 => true,
+            Self::Zero | Self::Cw180 => false,
+        }
+    }
+}
+
+const MAX_FRAME_AREA: usize = 16_777_216;
+
+#[must_use]
+pub fn rotated_dimensions(width: u32, height: u32, rotation: FrameRotation) -> (u32, u32) {
+    match rotation {
+        FrameRotation::Zero | FrameRotation::Cw180 => (width, height),
+        FrameRotation::Cw90 | FrameRotation::Cw270 => (height, width),
+    }
+}
+
+#[must_use]
+pub fn rotate_luma(
+    luma: &[u8],
+    width: u32,
+    height: u32,
+    rotation: FrameRotation,
+) -> (Vec<u8>, u32, u32) {
+    let (out_w, out_h) = rotated_dimensions(width, height, rotation);
+    let area = pixel_area_len(width, height);
+    if width == 0 || height == 0 || area > MAX_FRAME_AREA {
+        (Vec::new(), out_w, out_h)
+    } else {
+        let src_w = width as usize;
+        let src_h = height as usize;
+        let dst_w = out_w as usize;
+        let dst_h = out_h as usize;
+        let pixels: Vec<u8> = (0..dst_h)
+            .flat_map(|dst_y| {
+                (0..dst_w).map(move |dst_x| {
+                    let (src_x, src_y) = match rotation {
+                        FrameRotation::Zero => (dst_x, dst_y),
+                        FrameRotation::Cw90 => {
+                            (dst_y, src_h.saturating_sub(1).saturating_sub(dst_x))
+                        }
+                        FrameRotation::Cw180 => (
+                            src_w.saturating_sub(1).saturating_sub(dst_x),
+                            src_h.saturating_sub(1).saturating_sub(dst_y),
+                        ),
+                        FrameRotation::Cw270 => {
+                            (src_w.saturating_sub(1).saturating_sub(dst_y), dst_x)
+                        }
+                    };
+                    luma.get(src_y.saturating_mul(src_w).saturating_add(src_x))
+                        .copied()
+                        .unwrap_or(0)
+                })
+            })
+            .collect();
+        (pixels, out_w, out_h)
+    }
+}
+
+#[must_use]
+pub fn rotate_rgba(
+    rgba: &[u8],
+    width: u32,
+    height: u32,
+    rotation: FrameRotation,
+) -> (Vec<u8>, u32, u32) {
+    let (out_w, out_h) = rotated_dimensions(width, height, rotation);
+    let area = pixel_area_len(width, height);
+    if width == 0
+        || height == 0
+        || area > MAX_FRAME_AREA
+        || area.saturating_mul(4) > MAX_FRAME_AREA.saturating_mul(4)
+    {
+        (Vec::new(), out_w, out_h)
+    } else {
+        let src_w = width as usize;
+        let src_h = height as usize;
+        let dst_w = out_w as usize;
+        let dst_h = out_h as usize;
+        let pixels: Vec<u8> = (0..dst_h)
+            .flat_map(|dst_y| {
+                (0..dst_w).flat_map(move |dst_x| {
+                    let (src_x, src_y) = match rotation {
+                        FrameRotation::Zero => (dst_x, dst_y),
+                        FrameRotation::Cw90 => {
+                            (dst_y, src_h.saturating_sub(1).saturating_sub(dst_x))
+                        }
+                        FrameRotation::Cw180 => (
+                            src_w.saturating_sub(1).saturating_sub(dst_x),
+                            src_h.saturating_sub(1).saturating_sub(dst_y),
+                        ),
+                        FrameRotation::Cw270 => {
+                            (src_w.saturating_sub(1).saturating_sub(dst_y), dst_x)
+                        }
+                    };
+                    let base = src_y
+                        .saturating_mul(src_w)
+                        .saturating_add(src_x)
+                        .saturating_mul(4);
+                    (0..4).map(move |channel| {
+                        rgba.get(base.saturating_add(channel))
+                            .copied()
+                            .unwrap_or(if channel == 3 { 255 } else { 0 })
+                    })
+                })
+            })
+            .collect();
+        (pixels, out_w, out_h)
+    }
+}
+
+#[must_use]
+pub fn fit_preview_size(desired: egui::Vec2, frame_width: u32, frame_height: u32) -> egui::Vec2 {
+    if frame_width == 0 || frame_height == 0 || desired.x <= 0.0 || desired.y <= 0.0 {
+        desired
+    } else {
+        let frame_aspect = u32_to_f32(frame_width) / u32_to_f32(frame_height).max(1.0);
+        let box_aspect = desired.x / desired.y.max(1.0);
+        if frame_aspect > box_aspect {
+            egui::vec2(desired.x, (desired.x / frame_aspect.max(0.01)).max(1.0))
+        } else {
+            egui::vec2((desired.y * frame_aspect).max(1.0), desired.y)
+        }
+    }
+}
+
 #[must_use]
 pub fn nv21_luma(nv21: &[u8], width: u32, height: u32) -> Vec<u8> {
     let len = pixel_area_len(width, height);

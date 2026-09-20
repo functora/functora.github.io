@@ -477,6 +477,17 @@ pub(crate) fn start_camera_blocking() -> Result<(), Error> {
     Ok(())
 }
 
+pub(crate) fn frame_rotation_blocking() -> crate::utils::FrameRotation {
+    helper_call(|env, activity| {
+        let value = env.call_method(activity, "cameraFrameRotation", "()I", &[])?;
+        value.i()
+    })
+    .ok()
+    .map_or(crate::utils::FrameRotation::Zero, |degrees| {
+        crate::utils::FrameRotation::from_degrees_cw(u32::try_from(degrees).unwrap_or(0))
+    })
+}
+
 /// Blocking single-frame capture used by the android scan loop.
 #[allow(clippy::similar_names)]
 pub(crate) fn capture_frame_blocking() -> Result<FrameData, Error> {
@@ -509,7 +520,8 @@ pub(crate) fn capture_frame_blocking() -> Result<FrameData, Error> {
         width,
         height,
         preview_rgba: Some(crate::utils::nv21_to_rgba(&nv21, width, height)),
-    })
+    }
+    .upright(frame_rotation_blocking()))
 }
 
 pub(crate) fn stop_camera_blocking() {

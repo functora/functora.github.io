@@ -3,6 +3,7 @@ package {{ package }};
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.graphics.ImageFormat;
 import android.graphics.SurfaceTexture;
@@ -11,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -126,6 +128,52 @@ public class MainActivity extends GameActivity {
     /** Packed frame dimensions: high 32 bits = width, low 32 bits = height. */
     public synchronized long cameraSizeCode() {
         return ((long) frameWidth << 32) | (frameHeight & 0xFFFFFFFFL);
+    }
+
+    public synchronized int cameraFrameRotation() {
+        try {
+            int sensor = 90;
+            try {
+                int count = Camera.getNumberOfCameras();
+                Camera.CameraInfo info = new Camera.CameraInfo();
+                for (int i = 0; i < count; i++) {
+                    Camera.getCameraInfo(i, info);
+                    if (info.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                        sensor = info.orientation;
+                        break;
+                    }
+                }
+            } catch (Throwable ignored) {
+            }
+            int displayDegrees = 0;
+            try {
+                int rotation = getWindowManager().getDefaultDisplay().getRotation();
+                if (rotation == Surface.ROTATION_90) {
+                    displayDegrees = 90;
+                } else if (rotation == Surface.ROTATION_180) {
+                    displayDegrees = 180;
+                } else if (rotation == Surface.ROTATION_270) {
+                    displayDegrees = 270;
+                }
+            } catch (Throwable ignored) {
+                try {
+                    int orientation = getResources().getConfiguration().orientation;
+                    if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                        displayDegrees = 0;
+                    } else if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                        displayDegrees = 90;
+                    }
+                } catch (Throwable ignored2) {
+                }
+            }
+            int result = (sensor - displayDegrees + 360) % 360;
+            if (result == 0 || result == 90 || result == 180 || result == 270) {
+                return result;
+            }
+            return 0;
+        } catch (Throwable t) {
+            return 0;
+        }
     }
 
     public synchronized void cameraStop() {

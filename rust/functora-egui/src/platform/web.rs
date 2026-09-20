@@ -341,12 +341,24 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
         })
         .collect();
     CAPTURE_ARMED.with(|c| c.set(true));
+    let viewport_portrait = window
+        .inner_width()
+        .ok()
+        .and_then(|value| value.as_f64())
+        .zip(window.inner_height().ok().and_then(|value| value.as_f64()))
+        .is_some_and(|(w, h)| h > w);
+    let rotation = if viewport_portrait && scaled_w > scaled_h {
+        crate::utils::FrameRotation::Cw90
+    } else {
+        crate::utils::FrameRotation::Zero
+    };
     Ok(FrameData {
         data: luma,
         width: scaled_w,
         height: scaled_h,
         preview_rgba: Some(rgba),
-    })
+    }
+    .upright(rotation))
 }
 
 pub async fn stop_camera() -> Result<(), Error> {

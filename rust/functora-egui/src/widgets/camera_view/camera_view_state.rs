@@ -33,6 +33,7 @@ pub struct FeedInner {
 pub struct CameraViewState {
     inner: Arc<Mutex<FeedInner>>,
     texture: Option<egui::TextureHandle>,
+    preview_dims: Option<(u32, u32)>,
     in_flight: InFlight,
     handler: Option<FrameHandler>,
 }
@@ -45,6 +46,7 @@ impl Default for CameraViewState {
                 ..FeedInner::default()
             })),
             texture: None,
+            preview_dims: None,
             in_flight: InFlight::default(),
             handler: None,
         }
@@ -166,6 +168,11 @@ impl CameraViewState {
         &mut self.texture
     }
 
+    #[must_use]
+    pub fn preview_size(&self) -> Option<(u32, u32)> {
+        self.preview_dims
+    }
+
     /// Uploads a frame into the preview texture, reusing the existing handle.
     pub(crate) fn store_texture(
         &mut self,
@@ -174,17 +181,24 @@ impl CameraViewState {
         width: u32,
         height: u32,
     ) {
-        let image =
-            egui::ColorImage::from_rgba_unmultiplied([width as usize, height as usize], rgba);
-        match &self.texture {
-            Some(tex) => {
-                let mut updated = egui::TextureHandle::clone(tex);
-                updated.set(image, egui::TextureOptions::LINEAR);
+        let expected = crate::utils::pixel_area_len(width, height).saturating_mul(4);
+        if width != 0 && height != 0 && expected != 0 && rgba.len() == expected {
+            let image =
+                egui::ColorImage::from_rgba_unmultiplied([width as usize, height as usize], rgba);
+            match &self.texture {
+                Some(tex) => {
+                    let mut updated = egui::TextureHandle::clone(tex);
+                    updated.set(image, egui::TextureOptions::LINEAR);
+                }
+                None => {
+                    self.texture = Some(ctx.load_texture(
+                        "functora-camera",
+                        image,
+                        egui::TextureOptions::LINEAR,
+                    ));
+                }
             }
-            None => {
-                self.texture =
-                    Some(ctx.load_texture("functora-camera", image, egui::TextureOptions::LINEAR));
-            }
+            self.preview_dims = Some((width, height));
         }
     }
 }

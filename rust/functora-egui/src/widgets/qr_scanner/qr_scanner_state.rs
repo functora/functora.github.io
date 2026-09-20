@@ -114,6 +114,11 @@ impl QrScannerState {
         self.camera.take_texture().clone()
     }
 
+    #[must_use]
+    pub fn preview_size(&self) -> Option<(u32, u32)> {
+        self.camera.preview_size()
+    }
+
     pub(crate) fn on_error_callback(&self) -> Option<ErrorCallback> {
         self.runtime.lock().ok().and_then(|rt| rt.on_error.clone())
     }

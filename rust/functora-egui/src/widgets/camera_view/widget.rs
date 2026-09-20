@@ -66,12 +66,15 @@ impl CameraView {
                 if let Some((rgba, w, h)) = state.drain_rgba() {
                     state.store_texture(inner.ctx(), &rgba, w, h);
                 }
+                let fitted = state.preview_size().map_or(self.desired_size, |(fw, fh)| {
+                    crate::utils::fit_preview_size(self.desired_size, fw, fh)
+                });
                 let running = state.is_running();
                 let error = state.error();
                 match state.take_texture().clone() {
                     Some(tex) => {
                         let _ = inner.add(
-                            egui::Image::new((tex.id(), self.desired_size))
+                            egui::Image::new((tex.id(), fitted))
                                 .corner_radius(egui::CornerRadius::same(8)),
                         );
                         if running {
@@ -79,11 +82,11 @@ impl CameraView {
                         }
                     }
                     None if running => {
-                        placeholder(inner, self.desired_size, &theme, "Starting camera…");
+                        placeholder(inner, fitted, &theme, "Starting camera…");
                         inner.ctx().request_repaint();
                     }
                     None => {
-                        placeholder(inner, self.desired_size, &theme, "Camera off");
+                        placeholder(inner, fitted, &theme, "Camera off");
                     }
                 }
                 if let Some(err) = error {

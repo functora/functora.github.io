@@ -8,6 +8,28 @@ pub struct FrameData {
     pub preview_rgba: Option<Vec<u8>>,
 }
 
+impl FrameData {
+    #[must_use]
+    pub fn upright(self, rotation: crate::utils::FrameRotation) -> Self {
+        let Self {
+            data,
+            width,
+            height,
+            preview_rgba,
+        } = self;
+        let (upright_data, upright_width, upright_height) =
+            crate::utils::rotate_luma(&data, width, height, rotation);
+        let upright_preview =
+            preview_rgba.map(|rgba| crate::utils::rotate_rgba(&rgba, width, height, rotation).0);
+        Self {
+            data: upright_data,
+            width: upright_width,
+            height: upright_height,
+            preview_rgba: upright_preview,
+        }
+    }
+}
+
 fn camera_error(msg: String) -> Error {
     if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
         Error::CameraPermissionDenied(msg)

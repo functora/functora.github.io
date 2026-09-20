@@ -112,20 +112,23 @@ impl QrScanner {
             )))
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
-                let desired_size = self.desired_size;
+                let desired = self.desired_size;
                 if let Some((rgba, w, h)) = state.drain_rgba() {
                     state.store_preview(inner.ctx(), &rgba, w, h);
                 }
+                let fitted = state.preview_size().map_or(desired, |(fw, fh)| {
+                    crate::utils::fit_preview_size(desired, fw, fh)
+                });
                 let running = state.is_scanning();
                 match state.preview_texture() {
                     Some(tex) => {
                         let id = tex.id();
                         let _ = inner.add(
-                            egui::Image::new((id, desired_size))
+                            egui::Image::new((id, fitted))
                                 .corner_radius(egui::CornerRadius::same(8)),
                         );
                     }
-                    None => placeholder(inner, desired_size, &theme, "Starting camera…"),
+                    None => placeholder(inner, fitted, &theme, "Starting camera…"),
                 }
                 if running {
                     inner.ctx().request_repaint();

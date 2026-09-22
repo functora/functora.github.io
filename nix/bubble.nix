@@ -18,13 +18,13 @@
   app = pkgs.writeShellApplication {
     inherit name text runtimeInputs;
   };
+  sandboxHome =
+    if home == null
+    then "/tmp"
+    else "/home/${user}";
   passwd = pkgs.writeTextFile {
     name = "passwd";
-    text = "${user}:x:1000:1000:${user}:${
-      if home == null
-      then "/tmp"
-      else "/home/${user}"
-    }:/bin/sh";
+    text = "${user}:x:1000:1000:${user}:${sandboxHome}:/bin/sh";
   };
   asound = pkgs.writeText "asound.conf" ''
     pcm.!default {
@@ -49,7 +49,16 @@
             dieWithParent = true;
             sockets.pulse = true;
             sockets.wayland = true;
-            env.ALSA_PLUGIN_DIR = "${pkgs.alsa-plugins}/lib/alsa-lib";
+            env = {
+              USER = user;
+              LOGNAME = user;
+              HOME = sloth.homeDir;
+              XDG_DATA_HOME = sloth.concat' sloth.homeDir "/.local/share";
+              XDG_CACHE_HOME = sloth.concat' sloth.homeDir "/.cache";
+              XDG_STATE_HOME = sloth.concat' sloth.homeDir "/.local/state";
+              XDG_CONFIG_HOME = sloth.concat' sloth.homeDir "/.config";
+              ALSA_PLUGIN_DIR = "${pkgs.alsa-plugins}/lib/alsa-lib";
+            };
             bind.ro = [
               [(toString passwd) "/etc/passwd"]
               [(toString asound) "/etc/asound.conf"]
@@ -64,9 +73,10 @@
                   sloth.homeDir
                 ]
               ];
-            tmpfs = [
-              "/tmp"
-            ];
+            tmpfs =
+              if home == null
+              then ["/tmp" sloth.homeDir]
+              else ["/tmp"];
           };
         }
         // mkExtend sloth

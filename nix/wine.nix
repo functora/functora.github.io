@@ -1,6 +1,9 @@
-{pkgs ? import <nixpkgs> {}}:
+{
+  pkgs ? import <nixpkgs> {},
+  user ? "wine",
+}:
 import ./bubble.nix {
-  inherit pkgs;
+  inherit pkgs user;
   name = "wine";
   text = "alacritty";
   runtimeInputs = with pkgs; [

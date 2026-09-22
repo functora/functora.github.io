@@ -765,7 +765,10 @@ in {
           pkgs = unst;
           user = config.services.functora.userName;
         })
-        (import ./wine.nix {inherit pkgs;})
+        (import ./wine.nix {
+          inherit pkgs;
+          user = config.services.functora.userName;
+        })
         (import ./prusa.nix {inherit pkgs;})
         (import ./freecad.nix {inherit pkgs;})
         (import ./wf-recorder.nix {})

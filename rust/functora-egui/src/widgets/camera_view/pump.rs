@@ -3,8 +3,6 @@
 use super::camera_view_state::{FeedInner, FrameHandler};
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
 use super::camera_view_state::{camera_epoch, map_camera_error};
-#[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
-use crate::camera::FrameData;
 use crate::error::Error;
 use crate::in_flight::InFlightGuard;
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
@@ -23,12 +21,18 @@ fn set_error(feed: &Arc<Mutex<FeedInner>>, epoch: u64, err: &Error) {
 }
 
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
-fn store_frame(feed: &Arc<Mutex<FeedInner>>, epoch: u64, frame: &FrameData) {
-    if let Some(rgba) = frame.preview_rgba.clone()
+fn store_frame(
+    feed: &Arc<Mutex<FeedInner>>,
+    epoch: u64,
+    preview: Option<Vec<u8>>,
+    width: u32,
+    height: u32,
+) {
+    if let Some(rgba) = preview
         && let Ok(mut guard) = feed.lock()
         && guard.epoch == epoch
     {
-        guard.latest_rgba = Some((rgba, frame.width, frame.height));
+        guard.latest_rgba = Some((rgba, width, height));
     }
 }
 
@@ -44,7 +48,12 @@ fn session_alive(feed: &Arc<Mutex<FeedInner>>, epoch: u64) -> bool {
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
 fn finish(_feed: &Arc<Mutex<FeedInner>>, ctx: &egui::Context, epoch: u64) {
     if camera_epoch() == epoch {
-        drop(crate::camera::stop_camera());
+        #[cfg(all(target_arch = "wasm32", feature = "web"))]
+        wasm_bindgen_futures::spawn_local(async {
+            drop(crate::camera::stop_camera().await);
+        });
+        #[cfg(target_os = "android")]
+        crate::platform::android::stop_camera_blocking();
     }
     crate::camera::stop_capture_worker();
     ctx.request_repaint();
@@ -83,8 +92,14 @@ pub(crate) fn spawn_web_pump(
                 break;
             }
             match crate::camera::capture_frame().await {
-                Ok(frame) => {
-                    store_frame(&feed, epoch, &frame);
+                Ok(mut frame) => {
+                    store_frame(
+                        &feed,
+                        epoch,
+                        frame.preview_rgba.take(),
+                        frame.width,
+                        frame.height,
+                    );
                     if handler(&ctx, &frame) == ControlFlow::Break(()) {
                         break;
                     }
@@ -140,8 +155,14 @@ pub(crate) fn spawn_android_pump(
                     break;
                 }
                 match crate::platform::android::capture_frame_blocking() {
-                    Ok(frame) => {
-                        store_frame(&feed, epoch, &frame);
+                    Ok(mut frame) => {
+                        store_frame(
+                            &feed,
+                            epoch,
+                            frame.preview_rgba.take(),
+                            frame.width,
+                            frame.height,
+                        );
                         if handler(&ctx, &frame) == ControlFlow::Break(()) {
                             break;
                         }

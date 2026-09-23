@@ -1,6 +1,6 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
-use functora_core::qr::{decode_qr_luma, qr_rgba};
+use functora_core::qr::{decode_qr_luma, decode_qr_luma_fast, qr_rgba};
 
 fn luma_of(rgba: &[u8]) -> Vec<u8> {
     rgba.chunks_exact(4)
@@ -36,4 +36,12 @@ fn qr_rgba_roundtrips_through_decode_qr_luma() {
     let (w, h, rgba) = qr_rgba(url, 512).expect("qr");
     let luma = luma_of(&rgba);
     assert_eq!(decode_qr_luma(&luma, w, h).as_deref(), Some(url));
+}
+
+#[test]
+fn qr_rgba_roundtrips_through_decode_qr_luma_fast() {
+    let url = "https://functora.github.io/apps/cryptonote/?note=SGVsbG8%3D";
+    let (w, h, rgba) = qr_rgba(url, 512).expect("qr");
+    let luma = luma_of(&rgba);
+    assert_eq!(decode_qr_luma_fast(&luma, w, h).as_deref(), Some(url));
 }

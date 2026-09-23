@@ -53,6 +53,7 @@ features = [
   "HtmlInputElement",
   "HtmlAnchorElement",
   "CanvasRenderingContext2d",
+  "ContextAttributes2d",
   "Blob",
   "BlobPropertyBag",
   "Url",

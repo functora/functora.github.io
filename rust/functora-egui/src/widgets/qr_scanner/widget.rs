@@ -28,7 +28,7 @@ impl Default for QrScanner {
     fn default() -> Self {
         Self {
             desired_size: None,
-            fps: 15.0,
+            fps: 10.0,
             decode_fps: 5.0,
             dedupe_ms: 1500,
             continuous: false,
@@ -49,7 +49,7 @@ impl QrScanner {
         self
     }
 
-    /// Live preview capture rate (1..=60 fps, default 15).
+    /// Live preview capture rate (1..=60 fps, default 10).
     pub fn fps(mut self, fps: f32) -> Self {
         self.fps = fps;
         self
@@ -113,9 +113,10 @@ impl QrScanner {
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
                 let desired_opt = self.desired_size;
-                if let Some((rgba, w, h)) = state.drain_rgba() {
+                let fresh = state.drain_rgba().is_some_and(|(rgba, w, h)| {
                     state.store_preview(inner.ctx(), &rgba, w, h);
-                }
+                    true
+                });
                 let viewport = inner.ctx().input(egui::InputState::viewport_rect);
                 let fitted = desired_opt.map_or_else(
                     || {
@@ -136,18 +137,19 @@ impl QrScanner {
                     },
                 );
                 let running = state.is_scanning();
-                match state.preview_texture() {
-                    Some(tex) => {
-                        let id = tex.id();
-                        let _ = inner.add(
-                            egui::Image::new((id, fitted))
-                                .corner_radius(egui::CornerRadius::same(8)),
-                        );
+                if let Some(tex) = state.preview_texture() {
+                    let id = tex.id();
+                    let _ = inner.add(
+                        egui::Image::new((id, fitted)).corner_radius(egui::CornerRadius::same(8)),
+                    );
+                    if running && fresh {
+                        inner.ctx().request_repaint();
                     }
-                    None => placeholder(inner, fitted, &theme, "Starting camera…"),
-                }
-                if running {
-                    inner.ctx().request_repaint();
+                } else {
+                    placeholder(inner, fitted, &theme, "Starting camera…");
+                    if running {
+                        inner.ctx().request_repaint();
+                    }
                 }
                 if let Some(err) = state.error() {
                     inner.add_space(6.0);

@@ -39,18 +39,29 @@ pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
 }
 
 #[cfg(feature = "qr")]
-#[must_use]
-pub fn decode_qr_luma(luma: &[u8], w: u32, h: u32) -> Option<String> {
+fn decode_luma_with_hints(luma: &[u8], w: u32, h: u32, hints: &DecodeHints) -> Option<String> {
     (w != 0 && h != 0).then_some(())?;
     QRCodeReader::new()
         .immutable_decode_with_hints(
             &mut BinaryBitmap::new(HybridBinarizer::new(
                 Luma8LuminanceSource::new(luma.to_vec(), w, h).ok()?,
             )),
-            &decode_hints(),
+            hints,
         )
         .ok()
         .map(|r| r.getText().to_owned())
+}
+
+#[cfg(feature = "qr")]
+#[must_use]
+pub fn decode_qr_luma(luma: &[u8], w: u32, h: u32) -> Option<String> {
+    decode_luma_with_hints(luma, w, h, &decode_hints())
+}
+
+#[cfg(feature = "qr")]
+#[must_use]
+pub fn decode_qr_luma_fast(luma: &[u8], w: u32, h: u32) -> Option<String> {
+    decode_luma_with_hints(luma, w, h, &DecodeHints::default())
 }
 
 #[cfg(not(feature = "qr"))]
@@ -60,6 +71,11 @@ pub fn decode_qr_rgba(_rgba: &[u8], _w: u32, _h: u32) -> Option<String> {
 
 #[cfg(not(feature = "qr"))]
 pub fn decode_qr_luma(_luma: &[u8], _w: u32, _h: u32) -> Option<String> {
+    None
+}
+
+#[cfg(not(feature = "qr"))]
+pub fn decode_qr_luma_fast(_luma: &[u8], _w: u32, _h: u32) -> Option<String> {
     None
 }
 

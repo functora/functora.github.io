@@ -63,9 +63,10 @@ impl CameraView {
             )))
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
-                if let Some((rgba, w, h)) = state.drain_rgba() {
+                let fresh = state.drain_rgba().is_some_and(|(rgba, w, h)| {
                     state.store_texture(inner.ctx(), &rgba, w, h);
-                }
+                    true
+                });
                 let viewport = inner.ctx().input(egui::InputState::viewport_rect);
                 let fitted = self.desired_size.map_or_else(
                     || {
@@ -93,7 +94,7 @@ impl CameraView {
                             egui::Image::new((tex.id(), fitted))
                                 .corner_radius(egui::CornerRadius::same(8)),
                         );
-                        if running {
+                        if running && fresh {
                             inner.ctx().request_repaint();
                         }
                     }

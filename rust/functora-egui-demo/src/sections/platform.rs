@@ -44,7 +44,6 @@ impl crate::app::ShowcaseApp {
             || self.platform.download_rx.is_some()
             || self.platform.pwa_rx.is_some()
             || self.platform.camera_rx.is_some()
-            || self.platform.qr_rx.is_some()
             || self.platform.thumbnail_rx.is_some()
             || self.platform.zip_rx.is_some()
             || self.platform.crypto_rx.is_some()
@@ -262,15 +261,6 @@ impl crate::app::ShowcaseApp {
             now,
             "Camera error",
             "Camera disconnected",
-        ) {
-            self.toast.add(msg, ToastVariant::Success, now);
-        }
-        if let Some(msg) = poll_ok(
-            &mut self.platform.qr_rx,
-            &mut self.toast,
-            now,
-            "QR error",
-            "QR disconnected",
         ) {
             self.toast.add(msg, ToastVariant::Success, now);
         }
@@ -1159,7 +1149,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_camera(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_camera(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Camera: check_camera/start_camera/capture_frame/stop_camera + begin/stop session. Web via getUserMedia/canvas, Android via Camera2 (stub), desktop via file-picker fallback.",
@@ -1236,14 +1226,38 @@ impl crate::app::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Typography::small("On desktop this will report 'not available – use file picker' (expected). On web, use QrScanner below for live preview.").show(ui);
+        ui.add_space(12.0);
+        _ = Card::new().show(ui, |ui2| {
+            _ = Typography::small(
+                "Live preview via CameraView + CameraViewState (15 fps, auto-start, Start/Stop controls).",
+            )
+            .show(ui2);
+            ui2.add_space(4.0);
+            self.platform.camera_view_state.ensure_default_handler();
+            let _ = functora_egui::CameraView::new()
+                .controls(true)
+                .show(ui2, &mut self.platform.camera_view_state);
+            if self.platform.camera_view_state.is_running() {
+                ui2.add_space(8.0);
+                _ = ui2.add(Badge::new("Live preview running"));
+            }
+            if let Some(err) = self.platform.camera_view_state.error() {
+                ui2.add_space(8.0);
+                _ = ui2.label(
+                    egui::RichText::new(format!("Error: {err}"))
+                        .color(ui2.ctx().shadcn_theme().destructive)
+                        .size(12.0),
+                );
+            }
+        });
 
         snippet(
             ui,
-            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;",
+            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;\n\n// Live preview: stateful CameraView (call every frame)\nuse functora_egui::{CameraView, CameraViewState};\n\nlet mut camera_view = CameraViewState::new();\ncamera_view.ensure_default_handler();\nCameraView::new().controls(true).show(ui, &mut camera_view);",
         );
     }
 
-    pub(crate) fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
         self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "QrScanner widget: stateful live preview (TextureHandle) + decode_qr_luma/rgba (rxing). Web live via canvas, Android Camera2, desktop file-picker fallback. Opt-in features `camera` + `qr`.",
@@ -1252,41 +1266,24 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = ui.add(Input::new(&mut self.platform.qr_input).placeholder("https://example.com"));
         ui.add_space(4.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(
-                Button::new(if self.platform.qr_rx.is_some() {
-                    "Generating..."
-                } else {
-                    "Generate QR"
-                })
-                .icon(functora_egui::LucideIcon::QrCode)
-                .enabled(self.platform.qr_rx.is_none()),
-            )
-            .inner
+        if ui
+            .add(Button::new("Clear").variant(ButtonVariant::Outline))
             .clicked()
-            {
-                let input = self.platform.qr_input.clone();
-                self.platform.qr_rx = Some(spawn_async(async move {
-                    if let Some((w, h, rgba)) = functora_egui::qr::qr_rgba(&input, 128) {
-                        let _ = (w, h, rgba);
-                        Ok(format!("QR generated {w}x{h}"))
-                    } else {
-                        Err("QR generation failed".to_string())
-                    }
-                }));
-            }
-            if f.add(Button::new("Clear").variant(ButtonVariant::Outline))
-                .inner
-                .clicked()
-            {
-                self.platform.qr_state.clear_decoded();
-                self.platform.qr_state.clear_error();
-            }
-        });
+        {
+            self.platform.qr_state.clear_decoded();
+            self.platform.qr_state.clear_error();
+            self.platform.qr_last_scan.clear();
+            self.platform.qr_error_notified = None;
+        }
+        ui.add_space(8.0);
+        let generated = self.platform.qr_input.clone();
+        _ = functora_egui::QrImage::new(&generated).show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!("Preview content: {} chars", generated.len())).show(ui);
         ui.add_space(12.0);
         _ = Card::new().show(ui, |ui2| {
             _ = Typography::small(
-                "Auto-starts and scans automatically (15 fps preview, 5 fps decode).",
+                "Auto-starts and scans automatically (10 fps preview, 5 fps decode).",
             )
             .show(ui2);
             ui2.add_space(4.0);
@@ -1301,6 +1298,8 @@ impl crate::app::ShowcaseApp {
                 self.platform.qr_state.stop();
                 self.platform.qr_state.clear_decoded();
                 self.platform.qr_state.clear_error();
+                self.platform.qr_last_scan.clear();
+                self.platform.qr_error_notified = None;
                 let ctx = ui2.ctx().clone();
                 let _ = self.platform.qr_state.start(&ctx);
             }
@@ -1309,17 +1308,39 @@ impl crate::app::ShowcaseApp {
                 .continuous(self.platform.qr_continuous)
                 .on_scan(|text| log::info!("QR scanned: {text}"))
                 .show(ui2, &mut self.platform.qr_state);
-            if let Some(txt) = self.platform.qr_state.decoded() {
-                ui2.add_space(8.0);
-                _ = ui2.add(Badge::new(format!("Decoded: {txt}")));
+            if let Some(text) = self.platform.qr_state.take_decoded() {
+                self.platform.qr_last_scan.clone_from(&text);
+                self.toast.add(
+                    format!("Scanned: {text}"),
+                    ToastVariant::Success,
+                    ui2.ctx().input(|i| i.time),
+                );
             }
             if let Some(err) = self.platform.qr_state.error() {
+                let msg = err.to_string();
+                if self.platform.qr_error_notified.as_ref() != Some(&msg) {
+                    self.platform.qr_error_notified = Some(msg.clone());
+                    self.toast.add(
+                        format!("Scan error: {msg}"),
+                        ToastVariant::Error,
+                        ui2.ctx().input(|i| i.time),
+                    );
+                }
                 ui2.add_space(8.0);
                 _ = ui2.label(
                     egui::RichText::new(format!("Error: {err}"))
                         .color(ui2.ctx().shadcn_theme().destructive)
                         .size(12.0),
                 );
+            } else {
+                self.platform.qr_error_notified = None;
+            }
+            if !self.platform.qr_last_scan.is_empty() {
+                ui2.add_space(8.0);
+                _ = ui2.add(Badge::new(format!(
+                    "Scan action: {}",
+                    self.platform.qr_last_scan.clone()
+                )));
             }
         });
         ui.add_space(8.0);
@@ -1327,7 +1348,40 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// QrScanner: stateful live preview + auto-scan\nuse functora_egui::{QrScanner, QrScannerState};\n\n// State (persist across frames)\nlet mut qr_state = QrScannerState::new();\n\n// Start scanner (call once or on button)\nqr_state.start(&ctx)?;\n\n// Render widget (call every frame)\nQrScanner::new()\n    .continuous(true)           // keep scanning after first decode\n    .on_scan(|text| {           // callback on decode\n        log::info!(\"QR: {}\", text);\n    })\n    .show(ui, &mut qr_state);\n\n// Check decoded text\nif let Some(text) = qr_state.decoded() {\n    eprintln!(\"Decoded: {text}\");\n}\n\n// Check error\nif let Some(err) = qr_state.error() {\n    eprintln!(\"Error: {err}\");\n}\n\n// Stop when done\nqr_state.stop();",
+            "// QrScanner: stateful live preview + auto-scan\nuse functora_egui::{QrImage, QrScanner, QrScannerState};\n\n// State (persist across frames)\nlet mut qr_state = QrScannerState::new();\nlet mut last_scan = String::new();\nlet mut error_notified: Option<String> = None;\n\n// Generated QR preview (call every frame)\nQrImage::new(&qr_input).show(ui);\n\n// Start scanner (call once or on button)\nqr_state.start(&ctx)?;\n\n// Render widget (call every frame)\nQrScanner::new()\n    .continuous(true)           // keep scanning after first decode\n    .on_scan(|text| {           // callback on decode\n        log::info!(\"QR: {}\", text);\n    })\n    .show(ui, &mut qr_state);\n\n// Scan action: take + act once (cryptonote home_scan pattern)\nif let Some(text) = qr_state.take_decoded() {\n    last_scan = text.clone();\n}\n\n// Error toast once per distinct message\nif let Some(err) = qr_state.error() {\n    let msg = err.to_string();\n    if error_notified.as_ref() != Some(&msg) {\n        error_notified = Some(msg);\n    }\n} else {\n    error_notified = None;\n}\n\n// Stop when done\nqr_state.stop();",
+        );
+    }
+
+    pub fn demo_qr_image(&mut self, ui: &mut egui::Ui) {
+        self.poll_platform_promises(ui.ctx());
+        _ = Typography::muted(
+            "QrImage widget: renders encoded content as a centered QR card (white frame, cached texture, 480 max side). Share-card pattern from cryptonote: QrImage + readonly URL + share/download.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        _ = ui
+            .add(Input::new(&mut self.platform.qr_image_input).placeholder("https://example.com"));
+        ui.add_space(8.0);
+        let content = self.platform.qr_image_input.clone();
+        _ = functora_egui::QrImage::new(&content).show(ui);
+        ui.add_space(8.0);
+        match functora_egui::qr::qr_rgba(&content, 256) {
+            Some((wide, high, _)) => {
+                _ = Typography::small(format!(
+                    "QR payload: {wide}x{high}, content {} chars",
+                    content.len()
+                ))
+                .show(ui);
+            }
+            None => {
+                _ = Typography::small("QR unavailable: content is empty or encoding failed.")
+                    .show(ui);
+            }
+        }
+
+        snippet(
+            ui,
+            "// QrImage: encoded content as a centered QR card\nuse functora_egui::QrImage;\n\n// Render every frame (cached texture keyed by content hash)\nQrImage::new(&url).show(ui);\n\n// Share-card pattern (cryptonote share screen)\nQrImage::new(&url).show(ui);\n// + readonly URL row + share/download buttons\n\n// Payload size without rendering\nif let Some((w, h, rgba)) = functora_egui::qr::qr_rgba(&url, 256) {\n    eprintln!(\"QR {w}x{h} {} bytes\", rgba.len());\n}",
         );
     }
 

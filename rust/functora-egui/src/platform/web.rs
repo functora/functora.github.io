@@ -266,7 +266,7 @@ pub async fn start_camera() -> Result<(), Error> {
 
 pub async fn capture_frame() -> Result<FrameData, Error> {
     use wasm_bindgen::JsCast as _;
-    const MAX_DIM: f32 = 360.0;
+    const MAX_DIM: f32 = 240.0;
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let document = window
         .document()
@@ -310,14 +310,11 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
             })
         })
         .ok_or_else(|| Error::JS("No canvas".into()))?;
-    canvas.set_width(scaled_w);
-    canvas.set_height(scaled_h);
-    let ctx: web_sys::CanvasRenderingContext2d = canvas
-        .get_context("2d")
-        .map_err(|e| Error::JS(format!("{e:?}")))?
-        .ok_or_else(|| Error::JS("No 2d context".into()))?
-        .dyn_into::<web_sys::CanvasRenderingContext2d>()
-        .map_err(|_| Error::JS("Not 2d context".into()))?;
+    if canvas.width() != scaled_w || canvas.height() != scaled_h {
+        canvas.set_width(scaled_w);
+        canvas.set_height(scaled_h);
+    }
+    let ctx: web_sys::CanvasRenderingContext2d = readback_context(&canvas)?;
     ctx.draw_image_with_html_video_element_and_dw_and_dh(
         &video,
         0.0,
@@ -359,6 +356,34 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
         preview_rgba: Some(rgba),
     }
     .upright(rotation))
+}
+
+fn readback_settings() -> web_sys::ContextAttributes2d {
+    let settings = web_sys::ContextAttributes2d::new();
+    settings.set_will_read_frequently(true);
+    settings
+}
+
+fn readback_context(
+    canvas: &web_sys::HtmlCanvasElement,
+) -> Result<web_sys::CanvasRenderingContext2d, Error> {
+    use wasm_bindgen::JsCast as _;
+    canvas
+        .get_context_with_context_options("2d", readback_settings().as_ref())
+        .ok()
+        .flatten()
+        .and_then(|value| value.dyn_into::<web_sys::CanvasRenderingContext2d>().ok())
+        .map_or_else(
+            || {
+                canvas
+                    .get_context("2d")
+                    .map_err(|e| Error::JS(format!("{e:?}")))?
+                    .ok_or_else(|| Error::JS("No 2d context".into()))?
+                    .dyn_into::<web_sys::CanvasRenderingContext2d>()
+                    .map_err(|_| Error::JS("Not 2d context".into()))
+            },
+            Ok,
+        )
 }
 
 pub async fn stop_camera() -> Result<(), Error> {

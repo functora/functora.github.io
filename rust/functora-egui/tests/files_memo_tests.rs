@@ -1,3 +1,5 @@
+#![cfg(feature = "files")]
+
 use functora_egui::files::BlobMemo;
 
 #[test]

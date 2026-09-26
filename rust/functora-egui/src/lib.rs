@@ -2,19 +2,28 @@
 
 #[cfg(any(feature = "android", feature = "build"))]
 pub mod android;
+#[cfg(feature = "platform")]
 pub mod camera;
+#[cfg(feature = "clipboard")]
 pub mod clipboard;
 #[cfg(any(feature = "web", feature = "android", feature = "build"))]
 pub mod config;
 pub mod deep_link;
+#[cfg(feature = "files")]
 pub mod download;
 pub mod error;
+#[cfg(feature = "files")]
 pub mod files;
 
+#[cfg(feature = "files")]
 pub use files::CancelToken;
+#[cfg(feature = "files")]
 pub use files::PickResult;
+#[cfg(feature = "files")]
 pub use files::cancel;
+#[cfg(feature = "files")]
 pub use files::is_cancelled;
+#[cfg(feature = "files")]
 pub use files::new_cancel_token;
 
 pub mod icons;
@@ -28,18 +37,22 @@ pub mod progress;
 pub mod pwa;
 pub mod responsive;
 pub mod route;
+#[cfg(feature = "clipboard")]
 pub mod share;
+#[cfg(feature = "storage")]
 pub mod storage;
 pub mod theme;
 pub mod theme_extra;
 pub mod tokens;
 pub mod utils;
+#[cfg(feature = "runtime")]
 pub use utils::spawn_async;
 #[cfg(any(feature = "web", feature = "build"))]
 pub mod web;
 pub mod widgets;
 pub mod worker;
 
+#[cfg(feature = "crypto")]
 pub mod crypto {
     pub use functora_core::crypto::*;
 }
@@ -49,6 +62,7 @@ pub mod encoding {
 pub mod i18n {
     pub use functora_core::i18n::*;
 }
+#[cfg(feature = "html-markdown")]
 pub mod markdown {
     pub use functora_core::markdown::*;
 }
@@ -63,13 +77,16 @@ pub use markdown_loader::{WasmSafeDataUrlLoader, install_data_url_loader};
 pub mod messages {
     pub use functora_core::messages::*;
 }
+#[cfg(feature = "thumbnail")]
 pub mod thumbnail {
     pub use functora_core::thumbnail::*;
 }
 pub mod white_label {
     pub use functora_core::white_label::*;
 }
+#[cfg(feature = "package")]
 pub mod package;
+#[cfg(feature = "zip")]
 pub mod zip;
 #[cfg(feature = "qr")]
 pub mod qr {
@@ -133,7 +150,9 @@ pub use widgets::breadcrumb::{Breadcrumb, NavAction};
 pub use widgets::button::widget::Button;
 pub use widgets::button_group::widget::ButtonGroup;
 pub use widgets::calendar::widget::Calendar;
+#[cfg(feature = "platform")]
 pub use widgets::camera_view::camera_view_state::CameraViewState;
+#[cfg(feature = "platform")]
 pub use widgets::camera_view::widget::CameraView;
 pub use widgets::card::widget::Card;
 pub use widgets::carousel::widget::Carousel;
@@ -163,7 +182,9 @@ pub use widgets::hypertext::widget::Segment;
 pub use widgets::input::widget::Input;
 pub use widgets::input_group::widget::InputGroup;
 pub use widgets::input_otp::widget::InputOtp;
+#[cfg(feature = "clipboard")]
 pub use widgets::input_paste_clear::input_paste_clear_show::PasteClearResponse as InputPasteClearResponse;
+#[cfg(feature = "clipboard")]
 pub use widgets::input_paste_clear::widget::InputPasteClear;
 pub use widgets::item::widget::Item;
 pub use widgets::kbd::widget::Kbd;
@@ -178,7 +199,9 @@ pub use widgets::progress::widget::Progress;
 pub use widgets::property_grid::property_row::PropertyRow;
 pub use widgets::property_grid::widget::PropertyGrid;
 pub use widgets::qr_image::widget::QrImage;
+#[cfg(feature = "files")]
 pub use widgets::qr_scanner::qr_scanner_state::QrScannerState;
+#[cfg(feature = "files")]
 pub use widgets::qr_scanner::widget::QrScanner;
 pub use widgets::radio::widget::Radio;
 pub use widgets::radio_group::widget::RadioGroup;
@@ -204,7 +227,9 @@ pub use widgets::tabs::widget::TabEntry;
 pub use widgets::tabs::widget::Tabs;
 pub use widgets::tabs::widget::TabsValue;
 pub use widgets::textarea::widget::Textarea;
+#[cfg(feature = "clipboard")]
 pub use widgets::textarea_paste_clear::textarea_paste_clear_show::PasteClearResponse as TextareaPasteClearResponse;
+#[cfg(feature = "clipboard")]
 pub use widgets::textarea_paste_clear::widget::TextareaPasteClear;
 pub use widgets::toast::toast_entry::ToastEntry;
 pub use widgets::toast::toast_state::ToastState;

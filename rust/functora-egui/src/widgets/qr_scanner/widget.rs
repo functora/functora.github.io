@@ -213,7 +213,10 @@ fn controls_row(ui: &mut egui::Ui, state: &mut QrScannerState) {
                 let _ = state.start(&ctx);
             }
         }
-        #[cfg(any(target_arch = "wasm32", not(target_os = "android")))]
+        #[cfg(any(
+            all(target_arch = "wasm32", feature = "web"),
+            not(any(target_arch = "wasm32", target_os = "android"))
+        ))]
         if row
             .add(crate::Button::new("Pick Image").variant(crate::ButtonVariant::Outline))
             .clicked()
@@ -236,7 +239,10 @@ fn fire_on_error(state: &QrScannerState, err: &Error) {
     }
 }
 
-#[cfg(any(target_arch = "wasm32", not(target_os = "android")))]
+#[cfg(any(
+    all(target_arch = "wasm32", feature = "web"),
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
     let slots = state.pick_slots();
     let ctx = (*ui_ctx).clone();
@@ -284,7 +290,10 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
 #[cfg(all(
     feature = "camera",
     feature = "qr",
-    any(target_arch = "wasm32", not(target_os = "android"))
+    any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    )
 ))]
 fn decode_bytes(data: &[u8]) -> Option<String> {
     let img = image::load_from_memory(data).ok()?;
@@ -296,7 +305,10 @@ fn decode_bytes(data: &[u8]) -> Option<String> {
 
 #[cfg(all(
     not(all(feature = "camera", feature = "qr")),
-    any(target_arch = "wasm32", not(target_os = "android"))
+    any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    )
 ))]
 fn decode_bytes(_data: &[u8]) -> Option<String> {
     None

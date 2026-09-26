@@ -12,6 +12,7 @@ pub mod breadcrumb;
 pub mod button;
 pub mod button_group;
 pub mod calendar;
+#[cfg(feature = "platform")]
 pub mod camera_view;
 pub mod card;
 pub mod carousel;
@@ -34,6 +35,7 @@ pub mod hypertext;
 pub mod input;
 pub mod input_group;
 pub mod input_otp;
+#[cfg(feature = "clipboard")]
 pub mod input_paste_clear;
 pub mod item;
 pub mod kbd;
@@ -44,11 +46,13 @@ pub mod navigation_menu;
 pub mod number_input;
 pub(crate) mod overlay_common;
 pub mod pagination;
+#[cfg(feature = "clipboard")]
 pub(crate) mod paste_clear_core;
 pub mod popover;
 pub mod progress;
 pub mod property_grid;
 pub mod qr_image;
+#[cfg(feature = "files")]
 pub mod qr_scanner;
 pub mod radio;
 pub mod radio_group;
@@ -66,6 +70,7 @@ pub mod switch;
 pub mod table;
 pub mod tabs;
 pub mod textarea;
+#[cfg(feature = "clipboard")]
 pub mod textarea_paste_clear;
 pub mod toast;
 pub mod toggle;

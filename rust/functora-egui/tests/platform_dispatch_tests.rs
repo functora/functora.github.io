@@ -7,6 +7,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+#[cfg(all(feature = "platform", feature = "runtime"))]
 mod desktop {
     fn camera_unavailable_message(error: &functora_egui::error::Error) -> String {
         match error {
@@ -59,6 +60,7 @@ mod desktop {
     }
 
     #[test]
+    #[cfg(feature = "clipboard")]
     fn share_falls_back_to_clipboard_and_succeeds() {
         let data = functora_egui::share::ShareData {
             title: "title".into(),

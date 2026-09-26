@@ -65,7 +65,7 @@ pub fn detect_system_theme(ctx: &egui::Context) -> Option<Theme> {
     })
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "platform"))]
 #[must_use]
 pub fn detect_system_theme_wasm() -> Option<Theme> {
     web_sys::window()
@@ -79,7 +79,7 @@ pub fn detect_system_theme_wasm() -> Option<Theme> {
         })
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(all(target_arch = "wasm32", feature = "platform")))]
 #[must_use]
 pub fn detect_system_theme_wasm() -> Option<Theme> {
     None

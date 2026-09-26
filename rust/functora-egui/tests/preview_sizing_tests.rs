@@ -40,6 +40,7 @@ fn hostile_inputs_fall_back_without_panic() {
     assert!(nan.x.is_finite() && nan.y.is_finite() && nan.x > 0.0 && nan.y > 0.0);
 }
 
+#[cfg(feature = "platform")]
 fn run_on(
     screen: egui::Vec2,
     body: &mut dyn FnMut(&mut egui::Ui, &mut Option<egui::Response>),
@@ -60,6 +61,7 @@ fn run_on(
 }
 
 #[test]
+#[cfg(feature = "files")]
 fn qr_scanner_fills_narrow_phone_width() {
     let mut state = functora_egui::QrScannerState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {
@@ -78,6 +80,7 @@ fn qr_scanner_fills_narrow_phone_width() {
 }
 
 #[test]
+#[cfg(feature = "files")]
 fn qr_scanner_is_capped_on_wide_desktop() {
     let mut state = functora_egui::QrScannerState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {
@@ -96,6 +99,7 @@ fn qr_scanner_is_capped_on_wide_desktop() {
 }
 
 #[test]
+#[cfg(feature = "platform")]
 fn camera_view_fills_narrow_phone_width() {
     let mut state = functora_egui::CameraViewState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {

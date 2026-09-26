@@ -2,8 +2,9 @@ use crate::icons::lucide_icon::LucideIcon;
 use crate::widgets::paste_clear_core::{
     apply_clear, copy_pending, disabled_color, hover_color, paint_focused, paint_outer,
     paint_tool_icon, paste_pending, pending_color, poll_copy, poll_paste, request_copy,
-    request_paste, respond, take_slots, wrap_anywhere_layouter,
+    request_paste, respond, take_slots,
 };
+use crate::widgets::textarea::textarea_widget_impl::wrap_anywhere_layouter;
 
 pub use crate::widgets::paste_clear_core::PasteClearResponse;
 

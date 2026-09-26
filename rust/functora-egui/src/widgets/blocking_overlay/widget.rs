@@ -91,15 +91,15 @@ impl BlockingOverlay {
                             let label = if name.is_empty() {
                                 format!(
                                     "{} / {} ({}%)",
-                                    crate::files::format_size(j.done),
-                                    crate::files::format_size(j.total),
+                                    functora_core::files::format_size(j.done),
+                                    functora_core::files::format_size(j.total),
                                     j.percent()
                                 )
                             } else {
                                 format!(
                                     "{name}: {} / {} ({}%)",
-                                    crate::files::format_size(j.done),
-                                    crate::files::format_size(j.total),
+                                    functora_core::files::format_size(j.done),
+                                    functora_core::files::format_size(j.total),
                                     j.percent()
                                 )
                             };

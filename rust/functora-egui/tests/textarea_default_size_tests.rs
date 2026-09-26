@@ -51,6 +51,7 @@ fn textarea_default_height_is_roomy() {
 }
 
 #[test]
+#[cfg(feature = "clipboard")]
 fn textarea_paste_clear_default_height_is_roomy() {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);

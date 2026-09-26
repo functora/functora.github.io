@@ -6,13 +6,10 @@
 use crate::camera::FrameData;
 use crate::error::Error;
 
-#[derive(Debug, Clone)]
-pub struct ShareData {
-    pub title: String,
-    pub text: String,
-    pub url: String,
-}
+#[cfg(feature = "clipboard")]
+pub use super::web::ShareData;
 
+#[cfg(feature = "clipboard")]
 pub async fn clipboard_read() -> Result<String, Error> {
     std::future::ready(()).await;
     Err(Error::JS(
@@ -20,6 +17,7 @@ pub async fn clipboard_read() -> Result<String, Error> {
     ))
 }
 
+#[cfg(feature = "clipboard")]
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
     std::future::ready(()).await;
     let _ = text;
@@ -28,6 +26,7 @@ pub async fn clipboard_write(text: String) -> Result<(), Error> {
     ))
 }
 
+#[cfg(feature = "clipboard")]
 pub async fn share(data: ShareData) -> Result<(), Error> {
     std::future::ready(()).await;
     let _ = data;
@@ -36,6 +35,7 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     ))
 }
 
+#[cfg(feature = "files")]
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     std::future::ready(()).await;
     let _ = (data, filename);

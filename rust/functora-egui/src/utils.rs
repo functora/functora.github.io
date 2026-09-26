@@ -333,6 +333,7 @@ pub fn u32_to_f32(value: u32) -> f32 {
 /// Works on both wasm32 (using `wasm_bindgen_futures::spawn_local`)
 /// and native (using `std::thread::spawn` with `pollster::block_on`).
 #[cfg(target_arch = "wasm32")]
+#[cfg(feature = "runtime")]
 pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
 where
     F: std::future::Future<Output = T> + 'static,
@@ -347,6 +348,7 @@ where
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "runtime")]
 pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
 where
     F: std::future::Future<Output = T> + Send + 'static,
@@ -390,7 +392,7 @@ mod tests {
         let mut nv21 = vec![180_u8; 4];
         nv21.extend_from_slice(&[128, 128]);
         let rgba = super::nv21_to_rgba(&nv21, 2, 2);
-        for px in rgba.chunks_exact(4) {
+        for px in rgba.as_chunks::<4>().0 {
             assert_eq!((px[0], px[1], px[2], px[3]), (191, 191, 191, 255));
         }
     }
@@ -422,7 +424,7 @@ mod tests {
         let nv21 = vec![100_u8; 4 * 4 + 4 * 2];
         let rgba = super::nv21_to_rgba(&nv21, 4, 4);
         assert_eq!(rgba.len(), 4 * 4 * 4);
-        assert!(rgba.chunks_exact(4).all(|px| px[3] == 255));
+        assert!(rgba.as_chunks::<4>().0.iter().all(|px| px[3] == 255));
     }
 
     #[test]

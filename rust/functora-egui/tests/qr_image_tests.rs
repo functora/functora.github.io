@@ -2,7 +2,9 @@
 use egui::{FullOutput, Pos2, RawInput, Rect, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(800.0, 600.0);
+#[cfg(feature = "qr")]
 const WIDE_SCREEN: Vec2 = Vec2::new(1440.0, 900.0);
+#[cfg(feature = "qr")]
 const NARROW_SCREEN: Vec2 = Vec2::new(390.0, 844.0);
 
 fn run_on(
@@ -33,6 +35,7 @@ fn run_once(
     run_on(SCREEN, body)
 }
 
+#[cfg(feature = "qr")]
 fn textured_rects(out: &FullOutput) -> Vec<Rect> {
     out.shapes
         .iter()
@@ -54,6 +57,8 @@ fn textured_rects(out: &FullOutput) -> Vec<Rect> {
 fn qr_image_uses_full_width() {
     let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
     let (response, available, out) = run_once(&mut body);
+    #[cfg(not(feature = "qr"))]
+    drop(out);
     assert!(
         (response.rect.width() - available).abs() < 2.0,
         "QrImage must be full width, got {} expected {available}",

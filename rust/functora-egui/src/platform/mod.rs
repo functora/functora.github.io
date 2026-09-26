@@ -1,12 +1,15 @@
 #[cfg(target_os = "android")]
+#[cfg(feature = "platform")]
 pub mod android;
 
 pub mod android_back;
 
 #[cfg(target_arch = "wasm32")]
+#[cfg(feature = "platform")]
 pub mod web;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+#[cfg(feature = "platform")]
 pub mod desktop;
 
 #[cfg(all(
@@ -14,18 +17,22 @@ pub mod desktop;
     not(target_os = "android"),
     not(feature = "web")
 ))]
-mod stub;
+#[cfg(feature = "platform")]
+pub(crate) mod stub;
 
 /// The active platform backend. Callers (`clipboard`, `share`, `download`,
 /// `camera`) go through this alias instead of repeating the target/feature
 /// cfg matrix per operation.
 #[cfg(target_os = "android")]
+#[cfg(feature = "platform")]
 pub(crate) use android as backend;
 
 #[cfg(all(target_arch = "wasm32", feature = "web"))]
+#[cfg(feature = "platform")]
 pub(crate) use web as backend;
 
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+#[cfg(feature = "platform")]
 pub(crate) use desktop as backend;
 
 #[cfg(all(
@@ -33,4 +40,5 @@ pub(crate) use desktop as backend;
     not(target_os = "android"),
     not(feature = "web")
 ))]
+#[cfg(feature = "platform")]
 pub(crate) use stub as backend;

@@ -19,7 +19,9 @@ pub fn decode_hints() -> DecodeHints {
 pub fn decode_qr_rgba(rgba: &[u8], w: u32, h: u32) -> Option<String> {
     (w != 0 && h != 0).then_some(())?;
     let luma: Vec<u8> = rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|px| {
             if px[3] == 0 {
                 0xFF
@@ -65,16 +67,19 @@ pub fn decode_qr_luma_fast(luma: &[u8], w: u32, h: u32) -> Option<String> {
 }
 
 #[cfg(not(feature = "qr"))]
+#[must_use]
 pub fn decode_qr_rgba(_rgba: &[u8], _w: u32, _h: u32) -> Option<String> {
     None
 }
 
 #[cfg(not(feature = "qr"))]
+#[must_use]
 pub fn decode_qr_luma(_luma: &[u8], _w: u32, _h: u32) -> Option<String> {
     None
 }
 
 #[cfg(not(feature = "qr"))]
+#[must_use]
 pub fn decode_qr_luma_fast(_luma: &[u8], _w: u32, _h: u32) -> Option<String> {
     None
 }

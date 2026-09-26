@@ -1,3 +1,4 @@
+#![cfg(feature = "platform")]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 use functora_egui::camera::FrameData;
 use functora_egui::utils::{FrameRotation, fit_preview_size, rotate_luma, rotate_rgba};

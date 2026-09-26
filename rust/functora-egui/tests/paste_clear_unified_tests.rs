@@ -1,3 +1,5 @@
+#![cfg(feature = "clipboard")]
+
 //! Paste-clear unification (plan step 4): both widgets share one response
 //! type and one clipboard/slot core, so a fix in the shared logic applies to
 //! single-line and multi-line fields together.

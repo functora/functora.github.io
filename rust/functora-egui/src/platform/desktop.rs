@@ -1,6 +1,7 @@
 use crate::camera::FrameData;
 use crate::error::Error;
 
+#[cfg(feature = "clipboard")]
 pub async fn clipboard_read() -> Result<String, Error> {
     std::future::ready(()).await;
     let mut clipboard =
@@ -10,6 +11,7 @@ pub async fn clipboard_read() -> Result<String, Error> {
         .map_err(|e| Error::JS(format!("Clipboard read: {e}")))
 }
 
+#[cfg(feature = "clipboard")]
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
     std::future::ready(()).await;
     let mut clipboard =
@@ -26,6 +28,7 @@ pub struct ShareData {
     pub url: String,
 }
 
+#[cfg(feature = "clipboard")]
 pub async fn share(data: ShareData) -> Result<(), Error> {
     let full = format!("{}\n{}\n{}", data.title, data.text, data.url);
     if let Err(e) = clipboard_write(full).await {
@@ -34,6 +37,7 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     Ok(())
 }
 
+#[cfg(feature = "files")]
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     let handle = rfd::AsyncFileDialog::new()
         .set_file_name(filename)

@@ -152,7 +152,10 @@ impl QrScannerState {
         self.runtime.lock().ok().and_then(|rt| rt.on_error.clone())
     }
 
-    #[cfg(any(target_arch = "wasm32", not(target_os = "android")))]
+    #[cfg(any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    ))]
     #[must_use]
     pub(crate) fn pick_slots(&self) -> PickSlots {
         PickSlots {
@@ -251,7 +254,7 @@ fn handle_frame(
     #[cfg(feature = "qr")]
     {
         let duplicate = continuous
-            && runtime.lock().ok().is_some_and(|rt| {
+            && runtime.lock().is_ok_and(|rt| {
                 rt.last_hit.as_ref().is_some_and(|(hit, seen)| {
                     *hit == text && (now - *seen).max(0.0) < dedupe.as_secs_f64()
                 })
@@ -286,13 +289,19 @@ fn handle_frame(
 }
 
 /// Cross-thread handles for the file-picker fallback path.
-#[cfg(any(target_arch = "wasm32", not(target_os = "android")))]
+#[cfg(any(
+    all(target_arch = "wasm32", feature = "web"),
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 pub(crate) struct PickSlots {
     decoded: Arc<Mutex<Option<String>>>,
     runtime: Arc<Mutex<ScanRuntime>>,
 }
 
-#[cfg(any(target_arch = "wasm32", not(target_os = "android")))]
+#[cfg(any(
+    all(target_arch = "wasm32", feature = "web"),
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 impl PickSlots {
     pub(crate) fn set_decoded(&self, text: String) {
         if let Ok(mut slot) = self.decoded.lock() {
@@ -333,8 +342,7 @@ mod tests {
             state
                 .runtime
                 .lock()
-                .ok()
-                .is_some_and(|runtime| runtime.last_decode.is_some()),
+                .is_ok_and(|runtime| runtime.last_decode.is_some()),
             "identical configure must preserve decode throttle"
         );
     }
@@ -351,13 +359,13 @@ mod tests {
             state
                 .runtime
                 .lock()
-                .ok()
-                .is_some_and(|runtime| runtime.last_decode.is_none()),
+                .is_ok_and(|runtime| runtime.last_decode.is_none()),
             "changed decode rate must restart throttle window"
         );
     }
 
     #[test]
+    #[cfg(feature = "qr")]
     fn downscaled_luma_keeps_small_frames_as_is() {
         let data = vec![0xAB; 100 * 80];
         assert!(super::downscaled_luma(&data, 100, 80).is_none());
@@ -367,11 +375,13 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "qr")]
     fn downscaled_luma_rejects_mismatched_buffer() {
         assert!(super::downscaled_luma(&[0; 10], 480, 360).is_none());
     }
 
     #[test]
+    #[cfg(feature = "qr")]
     fn downscaled_luma_shrinks_large_frames() {
         let data = vec![0xAB; 480 * 360];
         let shrunk = super::downscaled_luma(&data, 480, 360);
@@ -390,7 +400,9 @@ mod tests {
     fn decodable_frame(content: &str, side: u32) -> Option<crate::camera::FrameData> {
         let (w, h, rgba) = crate::qr::qr_rgba(content, side)?;
         let luma = rgba
-            .chunks_exact(4)
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|px| if px[0] == 0 { 0 } else { 0xFF })
             .collect();
         Some(crate::camera::FrameData {
@@ -438,7 +450,7 @@ mod tests {
             let outcome = super::handle_frame(&ctx, &frame, &runtime, &decoded);
             assert!(matches!(outcome, ControlFlow::Continue(())));
             assert!(
-                decoded.lock().ok().is_some_and(|slot| slot.is_none()),
+                decoded.lock().is_ok_and(|slot| slot.is_none()),
                 "throttled scan must not decode"
             );
         }

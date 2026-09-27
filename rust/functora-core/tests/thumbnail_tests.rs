@@ -1,3 +1,5 @@
+#![cfg(feature = "thumbnail")]
+
 use functora_core::thumbnail::cache_thumbnail;
 use functora_core::thumbnail::cached_thumbnail;
 use functora_core::thumbnail::jpeg_data_url;

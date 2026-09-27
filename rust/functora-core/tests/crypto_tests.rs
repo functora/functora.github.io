@@ -1,3 +1,5 @@
+#![cfg(feature = "crypto")]
+
 use functora_core::crypto::{
     CipherType, EncryptedNote, KEY_SIZE, Kdf, decrypt_symmetric, derive_key, encrypt_symmetric,
     stream_decrypt_symmetric, stream_encrypt_symmetric,

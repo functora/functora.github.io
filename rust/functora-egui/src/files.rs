@@ -1247,6 +1247,7 @@ pub fn data_url_mime(prefix: &str) -> Option<&str> {
 }
 
 #[must_use]
+#[cfg(feature = "thumbnail")]
 pub fn video_thumbnail(url: &str) -> Option<String> {
     let src = match functora_core::thumbnail::cached_thumbnail(url) {
         Some(src) => src,
@@ -1267,6 +1268,7 @@ pub fn video_thumbnail(url: &str) -> Option<String> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "thumbnail")]
 fn extract_native(url: &str) -> Option<String> {
     let (prefix, payload) = url.split_once(',').unwrap_or(("", ""));
     let _mime = data_url_mime(prefix)?;

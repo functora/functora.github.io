@@ -21,11 +21,11 @@ pub fn wake_via_repaint() {
     {
         ctx.request_repaint();
     }
-    #[cfg(target_os = "android")]
+    #[cfg(all(target_os = "android", feature = "platform"))]
     crate::platform::android::wake_event_loop();
 }
 
-#[cfg(target_os = "android")]
+#[cfg(all(target_os = "android", feature = "platform"))]
 #[unsafe(no_mangle)]
 #[allow(non_snake_case)]
 pub extern "system" fn Java_com_functora_Waker_wake(
@@ -43,7 +43,7 @@ fn system_back_pressed(ctx: &egui::Context) -> bool {
         });
         return true;
     }
-    #[cfg(target_os = "android")]
+    #[cfg(all(target_os = "android", feature = "platform"))]
     {
         if crate::platform::android::poll_back_pressed() {
             return true;
@@ -55,11 +55,11 @@ fn system_back_pressed(ctx: &egui::Context) -> bool {
 #[must_use]
 pub fn is_back_pressed(ctx: &egui::Context) -> bool {
     ctx.input(|i| i.key_pressed(egui::Key::BrowserBack)) || {
-        #[cfg(target_os = "android")]
+        #[cfg(all(target_os = "android", feature = "platform"))]
         {
             crate::platform::android::peek_back_pressed()
         }
-        #[cfg(not(target_os = "android"))]
+        #[cfg(not(all(target_os = "android", feature = "platform")))]
         {
             false
         }
@@ -80,7 +80,7 @@ pub fn handle_system_back(
         if let Some(id) = ctx.memory(egui::Memory::focused) {
             ctx.memory_mut(|m| m.surrender_focus(id));
         }
-        #[cfg(target_os = "android")]
+        #[cfg(all(target_os = "android", feature = "platform"))]
         {
             let _ = crate::platform::android::hide_soft_input();
         }

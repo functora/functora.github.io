@@ -1,3 +1,4 @@
+#![cfg(feature = "clipboard")]
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};

@@ -140,13 +140,13 @@ pub mod router_impl {
         #[allow(clippy::needless_pass_by_value)]
         pub fn new(_state: &mut S, default: R) -> Self {
             let current = {
-                #[cfg(target_arch = "wasm32")]
+                #[cfg(all(target_arch = "wasm32", feature = "platform"))]
                 {
                     crate::platform::web::location_href()
                         .and_then(|u| R::from_url(&u))
                         .unwrap_or_else(|| default.clone())
                 }
-                #[cfg(not(target_arch = "wasm32"))]
+                #[cfg(not(all(target_arch = "wasm32", feature = "platform")))]
                 {
                     default.clone()
                 }
@@ -266,7 +266,7 @@ pub mod router_impl {
         }
 
         pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut S) {
-            #[cfg(target_arch = "wasm32")]
+            #[cfg(all(target_arch = "wasm32", feature = "platform"))]
             {
                 if let Some(href) = crate::platform::web::location_href() {
                     drop(self.sync_from_url(&href));
@@ -285,14 +285,14 @@ pub mod router_impl {
     where
         R: Routable + Default,
     {
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", feature = "platform"))]
         {
             let url = route.to_url();
             if let Err(err) = crate::platform::web::history_push(&url) {
                 tracing::warn!("history_push failed: {err}");
             }
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(all(target_arch = "wasm32", feature = "platform")))]
         {
             let _ = route;
         }
@@ -303,14 +303,14 @@ pub mod router_impl {
     where
         R: Routable + Default,
     {
-        #[cfg(target_arch = "wasm32")]
+        #[cfg(all(target_arch = "wasm32", feature = "platform"))]
         {
             let url = route.to_url();
             if let Err(err) = crate::platform::web::history_replace(&url) {
                 tracing::warn!("history_replace failed: {err}");
             }
         }
-        #[cfg(not(target_arch = "wasm32"))]
+        #[cfg(not(all(target_arch = "wasm32", feature = "platform")))]
         {
             let _ = route;
         }

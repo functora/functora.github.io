@@ -161,7 +161,10 @@ where
     }
 }
 
-#[cfg(any(target_arch = "wasm32", target_os = "android"))]
+#[cfg(all(
+    any(target_arch = "wasm32", target_os = "android"),
+    any(feature = "web", feature = "android")
+))]
 #[must_use]
 pub fn load_from_eframe<T: DeserializeOwned>(
     storage: Option<&dyn eframe::Storage>,
@@ -173,7 +176,10 @@ pub fn load_from_eframe<T: DeserializeOwned>(
         .or_else(|| load_state(key))
 }
 
-#[cfg(any(target_arch = "wasm32", target_os = "android"))]
+#[cfg(all(
+    any(target_arch = "wasm32", target_os = "android"),
+    any(feature = "web", feature = "android")
+))]
 pub fn save_to_eframe<T: Serialize>(storage: &mut dyn eframe::Storage, key: &str, value: &T) {
     if let Ok(json) = serde_json::to_string(value) {
         storage.set_string(key, json.clone());

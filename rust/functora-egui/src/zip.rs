@@ -1,7 +1,7 @@
+pub use functora_core::files::Attachment;
 pub use functora_core::zip::{create_zip_report, unzip_report};
 
 use crate::error::Error;
-use crate::files::Attachment;
 use crate::progress::Job;
 use crate::worker;
 

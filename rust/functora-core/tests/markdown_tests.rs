@@ -1,3 +1,5 @@
+#![cfg(feature = "markdown")]
+
 use functora_core::markdown::render_markdown;
 
 #[test]

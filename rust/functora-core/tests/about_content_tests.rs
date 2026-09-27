@@ -137,16 +137,16 @@ fn about_messages_render_all_languages() {
 
 #[test]
 fn build_year_is_four_digits() {
-    assert!(FUNCTORA_CORE_YEAR.len() == 4);
+    assert_eq!(FUNCTORA_CORE_YEAR.len(), 4);
     assert!(FUNCTORA_CORE_YEAR.bytes().all(|b| b.is_ascii_digit()));
 }
 
 #[test]
 fn build_date_is_iso_8601() {
     let b = FUNCTORA_CORE_DATE.as_bytes();
-    assert!(b.len() == 10);
-    assert!(b[4] == b'-');
-    assert!(b[7] == b'-');
+    assert_eq!(b.len(), 10);
+    assert_eq!(b[4], b'-');
+    assert_eq!(b[7], b'-');
     assert!(b[..4].iter().all(u8::is_ascii_digit));
     assert!(b[5..7].iter().all(u8::is_ascii_digit));
     assert!(b[8..10].iter().all(u8::is_ascii_digit));

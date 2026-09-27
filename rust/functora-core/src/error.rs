@@ -35,17 +35,21 @@ impl From<serde_json::Error> for JsonError {
     }
 }
 
+#[cfg(feature = "zip")]
 #[derive(Debug, thiserror::Error)]
 #[error(transparent)]
 pub struct ZipErr(pub Arc<zip::result::ZipError>);
 
+#[cfg(feature = "zip")]
 impl PartialEq for ZipErr {
     fn eq(&self, other: &Self) -> bool {
         Arc::ptr_eq(&self.0, &other.0)
     }
 }
+#[cfg(feature = "zip")]
 impl Eq for ZipErr {}
 
+#[cfg(feature = "zip")]
 impl From<zip::result::ZipError> for ZipErr {
     fn from(e: zip::result::ZipError) -> Self {
         ZipErr(Arc::new(e))
@@ -95,14 +99,19 @@ pub enum Error {
     JS(String),
     #[error("Eval channel died before completion (dioxus internal GC/drop race)")]
     EvalFinished,
+    #[cfg(feature = "crypto")]
     #[error("Cipher initialization error: {0}")]
     Cipher(cipher::InvalidLength),
+    #[cfg(feature = "crypto")]
     #[error("Key derivation error: {0}")]
     KeyDerive(#[from] argon2::Error),
+    #[cfg(feature = "crypto")]
     #[error("Random number generation error: {0}")]
     Getrandom(#[from] getrandom::Error),
+    #[cfg(feature = "crypto")]
     #[error("Encryption failed: {0}")]
     Encrypt(aead::Error),
+    #[cfg(feature = "crypto")]
     #[error("Decryption failed: {0}")]
     Decrypt(aead::Error),
     #[error("Invalid encrypted payload format: {0}")]
@@ -120,6 +129,7 @@ pub enum Error {
     CameraStalled,
     #[error("Not a JSON object: {0}")]
     NotJsonObject(serde_json::Value),
+    #[cfg(feature = "zip")]
     #[error("Archive error: {0}")]
     Archive(ZipErr),
     #[error("Background task error: {0}")]
@@ -152,6 +162,7 @@ impl From<base64::DecodeError> for Error {
     }
 }
 
+#[cfg(feature = "crypto")]
 impl From<cipher::InvalidLength> for Error {
     fn from(e: cipher::InvalidLength) -> Self {
         Error::Cipher(e)
@@ -171,6 +182,7 @@ impl From<WorkerStopped> for Error {
     }
 }
 
+#[cfg(feature = "zip")]
 impl From<zip::result::ZipError> for Error {
     fn from(e: zip::result::ZipError) -> Self {
         Error::Archive(ZipErr::from(e))
@@ -189,10 +201,15 @@ impl I18N for Error {
             Self::Channel(e) => format!("Channel receive error: {e}"),
             Self::JS(e) => format!("JavaScript evaluation error: {e}"),
             Self::EvalFinished => "The connection to the browser was lost; please try again".into(),
+            #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Cipher initialization error: {e}"),
+            #[cfg(feature = "crypto")]
             Self::KeyDerive(e) => format!("Key derivation error: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Getrandom(e) => format!("Random number generation error: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Encrypt(e) => format!("Encryption failed: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Decrypt(e) => format!("Decryption failed: {e}"),
             Self::InvalidFormat(e) => format!("Invalid encrypted payload format: {e}"),
             Self::Convert { context, source } => {
@@ -202,6 +219,7 @@ impl I18N for Error {
             Self::CameraPermissionDenied(e) => format!("Camera permission was denied: {e}"),
             Self::CameraStalled => "The camera feed stopped responding; try again".into(),
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
+            #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Archive error: {e}"),
             Self::Worker(e) => format!("Background task error: {e}"),
             Self::FileTooLarge { name, size, limit } => {
@@ -226,10 +244,15 @@ impl I18N for Error {
             Self::EvalFinished => {
                 "Se perdió la conexión con el navegador; inténtalo de nuevo".into()
             }
+            #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Error de inicialización de cifrado: {e}"),
+            #[cfg(feature = "crypto")]
             Self::KeyDerive(e) => format!("Error de derivación de clave: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Getrandom(e) => format!("Error de generación de números aleatorios: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Encrypt(e) => format!("Falló el cifrado: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Decrypt(e) => format!("Falló el descifrado: {e}"),
             Self::InvalidFormat(e) => format!("Formato de carga útil cifrada no válido: {e}"),
             Self::Convert { context, source } => {
@@ -239,6 +262,7 @@ impl I18N for Error {
             Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
             Self::CameraStalled => "La cámara dejó de responder; inténtalo de nuevo".into(),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
+            #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Error de archivo: {e}"),
             Self::Worker(e) => {
                 format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})")
@@ -263,10 +287,15 @@ impl I18N for Error {
             Self::Channel(e) => format!("Ошибка получения из канала: {e}"),
             Self::JS(e) => format!("Ошибка выполнения JavaScript: {e}"),
             Self::EvalFinished => "Соединение с браузером потеряно; попробуйте ещё раз".into(),
+            #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Ошибка инициализации шифра: {e}"),
+            #[cfg(feature = "crypto")]
             Self::KeyDerive(e) => format!("Ошибка вывода ключа: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Getrandom(e) => format!("Ошибка генерации случайных чисел: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Encrypt(e) => format!("Ошибка шифрования: {e}"),
+            #[cfg(feature = "crypto")]
             Self::Decrypt(e) => format!("Ошибка расшифровки: {e}"),
             Self::InvalidFormat(e) => format!("Неверный формат зашифрованных данных: {e}"),
             Self::Convert { context, source } => {
@@ -276,6 +305,7 @@ impl I18N for Error {
             Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
             Self::CameraStalled => "Поток с камеры остановился; попробуйте ещё раз".into(),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
+            #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Ошибка архива: {e}"),
             Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),
             Self::FileTooLarge { name, size, limit } => {

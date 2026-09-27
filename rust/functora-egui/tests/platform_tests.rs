@@ -1,5 +1,9 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
-use functora_egui::{deep_link, files, nav::NavHistory, progress, storage, theme_extra::Theme};
+#[cfg(feature = "files")]
+use functora_egui::files;
+#[cfg(feature = "storage")]
+use functora_egui::storage;
+use functora_egui::{deep_link, nav::NavHistory, progress, theme_extra::Theme};
 use std::sync::{Mutex, OnceLock, PoisonError};
 
 fn deep_link_lock() -> &'static Mutex<()> {
@@ -8,6 +12,7 @@ fn deep_link_lock() -> &'static Mutex<()> {
 }
 
 #[test]
+#[cfg(feature = "storage")]
 fn storage_roundtrip() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("storage.json");
@@ -23,6 +28,7 @@ fn storage_roundtrip() {
 }
 
 #[test]
+#[cfg(feature = "storage")]
 fn storage_persistent_wrapper() {
     let _guard = deep_link_lock()
         .lock()
@@ -167,6 +173,7 @@ fn progress_job_percent() {
 }
 
 #[test]
+#[cfg(feature = "files")]
 fn files_mime_and_preview() {
     assert_eq!(files::mime_for_name("photo.jpg"), Some("image/jpeg"));
     assert_eq!(files::mime_for_name("video.mp4"), Some("video/mp4"));
@@ -180,6 +187,7 @@ fn files_mime_and_preview() {
 }
 
 #[test]
+#[cfg(feature = "files")]
 fn files_preview_blob_and_revoke() {
     let preview = files::preview_blob("photo.jpg", b"fake image data");
     assert!(matches!(preview, files::Preview::Image(_)));
@@ -191,6 +199,7 @@ fn files_preview_blob_and_revoke() {
 }
 
 #[test]
+#[cfg(feature = "files")]
 fn files_data_url_mime() {
     assert_eq!(
         files::data_url_mime("data:image/png;base64"),
@@ -240,6 +249,7 @@ fn in_flight_guard() {
 }
 
 #[test]
+#[cfg(any(feature = "build", all(feature = "web", feature = "android")))]
 fn config_derive() {
     let tmp = tempfile::NamedTempFile::new().unwrap();
     let path = tmp.path().to_str().unwrap();

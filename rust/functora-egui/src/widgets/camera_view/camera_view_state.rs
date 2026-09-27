@@ -143,7 +143,7 @@ impl CameraViewState {
 
     #[must_use]
     pub fn is_running(&self) -> bool {
-        self.inner.lock().ok().is_some_and(|feed| feed.running)
+        self.inner.lock().is_ok_and(|feed| feed.running)
     }
 
     #[must_use]

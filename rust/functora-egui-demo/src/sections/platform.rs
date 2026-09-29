@@ -50,6 +50,23 @@ impl crate::app::ShowcaseApp {
             || self.platform.worker_rx.is_some()
     }
 
+    /// Cuts `url` down to at most `max_bytes` on a char boundary, so preview
+    /// labels can never panic on multi-byte data URLs. Pure so tests can
+    /// exercise every boundary.
+    #[must_use]
+    pub fn truncate_preview_url(url: &str, max_bytes: usize) -> &str {
+        if url.len() <= max_bytes {
+            return url;
+        }
+        let end = url
+            .char_indices()
+            .map(|(index, _)| index)
+            .take_while(|&index| index <= max_bytes)
+            .last()
+            .unwrap_or_default();
+        &url[..end]
+    }
+
     /// Builds a `(uri, jpeg bytes)` thumbnail pair from a data URL via the
     /// real `files::video_thumbnail` (mp4 decode + cache). Pure and sync so
     /// tests can exercise it; the demo runs it inside `spawn_async`. The uri
@@ -345,7 +362,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_storage(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Unified persistent storage: localStorage on web, storage.json via ProjectDirs on desktop, MediaStore dir on Android. Single API `load_state`/`persist_value`.",
         )
@@ -444,7 +460,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_clipboard(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Clipboard read/write via arboard (desktop), navigator.clipboard (web), ClipboardManager (Android).",
         )
@@ -508,7 +523,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_share(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Social share via navigator.share (web), Intent.createChooser (Android), clipboard fallback (desktop).",
         )
@@ -548,7 +562,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_deep_link(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         if let Some(url) = functora_egui::deep_link::poll_deep_link() {
             self.platform.deep_link_current = url;
         }
@@ -639,7 +652,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_files(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         if let Some(cancel) = self.platform.pick_cancel.clone() {
             let mut open = self.platform.pick_overlay_open;
             BlockingOverlay::new("Uploading...")
@@ -749,7 +761,7 @@ impl crate::app::ShowcaseApp {
                             functora_egui::files::Preview::Video(ref url) => {
                                 _ = Typography::small(format!(
                                     "Video: {}...",
-                                    &url[..url.len().min(60)]
+                                    Self::truncate_preview_url(url, 60)
                                 ))
                                 .show(ui3);
                                 _ = Typography::small(format!("Video file: {name} ({size})"))
@@ -792,7 +804,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_download(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Download via Blob+anchor (web), rfd save dialog (desktop), MediaStore Downloads (Android).",
         )
@@ -833,7 +844,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_nav(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_nav(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "NavHistory<R> + AppRouter<R, S>: push/go_back/go_forward, integrates with browser history."
         )
@@ -867,7 +878,7 @@ impl crate::app::ShowcaseApp {
             ui2.add_space(4.0);
             snippet(
                 ui2,
-                "// NavHistory: push / go_back / go_forward / sync\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::{AppRouter, Routable};\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(42));\nassert_eq!(history.current(), &AppRoute::Component(42));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&mut (), AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(42));\nrouter.go_back(&mut ());",
+                "// NavHistory: push / go_back / go_forward / sync\nuse crate::route::AppRoute;\nuse crate::app::ComponentId;\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::AppRouter;\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(ComponentId::Button));\nassert_eq!(history.current(), &AppRoute::Component(ComponentId::Button));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&mut (), AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(ComponentId::Button));\nrouter.go_back(&mut ());",
             );
         });
     }
@@ -963,7 +974,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_pwa(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "PWA: pwa_init_js, pwa_sw_js, trigger_pwa_install, install_hint. Manifest/theme_color derived from Cargo.toml.",
         )
@@ -1092,6 +1102,26 @@ impl crate::app::ShowcaseApp {
         );
     }
 
+    /// Claims the demo's `InFlight` guard and moves it into a `spawn_async`
+    /// task that holds it for the simulated 2s operation, so the claim stays
+    /// held for the whole task and releases only when the task drops the
+    /// guard. Returns `false` when a claim is already held.
+    pub fn try_claim_in_flight(&mut self, ctx: &egui::Context) -> bool {
+        let Some(guard) = self.platform.in_flight.claim() else {
+            return false;
+        };
+        let repaint = ctx.clone();
+        drop(spawn_async(async move {
+            #[cfg(target_arch = "wasm32")]
+            gloo_timers::future::TimeoutFuture::new(2000).await;
+            #[cfg(not(target_arch = "wasm32"))]
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            drop(guard);
+            repaint.request_repaint();
+        }));
+        true
+    }
+
     pub(crate) fn demo_in_flight(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("InFlight guard: prevents concurrent async actions (share/pick), auto-releases on drop.").show(ui);
         ui.add_space(12.0);
@@ -1107,32 +1137,12 @@ impl crate::app::ShowcaseApp {
                 .inner
                 .clicked()
             {
-                if let Some(_guard) = self.platform.in_flight.claim() {
+                if self.try_claim_in_flight(&ctx) {
                     self.toast.add(
                         "Claimed! holding for 2s...",
                         ToastVariant::Success,
                         ctx.input(|i| i.time),
                     );
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        let flag = self.platform.in_flight.clone();
-                        let ctx2 = ctx.clone();
-                        wasm_bindgen_futures::spawn_local(async move {
-                            gloo_timers::future::TimeoutFuture::new(2000).await;
-                            drop(flag);
-                            ctx2.request_repaint();
-                        });
-                    }
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        let flag = self.platform.in_flight.clone();
-                        let ctx2 = ctx.clone();
-                        drop(std::thread::spawn(move || {
-                            std::thread::sleep(std::time::Duration::from_secs(2));
-                            drop(flag);
-                            ctx2.request_repaint();
-                        }));
-                    }
                 } else {
                     self.toast.add(
                         "Already in flight - rejected",
@@ -1150,7 +1160,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_camera(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Camera: check_camera/start_camera/capture_frame/stop_camera + begin/stop session. Web via getUserMedia/canvas, Android via Camera2 (stub), desktop via file-picker fallback.",
         )
@@ -1258,7 +1267,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "QrScanner widget: stateful live preview (TextureHandle) + decode_qr_luma/rgba (rxing). Web live via canvas, Android Camera2, desktop file-picker fallback. Opt-in features `camera` + `qr`.",
         )
@@ -1353,7 +1361,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_qr_image(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "QrImage widget: renders encoded content as a centered QR card (white frame, cached texture, 480 max side). Share-card pattern from cryptonote: QrImage + readonly URL + share/download.",
         )
@@ -1386,7 +1393,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub fn demo_thumbnail(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Thumbnail: files::video_thumbnail (mp4 data URL -> jpeg data URL) + cache. Native decodes via mp4+rust_h264; web reports unavailable.",
         )
@@ -1439,7 +1445,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_zip(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Zip: zip::create_zip_async / unzip_async over the picked files from Files demo, then verify_zip_roundtrip compares names and bytes.",
         )
@@ -1487,7 +1492,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_crypto(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Crypto: encrypt_output / decrypt_output (ChaCha20Poly1305 + Argon2id via crypto::encrypt_symmetric). Key derivation runs in spawn_async so paint never blocks.",
         )
@@ -1554,7 +1558,6 @@ impl crate::app::ShowcaseApp {
     }
 
     pub(crate) fn demo_worker(&mut self, ui: &mut egui::Ui) {
-        self.poll_platform_promises(ui.ctx());
         _ = Typography::muted(
             "Worker: worker::run – runs future on thread (desktop) or inline (wasm) with Reporter<Stage> progress.",
         )
@@ -1595,7 +1598,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_platform_info(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_platform_info(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "Platform info: is_mobile_hint (web innerWidth), location_href/hash, storage files_dir, theme, breakpoint.",
         )
@@ -1638,8 +1641,8 @@ impl crate::app::ShowcaseApp {
                 Ok(p) => _ = Typography::small(format!("files_dir: {}", p.display())).show(ui2),
                 Err(e) => _ = Typography::small(format!("files_dir err: {e}")).show(ui2),
             }
-            if let Some(v) = functora_egui::storage::load_state::<String>("demo_persistent") {
-                _ = Typography::small(format!("demo_persistent: {v}")).show(ui2);
+            if let Some(v) = functora_egui::storage::load_state::<String>("platform_info") {
+                _ = Typography::small(format!("platform_info: {v}")).show(ui2);
             }
         });
         ui.add_space(8.0);
@@ -1650,9 +1653,14 @@ impl crate::app::ShowcaseApp {
             self.toast
                 .add("Saved", ToastVariant::Success, ui.ctx().input(|i| i.time));
         }
+        ui.add_space(12.0);
+        snippet(
+            ui,
+            "// Platform info: responsive context + persistent storage\nuse functora_egui::{ResponsiveExt, storage};\n\n// Breakpoint + spacing from the current viewport (800px mobile)\nlet is_mobile = ui.on_mobile();\nlet spacing = ui.ctx().responsive_spacing();\neprintln!(\"{} px content, {} px padding\", spacing.content_max_width, spacing.page_padding);\n\n// Current theme\nlet theme = functora_egui::current_theme(ui.ctx());\n\n// Persistent key/value storage (localStorage / storage.json)\nstorage::persist_value(\"platform_info\", &note)?;\nlet saved = storage::load_state::<String>(\"platform_info\");\n\n// Web-only location helpers\n#[cfg(target_arch = \"wasm32\")]\nif let Some(href) = functora_egui::platform::web::location_href() {\n    eprintln!(\"{href}\");\n}",
+        );
     }
 
-    pub(crate) fn demo_messages(ui: &mut egui::Ui) {
+    pub fn demo_messages(ui: &mut egui::Ui) {
         use functora_egui::i18n::I18N;
         _ = Typography::muted(
             "Messages / I18N: functora_core::messages + i18n Language (Eng/Spa/Rus). Error::render_* etc.",
@@ -1675,6 +1683,11 @@ impl crate::app::ShowcaseApp {
                 let _ = f.add(Badge::new(lang.to_string()));
             }
         });
+        ui.add_space(12.0);
+        snippet(
+            ui,
+            "// Messages / I18N: the same value rendered in every supported language\nuse functora_egui::error::Error;\nuse functora_egui::i18n::{I18N, Language};\n\nlet err = Error::JS(\"demo error\".into());\n\n// One value, three locales\nassert!(!err.render_eng().is_empty());\nassert!(!err.render_spa().is_empty());\nassert!(!err.render_rus().is_empty());\n\n// Supported UI languages\nfor lang in [Language::Eng, Language::Spa, Language::Rus] {\n    eprintln!(\"{lang}\");\n}",
+        );
     }
 
     pub fn demo_markdown(&mut self, ui: &mut egui::Ui) {
@@ -1706,9 +1719,9 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_package(ui: &mut egui::Ui) {
+    pub fn demo_package(ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "Package: FUNCTORA_CORE_DATE/YEAR + Cargo.toml metadata (theme_color, title) + build info.",
+            "Package: FUNCTORA_CORE_DATE/YEAR + Cargo.toml metadata (title, theme_color) via build.rs env.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -1724,33 +1737,66 @@ impl crate::app::ShowcaseApp {
             ))
             .show(ui2);
             _ = Typography::small(format!(
-                "FUNCTORA_CORE version: {}",
+                "crate: {} v{}",
+                env!("CARGO_PKG_NAME"),
                 env!("CARGO_PKG_VERSION")
             ))
             .show(ui2);
-            _ = Typography::small("Package metadata via include_str! for theme_color etc.")
+            _ = Typography::small(format!("title: {}", env!("DEMO_WEB_TITLE"))).show(ui2);
+            _ = Typography::small(format!("theme_color: {}", env!("DEMO_WEB_THEME_COLOR")))
                 .show(ui2);
         });
+        ui.add_space(12.0);
+        snippet(
+            ui,
+            "// Package: compile-time metadata via env! + functora-core stamps\nuse functora_egui::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};\n\n// From Cargo.toml, resolved at compile time\nlet name = env!(\"CARGO_PKG_NAME\");\nlet version = env!(\"CARGO_PKG_VERSION\");\n\n// build.rs: println!(\"cargo:rustc-env=MY_TITLE={}\", title);\nlet title = env!(\"MY_TITLE\");\nlet theme_color = env!(\"MY_THEME_COLOR\");\n\n// Library build stamps\nlet date = FUNCTORA_CORE_DATE;\nlet year = FUNCTORA_CORE_YEAR;\n\neprintln!(\"{name} {version} - {title} ({date}, {year})\");",
+        );
     }
 
-    pub(crate) fn demo_white_label(ui: &mut egui::Ui) {
+    /// White-label branding for this demo crate, the same way an app
+    /// declares `AppAttrs` for URLs, store links and footer text.
+    pub const DEMO_ATTRS: functora_egui::white_label::AppAttrs =
+        functora_egui::white_label::AppAttrs {
+            app: "functora-egui-demo",
+            vsn: env!("CARGO_PKG_VERSION"),
+            org: "functora",
+            src: Some("rust"),
+            dst: "apps",
+            description: env!("CARGO_PKG_DESCRIPTION"),
+        };
+
+    pub fn demo_white_label(ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "WhiteLabel: functora_core::white_label – branding, theme overrides, per-app config.",
+            "WhiteLabel: functora_core::white_label - AppAttrs branding URLs, donate blocks, WhiteLabelContent defaults.",
         )
         .show(ui);
         ui.add_space(12.0);
+        let attrs = Self::DEMO_ATTRS;
+        let content =
+            functora_egui::white_label::WhiteLabelContent::<functora_egui::messages::Msg>::default(
+            );
+        let custom_branding = content.license_text.is_some() || content.privacy_text.is_some();
+        let donate_labels = content
+            .donate_blocks
+            .iter()
+            .map(|block| block.label.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
         _ = Card::new().show(ui, |ui2| {
-            _ = Typography::small(format!("white_label available: {}", true)).show(ui2);
-            _ = Typography::small(
-                "Configure via Cargo.toml [package.metadata.functora-egui-*] + WhiteLabel::load",
-            )
-            .show(ui2);
-            _ = Typography::small("WhiteLabel: default (no custom branding)").show(ui2);
             _ = Typography::small(format!(
-                "white_label donate_blocks: {:?}",
-                functora_egui::white_label::donate_blocks().len()
+                "app: {} v{} ({})",
+                attrs.app, attrs.vsn, attrs.description
             ))
             .show(ui2);
+            _ = Typography::small(format!("app_url: {}", attrs.app_url())).show(ui2);
+            _ = Typography::small(format!("source_url: {}", attrs.source_url())).show(ui2);
+            _ = Typography::small(format!("custom branding: {custom_branding}")).show(ui2);
+            _ = Typography::small(format!("donate_blocks: {donate_labels}")).show(ui2);
         });
+        ui.add_space(12.0);
+        snippet(
+            ui,
+            "// WhiteLabel: per-app branding derived from AppAttrs\nuse functora_egui::white_label::{AppAttrs, WhiteLabelContent};\n\nconst ATTRS: AppAttrs = AppAttrs {\n    app: \"functora-egui-demo\",\n    vsn: env!(\"CARGO_PKG_VERSION\"),\n    org: \"functora\",\n    src: Some(\"rust\"),\n    dst: \"apps\",\n    description: env!(\"CARGO_PKG_DESCRIPTION\"),\n};\n\n// Derived branding URLs\nlet app_url = ATTRS.app_url();        // https://functora.github.io/apps/functora-egui-demo\nlet source_url = ATTRS.source_url();  // repo tree link\n\n// Default content (license / privacy / donate blocks)\nlet content = WhiteLabelContent::<functora_egui::messages::Msg>::default();\nlet donate = content.donate_blocks.len();",
+        );
     }
 }

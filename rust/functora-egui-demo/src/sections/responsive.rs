@@ -102,7 +102,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().no_wrap_on_mobile().show(ui, |f| { ... });",
+            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().gap(8.0).no_wrap_on_mobile().show(ui, |f| { ... });",
         );
     }
 

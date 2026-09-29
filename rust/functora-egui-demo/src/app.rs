@@ -487,6 +487,8 @@ pub enum ComponentId {
     Item,
     Icons,
     Image,
+    Hyperlink,
+    Hypertext,
     FieldGroup,
     FieldSet,
     FieldLegend,
@@ -523,7 +525,7 @@ pub enum ComponentId {
 }
 
 impl ComponentId {
-    pub const ALL: [Self; 97] = [
+    pub const ALL: [Self; 99] = [
         Self::Button,
         Self::Checkbox,
         Self::Switch,
@@ -588,6 +590,8 @@ impl ComponentId {
         Self::Item,
         Self::Icons,
         Self::Image,
+        Self::Hyperlink,
+        Self::Hypertext,
         Self::FieldGroup,
         Self::FieldSet,
         Self::FieldLegend,
@@ -691,6 +695,8 @@ impl ComponentId {
             Self::Item => "Item",
             Self::Icons => "Icons",
             Self::Image => "Image",
+            Self::Hyperlink => "Hyperlink",
+            Self::Hypertext => "Hypertext",
             Self::FieldGroup => "FieldGroup",
             Self::FieldSet => "FieldSet",
             Self::FieldLegend => "FieldLegend",
@@ -801,6 +807,8 @@ impl ComponentId {
             "item" => Some(Self::Item),
             "icons" => Some(Self::Icons),
             "image" => Some(Self::Image),
+            "hyperlink" => Some(Self::Hyperlink),
+            "hypertext" => Some(Self::Hypertext),
             "fieldgroup" => Some(Self::FieldGroup),
             "fieldset" => Some(Self::FieldSet),
             "fieldlegend" => Some(Self::FieldLegend),
@@ -1161,6 +1169,12 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("Item", LucideIcon::Rows3, Some(ComponentId::Item)),
             ComponentDef::new("Icons", LucideIcon::Component, Some(ComponentId::Icons)),
             ComponentDef::new("Image", LucideIcon::Image, Some(ComponentId::Image)),
+            ComponentDef::new("Hyperlink", LucideIcon::Link, Some(ComponentId::Hyperlink)),
+            ComponentDef::new(
+                "Hypertext",
+                LucideIcon::Pilcrow,
+                Some(ComponentId::Hypertext),
+            ),
         ],
     ),
     (
@@ -1285,8 +1299,9 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
 pub fn component_count() -> usize {
     CATEGORIES
         .iter()
-        .map(|(_, _, items)| items.len())
-        .sum::<usize>()
+        .flat_map(|(_, _, items)| items.iter())
+        .filter(|def| def.id.is_some())
+        .count()
 }
 
 /// Single source of truth for section buttons – used by sidebar, palette and overview.
@@ -1815,6 +1830,8 @@ impl ShowcaseApp {
             Some(ComponentId::Item) => self.demo_item(ui),
             Some(ComponentId::Icons) => self.demo_icons(ui),
             Some(ComponentId::Image) => self.demo_image(ui),
+            Some(ComponentId::Hyperlink) => Self::demo_hyperlink(ui),
+            Some(ComponentId::Hypertext) => self.demo_hypertext(ui),
             Some(ComponentId::FieldGroup) => self.demo_field_group(ui),
             Some(ComponentId::FieldSet) => self.demo_field_set(ui),
             Some(ComponentId::FieldLegend) => Self::demo_field_legend(ui),

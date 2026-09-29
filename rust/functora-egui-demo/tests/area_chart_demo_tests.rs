@@ -1,5 +1,5 @@
 //! `AreaChart` demo regression: chart lines must contrast with the card surface
-//! on both themes, and the legend pills must not share one fill color.
+//! on both themes.
 
 use egui::{Context, Pos2, RawInput, Rect, Vec2};
 use functora_egui::theme_extra::{Theme, set_theme};
@@ -57,13 +57,6 @@ fn chart_line_hues(out: &egui::FullOutput) -> Vec<[u8; 4]> {
         .collect()
 }
 
-fn primary_fills(out: &egui::FullOutput, primary: egui::Color32) -> usize {
-    out.shapes
-        .iter()
-        .filter(|clipped| matches!(&clipped.shape, egui::Shape::Rect(rect) if rect.fill == primary))
-        .count()
-}
-
 fn render_demo(ui: &mut egui::Ui) {
     functora_egui_demo::ShowcaseApp::demo_area_chart(ui);
 }
@@ -84,17 +77,4 @@ fn chart_lines_contrast_with_card() {
             );
         }
     }
-}
-
-#[test]
-fn legend_pills_have_distinct_fills() {
-    let mut app = Harness::new();
-    let mut body = render_demo;
-    let out = app.step_themed(Theme::Dark, 800.0, &mut body);
-    let theme = functora_egui::ShadcnThemeExt::shadcn_theme(&app.ctx);
-    assert_eq!(
-        primary_fills(&out, theme.primary),
-        1,
-        "legend must not paint two identical Default pills"
-    );
 }

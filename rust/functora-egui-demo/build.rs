@@ -31,6 +31,13 @@ fn main() {
     let android_cfg = functora_egui::android::config::load_android_config("Cargo.toml");
     let web_cfg = functora_egui::web::config::load_config("Cargo.toml");
 
+    println!("cargo:rustc-env=DEMO_WEB_TITLE={}", web_cfg.title);
+    println!("cargo:rustc-env=DEMO_WEB_SHORT_NAME={}", web_cfg.short_name);
+    println!(
+        "cargo:rustc-env=DEMO_WEB_THEME_COLOR={}",
+        web_cfg.theme_color
+    );
+
     let settings = functora_egui::android::templates::SettingsGradle {
         app_name: &android_cfg.app_name,
     }

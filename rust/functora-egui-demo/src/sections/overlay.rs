@@ -47,7 +47,7 @@ enum HelpAction {
 }
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_dialog(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_dialog(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A modal dialog with a backdrop.").show(ui);
         ui.add_space(12.0);
         _ = Typography::small("On mobile the dialog opens as a bottom sheet.").show(ui);
@@ -68,7 +68,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Dialog: modal dialog with backdrop\n// On mobile Dialog anchors CENTER_BOTTOM as a bottom sheet.\nuse functora_egui::{Dialog, Button, ButtonVariant, LucideIcon};\n\nlet mut open = false;\n\nif Button::new(\"Open Dialog\").icon(LucideIcon::SquareMenu).show(ui).clicked() {\n    open = true;\n}\n\nDialog::new()\n    .title(\"Edit Profile\")\n    .description(\"Make changes to your profile here.\")\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Full name\").show(ui);\n        Input::new(&mut name).placeholder(\"Ada Lovelace\").show(ui);\n        ui.add_space(8.0);\n        Label::new(\"Bio\").show(ui);\n        Textarea::new(&mut bio).placeholder(\"Tell us...\").show(ui);\n        ui.add_space(12.0);\n        Flex::row().justify_end().gap(8.0).show(ui, |f| {\n            f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n            if f.add(Button::new(\"Save\").icon(LucideIcon::Check)).clicked() {\n                open = false;\n            }\n        });\n    });",
+            "// Dialog: modal dialog with backdrop\n// On mobile Dialog anchors CENTER_BOTTOM as a bottom sheet.\nuse functora_egui::{Dialog, Button, ButtonVariant, LucideIcon, ComponentSize, Label, Input, Textarea, Flex};\n\nlet mut open = false;\n\nif Button::new(\"Open Dialog\").icon(LucideIcon::SquareMenu).show(ui).clicked() {\n    open = true;\n}\n\nDialog::new()\n    .title(\"Edit Profile\")\n    .description(\"Make changes to your profile here.\")\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Full name\").show(ui);\n        ui.add_space(8.0);\n        Input::new(&mut name).placeholder(\"Ada Lovelace\").show(ui);\n        ui.add_space(8.0);\n        Label::new(\"Bio\").show(ui);\n        ui.add_space(8.0);\n        Textarea::new(&mut bio).placeholder(\"Tell us about yourself...\").desired_width(ui.available_width()).show(ui);\n        ui.add_space(12.0);\n        Flex::row().justify_end().gap(8.0).show(ui, |f| {\n            f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            if f.add(Button::new(\"Save Changes\").size(ComponentSize::Sm).icon(LucideIcon::Check)).clicked() {\n                open = false;\n            }\n        });\n    });",
         );
     }
 
@@ -86,7 +86,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// AlertDialog: confirmation with destructive action\nuse functora_egui::{AlertDialog, Button, ButtonVariant, LucideIcon};\n\nlet mut open = false;\n\nif Button::new(\"Delete Account\").variant(ButtonVariant::Destructive).show(ui).clicked() {\n    open = true;\n}\n\nlet result = AlertDialog::new(\n    \"Are you absolutely sure?\",\n    \"This action cannot be undone.\"\n)\n.destructive()\n.show(ctx, &mut open);\n\nmatch result {\n    AlertDialogResult::Confirmed => eprintln!(\"User confirmed deletion\"),\n    AlertDialogResult::Cancelled => eprintln!(\"User cancelled\"),\n    _ => {}\n}",
+            "// AlertDialog: confirmation with destructive action\nuse functora_egui::{AlertDialog, AlertDialogResult, Button, ButtonVariant, LucideIcon};\n\nlet mut open = false;\n\nif Button::new(\"Delete Account\").icon(LucideIcon::Trash).variant(ButtonVariant::Destructive).show(ui).clicked() {\n    open = true;\n}\n\nlet result = AlertDialog::new(\n    \"Are you absolutely sure?\",\n    \"This action cannot be undone. This will permanently delete your account.\"\n)\n.destructive()\n.show(ctx, &mut open);\n\nmatch result {\n    AlertDialogResult::Confirmed => eprintln!(\"User confirmed deletion\"),\n    AlertDialogResult::Cancelled => eprintln!(\"User cancelled\"),\n}",
         );
     }
 
@@ -106,7 +106,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Sheet: side panel from edge (right/left/top/bottom)\nuse functora_egui::{Sheet, SheetSide, Button, ButtonVariant, LucideIcon, Label};\n\nlet mut open = false;\n\nif Button::new(\"Open Sheet\").icon(LucideIcon::PanelRight).show(ui).clicked() {\n    open = true;\n}\n\nSheet::new()\n    .title(\"Sheet Panel\")\n    .description(\"A side sheet that slides in from the edge.\")\n    .side(SheetSide::Right)\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Notifications\").show(ui);\n        // ... content\n    });\n\n// On mobile, opens from bottom regardless of side",
+            "// Sheet: side panel from edge (right/left/top/bottom)\nuse functora_egui::{Sheet, SheetSide, Button, ButtonVariant, LucideIcon, Label, Item, FieldDescription};\n\nlet mut open = false;\n\nif Button::new(\"Open Sheet\").icon(LucideIcon::PanelRight).variant(ButtonVariant::Outline).show(ui).clicked() {\n    open = true;\n}\n\nSheet::new()\n    .title(\"Sheet Panel\")\n    .description(\"A side sheet that slides in from the edge.\")\n    .side(SheetSide::Right)\n    .show(ctx, &mut open, |ui| {\n        Label::new(\"Notifications\").show(ui);\n        ui.add_space(4.0);\n        for (label, desc) in [\n            (\"New comment\", \"Alice commented on your post.\"),\n            (\"Build passed\", \"The release pipeline finished.\"),\n            (\"Update ready\", \"functora-egui 0.2 is available.\"),\n        ] {\n            Item::new().show(ui, |item| {\n                item.vertical(|v| {\n                    Label::new(label).show(v);\n                    FieldDescription::show(v, desc);\n                });\n            });\n        }\n    });\n\n// On mobile, opens from bottom regardless of side",
         );
     }
 
@@ -124,11 +124,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Popover: floating popup anchored to trigger\nuse functora_egui::{Popover, Button, ButtonVariant, LucideIcon, Label};\n\nlet response = Button::new(\"Open Popover\").icon(LucideIcon::PanelTopOpen).show(ui);\n\nPopover::new().show(ui, &response, |ui| {\n    Label::new(\"Popover content\").show(ui);\n    ui.label(\"Click the button again to close it.\");\n});",
+            "// Popover: floating popup anchored to trigger\nuse functora_egui::{Popover, Button, ButtonVariant, LucideIcon, Label};\n\nlet response = Button::new(\"Open Popover\").icon(LucideIcon::PanelTopOpen).variant(ButtonVariant::Outline).show(ui);\n\nPopover::new().show(ui, &response, |ui| {\n    Label::new(\"Popover content\").show(ui);\n    ui.label(\"Click the button again to close it.\");\n});",
         );
     }
 
-    pub(crate) fn demo_hover_card(ui: &mut egui::Ui) {
+    pub fn demo_hover_card(ui: &mut egui::Ui) {
         _ = Typography::muted("A rich tooltip shown on hover.").show(ui);
         ui.add_space(12.0);
         let response = Button::new("Hover me")
@@ -147,7 +147,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// HoverCard: rich tooltip on hover\nuse functora_egui::{HoverCard, Button, ButtonVariant, LucideIcon, Typography, Label};\n\nlet response = Button::new(\"Hover me\").icon(LucideIcon::MousePointer2).variant(ButtonVariant::Outline).show(ui);\n\nHoverCard::new().width(260.0).show(&response, |ui| {\n    Typography::h4(\"shadcn/ui\").show(ui);\n    ui.add_space(4.0);\n    ui.label(\"Beautifully designed components for your apps.\");\n    ui.add_space(6.0);\n    Label::new(\"Learn more about functora-egui\").show(ui);\n});",
+            "// HoverCard: rich tooltip on hover\nuse functora_egui::{HoverCard, Button, ButtonVariant, LucideIcon, Typography, Label};\n\nlet response = Button::new(\"Hover me\").icon(LucideIcon::MousePointer2).variant(ButtonVariant::Outline).show(ui);\n\nHoverCard::new().width(260.0).show(&response, |ui| {\n    Typography::h4(\"shadcn/ui\").show(ui);\n    ui.add_space(4.0);\n    ui.label(\"Beautifully designed components that you can copy and paste into your apps.\");\n    ui.add_space(6.0);\n    Label::new(\"Learn more about functora-egui\").show(ui);\n});",
         );
     }
 
@@ -175,7 +175,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_context_menu(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_context_menu(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Right-click a target to open a context menu.").show(ui);
         ui.add_space(12.0);
         let response = Button::new("Right-click me")
@@ -198,7 +198,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// ContextMenu: right-click menu bound to an enum\nuse functora_egui::{ContextMenu, Button, ButtonVariant, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ContextAction { Cut, Copy, Paste }\n\nlet response = Button::new(\"Right-click me\")\n    .icon(LucideIcon::MousePointerClick)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet entries = [(ContextAction::Cut, \"Cut\".to_owned()), (ContextAction::Copy, \"Copy\".to_owned())];\nContextMenu::show_value(&response, &entries, |action| {\n    match action {\n        ContextAction::Cut => eprintln!(\"Cut\"),\n        ContextAction::Copy => eprintln!(\"Copy\"),\n        ContextAction::Paste => eprintln!(\"Paste\"),\n    }\n});",
+            "// ContextMenu: right-click menu bound to an enum\nuse functora_egui::{ContextMenu, Button, ButtonVariant, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ContextAction { Cut, Copy, Paste, SelectAll }\n\nlet response = Button::new(\"Right-click me\")\n    .icon(LucideIcon::MousePointerClick)\n    .variant(ButtonVariant::Outline)\n    .show(ui);\n\nlet entries = [(ContextAction::Cut, \"Cut\".to_owned()), (ContextAction::Copy, \"Copy\".to_owned()), (ContextAction::Paste, \"Paste\".to_owned()), (ContextAction::SelectAll, \"Select All\".to_owned())];\nContextMenu::show_value(&response, &entries, |action| {\n    match action {\n        ContextAction::Cut => eprintln!(\"Cut\"),\n        ContextAction::Copy => eprintln!(\"Copy\"),\n        ContextAction::Paste => eprintln!(\"Paste\"),\n        ContextAction::SelectAll => eprintln!(\"Select All\"),\n    }\n});",
         );
     }
 
@@ -247,11 +247,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// CommandValue: searchable palette bound to an enum\nuse functora_egui::{CommandValue, CommandItem, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum DemoCommand { NewFile, Copy, Paste }\n\nlet entries = vec![\n    (DemoCommand::NewFile, CommandItem { group: \"File\".to_owned(), group_icon: LucideIcon::File, label: \"New File\".to_owned(), icon: LucideIcon::FilePlus }),\n    (DemoCommand::Copy, CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Copy\".to_owned(), icon: LucideIcon::Copy }),\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(command) = CommandValue::new(entries)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {command:?}\");\n}",
+            "// CommandValue: searchable palette bound to an enum\nuse functora_egui::{CommandValue, CommandItem, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum DemoCommand { NewFile, Copy, Paste }\n\nlet entries = vec![\n    (DemoCommand::NewFile, CommandItem { group: \"File\".to_owned(), group_icon: LucideIcon::File, label: \"New File\".to_owned(), icon: LucideIcon::FilePlus }),\n    (DemoCommand::Copy, CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Copy\".to_owned(), icon: LucideIcon::Copy }),\n    (DemoCommand::Paste, CommandItem { group: \"Edit\".to_owned(), group_icon: LucideIcon::Pencil, label: \"Paste\".to_owned(), icon: LucideIcon::ClipboardPaste }),\n];\nlet mut open = false;\nlet mut search = String::new();\n\nif let Some(command) = CommandValue::new(entries)\n    .placeholder(\"Search...\")\n    .show(ctx, &mut open, &mut search)\n{\n    eprintln!(\"Selected: {command:?}\");\n}",
         );
     }
 
-    pub(crate) fn demo_menubar(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_menubar(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A horizontal menu bar with dropdown menus.").show(ui);
         ui.add_space(12.0);
         let ctx = ui.ctx().clone();
@@ -298,7 +298,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Menubar: menu bar with enum-bound dropdowns\nuse functora_egui::{Menubar, Button, LucideIcon, ToastVariant};\n\n#[derive(Clone, Copy, PartialEq)]\nenum EditAction { Undo, Redo, Cut }\n\nMenubar::new().show(ui, |bar| {\n    Menubar::item(bar, \"File\");\n    let entries = [(EditAction::Undo, \"Undo\".to_owned()), (EditAction::Redo, \"Redo\".to_owned()), (EditAction::Cut, \"Cut\".to_owned())];\n    Menubar::menu_value(bar, \"Edit\", &entries, |action| {\n        match action {\n            EditAction::Undo => eprintln!(\"Undo\"),\n            EditAction::Redo => eprintln!(\"Redo\"),\n            EditAction::Cut => eprintln!(\"Cut\"),\n        }\n    });\n});",
+            "// Menubar: menu bar with enum-bound dropdowns\nuse functora_egui::Menubar;\n\n#[derive(Clone, Copy, PartialEq)]\nenum EditAction { Undo, Redo, Cut, Copy, Paste }\n\n#[derive(Clone, Copy, PartialEq)]\nenum ViewAction { ZoomIn, ZoomOut, FullScreen }\n\n#[derive(Clone, Copy, PartialEq)]\nenum HelpAction { Documentation, About }\n\nMenubar::new().show(ui, |bar| {\n    Menubar::item(bar, \"File\");\n    let edit = [(EditAction::Undo, \"Undo\".to_owned()), (EditAction::Redo, \"Redo\".to_owned()), (EditAction::Cut, \"Cut\".to_owned()), (EditAction::Copy, \"Copy\".to_owned()), (EditAction::Paste, \"Paste\".to_owned())];\n    Menubar::menu_value(bar, \"Edit\", &edit, |action| {\n        match action {\n            EditAction::Undo => eprintln!(\"Undo\"),\n            EditAction::Redo => eprintln!(\"Redo\"),\n            EditAction::Cut => eprintln!(\"Cut\"),\n            EditAction::Copy => eprintln!(\"Copy\"),\n            EditAction::Paste => eprintln!(\"Paste\"),\n        }\n    });\n    let view = [(ViewAction::ZoomIn, \"Zoom In\".to_owned()), (ViewAction::ZoomOut, \"Zoom Out\".to_owned()), (ViewAction::FullScreen, \"Full Screen\".to_owned())];\n    Menubar::menu_value(bar, \"View\", &view, |action| {\n        eprintln!(\"View: {action:?}\");\n    });\n    let help = [(HelpAction::Documentation, \"Documentation\".to_owned()), (HelpAction::About, \"About\".to_owned())];\n    Menubar::menu_value(bar, \"Help\", &help, |action| {\n        eprintln!(\"Help: {action:?}\");\n    });\n});",
         );
     }
 

@@ -2,8 +2,8 @@
 //! tables, and area charts.
 
 use functora_egui::{
-    AreaChart, AreaSeries, Avatar, Badge, BadgeVariant, Breadcrumb, Calendar, Carousel, Flex,
-    NavAction, Pagination, ResponsiveExt, Separator, Table, Typography,
+    AreaChart, AreaSeries, Avatar, Breadcrumb, Calendar, Carousel, Flex, NavAction, Pagination,
+    ResponsiveExt, Table, Typography,
 };
 
 use functora_egui::snippet;
@@ -103,7 +103,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_carousel(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_carousel(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A slider with prev/next navigation and dots.").show(ui);
         ui.add_space(12.0);
         let slides = [
@@ -143,7 +143,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet slides = [(\"Slide 1\", Color32::from_rgb(25, 113, 194)), (\"Slide 2\", Color32::from_rgb(18, 184, 134))];\nlet mut index = 0;\n\nCarousel::new(slides.len()).show(ui, &mut index, |slide, idx| {\n    if let Some((name, color)) = slides.get(idx).copied() {\n        let width = slide.available_width().min(420.0);\n        let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n        slide.painter().rect_filled(rect, theme.radius, color);\n        slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n    }\n});",
+            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet slides = [(\"Slide 1\", Color32::from_rgb(25, 113, 194)), (\"Slide 2\", Color32::from_rgb(18, 184, 134)), (\"Slide 3\", Color32::from_rgb(245, 159, 0)), (\"Slide 4\", Color32::from_rgb(224, 49, 49))];\nlet mut index = 0;\n\nCarousel::new(slides.len()).show(ui, &mut index, |slide, idx| {\n    if let Some((name, color)) = slides.get(idx).copied() {\n        let width = slide.available_width().min(420.0);\n        let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n        slide.painter().rect_filled(rect, theme.radius, color);\n        slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n    }\n});",
         );
     }
 
@@ -180,7 +180,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_table(ui: &mut egui::Ui) {
+    pub fn demo_table(ui: &mut egui::Ui) {
         _ = Typography::muted("A styled table with headers, rows, and optional striping.").show(ui);
         ui.add_space(12.0);
         let headers = vec!["Name".to_owned(), "Status".to_owned(), "Role".to_owned()];
@@ -232,7 +232,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Table: styled table with headers, rows, striping, column weights\nuse functora_egui::Table;\n\nlet headers = vec![\"Name\", \"Status\", \"Role\"];\nlet rows = vec![\n    vec![\"Ada Lovelace\", \"Active\", \"Admin\"],\n    vec![\"Alan Turing\", \"Active\", \"Editor\"],\n    vec![\"Grace Hopper\", \"Inactive\", \"Viewer\"],\n];\n\n// Basic with striping\nTable::new(headers.clone()).rows(rows.clone()).striped().show(ui);\n\n// Custom column weights\nTable::new(vec![\"Name\", \"Email\", \"Role\"])\n    .rows(vec![\n        vec![\"Ada Lovelace\", \"ada@example.com\", \"Admin\"],\n        vec![\"Alan Turing\", \"alan@example.com\", \"Editor\"],\n    ])\n    .col_weights(vec![0.4, 0.4, 0.2])\n    .show(ui);",
+            "// Table: styled table with headers, rows, striping, column weights\nuse functora_egui::Table;\n\nlet headers = vec![\"Name\", \"Status\", \"Role\"];\nlet rows = vec![\n    vec![\"Ada Lovelace\", \"Active\", \"Admin\"],\n    vec![\"Alan Turing\", \"Active\", \"Editor\"],\n    vec![\"Grace Hopper\", \"Inactive\", \"Viewer\"],\n    vec![\"Edsger Dijkstra\", \"Active\", \"Editor\"],\n];\n\n// Basic with striping\nTable::new(headers.clone()).rows(rows.clone()).striped().show(ui);\n\n// Custom column weights\nTable::new(vec![\"Name\", \"Email\", \"Role\"])\n    .rows(vec![\n        vec![\"Ada Lovelace\", \"ada@example.com\", \"Admin\"],\n        vec![\"Alan Turing\", \"alan@example.com\", \"Editor\"],\n    ])\n    .col_weights(vec![0.4, 0.4, 0.2])\n    .show(ui);",
         );
     }
 
@@ -259,17 +259,10 @@ impl crate::app::ShowcaseApp {
         .stacked()
         .height(260.0)
         .show(ui);
-        ui.add_space(12.0);
-        _ = Separator::horizontal().show(ui);
-        ui.add_space(4.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
-            _ = f.add(Badge::new("Alpha"));
-            _ = f.add(Badge::new("Beta").variant(BadgeVariant::Success));
-        });
 
         snippet(
             ui,
-            "// AreaChart: stacked area chart with smooth curves\nuse functora_egui::{AreaChart, AreaSeries, Badge, BadgeVariant};\n\nlet theme = ShadcnThemeExt::shadcn_theme(ui.ctx());\n\nAreaChart::new(months)\n    .series(AreaSeries {\n        values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],\n        color: theme.chart_1,\n    })\n    .series(AreaSeries {\n        values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],\n        color: theme.chart_2,\n    })\n    .stacked()\n    .height(260.0)\n    .show(ui);\n\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Badge::new(\"Alpha\"));\n    f.add(Badge::new(\"Beta\").variant(BadgeVariant::Success));\n});",
+            "// AreaChart: stacked area chart with smooth curves\nuse functora_egui::{AreaChart, AreaSeries};\n\nlet theme = ShadcnThemeExt::shadcn_theme(ui.ctx());\n\nlet months = [\"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\"].map(str::to_owned);\nAreaChart::new(months.to_vec())\n    .series(AreaSeries {\n        values: vec![186.0, 305.0, 237.0, 73.0, 209.0, 214.0],\n        color: theme.chart_1,\n    })\n    .series(AreaSeries {\n        values: vec![80.0, 200.0, 120.0, 190.0, 130.0, 140.0],\n        color: theme.chart_2,\n    })\n    .stacked()\n    .height(260.0)\n    .show(ui);",
         );
     }
 }

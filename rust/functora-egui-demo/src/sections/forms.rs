@@ -59,7 +59,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// FieldGroup: groups related fields in a card container\nuse functora_egui::{FieldGroup, Label, Input, Flex, SelectLabeled, ResponsiveExt};\n\n#[derive(Clone, Copy, PartialEq)]\nstruct Month(u8);\n\nFieldGroup::show(ui, |group| {\n    Label::new(\"Card number\").show(group);\n    Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(group);\n    Label::new(\"Expiry\").show(group);\n    let months = [Month(1), Month(2)].map(|m| (m, format!(\"{:02}\", m.0)));\n    let mut month: Option<Month> = None;\n    SelectLabeled::new(&mut month, &months).placeholder(\"Month\").show(group);\n    Label::new(\"CVV\").show(group);\n    Input::new(&mut cvv).placeholder(\"123\").show(group);\n});",
+            "// FieldGroup: groups related fields in a card container\nuse functora_egui::{FieldGroup, Label, Input, SelectLabeled};\n\n#[derive(Clone, Copy, PartialEq)]\nstruct Month(u8);\n\nFieldGroup::show(ui, |group| {\n    Label::new(\"Card number\").show(group);\n    Input::new(&mut card).placeholder(\"4242 4242 4242 4242\").show(group);\n    Label::new(\"Expiry\").show(group);\n    let months = (1..=12).map(|m| (Month(m), format!(\"{m:02}\"))).collect::<Vec<_>>();\n    let mut month: Option<Month> = None;\n    SelectLabeled::new(&mut month, &months).placeholder(\"Month\").show(group);\n    let years = [(2026, \"2026\".to_owned()), (2027, \"2027\".to_owned()), (2028, \"2028\".to_owned()), (2029, \"2029\".to_owned()), (2030, \"2030\".to_owned())];\n    let mut year: Option<i32> = None;\n    SelectLabeled::new(&mut year, &years).placeholder(\"Year\").show(group);\n    Label::new(\"CVV\").show(group);\n    Input::new(&mut cvv).placeholder(\"123\").show(group);\n});",
         );
     }
 
@@ -120,7 +120,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_property_grid(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_property_grid(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A label/value grid for inspectors and settings.").show(ui);
         ui.add_space(12.0);
         _ = PropertyGrid::new()
@@ -175,11 +175,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// PropertyGrid: label/value grid for inspectors\nuse functora_egui::{PropertyGrid, PropertyRow, NumberInput};\n\nPropertyGrid::new()\n    .label_width(96.0)\n    .row_gap(4.0)\n    .show(ui, |grid| {\n        PropertyRow::new(\"X\").show(grid, |row| {\n            row.add(NumberInput::new(&mut x).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Y\").show(grid, |row| {\n            row.add(NumberInput::new(&mut y).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Width\").show(grid, |row| {\n            row.add(NumberInput::new(&mut w).range(0.0..=2000.0).width(110.0));\n        });\n    });",
+            "// PropertyGrid: label/value grid for inspectors\nuse functora_egui::{PropertyGrid, PropertyRow, NumberInput};\n\nPropertyGrid::new()\n    .label_width(96.0)\n    .row_gap(4.0)\n    .show(ui, |grid| {\n        PropertyRow::new(\"X\").show(grid, |row| {\n            row.add(NumberInput::new(&mut x).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Y\").show(grid, |row| {\n            row.add(NumberInput::new(&mut y).range(-500.0..=500.0).width(110.0));\n        });\n        PropertyRow::new(\"Width\").show(grid, |row| {\n            row.add(NumberInput::new(&mut w).range(0.0..=2000.0).width(110.0));\n        });\n        PropertyRow::new(\"Height\").show(grid, |row| {\n            row.add(NumberInput::new(&mut h).range(0.0..=2000.0).width(110.0));\n        });\n        PropertyRow::new(\"Rotation\").show(grid, |row| {\n            row.add(NumberInput::new(&mut rot).range(-180.0..=180.0).suffix(\" deg\").width(110.0));\n        });\n        PropertyRow::new(\"Opacity\").show(grid, |row| {\n            row.add(NumberInput::new(&mut opacity).range(0.0..=100.0).suffix(\"%\").width(110.0));\n        });\n    });",
         );
     }
 
-    pub(crate) fn demo_property_row(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_property_row(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A single labeled row: text, badges, or inputs.").show(ui);
         ui.add_space(12.0);
         _ = PropertyGrid::new().label_width(96.0).show(ui, |ui41| {
@@ -213,7 +213,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// PropertyRow: single labeled row (text, badges, inputs, switches)\nuse functora_egui::{PropertyGrid, PropertyRow, Badge, BadgeVariant, SelectValueLabeled, Switch, Flex, Button, ButtonVariant, LucideIcon, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply }\n\nPropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"Mode\").show(grid, |row| {\n        Badge::new(\"Auto\").variant(BadgeVariant::Secondary).show(row);\n    });\n    PropertyRow::new(\"Blend\").show(grid, |row| {\n        let entries = [(BlendMode::Normal, \"Normal\".to_owned())];\n        SelectValueLabeled::new(&mut blend, &entries).show(row);\n    });\n    PropertyRow::new(\"Visible\").show(grid, |row| {\n        Switch::new(&mut show).label(\"Show\").show(row);\n    });\n    PropertyRow::new(\"Actions\").show(grid, |row| {\n        Flex::row().gap(8.0).show(row, |f| {\n            f.add(Button::new(\"Reset\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            f.add(Button::new(\"Apply\").size(ComponentSize::Sm).icon(LucideIcon::Check));\n        });\n    });\n});",
+            "// PropertyRow: single labeled row (text, badges, inputs, switches)\nuse functora_egui::{PropertyGrid, PropertyRow, Badge, BadgeVariant, SelectValueLabeled, Switch, Flex, Button, ButtonVariant, LucideIcon, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply, Screen, Overlay }\n\nPropertyGrid::new().label_width(96.0).show(ui, |grid| {\n    PropertyRow::new(\"Mode\").show(grid, |row| {\n        Badge::new(\"Auto\").variant(BadgeVariant::Secondary).show(row);\n    });\n    PropertyRow::new(\"Blend\").show(grid, |row| {\n        let entries = [(BlendMode::Normal, \"Normal\".to_owned()), (BlendMode::Multiply, \"Multiply\".to_owned()), (BlendMode::Screen, \"Screen\".to_owned()), (BlendMode::Overlay, \"Overlay\".to_owned())];\n        SelectValueLabeled::new(&mut blend, &entries).show(row);\n    });\n    PropertyRow::new(\"Visible\").show(grid, |row| {\n        Switch::new(&mut show).label(\"Show\").show(row);\n    });\n    PropertyRow::new(\"Actions\").show(grid, |row| {\n        Flex::row().gap(8.0).show(row, |f| {\n            f.add(Button::new(\"Reset\").variant(ButtonVariant::Outline).size(ComponentSize::Sm));\n            f.add(Button::new(\"Apply\").size(ComponentSize::Sm).icon(LucideIcon::Check));\n        });\n    });\n});",
         );
     }
 }

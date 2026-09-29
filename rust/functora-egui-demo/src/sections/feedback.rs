@@ -8,7 +8,7 @@ use functora_egui::{
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_alert(ui: &mut egui::Ui) {
+    pub fn demo_alert(ui: &mut egui::Ui) {
         _ = Typography::muted("A status message container with variants.").show(ui);
         ui.add_space(12.0);
         _ = Alert::new()
@@ -27,7 +27,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant, Flex, Label, Button, ButtonVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .show(ui, |ui| {\n        ui.label(\"This is an informational alert message.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });",
+            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .variant(AlertVariant::Default)\n    .show(ui, |ui| {\n        ui.label(\"You can add components to your app using the CLI.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });",
         );
     }
 
@@ -184,7 +184,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_empty(ui: &mut egui::Ui) {
+    pub fn demo_empty(ui: &mut egui::Ui) {
         _ = Typography::muted("A centered empty state for lists and searches.").show(ui);
         ui.add_space(12.0);
         _ = Empty::show(ui, |ui25| {
@@ -208,7 +208,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Empty: centered empty state for lists/searches\nuse functora_egui::{Empty, Card, Button, ButtonVariant, LucideIcon, Typography, ComponentSize};\n\nEmpty::show(ui, |ui| {\n    Card::new().show(ui, |card| {\n        Button::icon_only(LucideIcon::Inbox)\n            .variant(ButtonVariant::Ghost)\n            .size(ComponentSize::Lg)\n            .show(card);\n        card.add_space(4.0);\n        Typography::h4(\"No results found\").show(card);\n        card.add_space(4.0);\n        Typography::small(\"Try adjusting your search...\").show(card);\n        card.add_space(8.0);\n        Button::new(\"Reset Search\")\n            .variant(ButtonVariant::Outline)\n            .size(ComponentSize::Sm)\n            .show(card);\n    });\n});",
+            "// Empty: centered empty state for lists/searches\nuse functora_egui::{Empty, Card, Button, ButtonVariant, LucideIcon, Typography, ComponentSize};\n\nEmpty::show(ui, |ui| {\n    Card::new().show(ui, |card| {\n        Button::icon_only(LucideIcon::Inbox)\n            .variant(ButtonVariant::Ghost)\n            .size(ComponentSize::Lg)\n            .show(card);\n        card.add_space(4.0);\n        Typography::h4(\"No results found\").show(card);\n        card.add_space(4.0);\n        Typography::small(\"Try adjusting your search to find what you're looking for.\").show(card);\n        card.add_space(8.0);\n        Button::new(\"Reset Search\")\n            .variant(ButtonVariant::Outline)\n            .size(ComponentSize::Sm)\n            .show(card);\n    });\n});",
         );
     }
 }

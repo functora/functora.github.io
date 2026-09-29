@@ -12,7 +12,7 @@ use functora_egui::{
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_button(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_button(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Clickable buttons with variant styles and sizes.").show(ui);
         ui.add_space(12.0);
 
@@ -141,7 +141,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Button: variants + sizes + icons + shortcuts\nuse functora_egui::{Button, ButtonVariant, ComponentSize, LucideIcon};\n\n// Variants\nButton::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::new(\"Outline\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Secondary\").variant(ButtonVariant::Secondary).show(ui);\nButton::new(\"Ghost\").variant(ButtonVariant::Ghost).show(ui);\nButton::new(\"Link\").variant(ButtonVariant::Link).show(ui);\n\n// Sizes\nButton::new(\"XS\").size(ComponentSize::Xs).show(ui);\nButton::new(\"Small\").size(ComponentSize::Sm).show(ui);\nButton::new(\"Default\").show(ui);\nButton::new(\"Large\").size(ComponentSize::Lg).show(ui);\n\n// Icon only\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::icon_only(LucideIcon::Settings).variant(ButtonVariant::Outline).show(ui);\n\n// Icon + text\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Upload\").icon(LucideIcon::Upload).variant(ButtonVariant::Outline).show(ui);\n\n// Shortcut text\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").variant(ButtonVariant::Outline).show(ui);\n\n// Disabled\nButton::new(\"Disabled\").enabled(false).show(ui);",
+            "// Button: variants + sizes + icons + shortcuts\nuse functora_egui::{Button, ButtonGroup, ButtonVariant, ComponentSize, LucideIcon};\n\n// Variants\nButton::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::new(\"Outline\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Secondary\").variant(ButtonVariant::Secondary).show(ui);\nButton::new(\"Ghost\").variant(ButtonVariant::Ghost).show(ui);\nButton::new(\"Link\").variant(ButtonVariant::Link).show(ui);\n\n// Sizes\nButton::new(\"XS\").size(ComponentSize::Xs).show(ui);\nButton::new(\"Small\").size(ComponentSize::Sm).show(ui);\nButton::new(\"Default\").show(ui);\nButton::new(\"Large\").size(ComponentSize::Lg).show(ui);\n\n// Icon only\nButton::icon_only(LucideIcon::Plus).show(ui);\nButton::icon_only(LucideIcon::Settings).variant(ButtonVariant::Outline).show(ui);\nButton::icon_only(LucideIcon::Trash).variant(ButtonVariant::Destructive).show(ui);\nButton::icon_only(LucideIcon::Heart).variant(ButtonVariant::Ghost).show(ui);\nButton::icon_only(LucideIcon::Search).variant(ButtonVariant::Secondary).size(ComponentSize::Sm).show(ui);\nButton::icon_only(LucideIcon::Star).variant(ButtonVariant::Outline).size(ComponentSize::Lg).show(ui);\n\n// Icon + text\nButton::new(\"Download\").icon(LucideIcon::Download).show(ui);\nButton::new(\"Upload\").icon(LucideIcon::Upload).variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Mail\").icon(LucideIcon::Mail).variant(ButtonVariant::Secondary).show(ui);\nButton::new(\"Copy\").icon(LucideIcon::Copy).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(ui);\n\n// Shortcut text\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Open\").shortcut_text(\"Ctrl+O\").variant(ButtonVariant::Outline).show(ui);\n\n// Selected (toggle)\nButton::new(\"Toggle Me\").variant(ButtonVariant::Outline).selected(selected).show(ui);\n\n// Disabled\nButton::new(\"Disabled\").enabled(false).show(ui);\nButton::new(\"Disabled Outline\").variant(ButtonVariant::Outline).enabled(false).show(ui);\n\n// Button group\nButtonGroup::show(ui, |g| {\n    Button::new(\"Left\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Center\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Right\").variant(ButtonVariant::Outline).show(g);\n});",
         );
     }
 
@@ -203,7 +203,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A group of radio buttons managed together.").show(ui);
         ui.add_space(12.0);
         let entries = RadioOption::ALL.map(|(value, label)| (value, label.to_owned()));
@@ -213,7 +213,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// RadioGroupLabeled: managed group bound to an enum\nuse functora_egui::RadioGroupLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum RadioOption { A, B, C }\n\nlet entries = [(RadioOption::A, \"Option A\".to_owned()), (RadioOption::B, \"Option B\".to_owned())];\nlet mut selected = RadioOption::A;\n\nRadioGroupLabeled::new(&mut selected, &entries).show(ui);\n\n// selected now holds the chosen variant",
+            "// RadioGroupLabeled: managed group bound to an enum\nuse functora_egui::RadioGroupLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum RadioOption { A, B, C }\n\nlet entries = [(RadioOption::A, \"Option A\".to_owned()), (RadioOption::B, \"Option B\".to_owned()), (RadioOption::C, \"Option C\".to_owned())];\nlet mut selected = RadioOption::A;\n\nRadioGroupLabeled::new(&mut selected, &entries).show(ui);\n\n// selected now holds the chosen variant",
         );
     }
 
@@ -643,7 +643,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_select(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_select(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Dropdown selection from a list.").show(ui);
         ui.add_space(12.0);
         let entries = Fruit::ALL.map(|(value, label)| (value, label.to_owned()));
@@ -655,11 +655,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// SelectLabeled: dropdown bound to an enum (Option value)\nuse functora_egui::SelectLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Fruit { Apple, Banana, Cherry }\n\nlet entries = [(Fruit::Apple, \"Apple\".to_owned()), (Fruit::Banana, \"Banana\".to_owned())];\nlet mut fruit: Option<Fruit> = None;\n\nSelectLabeled::new(&mut fruit, &entries)\n    .placeholder(\"Pick a fruit...\")\n    .show(ui);\n\n// fruit is now Some(Fruit) or None",
+            "// SelectLabeled: dropdown bound to an enum (Option value)\nuse functora_egui::SelectLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Fruit { Apple, Banana, Cherry, Grape, Mango }\n\nlet entries = [(Fruit::Apple, \"Apple\".to_owned()), (Fruit::Banana, \"Banana\".to_owned()), (Fruit::Cherry, \"Cherry\".to_owned()), (Fruit::Grape, \"Grape\".to_owned()), (Fruit::Mango, \"Mango\".to_owned())];\nlet mut fruit: Option<Fruit> = None;\n\nSelectLabeled::new(&mut fruit, &entries)\n    .placeholder(\"Pick a fruit...\")\n    .show(ui);\n\n// fruit is now Some(Fruit) or None",
         );
     }
 
-    pub(crate) fn demo_select_value(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_select_value(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Select bound to a non-Option enum value.").show(ui);
         ui.add_space(12.0);
         let entries = BlendMode::ALL.map(|(value, label)| (value, label.to_owned()));
@@ -669,11 +669,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// SelectValueLabeled: dropdown bound to a non-Option enum\nuse functora_egui::SelectValueLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply, Screen }\n\nlet entries = [(BlendMode::Normal, \"Normal\".to_owned()), (BlendMode::Multiply, \"Multiply\".to_owned())];\nlet mut blend_mode = BlendMode::Normal;\n\nSelectValueLabeled::new(&mut blend_mode, &entries).show(ui);\n\n// blend_mode always holds a valid variant (never None)",
+            "// SelectValueLabeled: dropdown bound to a non-Option enum\nuse functora_egui::SelectValueLabeled;\n\n#[derive(Clone, Copy, PartialEq)]\nenum BlendMode { Normal, Multiply, Screen, Overlay }\n\nlet entries = [(BlendMode::Normal, \"Normal\".to_owned()), (BlendMode::Multiply, \"Multiply\".to_owned()), (BlendMode::Screen, \"Screen\".to_owned()), (BlendMode::Overlay, \"Overlay\".to_owned())];\nlet mut blend_mode = BlendMode::Normal;\n\nSelectValueLabeled::new(&mut blend_mode, &entries).show(ui);\n\n// blend_mode always holds a valid variant (never None)",
         );
     }
 
-    pub(crate) fn demo_combobox(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_combobox(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Searchable dropdown with type-ahead filtering.").show(ui);
         ui.add_space(12.0);
         let entries = [
@@ -691,7 +691,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// ComboboxValue: searchable dropdown bound to an enum\nuse functora_egui::ComboboxValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Framework { React, Vue, Angular, Svelte, Solid }\n\nlet entries = [(Framework::React, \"React\".to_owned()), (Framework::Vue, \"Vue\".to_owned())];\nlet mut selected: Option<Framework> = None;\nlet mut search = String::new();\n\nComboboxValue::new(&entries)\n    .placeholder(\"Select framework...\")\n    .show(ui, &mut selected, &mut search);\n\n// selected is Some(Framework) or None",
+            "// ComboboxValue: searchable dropdown bound to an enum\nuse functora_egui::ComboboxValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Framework { React, Vue, Angular, Svelte, Solid }\n\nlet entries = [(Framework::React, \"React\".to_owned()), (Framework::Vue, \"Vue\".to_owned()), (Framework::Angular, \"Angular\".to_owned()), (Framework::Svelte, \"Svelte\".to_owned()), (Framework::Solid, \"Solid\".to_owned())];\nlet mut selected: Option<Framework> = None;\nlet mut search = String::new();\n\nComboboxValue::new(&entries)\n    .placeholder(\"Select framework...\")\n    .show(ui, &mut selected, &mut search);\n\n// selected is Some(Framework) or None",
         );
     }
 
@@ -727,7 +727,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_color_swatch(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_color_swatch(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Clickable color swatches for palettes and style controls.").show(ui);
         ui.add_space(12.0);
 
@@ -766,7 +766,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// ColorSwatch: clickable color swatches bound to an enum\nuse functora_egui::ColorSwatch;\nuse egui::Color32;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Swatch { Signal, Mint, Amber }\n\nlet palette = [(Swatch::Signal, \"Signal\", Color32::from_rgb(25, 113, 194)), (Swatch::Mint, \"Mint\", Color32::from_rgb(18, 184, 134))];\nlet mut swatch = Swatch::Signal;\n\nfor (value, label, color) in palette {\n    if ColorSwatch::new(color)\n        .label(label)\n        .selected(swatch == value)\n        .show_hex()\n        .show(ui)\n        .clicked()\n    {\n        swatch = value;\n    }\n}\n\n// Compact states\nColorSwatch::new(Color32::from_rgb(25, 113, 194)).selected(true).show(ui);\nColorSwatch::new(Color32::from_rgba_unmultiplied(25, 113, 194, 120)).show(ui);\nColorSwatch::new(Color32::TRANSPARENT).label(\"Transparent\").show_hex().show(ui);",
+            "// ColorSwatch: clickable color swatches bound to an enum\nuse functora_egui::ColorSwatch;\nuse egui::Color32;\n\n#[derive(Clone, Copy, PartialEq)]\nenum Swatch { Signal, Mint, Amber, Rose, Ink }\n\nlet palette = [(Swatch::Signal, \"Signal\", Color32::from_rgb(25, 113, 194)), (Swatch::Mint, \"Mint\", Color32::from_rgb(18, 184, 134)), (Swatch::Amber, \"Amber\", Color32::from_rgb(245, 159, 0)), (Swatch::Rose, \"Rose\", Color32::from_rgb(224, 49, 49)), (Swatch::Ink, \"Ink\", Color32::from_rgb(33, 37, 41))];\nlet mut swatch = Swatch::Signal;\n\nfor (value, label, color) in palette {\n    if ColorSwatch::new(color)\n        .label(label)\n        .selected(swatch == value)\n        .show_hex()\n        .show(ui)\n        .clicked()\n    {\n        swatch = value;\n    }\n}\n\n// Compact states\nColorSwatch::new(Color32::from_rgb(25, 113, 194)).selected(true).show(ui);\nColorSwatch::new(Color32::from_rgba_unmultiplied(25, 113, 194, 120)).show(ui);\nColorSwatch::new(Color32::TRANSPARENT).label(\"Transparent\").show_hex().show(ui);",
         );
     }
 }

@@ -19,9 +19,21 @@ fn names_are_unique_and_non_empty() {
 
 #[test]
 fn count_matches_catalog() {
-    let expected: usize = CATEGORIES.iter().map(|(_, _, items)| items.len()).sum();
+    let expected = ComponentId::ALL.len();
     assert_eq!(component_count(), expected);
     assert!(component_count() > 0);
+}
+
+#[test]
+fn count_excludes_idless_overview_entry() {
+    let idless = CATEGORIES
+        .iter()
+        .flat_map(|(_, _, items)| items.iter())
+        .filter(|def| def.id.is_none())
+        .count();
+    assert_eq!(idless, 1, "only the Overview pseudo-entry is id-less");
+    let total: usize = CATEGORIES.iter().map(|(_, _, items)| items.len()).sum();
+    assert_eq!(component_count() + idless, total);
 }
 
 #[test]

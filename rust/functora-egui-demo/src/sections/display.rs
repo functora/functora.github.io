@@ -1,14 +1,14 @@
 //! Display: typography, labels, keyboard hints, items, and the icon catalog.
 
 use functora_egui::{
-    Button, ButtonVariant, Flex, Item, Kbd, Label, LucideIcon, ResponsiveExt, ScrollArea,
-    Separator, ShadcnThemeExt, Typography, TypographyVariant,
+    Button, ButtonVariant, Flex, Hyperlink, Hypertext, Item, Kbd, Label, LucideIcon, ResponsiveExt,
+    ScrollArea, Separator, ShadcnThemeExt, Typography, TypographyVariant,
 };
 
 use functora_egui::snippet;
 
 impl crate::app::ShowcaseApp {
-    pub(crate) fn demo_typography(ui: &mut egui::Ui) {
+    pub fn demo_typography(ui: &mut egui::Ui) {
         _ = Typography::muted("Text styles: headings, lead, muted, and small.").show(ui);
         ui.add_space(12.0);
         _ = Typography::h1("The Joke Tax Chronicles").show(ui);
@@ -45,7 +45,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Typography: styled text with variants\nuse functora_egui::{Typography, TypographyVariant};\n\nTypography::h1(\"Title\").show(ui);\nTypography::h2(\"Subtitle\").show(ui);\nTypography::h3(\"Heading\").show(ui);\nTypography::h4(\"Sub-heading\").show(ui);\nTypography::small(\"fine print\").show(ui);\nTypography::lead(\"Lead paragraph\").show(ui);\nTypography::muted(\"Muted text\").show(ui);\n\n// Custom variant\nTypography::new(\"Plain paragraph with Large variant.\")\n    .variant(TypographyVariant::Large)\n    .show(ui);",
+            "// Typography: styled text with variants\nuse functora_egui::{Typography, TypographyVariant};\n\nTypography::h1(\"The Joke Tax Chronicles\").show(ui);\nTypography::h2(\"The King's Plan\").show(ui);\nTypography::h3(\"The Joke\").show(ui);\nTypography::h4(\"People stopped telling jokes\").show(ui);\nTypography::small(\"The moral of the story is: this is a typography demo.\").show(ui);\nTypography::lead(\"This is a lead paragraph: slightly larger and muted.\").show(ui);\nTypography::muted(\"Muted text is dimmer for secondary content.\").show(ui);\n\n// Custom variant\nTypography::new(\"Plain paragraph style with a custom variant.\")\n    .variant(TypographyVariant::Large)\n    .show(ui);",
         );
     }
 
@@ -68,7 +68,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Label: text labels for forms\nuse functora_egui::{Label, Input, ComponentSize, Flex};\n\nLabel::new(\"Your email address\").show(ui);\n\nInput::new(&mut email).placeholder(\"you@example.com\").show(ui);\n\n// Sizes\nLabel::new(\"Small label\").size(ComponentSize::Sm).show(ui);\nLabel::new(\"Muted label\").muted().show(ui);",
+            "// Label: text labels for forms\nuse functora_egui::{Label, Input, ComponentSize};\n\nLabel::new(\"Your email address\").show(ui);\n\nInput::new(&mut email).placeholder(\"you@example.com\").show(ui);\n\nLabel::new(\"Sizes\").show(ui);\nLabel::new(\"Small label\").size(ComponentSize::Sm).show(ui);\nLabel::new(\"Muted label\").muted().show(ui);",
         );
     }
 
@@ -99,11 +99,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Kbd: keyboard hint chips\nuse functora_egui::{Kbd, Flex};\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Ctrl\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"K\"));\n    f.label(\"opens command palette\");\n});\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Shift\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"Tab\"));\n    f.label(\"cycles focus\");\n});",
+            "// Kbd: keyboard hint chips\nuse functora_egui::{Kbd, Flex};\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Ctrl\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"K\"));\n    f.label(\"opens the command palette\");\n});\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Shift\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"Tab\"));\n    f.label(\"cycles focus\");\n});",
         );
     }
 
-    pub(crate) fn demo_item(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_item(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Clickable rows for lists and menus.").show(ui);
         ui.add_space(12.0);
         _ = Typography::small("Default variant").show(ui);
@@ -154,11 +154,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Item: clickable rows for lists/menus\nuse functora_egui::{Item, Label, Button, LucideIcon, ButtonVariant, ComponentSize};\n\n// Default variant\nItem::new().show(ui, |item| {\n    item.vertical(|v| {\n        v.add(Label::new(\"Notifications\"));\n        v.label(\"Check your activity and updates\");\n    });\n});\n\n// Outline variant with icons\nItem::new().variant(ItemVariant::Outline).show(ui, |item| {\n    item.horizontal(|h| {\n        h.add(Button::icon_only(LucideIcon::Settings).variant(ButtonVariant::Ghost).size(ComponentSize::Sm));\n        h.label(\"Open settings\");\n    });\n});",
+            "// Item: clickable rows for lists/menus\nuse functora_egui::{Item, Label, Button, LucideIcon, ButtonVariant, ComponentSize, ItemVariant};\n\n// Default variant\nfor (title, desc) in [\n    (\"Notifications\", \"Check your activity and updates\"),\n    (\"Appearance\", \"Choose a theme for the app\"),\n    (\"Storage\", \"Manage files and downloads\"),\n] {\n    Item::new().show(ui, |item| {\n        item.vertical(|v| {\n            v.add(Label::new(title));\n            v.label(desc);\n        });\n    });\n}\n\n// Outline variant with icons\nItem::new().variant(ItemVariant::Outline).show(ui, |item| {\n    item.horizontal(|h| {\n        h.add(Button::icon_only(LucideIcon::Settings).variant(ButtonVariant::Ghost).size(ComponentSize::Sm));\n        h.label(\"Open settings\");\n    });\n});",
         );
     }
 
-    pub(crate) fn demo_icons(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_icons(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("All 1600+ Lucide icons are available with one import.").show(ui);
         ui.add_space(12.0);
         _ = functora_egui::Input::new(&mut self.icon_search)
@@ -203,7 +203,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Icons: 1600+ Lucide icons from built-in SVG paths\nuse functora_egui::{LucideIcon, Button, ButtonVariant, ComponentSize};\n\n// Search and display icons\nlet search = \"settings\";\nlet icons: Vec<LucideIcon> = LucideIcon::ALL\n    .iter()\n    .copied()\n    .filter(|icon| icon.name().to_lowercase().contains(search))\n    .collect();\n\nfor icon in icons {\n    Button::icon_only(icon)\n        .variant(ButtonVariant::Ghost)\n        .size(ComponentSize::Sm)\n        .on_hover_text(icon.name())\n        .show(ui);\n}\n\n// Icons render from built-in SVG; no external font needed",
+            "// Icons: 1600+ Lucide icons from built-in SVG paths\nuse functora_egui::{LucideIcon, Button, ButtonVariant, ComponentSize};\nuse functora_egui::icons::lucide_icon::ALL;\n\n// Search and display icons\nlet needle = \"settings\".to_ascii_lowercase();\nlet icons: Vec<LucideIcon> = ALL\n    .iter()\n    .copied()\n    .filter(|icon| icon.name().to_ascii_lowercase().contains(&needle))\n    .collect();\n\nfor icon in icons {\n    Button::icon_only(icon)\n        .variant(ButtonVariant::Ghost)\n        .size(ComponentSize::Sm)\n        .on_hover_text(icon.name())\n        .show(ui);\n}\n\n// Icons render from built-in SVG; no external font needed",
         );
     }
 
@@ -702,6 +702,68 @@ impl crate::app::ShowcaseApp {
             ui,
             "// Image: responsive images with egui::Image\n\n// Setup once alongside fonts (enables svg, file and http loaders)\nfunctora_egui::setup_image_loaders(&cc.egui_ctx);\n\n// Show SVG, PNG, JPEG, GIF, WebP, BMP, ICO, QOI, Farbfeld, TIFF or PPM from bytes\n// Keep the file extension in the URI so the loader routes correctly.\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"A photo\"),\n);\n\n// Cover mode crops overflow while preserving aspect\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(300.0, 200.0)),\n);\n\n// Paint a transparent image over a theme color (needs an alpha-channel image:
 // bg_fill shows through transparent pixels while opaque pixels cover it)\nui.add(\n    egui::Image::from_bytes(\"bytes://logo.png\", logo_bytes)\n        .bg_fill(theme.primary)\n        .max_width(48.0),\n);\n\n// Colorize an image\nui.add(\n    egui::Image::from_bytes(\"bytes://avatar.png\", avatar_bytes)\n        .tint(theme.primary)\n        .max_width(48.0),\n);\n\n// Clickable image\nif ui\n    .add(\n        egui::Image::from_bytes(\"bytes://preview.png\", data).sense(egui::Sense::click()),\n    )\n    .clicked()\n{\n    // open lightbox\n}\n\n// Rotate about a relative origin (leave room: tilted corners extend past the box)\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .rotate(std::f32::consts::FRAC_PI_4, egui::vec2(0.5, 0.5))\n        .fit_to_exact_size(egui::vec2(80.0, 80.0)),\n);\n\n// Fractional sizing needs real available height, so show it in a row;\n// cap it so wide viewports stay sane\nfunctora_egui::Flex::row().gap(8.0).show(ui, |f| {\n    f.ui(|tile| {\n        tile.add(\n            egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n                .fit_to_fraction(egui::vec2(0.5, 0.5))\n                .max_size(egui::vec2(280.0, 180.0)),\n        );\n    });\n});\n\n// View-adaptive width (exact box: bare max_width collapses without available height)\nlet viewport_max = if ui.on_mobile() { 160.0 } else { 400.0 };\nui.add(\n    egui::Image::from_bytes(\"bytes://photo.png\", photo_bytes)\n        .maintain_aspect_ratio(true)\n        .fit_to_exact_size(egui::vec2(viewport_max, viewport_max)),\n);\n\n// Responsive by default; respects available width on mobile\nui.add(egui::Image::from_uri(\"https://example.com/photo.webp\"));\n\n// Bundled fixtures: ImageSamples carries every encoding plus a transparent PNG\nlet samples = functora_egui::image_samples().expect(\"fixtures must encode\");\n\n// to_image bakes in the routing URI; clone one builder across many widgets\nlet png = samples.png.to_image();\nui.add(\n    png.clone()\n        .maintain_aspect_ratio(true)\n        .max_width(300.0)\n        .alt_text(\"Blue and sky checkerboard with a red circle\"),\n);\n\n// Transparent fixture: the fill shows through transparent pixels\nui.add(\n    samples\n        .transparent\n        .to_image()\n        .bg_fill(theme.secondary)\n        .max_width(160.0),\n);\n\n// Error state: failed loads fall back to a 24 px box, so pin an exact\n// size with aspect maintenance off to leave room for the alt text\nui.add(\n    egui::Image::from_bytes(\"bytes://missing.png\", data)\n        .maintain_aspect_ratio(false)\n        .fit_to_exact_size(egui::vec2(300.0, 64.0))\n        .alt_text(\"Blue checkerboard, red circle\"),\n);",
+        );
+    }
+
+    pub fn demo_hyperlink(ui: &mut egui::Ui) {
+        _ = Typography::muted("A single inline link styled with the theme's primary color.")
+            .show(ui);
+        ui.add_space(12.0);
+        _ = Flex::row().gap(12.0).wrap().show(ui, |f| {
+            _ = f.add(
+                Hyperlink::new("functora-egui").url("https://github.com/functora/functora-egui"),
+            );
+            _ = f.add(Hyperlink::new("Docs").url("https://docs.rs/functora-egui"));
+            _ = f.add(
+                Hyperlink::new("Same tab")
+                    .url("https://functora.github.io/")
+                    .open_in_new_tab(false),
+            );
+        });
+        ui.add_space(4.0);
+        _ = Typography::small("Links open in a new tab unless disabled.").show(ui);
+
+        snippet(
+            ui,
+            "// Hyperlink: single inline link styled with the theme\nuse functora_egui::Hyperlink;\n\nHyperlink::new(\"functora-egui\")\n    .url(\"https://github.com/functora/functora-egui\")\n    .show(ui);\n\n// Same tab\nHyperlink::new(\"Docs\")\n    .url(\"https://docs.rs/functora-egui\")\n    .open_in_new_tab(false)\n    .show(ui);",
+        );
+    }
+
+    pub fn demo_hypertext(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted("A paragraph with inline links and internal action segments.")
+            .show(ui);
+        ui.add_space(12.0);
+        let (_, action) = Hypertext::new()
+            .text("Read the ")
+            .link("docs", "https://docs.rs/functora-egui")
+            .text(" or continue with the ")
+            .action("onboarding guide", "onboarding")
+            .text(" to get started.")
+            .show_action(ui);
+        if let Some(id) = action {
+            self.toast.add(
+                format!("Hypertext action: {id}"),
+                functora_egui::ToastVariant::Default,
+                ui.ctx().input(|i| i.time),
+            );
+        }
+        ui.add_space(4.0);
+        _ = Typography::small("Link segments open a URL; action segments report their id.")
+            .show(ui);
+        ui.add_space(12.0);
+        _ = Hypertext::new()
+            .text(format!(
+                "\u{a9} {} Functora. ",
+                functora_egui::FUNCTORA_CORE_YEAR
+            ))
+            .link("Functora", "https://functora.github.io/")
+            .size(11.0)
+            .centered()
+            .show(ui);
+
+        snippet(
+            ui,
+            "// Hypertext: paragraph with inline links and internal actions\nuse functora_egui::Hypertext;\n\nlet (_, action) = Hypertext::new()\n    .text(\"Read the \")\n    .link(\"docs\", \"https://docs.rs/functora-egui\")\n    .text(\" or continue with the \")\n    .action(\"onboarding guide\", \"onboarding\")\n    .text(\" to get started.\")\n    .show_action(ui);\n\nif let Some(id) = action {\n    eprintln!(\"action: {id}\");\n}\n\n// Uniform size for mixed paragraphs\nHypertext::new()\n    .text(\"\u{a9} 2026 Functora. \")\n    .link(\"Functora\", \"https://functora.github.io/\")\n    .size(11.0)\n    .centered()\n    .show(ui);",
         );
     }
 }

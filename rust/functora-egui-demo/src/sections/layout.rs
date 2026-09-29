@@ -157,7 +157,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\"));\n    f.add(Button::new(\"Next\"));\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"flex\"] {\n        f.add(Badge::new(tag));\n    }\n});",
+            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n    f.add(Badge::new(\"Third\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type a message...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Next\"));\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"shadcn\", \"flexbox\", \"layout\", \"widgets\", \"responsive\", \"wrap\", \"gap\", \"grow\", \"theming\", \"buttons\", \"inputs\", \"cards\", \"dialogs\", \"toasts\", \"badges\"] {\n        f.add(Badge::new(tag));\n    }\n});",
         );
     }
 
@@ -212,7 +212,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// AspectRatio: maintains fixed width/height ratio\nuse functora_egui::AspectRatio;\n\n// 16:9 video player\nAspectRatio::new(16.0 / 9.0).show(ui, |ui| {\n    // ui.available_rect_before_wrap() is 16:9\n    ui.label(\"Video player area\");\n});\n\n// 1:1 square\nAspectRatio::new(1.0).show(ui, |ui| {\n    ui.label(\"Square thumbnail\");\n});",
+            "// AspectRatio: maintains fixed width/height ratio\nuse functora_egui::AspectRatio;\n\n// 16:9 video player\nAspectRatio::new(16.0 / 9.0).show(ui, |ui| {\n    // ui.available_rect_before_wrap() is 16:9\n    ui.label(\"16:9\");\n});\n\n// 1:1 square\nAspectRatio::new(1.0).show(ui, |ui| {\n    ui.label(\"1:1\");\n});",
         );
     }
 
@@ -233,7 +233,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Card: bordered container for grouping content\nuse functora_egui::{Card, Button, ButtonVariant, ComponentSize};\n\nCard::new().show(ui, |card| {\n    card.add(Typography::h4(\"Card Title\"));\n    card.add_space(4.0);\n    card.label(\"Content inside the card...\");\n    card.add_space(8.0);\n    Button::new(\"Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(card);\n});",
+            "// Card: bordered container for grouping content\nuse functora_egui::{Card, Button, ButtonVariant, ComponentSize};\n\nCard::new().show(ui, |card| {\n    card.add(Typography::h4(\"Card Title\"));\n    card.add_space(4.0);\n    card.label(\"This is a card with some descriptive content inside.\");\n    card.add_space(8.0);\n    Button::new(\"Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(card);\n});",
         );
     }
 
@@ -256,7 +256,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Collapsible: toggleable content section\nuse functora_egui::Collapsible;\n\nlet mut open = true;\nCollapsible::new(\"Click to toggle\").show(ui, &mut open, |body| {\n    body.label(\"This content is hidden when closed.\");\n    body.label(\"You can put any widgets inside here.\");\n    Button::new(\"Nested Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(body);\n});",
+            "// Collapsible: toggleable content section\nuse functora_egui::Collapsible;\n\nlet mut open = true;\nCollapsible::new(\"Click to toggle\").show(ui, &mut open, |body| {\n    body.label(\"This content is hidden when the collapsible is closed.\");\n    body.label(\"You can put any widgets inside here.\");\n    Button::new(\"Nested Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(body);\n});",
         );
     }
 
@@ -377,11 +377,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Account settings...\"),\n        SettingsTab::Password => content.label(\"Password settings...\"),\n        SettingsTab::Settings => content.label(\"App settings...\"),\n    }\n});",
+            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Manage your account settings and preferences.\"),\n        SettingsTab::Password => content.label(\"Change your password and security settings.\"),\n        SettingsTab::Settings => content.label(\"Configure application settings.\"),\n    }\n});",
         );
     }
 
-    pub(crate) fn demo_icon_tabs(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_icon_tabs(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Icon-based tabs with tooltips.").show(ui);
         ui.add_space(12.0);
         let entries = [
@@ -431,11 +431,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// IconTabsValue: icon-only tabs bound to an enum\nuse functora_egui::{IconTabsValue, TabEntry, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ProfileTab { Home, Settings, Profile, Notifications }\n\nlet entries = [\n    (ProfileTab::Home, TabEntry::Icon { icon: LucideIcon::House, tooltip: \"Home\".to_owned() }),\n    (ProfileTab::Settings, TabEntry::Icon { icon: LucideIcon::Settings, tooltip: \"Settings\".to_owned() }),\n];\nlet mut active = ProfileTab::Home;\nIconTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        ProfileTab::Home => content.label(\"Home content\"),\n        _ => content.label(\"Other content\"),\n    }\n});",
+            "// IconTabsValue: icon-only tabs bound to an enum\nuse functora_egui::{IconTabsValue, TabEntry, LucideIcon};\n\n#[derive(Clone, Copy, PartialEq)]\nenum ProfileTab { Home, Settings, Profile, Notifications }\n\nlet entries = [\n    (ProfileTab::Home, TabEntry::Icon { icon: LucideIcon::House, tooltip: \"Home\".to_owned() }),\n    (ProfileTab::Settings, TabEntry::Icon { icon: LucideIcon::Settings, tooltip: \"Settings\".to_owned() }),\n    (ProfileTab::Profile, TabEntry::Icon { icon: LucideIcon::CircleUser, tooltip: \"Profile\".to_owned() }),\n    (ProfileTab::Notifications, TabEntry::Icon { icon: LucideIcon::Bell, tooltip: \"Notifications\".to_owned() }),\n];\nlet mut active = ProfileTab::Home;\nIconTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        ProfileTab::Home => content.label(\"Home content\"),\n        ProfileTab::Settings => content.label(\"Settings content\"),\n        ProfileTab::Profile => content.label(\"Profile content\"),\n        ProfileTab::Notifications => content.label(\"Notifications content\"),\n    }\n});",
         );
     }
 
-    pub(crate) fn demo_toolbar(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_toolbar(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Compact command container for editor and app controls.").show(ui);
         ui.add_space(12.0);
 
@@ -490,7 +490,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Toolbar: tool selection bound to an enum\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum Tool { Select, Pen, Spline }\n\nlet tools = [(Tool::Select, LucideIcon::MousePointer2), (Tool::Pen, LucideIcon::PenTool), (Tool::Spline, LucideIcon::Spline)];\nlet mut tool = Tool::Select;\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (value, icon) in tools {\n            if Button::icon_only(icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool == value)\n                .show(bg)\n                .clicked()\n            {\n                tool = value;\n            }\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
+            "// Toolbar: tool selection bound to an enum\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum Tool { Select, Pen, Spline, Frame, Text }\n\nlet tools = [(Tool::Select, LucideIcon::MousePointer2), (Tool::Pen, LucideIcon::PenTool), (Tool::Spline, LucideIcon::Spline), (Tool::Frame, LucideIcon::Frame), (Tool::Text, LucideIcon::Type)];\nlet mut tool = Tool::Select;\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (value, icon) in tools {\n            if Button::icon_only(icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool == value)\n                .show(bg)\n                .clicked()\n            {\n                tool = value;\n            }\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
         );
     }
 
@@ -516,7 +516,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Accordion: expandable sections\nuse functora_egui::Accordion;\n\nlet items = vec![\n    (\"Is it accessible?\", \"Yes. It adheres to WAI-ARIA.\"),\n    (\"Is it styled?\", \"Yes. Matches shadcn/ui.\"),\n    (\"Is it animated?\", \"Yes. Smooth open/close transitions.\"),\n];\nlet mut open_indices = vec![0];\n\nAccordion::new(items)\n    .multiple()\n    .show(ui, &mut open_indices);",
+            "// Accordion: expandable sections\nuse functora_egui::Accordion;\n\nlet items = vec![\n    (\"Is it accessible?\", \"Yes. It adheres to the WAI-ARIA design pattern.\"),\n    (\"Is it styled?\", \"Yes. It comes with default styles matching shadcn/ui.\"),\n    (\"Is it animated?\", \"Yes. It has smooth open/close transitions.\"),\n];\nlet mut open_indices = vec![0];\n\nAccordion::new(items)\n    .multiple()\n    .show(ui, &mut open_indices);",
         );
     }
 }

@@ -52,6 +52,20 @@ theme_color = "#0a0a0a"
 host = "functora.github.io"
 path_prefix = "/apps/cryptonote/"
 camera = true
+extra_intent_filters = '''
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <data android:scheme="content" android:mimeType="application/octet-stream" android:pathPattern=".*\.cryptonote" />
+    <data android:scheme="file" android:mimeType="application/octet-stream" android:pathPattern=".*\.cryptonote" />
+</intent-filter>
+<intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <data android:scheme="content" android:mimeType="*/*" android:pathPattern=".*\.cryptonote" />
+    <data android:scheme="file" android:mimeType="*/*" android:pathPattern=".*\.cryptonote" />
+</intent-filter>
+'''
 
 [build-dependencies]
 askama = "0.12"

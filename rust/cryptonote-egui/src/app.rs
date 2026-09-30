@@ -414,8 +414,9 @@ impl CryptonoteApp {
                 }
             }
         }
-        if let Some(source) = crate::deep_link::take_archive()
+        if crate::deep_link::has_pending_archive()
             && claim_job(&mut self.temporary.progress, Stage::Preview).is_some()
+            && let Some(source) = crate::deep_link::take_archive()
         {
             let rx = functora_egui::spawn_async(async move { crate::hooks::load_archive_async(source).await });
             self.archive_rx = Some(rx);

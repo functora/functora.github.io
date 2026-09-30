@@ -16,6 +16,23 @@ pub fn take_archive() -> Option<ArchiveSource> {
     PENDING_ARCHIVE.lock().ok().and_then(|mut guard| guard.take())
 }
 
+#[must_use]
+pub fn has_pending_archive() -> bool {
+    PENDING_ARCHIVE.lock().is_ok_and(|guard| guard.is_some())
+}
+
+#[cfg(target_os = "android")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeepLink<'local>(
+    mut env: jni::JNIEnv<'local>,
+    _class: jni::objects::JClass<'local>,
+    url: jni::objects::JString<'local>,
+) {
+    if let Ok(raw) = env.get_string(&url) {
+        store_url(String::from(raw));
+    }
+}
+
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeepLinkFile<'local>(

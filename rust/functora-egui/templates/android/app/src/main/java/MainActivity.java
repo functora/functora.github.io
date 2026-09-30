@@ -25,7 +25,11 @@ import com.functora.Waker;
 import com.google.androidgamesdk.GameActivity;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 public class MainActivity extends GameActivity {
@@ -412,6 +416,95 @@ public class MainActivity extends GameActivity {
         }
     }
 
+    // ------------------------------------------------------------------
+    // Deep link intake: content/file URIs are copied into the app cache on
+    // a background thread, https VIEW intents are forwarded directly, and
+    // consumed intent data is cleared so level-triggered Rust polling
+    // cannot re-deliver a sticky link.
+    // ------------------------------------------------------------------
+
+    private static final String TAG_DEEP_LINK = "FunctoraDeepLink";
+
+    private static native void handleDeepLink(String url);
+
+    private static native void handleDeepLinkFile(String path);
+
+    private void handleDeepLinkIntent(Intent intent) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+            return;
+        }
+        Uri data = intent.getData();
+        if (data == null) {
+            return;
+        }
+        String scheme = data.getScheme();
+        if ("file".equals(scheme) || "content".equals(scheme)) {
+            intent.setData(null);
+            copyToCacheAsync(data);
+        } else if ("https".equals(scheme)) {
+            try {
+                handleDeepLink(data.toString());
+                intent.setData(null);
+            } catch (Throwable ignored) {
+            }
+        }
+    }
+
+    private void copyToCacheAsync(Uri uri) {
+        Thread thread =
+                new Thread(
+                        () -> {
+                            try {
+                                handleDeepLinkFile(copyToCache(uri));
+                                Waker.wake();
+                            } catch (Throwable ignored) {
+                            }
+                        },
+                        "functora-deeplink");
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+    private String copyToCache(Uri uri) throws IOException {
+        String name = "deep-link";
+        Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+        if (cursor != null) {
+            try {
+                int index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (index >= 0 && cursor.moveToFirst()) {
+                    String value = cursor.getString(index);
+                    if (value != null && !value.isEmpty()) {
+                        name = value;
+                    }
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        File file = File.createTempFile("deeplink-", "-" + name, getCacheDir());
+        try {
+            InputStream in = getContentResolver().openInputStream(uri);
+            if (in == null) {
+                throw new IOException("unable to open " + uri);
+            }
+            try (InputStream source = in;
+                    OutputStream out = new FileOutputStream(file)) {
+                byte[] buffer = new byte[8192];
+                for (int read = source.read(buffer);
+                        read != -1;
+                        read = source.read(buffer)) {
+                    out.write(buffer, 0, read);
+                }
+            }
+        } catch (IOException | RuntimeException failure) {
+            if (!file.delete()) {
+                Log.w(TAG_DEEP_LINK, "unable to delete " + file);
+            }
+            throw failure;
+        }
+        return file.getAbsolutePath();
+    }
+
     private void hideSystemUI() {
         getWindow().getAttributes().layoutInDisplayCutoutMode =
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
@@ -445,6 +538,14 @@ public class MainActivity extends GameActivity {
                                         }
                                     }
                                 });
+        handleDeepLinkIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLinkIntent(intent);
     }
 
     @Override

@@ -1,4 +1,5 @@
 use android_activity::AndroidApp;
+use std::sync::Arc;
 
 use crate::android::ime::store_app as store_ime_app;
 use crate::platform::android::store_app;
@@ -13,6 +14,9 @@ where
     let cloned = app.clone();
     store_ime_app(app.clone());
     store_app(app);
+    crate::deep_link::set_schedule_update(Arc::new(
+        crate::platform::android_back::wake_via_repaint,
+    ));
     let options = eframe::NativeOptions {
         android_app: Some(cloned),
         viewport: egui::ViewportBuilder::default(),

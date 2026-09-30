@@ -46,7 +46,7 @@ impl CryptonoteApp {
                 }
                 if f.add(
                     Button::new(Msg::CreateNewNote.render(lang))
-                        .icon(functora_egui::LucideIcon::Trash2)
+                        .icon(functora_egui::LucideIcon::RotateCcw)
                         .variant(ButtonVariant::Ghost),
                 )
                 .inner
@@ -98,14 +98,9 @@ impl CryptonoteApp {
                 let rx = functora_egui::spawn_async(async move {
                     let bytes = archive.untag();
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-
-                    functora_egui::spawn_async(async move {
-                        crate::archive::extract_archive_package_async_with_progress(source, &password, |_| {})
-                            .await
-                            .map(|(text, _)| text)
-                    })
-                    .recv()
-                    .unwrap_or(Err(AppError::Cancelled))
+                    crate::archive::extract_archive_package_async_with_progress(source, &password, |_| {})
+                        .await
+                        .map(|(text, _)| text)
                 });
                 self.decrypt_rx = Some(rx);
             }

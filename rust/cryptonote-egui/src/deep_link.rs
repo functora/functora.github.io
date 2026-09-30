@@ -1,5 +1,5 @@
 use crate::archive::ArchiveSource;
-use std::sync::Mutex;
+use std::sync::{Mutex, PoisonError};
 
 pub use functora_egui::deep_link::{poll_deep_link, set_schedule_update, store_url, take_url, url_to_route};
 
@@ -13,12 +13,12 @@ pub fn store_archive(source: ArchiveSource) {
 }
 
 pub fn take_archive() -> Option<ArchiveSource> {
-    PENDING_ARCHIVE.lock().ok().and_then(|mut guard| guard.take())
+    PENDING_ARCHIVE.lock().unwrap_or_else(PoisonError::into_inner).take()
 }
 
 #[must_use]
 pub fn has_pending_archive() -> bool {
-    PENDING_ARCHIVE.lock().is_ok_and(|guard| guard.is_some())
+    PENDING_ARCHIVE.lock().unwrap_or_else(PoisonError::into_inner).is_some()
 }
 
 #[cfg(target_os = "android")]

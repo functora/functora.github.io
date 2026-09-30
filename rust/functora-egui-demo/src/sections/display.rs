@@ -5,7 +5,7 @@ use functora_egui::{
     ScrollArea, Separator, ShadcnThemeExt, Typography, TypographyVariant,
 };
 
-use functora_egui::snippet;
+use functora_egui::{snippet, snippet_break_long_words};
 
 impl crate::app::ShowcaseApp {
     pub fn demo_typography(ui: &mut egui::Ui) {
@@ -763,7 +763,27 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Hypertext: paragraph with inline links and internal actions\nuse functora_egui::Hypertext;\n\nlet (_, action) = Hypertext::new()\n    .text(\"Read the \")\n    .link(\"docs\", \"https://docs.rs/functora-egui\")\n    .text(\" or continue with the \")\n    .action(\"onboarding guide\", \"onboarding\")\n    .text(\" to get started.\")\n    .show_action(ui);\n\nif let Some(id) = action {\n    eprintln!(\"action: {id}\");\n}\n\n// Uniform size for mixed paragraphs\nHypertext::new()\n    .text(\"\u{a9} 2026 Functora. \")\n    .link(\"Functora\", \"https://functora.github.io/\")\n    .size(11.0)\n    .centered()\n    .show(ui);",
+            "// Hypertext: paragraph with inline links and internal actions\nuse functora_egui::Hypertext;\n\nlet (_, action) = Hypertext::new()\n    .text(\"Read the \")\n    .link(\"docs\", \"https://docs.rs/functora-egui\")\n    .text(\" or continue with the \")\n    .action(\"onboarding guide\", \"onboarding\")\n    .text(\" to get started.\")\n    .show_action(ui);\n\nif let Some(id) = action {\n    eprintln!(\"action: {id}\");\n}\n\n// Uniform size for mixed paragraphs\nHypertext::new()\n    .text(\"\u{a9} 2026 Functora. \")\n    .link(\"Functora\", \"https://functora.github.io/\")\n    .size(11.0)\n    .centered()\n                .show(ui);",
+        );
+    }
+
+    pub(crate) fn demo_code_snippet(ui: &mut egui::Ui) {
+        _ = Typography::muted("Themed monospace block for displaying code examples.").show(ui);
+        ui.add_space(12.0);
+        _ = Typography::small("snippet(): normal wrapping").show(ui);
+        ui.add_space(4.0);
+        snippet(ui, "fn main() {\n    println!(\"Hello, world!\");\n}");
+        ui.add_space(12.0);
+        _ = Typography::small("snippet_break_long_words(): breaks long unbroken strings").show(ui);
+        ui.add_space(4.0);
+        snippet_break_long_words(
+            ui,
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        );
+
+        snippet(
+            ui,
+            "// CodeSnippet: themed code blocks\nuse functora_egui::{snippet, snippet_break_long_words};\n\n// Normal wrapping\nsnippet(ui, \"fn main() {\\n    println!(\\\"Hello, world!\\\");\\n}\");\n\n// Break long words (base64, minified JSON)\nsnippet_break_long_words(ui, \"data:image/png;base64,iVBORw0KGgo...\");",
         );
     }
 }

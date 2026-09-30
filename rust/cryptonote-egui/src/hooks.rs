@@ -18,10 +18,6 @@ pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
     (cipher.is_some() && password.is_empty()).then_some(Msg::Base(functora_egui::messages::Msg::PasswordRequired))
 }
 
-pub fn reset_temporary_state(state: &mut TemporaryState) {
-    state.reset();
-}
-
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {
     current.retain(|f| f.name != att.name);
     current.push(att);
@@ -34,17 +30,13 @@ pub fn remove_attachment(state: &mut TemporaryState, index: crate::state::Attach
     }
 }
 
-pub fn extract_note_param_or_err(url: &str) -> Result<String, AppError> {
-    extract_note_param(url)
-}
-
 pub async fn load_archive_async(source: ArchiveSource) -> Result<OpenedArchive, AppError> {
     use crate::state::OpenedArchive;
     let meta = crate::archive::read_archive_metadata(&source)?;
     if meta.cipher.is_some() {
         let bytes = match source {
             ArchiveSource::Bytes(bytes) => bytes,
-            ArchiveSource::Path(path) => std::fs::read(&path).map_err(|e| AppError::Archive(e.to_string()))?,
+            ArchiveSource::Path(path) => std::fs::read(&path)?,
         };
         Ok(OpenedArchive {
             screen: Screen::Open,

@@ -4,9 +4,9 @@
 use crate::app::{ProfileTab, SettingsTab};
 use functora_egui::{
     Accordion, AspectRatio, Badge, BadgeVariant, Button, ButtonGroup, ButtonVariant, Card,
-    Collapsible, ComponentSize, Flex, FlexAlign, FlexItem, IconTabsValue, Input, Kbd, Label,
-    LucideIcon, Resizable, ScrollArea, Separator, StatusBar, TabEntry, TabsValue, Toolbar,
-    Typography,
+    Collapsible, ComponentSize, Flex, FlexAlign, FlexItem, Footer, Hypertext, IconTabsValue, Input,
+    Kbd, Label, LucideIcon, Navbar, Resizable, ScrollArea, Separator, StatusBar, TabEntry,
+    TabsValue, ToastVariant, Toolbar, Typography,
 };
 
 use functora_egui::snippet;
@@ -517,6 +517,73 @@ impl crate::app::ShowcaseApp {
         snippet(
             ui,
             "// Accordion: expandable sections\nuse functora_egui::Accordion;\n\nlet items = vec![\n    (\"Is it accessible?\", \"Yes. It adheres to the WAI-ARIA design pattern.\"),\n    (\"Is it styled?\", \"Yes. It comes with default styles matching shadcn/ui.\"),\n    (\"Is it animated?\", \"Yes. It has smooth open/close transitions.\"),\n];\nlet mut open_indices = vec![0];\n\nAccordion::new(items)\n    .multiple()\n    .show(ui, &mut open_indices);",
+        );
+    }
+
+    pub fn demo_navbar(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted(
+            "Top navigation bar with brand, version, search, theme toggle, and language switcher.",
+        )
+        .show(ui);
+        ui.add_space(12.0);
+        let mut collapsed = self.demo.navbar_collapsed;
+        let mut theme = self.persistent.theme;
+        let language = self.navbar_language.clone();
+        let time = ui.ctx().input(|i| i.time);
+        let action = std::cell::Cell::new("");
+        let mut on_brand = || {
+            action.set("brand");
+        };
+        let mut on_search = || {
+            action.set("search");
+        };
+        _ = Navbar::new("functora-egui")
+            .brand_icon(Some(LucideIcon::Sparkles))
+            .version("0.2")
+            .search("Search...", Some("Ctrl K"))
+            .show(
+                ui,
+                &mut collapsed,
+                Some(&mut theme),
+                Some(&language),
+                Some(&mut on_brand),
+                Some(&mut on_search),
+            );
+        self.demo.navbar_collapsed = collapsed;
+        self.persistent.theme = theme;
+        self.navbar_language = language;
+        match action.get() {
+            "brand" => {
+                self.toast.add("Brand clicked", ToastVariant::Default, time);
+            }
+            "search" => {
+                self.toast
+                    .add("Search clicked", ToastVariant::Default, time);
+            }
+            _ => {}
+        }
+
+        snippet(
+            ui,
+            "// Navbar: top navigation bar\nuse functora_egui::{Navbar, LucideIcon};\nuse functora_egui::i18n::Language;\nuse functora_egui::theme_extra::Theme;\nuse std::cell::Cell;\n\nlet mut collapsed = false;\nlet mut theme = persistent.theme;\nlet mut language = Cell::new(Language::default());\n\nNavbar::new(\"functora-egui\")\n    .brand_icon(Some(LucideIcon::Sparkles))\n    .version(\"0.2\")\n    .search(\"Search...\", Some(\"Ctrl K\"))\n    .show(ui, &mut collapsed, Some(&mut theme), Some(&mut language), None, None);",
+        );
+    }
+
+    pub(crate) fn demo_footer(ui: &mut egui::Ui) {
+        _ = Typography::muted("Centered, muted footer for page bottoms.").show(ui);
+        ui.add_space(12.0);
+        _ = Footer::new().show(ui, |inner| {
+            _ = Hypertext::new()
+                .text("© 2026 Functora. ")
+                .link("Privacy", "https://functora.github.io/")
+                .text(" · ")
+                .link("Terms", "https://functora.github.io/")
+                .show(inner);
+        });
+
+        snippet(
+            ui,
+            "// Footer: centered muted footer\nuse functora_egui::{Footer, Hypertext};\n\nFooter::new().show(ui, |inner| {\n    Hypertext::new()\n        .text(\"© 2026 Functora. \")\n        .link(\"Privacy\", \"https://functora.github.io/\")\n        .text(\" · \")\n        .link(\"Terms\", \"https://functora.github.io/\")\n        .show(inner);\n});",
         );
     }
 }

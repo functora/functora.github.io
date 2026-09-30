@@ -1,13 +1,13 @@
-use crate::crypto::CipherType;
+use crate::crypto::{AAD_PREFIX, CipherType};
 use crate::error::AppError;
 use crate::progress::{Job, Stage};
 use functora_egui::worker::Reporter;
+use std::sync::{Arc, Mutex};
 use tap::prelude::*;
 
 pub use functora_core::package::{ArchiveMetadata, ArchiveSource, PackageStages};
 pub use functora_egui::files::Attachment;
 
-const AAD_PREFIX: &[u8] = b"cryptonote.v1";
 pub const NOTE_ENTRY: &str = "note.txt";
 pub const ATTACHMENTS_PREFIX: &str = "attachments/";
 
@@ -81,39 +81,7 @@ pub async fn extract_archive_package_async(
     password: &str,
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<(String, Vec<Attachment>), AppError> {
-    use std::sync::{Arc, Mutex};
-    let progress_box: Box<dyn FnMut(Option<Job<Stage>>) + Send> = Box::new(progress);
-    let progress_arc = Arc::new(Mutex::new(progress_box));
-    let progress_clone = Arc::clone(&progress_arc);
-    let inner = functora_egui::package::extract_package_async(source, password, AAD_PREFIX, stages(), move |job| {
-        if let Ok(mut guard) = progress_arc.lock() {
-            guard(job);
-        }
-    })
-    .await?;
-    let mut note = String::new();
-    let mut files = Vec::new();
-    for (name, data) in functora_egui::zip::unzip_async(
-        inner,
-        move |job| {
-            if let Ok(mut guard) = progress_clone.lock() {
-                guard(job);
-            }
-        },
-        Stage::Unzip,
-    )
-    .await?
-    {
-        if name == NOTE_ENTRY {
-            note = String::from_utf8(data)?;
-        } else {
-            files.push(Attachment {
-                name: name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(&name).to_string(),
-                data: data.into(),
-            });
-        }
-    }
-    Ok((note, files))
+    extract_archive_package_async_with_progress(source, password, progress).await
 }
 
 pub async fn extract_archive_package_async_with_progress<F>(
@@ -124,7 +92,6 @@ pub async fn extract_archive_package_async_with_progress<F>(
 where
     F: FnMut(Option<Job<Stage>>) + Send + 'static,
 {
-    use std::sync::{Arc, Mutex};
     let progress_box: Box<dyn FnMut(Option<Job<Stage>>) + Send> = Box::new(progress);
     let progress_arc = Arc::new(Mutex::new(progress_box));
     let progress_clone = Arc::clone(&progress_arc);

@@ -3,7 +3,7 @@ use functora_egui::i18n::I18N;
 use std::string::FromUtf8Error;
 use std::sync::Arc;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct MsgError(pub Arc<AppError>);
 
 impl From<AppError> for MsgError {
@@ -20,7 +20,7 @@ impl std::ops::Deref for MsgError {
     }
 }
 
-#[derive(Debug, thiserror::Error, PartialEq, Eq)]
+#[derive(Debug, thiserror::Error)]
 pub enum AppError {
     #[error(transparent)]
     Json(JsonError),
@@ -48,6 +48,8 @@ pub enum AppError {
     WorkerStopped,
     #[error(transparent)]
     FunctoraEgui(#[from] functora_egui::error::Error),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
 }
 
 impl I18N for AppError {
@@ -66,6 +68,7 @@ impl I18N for AppError {
             Self::Cancelled => "Cancelled".into(),
             Self::WorkerStopped => "Worker stopped".into(),
             Self::FunctoraEgui(e) => e.render_eng(),
+            Self::Io(e) => format!("I/O error: {e}"),
         }
     }
 
@@ -84,6 +87,7 @@ impl I18N for AppError {
             Self::Cancelled => "Cancelado".into(),
             Self::WorkerStopped => "Trabajador detenido".into(),
             Self::FunctoraEgui(e) => e.render_spa(),
+            Self::Io(e) => format!("Error de E/S: {e}"),
         }
     }
 
@@ -102,6 +106,7 @@ impl I18N for AppError {
             Self::Cancelled => "Отменено".into(),
             Self::WorkerStopped => "Рабочий остановлен".into(),
             Self::FunctoraEgui(e) => e.render_rus(),
+            Self::Io(e) => format!("Ошибка ввода-вывода: {e}"),
         }
     }
 }

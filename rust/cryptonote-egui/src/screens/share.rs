@@ -6,7 +6,7 @@ use crate::route::Screen;
 use crate::state::ActionMode;
 use crate::state::External;
 use functora_egui::i18n::I18N;
-use functora_egui::{Button, ButtonVariant, Flex, Progress, TextareaPasteClear};
+use functora_egui::{Button, ButtonVariant, Flex, Progress, Spinner, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
@@ -27,7 +27,7 @@ impl CryptonoteApp {
         } else {
             _ = ui.label(Msg::Base(functora_egui::messages::Msg::Loading).render(lang));
             let () = ui.add_space(8.0);
-            _ = ui.add(Progress::new(0.5));
+            _ = ui.add(Spinner::new().size(24.0));
         }
         let () = ui.add_space(12.0);
         if pkg_ready || !url.is_empty() {
@@ -93,7 +93,7 @@ impl CryptonoteApp {
                 }
                 if f.add(
                     Button::new(Msg::CreateNewNote.render(lang))
-                        .icon(functora_egui::LucideIcon::Trash2)
+                        .icon(functora_egui::LucideIcon::RotateCcw)
                         .variant(ButtonVariant::Ghost),
                 )
                 .inner

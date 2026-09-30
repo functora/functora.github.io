@@ -173,7 +173,7 @@ impl CryptonoteApp {
             }
             if f.add(
                 Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::Trash2)
+                    .icon(functora_egui::LucideIcon::RotateCcw)
                     .variant(ButtonVariant::Ghost),
             )
             .inner

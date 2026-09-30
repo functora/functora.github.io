@@ -2,10 +2,13 @@
 //! context menus, dropdowns, command palette, menubars, navigation menus.
 
 use crate::app::NavSection;
+use functora_egui::progress::{Job, Stage};
 use functora_egui::{
-    Button, ButtonVariant, ContextMenu, DropdownMenu, Flex, HoverCard, Label, LucideIcon, Menubar,
-    NavigationMenuValue, Popover, Tooltip, Typography,
+    BlockingOverlay, Button, ButtonVariant, ContextMenu, DropdownMenu, Flex, HoverCard, Label,
+    LucideIcon, Menubar, NavigationMenuValue, Popover, Tooltip, Typography,
 };
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use functora_egui::snippet;
 
@@ -322,6 +325,51 @@ impl crate::app::ShowcaseApp {
         snippet(
             ui,
             "// NavigationMenuValue: top-level navigation bound to an enum\nuse functora_egui::NavigationMenuValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum NavSection { Overview, Integrations, Settings }\n\nlet entries = [(NavSection::Overview, \"Overview\".to_owned()), (NavSection::Integrations, \"Integrations\".to_owned()), (NavSection::Settings, \"Settings\".to_owned())];\nlet mut active = NavSection::Overview;\n\nif let Some(section) = NavigationMenuValue::new(&entries).show(ui, &mut active) {\n    eprintln!(\"Navigated to: {section:?}\");\n}",
+        );
+    }
+
+    pub(crate) fn demo_blocking_overlay(&mut self, ui: &mut egui::Ui) {
+        _ = Typography::muted("A modal overlay that blocks interaction during long operations.")
+            .show(ui);
+        ui.add_space(12.0);
+        if Button::new("Show Blocking Overlay")
+            .icon(LucideIcon::Hourglass)
+            .variant(ButtonVariant::Outline)
+            .show(ui)
+            .clicked()
+        {
+            self.demo.blocking_overlay_open = true;
+            self.blocking_overlay_cancel = Arc::new(AtomicBool::new(false));
+            self.blocking_overlay_job = Some(Job {
+                stage: Stage::Download,
+                done: 45,
+                total: 100,
+                name: Some("archive.zip".to_owned()),
+            });
+        }
+        ui.add_space(4.0);
+        _ = Typography::small("Click Cancel inside the overlay to dismiss it.").show(ui);
+
+        if self.demo.blocking_overlay_open {
+            let mut open = self.demo.blocking_overlay_open;
+            BlockingOverlay::new("Processing files...")
+                .description("Reading and compressing files, please wait.")
+                .show(
+                    ui.ctx(),
+                    &mut open,
+                    self.blocking_overlay_job.as_ref(),
+                    &self.blocking_overlay_cancel,
+                );
+            if self.blocking_overlay_cancel.load(Ordering::Relaxed) {
+                open = false;
+                self.blocking_overlay_job = None;
+            }
+            self.demo.blocking_overlay_open = open;
+        }
+
+        snippet(
+            ui,
+            "// BlockingOverlay: modal overlay for long operations\nuse functora_egui::BlockingOverlay;\nuse functora_egui::progress::{Job, Stage};\nuse std::sync::Arc;\nuse std::sync::atomic::{AtomicBool, Ordering};\n\nlet mut open = false;\nlet cancel = Arc::new(AtomicBool::new(false));\nlet job = Job { stage: Stage::Download, done: 45, total: 100, name: Some(\"archive.zip\".to_owned()) };\n\nBlockingOverlay::new(\"Processing files...\")\n    .description(\"Reading and compressing files, please wait.\")\n    .show(ctx, &mut open, Some(&job), &cancel);\n\n// Close when cancelled\nif cancel.load(Ordering::Relaxed) {\n    open = false;\n}",
         );
     }
 }

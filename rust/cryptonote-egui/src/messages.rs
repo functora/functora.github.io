@@ -2,7 +2,7 @@ use crate::error::MsgError;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 
-#[derive(Clone, Debug, PartialEq, strum::EnumCount)]
+#[derive(Clone, Debug, strum::EnumCount)]
 pub enum Msg {
     Base(BaseMsg),
     Error(MsgError),

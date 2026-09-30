@@ -103,12 +103,12 @@ impl crate::app::ShowcaseApp {
             if f.add(
                 Button::new("Toggle Me")
                     .variant(ButtonVariant::Outline)
-                    .selected(self.button_selected),
+                    .selected(self.demo.button_selected),
             )
             .inner
             .clicked()
             {
-                self.button_selected = !self.button_selected;
+                self.demo.button_selected = !self.demo.button_selected;
             }
         });
 

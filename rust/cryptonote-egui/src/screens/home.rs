@@ -145,9 +145,9 @@ impl CryptonoteApp {
                 self.pick_rx = Some(rx);
             }
             if f.add(
-                Button::new(Msg::ViewButton.render(lang))
-                    .icon(functora_egui::LucideIcon::Eye)
-                    .variant(ButtonVariant::Outline),
+                Button::new(Msg::CreateNewNote.render(lang))
+                    .icon(functora_egui::LucideIcon::RotateCcw)
+                    .variant(ButtonVariant::Ghost),
             )
             .inner
             .clicked()
@@ -156,7 +156,7 @@ impl CryptonoteApp {
             }
             if f.add(
                 Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::Trash2)
+                    .icon(functora_egui::LucideIcon::RotateCcw)
                     .variant(ButtonVariant::Ghost),
             )
             .inner
@@ -230,7 +230,7 @@ impl CryptonoteApp {
             }
             if f.add(
                 Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::Trash2)
+                    .icon(functora_egui::LucideIcon::RotateCcw)
                     .variant(ButtonVariant::Ghost),
             )
             .inner
@@ -275,7 +275,7 @@ impl CryptonoteApp {
         _ = Flex::row().gap(8.0).show(ui, |f| {
             if f.add(
                 Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::Trash2)
+                    .icon(functora_egui::LucideIcon::RotateCcw)
                     .variant(ButtonVariant::Ghost),
             )
             .inner

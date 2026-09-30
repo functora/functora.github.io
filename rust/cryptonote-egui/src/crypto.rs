@@ -4,7 +4,7 @@ use tap::prelude::*;
 
 pub use functora_core::crypto::{CipherType, EncryptedNote, KEY_SIZE, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts};
 
-const AAD_PREFIX: &[u8] = b"cryptonote.v1";
+pub const AAD_PREFIX: &[u8] = b"cryptonote.v1";
 
 #[must_use]
 pub fn aad(cipher: CipherType, kdf: Kdf) -> Vec<u8> {

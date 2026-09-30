@@ -455,6 +455,8 @@ pub enum ComponentId {
     IconTabs,
     Toolbar,
     Accordion,
+    Navbar,
+    Footer,
     Dialog,
     AlertDialog,
     Sheet,
@@ -466,6 +468,7 @@ pub enum ComponentId {
     Command,
     Menubar,
     NavigationMenu,
+    BlockingOverlay,
     Alert,
     Badge,
     Progress,
@@ -489,6 +492,7 @@ pub enum ComponentId {
     Image,
     Hyperlink,
     Hypertext,
+    CodeSnippet,
     FieldGroup,
     FieldSet,
     FieldLegend,
@@ -525,7 +529,7 @@ pub enum ComponentId {
 }
 
 impl ComponentId {
-    pub const ALL: [Self; 99] = [
+    pub const ALL: [Self; 103] = [
         Self::Button,
         Self::Checkbox,
         Self::Switch,
@@ -558,6 +562,8 @@ impl ComponentId {
         Self::IconTabs,
         Self::Toolbar,
         Self::Accordion,
+        Self::Navbar,
+        Self::Footer,
         Self::Dialog,
         Self::AlertDialog,
         Self::Sheet,
@@ -569,6 +575,7 @@ impl ComponentId {
         Self::Command,
         Self::Menubar,
         Self::NavigationMenu,
+        Self::BlockingOverlay,
         Self::Alert,
         Self::Badge,
         Self::Progress,
@@ -592,6 +599,7 @@ impl ComponentId {
         Self::Image,
         Self::Hyperlink,
         Self::Hypertext,
+        Self::CodeSnippet,
         Self::FieldGroup,
         Self::FieldSet,
         Self::FieldLegend,
@@ -663,6 +671,8 @@ impl ComponentId {
             Self::IconTabs => "IconTabs",
             Self::Toolbar => "Toolbar",
             Self::Accordion => "Accordion",
+            Self::Navbar => "Navbar",
+            Self::Footer => "Footer",
             Self::Dialog => "Dialog",
             Self::AlertDialog => "AlertDialog",
             Self::Sheet => "Sheet",
@@ -674,6 +684,7 @@ impl ComponentId {
             Self::Command => "Command",
             Self::Menubar => "Menubar",
             Self::NavigationMenu => "NavigationMenu",
+            Self::BlockingOverlay => "BlockingOverlay",
             Self::Alert => "Alert",
             Self::Badge => "Badge",
             Self::Progress => "Progress",
@@ -697,6 +708,7 @@ impl ComponentId {
             Self::Image => "Image",
             Self::Hyperlink => "Hyperlink",
             Self::Hypertext => "Hypertext",
+            Self::CodeSnippet => "CodeSnippet",
             Self::FieldGroup => "FieldGroup",
             Self::FieldSet => "FieldSet",
             Self::FieldLegend => "FieldLegend",
@@ -775,6 +787,8 @@ impl ComponentId {
             "icontabs" => Some(Self::IconTabs),
             "toolbar" => Some(Self::Toolbar),
             "accordion" => Some(Self::Accordion),
+            "navbar" => Some(Self::Navbar),
+            "footer" => Some(Self::Footer),
             "dialog" => Some(Self::Dialog),
             "alertdialog" => Some(Self::AlertDialog),
             "sheet" => Some(Self::Sheet),
@@ -786,6 +800,7 @@ impl ComponentId {
             "command" => Some(Self::Command),
             "menubar" => Some(Self::Menubar),
             "navigationmenu" => Some(Self::NavigationMenu),
+            "blockingoverlay" => Some(Self::BlockingOverlay),
             "alert" => Some(Self::Alert),
             "badge" => Some(Self::Badge),
             "progress" => Some(Self::Progress),
@@ -809,6 +824,7 @@ impl ComponentId {
             "image" => Some(Self::Image),
             "hyperlink" => Some(Self::Hyperlink),
             "hypertext" => Some(Self::Hypertext),
+            "codesnippet" => Some(Self::CodeSnippet),
             "fieldgroup" => Some(Self::FieldGroup),
             "fieldset" => Some(Self::FieldSet),
             "fieldlegend" => Some(Self::FieldLegend),
@@ -1053,6 +1069,8 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 LucideIcon::ChevronsUpDown,
                 Some(ComponentId::Accordion),
             ),
+            ComponentDef::new("Navbar", LucideIcon::PanelTop, Some(ComponentId::Navbar)),
+            ComponentDef::new("Footer", LucideIcon::PanelBottom, Some(ComponentId::Footer)),
         ],
     ),
     (
@@ -1101,6 +1119,11 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 "NavigationMenu",
                 LucideIcon::Navigation,
                 Some(ComponentId::NavigationMenu),
+            ),
+            ComponentDef::new(
+                "BlockingOverlay",
+                LucideIcon::Hourglass,
+                Some(ComponentId::BlockingOverlay),
             ),
         ],
     ),
@@ -1174,6 +1197,11 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 "Hypertext",
                 LucideIcon::Pilcrow,
                 Some(ComponentId::Hypertext),
+            ),
+            ComponentDef::new(
+                "CodeSnippet",
+                LucideIcon::SquareCode,
+                Some(ComponentId::CodeSnippet),
             ),
         ],
     ),
@@ -1414,6 +1442,13 @@ impl Default for FormState {
     }
 }
 
+#[derive(Default)]
+pub struct DemoState {
+    pub button_selected: bool,
+    pub navbar_collapsed: bool,
+    pub blocking_overlay_open: bool,
+}
+
 /// All state for the showcase demos, one field per interactive demo.
 pub struct ShowcaseApp {
     pub persistent: PersistentState<()>,
@@ -1463,7 +1498,6 @@ pub struct ShowcaseApp {
     pub settings_tab: SettingsTab,
     pub profile_tab: ProfileTab,
     pub nav_section: NavSection,
-    pub button_selected: bool,
     pub input_password: String,
     pub pagination_page: usize,
     pub resizable_fraction: f32,
@@ -1476,6 +1510,9 @@ pub struct ShowcaseApp {
     pub field_set_email: String,
     pub field_description_password: String,
     pub toolbar: ToolbarState,
+    pub navbar_language: std::cell::Cell<Language>,
+    pub blocking_overlay_cancel: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    pub blocking_overlay_job: Option<functora_egui::progress::Job<functora_egui::progress::Stage>>,
     // feedback
     pub progress_val: f32,
     // data
@@ -1494,6 +1531,7 @@ pub struct ShowcaseApp {
     pub prop_opacity: f64,
     pub form: FormState,
     pub platform: PlatformState,
+    pub demo: DemoState,
 }
 
 impl Default for ShowcaseApp {
@@ -1544,7 +1582,6 @@ impl Default for ShowcaseApp {
             settings_tab: SettingsTab::default(),
             profile_tab: ProfileTab::default(),
             nav_section: NavSection::default(),
-            button_selected: false,
             input_password: String::new(),
             pagination_page: 0,
             resizable_fraction: 0.5,
@@ -1557,6 +1594,9 @@ impl Default for ShowcaseApp {
             field_set_email: String::new(),
             field_description_password: String::new(),
             toolbar: ToolbarState::default(),
+            navbar_language: std::cell::Cell::new(Language::default()),
+            blocking_overlay_cancel: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            blocking_overlay_job: None,
             progress_val: 0.66,
             carousel_idx: 0,
             calendar_year: 2026,
@@ -1571,6 +1611,7 @@ impl Default for ShowcaseApp {
             prop_opacity: 92.0,
             form: FormState::default(),
             platform: PlatformState::default(),
+            demo: DemoState::default(),
         }
     }
 }
@@ -1798,6 +1839,8 @@ impl ShowcaseApp {
             Some(ComponentId::IconTabs) => self.demo_icon_tabs(ui),
             Some(ComponentId::Toolbar) => self.demo_toolbar(ui),
             Some(ComponentId::Accordion) => self.demo_accordion(ui),
+            Some(ComponentId::Navbar) => self.demo_navbar(ui),
+            Some(ComponentId::Footer) => Self::demo_footer(ui),
             Some(ComponentId::Dialog) => self.demo_dialog(ui),
             Some(ComponentId::AlertDialog) => self.demo_alert_dialog(ui),
             Some(ComponentId::Sheet) => self.demo_sheet(ui),
@@ -1809,6 +1852,7 @@ impl ShowcaseApp {
             Some(ComponentId::Command) => self.demo_command(ui),
             Some(ComponentId::Menubar) => self.demo_menubar(ui),
             Some(ComponentId::NavigationMenu) => self.demo_navigation_menu(ui),
+            Some(ComponentId::BlockingOverlay) => self.demo_blocking_overlay(ui),
             Some(ComponentId::Alert) => Self::demo_alert(ui),
             Some(ComponentId::Badge) => Self::demo_badge(ui),
             Some(ComponentId::Progress) => self.demo_progress(ui),
@@ -1832,6 +1876,7 @@ impl ShowcaseApp {
             Some(ComponentId::Image) => self.demo_image(ui),
             Some(ComponentId::Hyperlink) => Self::demo_hyperlink(ui),
             Some(ComponentId::Hypertext) => self.demo_hypertext(ui),
+            Some(ComponentId::CodeSnippet) => Self::demo_code_snippet(ui),
             Some(ComponentId::FieldGroup) => self.demo_field_group(ui),
             Some(ComponentId::FieldSet) => self.demo_field_set(ui),
             Some(ComponentId::FieldLegend) => Self::demo_field_legend(ui),

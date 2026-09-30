@@ -5,7 +5,8 @@ use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
 use functora_egui::storage::persist_value;
 use functora_egui::{
-    Button, ButtonVariant, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell, ToastState, ToastVariant,
+    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell, ToastState,
+    ToastVariant,
 };
 
 use crate::encoding::{NoteData, decode_note, extract_note_param};
@@ -179,6 +180,21 @@ impl CryptonoteApp {
             }
         }
         self.preview_rx = remaining;
+    }
+
+    fn cancel_all(&mut self) {
+        self.clipboard_write_rx = None;
+        self.share_rx = None;
+        self.download_rx = None;
+        self.pick_rx = None;
+        self.generate_rx = None;
+        self.decrypt_rx = None;
+        self.archive_rx = None;
+        self.pwa_rx = None;
+        self.preview_rx.clear();
+        clear_progress(&mut self.temporary.progress);
+        self.pick_cancel = None;
+        self.pick_overlay_open = false;
     }
 
     pub fn poll_receivers(&mut self, ctx: &egui::Context) {
@@ -597,6 +613,9 @@ impl eframe::App for CryptonoteApp {
                     bottom_ui.add_space(4.0);
                     let _ = bottom_ui.add(Progress::new(f32::from(job.percent()) / 100.0));
                     let _ = bottom_ui.label(format!("{:?} {} / {}", job.stage, job.done, job.total));
+                    if bottom_ui.add(Button::new("Cancel").size(ComponentSize::Sm)).clicked() {
+                        self.cancel_all();
+                    }
                     bottom_ui.add_space(4.0);
                 });
         }

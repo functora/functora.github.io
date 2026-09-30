@@ -49,6 +49,7 @@ pub fn clear_progress<S>(progress: &mut Option<Job<S>>) {
     *progress = None;
 }
 
+#[derive(Debug)]
 pub struct JobGuard<'a, S> {
     slot: &'a mut Option<Job<S>>,
 }
@@ -74,12 +75,4 @@ where
         name: None,
     });
     Some(JobGuard { slot })
-}
-
-pub fn with_callback<S, F>(mut callback: F) -> impl FnMut(Option<Job<S>>)
-where
-    F: FnMut(Option<Job<S>>),
-    S: Clone,
-{
-    move |job| callback(job)
 }

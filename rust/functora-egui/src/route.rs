@@ -137,8 +137,8 @@ pub mod router_impl {
         R: Routable + Default,
         S: 'static,
     {
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn new(_state: &mut S, default: R) -> Self {
+        #[must_use]
+        pub fn new(default: &R) -> Self {
             let current = {
                 #[cfg(all(target_arch = "wasm32", feature = "platform"))]
                 {

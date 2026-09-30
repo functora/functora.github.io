@@ -72,8 +72,12 @@ impl CryptonoteApp {
                         }
                     });
                     let () = ui.add_space(4.0);
-                    // preview via functora_egui::files::preview
-                    let preview = preview(&att.name, &att.data);
+                    let preview = self
+                        .temporary
+                        .preview_cache
+                        .get(&att.name)
+                        .cloned()
+                        .unwrap_or_else(|| preview(&att.name, &att.data));
                     match preview {
                         Preview::Text(t) => {
                             _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
@@ -87,8 +91,7 @@ impl CryptonoteApp {
                             );
                         }
                         Preview::Markdown(t) => {
-                            let rendered = crate::markdown::render_markdown(&t);
-                            _ = ui.label(rendered);
+                            _ = ui.label(t);
                         }
                         Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
                             _ = ui.label(Msg::PreviewUnavailable.render(lang));

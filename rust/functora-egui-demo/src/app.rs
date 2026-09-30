@@ -1541,7 +1541,7 @@ impl Default for ShowcaseApp {
             sidebar_collapsed: true,
             selected: None,
             prev_selected: None,
-            router: functora_egui::route::AppRouter::new(&mut (), AppRoute::default()),
+            router: functora_egui::route::AppRouter::new(&AppRoute::default()),
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),

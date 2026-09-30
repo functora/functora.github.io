@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 
+fn theme_key() -> egui::Id {
+    egui::Id::new("functora_theme")
+}
+
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Theme {
     Light,
@@ -34,6 +38,9 @@ impl std::fmt::Display for Theme {
 }
 
 pub fn set_theme(ctx: &egui::Context, theme: Theme) {
+    ctx.data_mut(|d| {
+        let _ = d.insert_temp(theme_key(), theme);
+    });
     match theme {
         Theme::Light => {
             let light = crate::theme::shadcn_theme_light::light();
@@ -48,13 +55,7 @@ pub fn set_theme(ctx: &egui::Context, theme: Theme) {
 
 #[must_use]
 pub fn current_theme(ctx: &egui::Context) -> Theme {
-    let current = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
-    let dark_bg = crate::theme::shadcn_theme_dark::dark().background;
-    if current.background == dark_bg {
-        Theme::Dark
-    } else {
-        Theme::Light
-    }
+    ctx.data(|d| d.get_temp::<Theme>(theme_key()).unwrap_or(Theme::Light))
 }
 
 #[must_use]

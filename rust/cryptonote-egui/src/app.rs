@@ -39,6 +39,7 @@ pub struct CryptonoteApp {
     pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
+    preview_rx: Vec<std::sync::mpsc::Receiver<(String, functora_egui::files::Preview)>>,
     pub(crate) qr_state: functora_egui::QrScannerState,
     pub(crate) qr_error_notified: Option<String>,
     pub(crate) md_cache: functora_egui::CommonMarkCache,
@@ -47,7 +48,7 @@ pub struct CryptonoteApp {
 impl Default for CryptonoteApp {
     fn default() -> Self {
         Self {
-            router: AppRouter::new(&mut (), Screen::default()),
+            router: AppRouter::new(&Screen::default()),
             persistent: PersistentState::default(),
             temporary: TemporaryState::default(),
             toast: ToastState::new(),
@@ -62,6 +63,7 @@ impl Default for CryptonoteApp {
             decrypt_rx: None,
             archive_rx: None,
             pwa_rx: None,
+            preview_rx: Vec::new(),
             qr_state: functora_egui::QrScannerState::new(),
             qr_error_notified: None,
             md_cache: functora_egui::CommonMarkCache::default(),
@@ -83,8 +85,7 @@ impl CryptonoteApp {
         this.sidebar_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         #[cfg(target_arch = "wasm32")]
         {
-            let mut tmp = ();
-            let router = AppRouter::new(&mut tmp, Screen::default());
+            let router = AppRouter::new(&Screen::default());
             let current = *router.current();
             this.router = router;
             this.temporary.screen = current;
@@ -147,7 +148,41 @@ impl CryptonoteApp {
             || matches!(error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
     }
 
+    fn generate_previews(&mut self) {
+        let new_attachments: Vec<_> = self
+            .temporary
+            .attachments
+            .iter()
+            .filter(|att| !self.temporary.preview_cache.contains_key(&att.name))
+            .cloned()
+            .collect();
+        for att in new_attachments {
+            let name = att.name.clone();
+            let data = att.data.clone();
+            let rx = functora_egui::spawn_async(async move {
+                let preview = functora_egui::files::preview(&name, &data);
+                (name, preview)
+            });
+            self.preview_rx.push(rx);
+        }
+    }
+
+    fn poll_previews(&mut self) {
+        let mut remaining = Vec::with_capacity(self.preview_rx.len());
+        for rx in self.preview_rx.drain(..) {
+            match rx.try_recv() {
+                Ok((name, preview)) => {
+                    let _ = self.temporary.preview_cache.insert(name, preview);
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => remaining.push(rx),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+            }
+        }
+        self.preview_rx = remaining;
+    }
+
     pub fn poll_receivers(&mut self, ctx: &egui::Context) {
+        self.poll_previews();
         let lang = self.lang();
         let time = ctx.input(|i| i.time);
 
@@ -223,6 +258,7 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
                     self.pick_overlay_open = false;
+                    self.generate_previews();
                 }
                 Ok(Err(e)) => {
                     if Self::is_cancelled(&e) {
@@ -300,6 +336,7 @@ impl CryptonoteApp {
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.generate_previews();
                     self.navigate(opened.screen);
                 }
                 Ok(Err(e)) => {

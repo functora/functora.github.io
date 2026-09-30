@@ -878,7 +878,7 @@ impl crate::app::ShowcaseApp {
             ui2.add_space(4.0);
             snippet(
                 ui2,
-                "// NavHistory: push / go_back / go_forward / sync\nuse crate::route::AppRoute;\nuse crate::app::ComponentId;\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::AppRouter;\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(ComponentId::Button));\nassert_eq!(history.current(), &AppRoute::Component(ComponentId::Button));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&mut (), AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(ComponentId::Button));\nrouter.go_back(&mut ());",
+                "// NavHistory: push / go_back / go_forward / sync\nuse crate::route::AppRoute;\nuse crate::app::ComponentId;\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::AppRouter;\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(ComponentId::Button));\nassert_eq!(history.current(), &AppRoute::Component(ComponentId::Button));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(ComponentId::Button));\nrouter.go_back(&mut ());",
             );
         });
     }
@@ -996,7 +996,7 @@ impl crate::app::ShowcaseApp {
             .clicked()
             {
                 self.platform.pwa_rx = Some(spawn_async(async move {
-                    let res = functora_egui::camera::trigger_pwa_install()
+                    let res = functora_egui::pwa::trigger_pwa_install()
                         .await
                         .map_err(|e| e.to_string())?;
                     Ok(format!("Install: {res:?}"))
@@ -1011,7 +1011,7 @@ impl crate::app::ShowcaseApp {
             .clicked()
             {
                 self.platform.pwa_rx = Some(spawn_async(async move {
-                    let hint = functora_egui::camera::install_hint()
+                    let hint = functora_egui::pwa::install_hint()
                         .await
                         .map_err(|e| e.to_string())?;
                     Ok(format!("Hint: {hint:?}"))
@@ -1026,7 +1026,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// PWA: install_hint + trigger_pwa_install\nuse functora_egui::{camera::install_hint, camera::trigger_pwa_install};\n\n// Check if install is available\nlet hint = install_hint().await?;\nmatch hint {\n    functora_egui::camera::InstallHint::Available => {\n        // Show install button\n    }\n    functora_egui::camera::InstallHint::NotAvailable => {\n        // Hide install button\n    }\n    functora_egui::camera::InstallHint::Unknown => {}\n}\n\n// Trigger install prompt\nlet res = trigger_pwa_install().await?;\n// res = Accepted | Rejected | NotAvailable | AlreadyInstalled",
+            "// PWA: install_hint + trigger_pwa_install\nuse functora_egui::{pwa::install_hint, pwa::trigger_pwa_install};\n\n// Check if install is available\nlet hint = install_hint().await?;\nmatch hint {\n    functora_egui::pwa::InstallHint::Ios => {\n        // Show install button\n    }\n    functora_egui::pwa::InstallHint::Mac => {\n        // Hide install button\n    }\n    functora_egui::pwa::InstallHint::Unavailable => {}\n}\n\n// Trigger install prompt\nlet res = trigger_pwa_install().await?;\n// res = Accepted | Rejected | NotAvailable",
         );
     }
 

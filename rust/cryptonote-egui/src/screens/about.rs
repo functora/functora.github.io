@@ -74,18 +74,16 @@ impl CryptonoteApp {
                 .clicked()
                 {
                     let rx = functora_egui::spawn_async(async move {
-                        match functora_egui::camera::trigger_pwa_install().await {
-                            Ok(functora_egui::camera::PwaInstallOutcome::Accepted) => Ok(BaseMsg::PwaInstallSuccess),
-                            Ok(functora_egui::camera::PwaInstallOutcome::Rejected) => Ok(BaseMsg::PwaInstallRejected),
-                            Ok(functora_egui::camera::PwaInstallOutcome::NotAvailable) => {
-                                functora_egui::camera::install_hint()
+                        match functora_egui::pwa::trigger_pwa_install().await {
+                            Ok(functora_egui::pwa::PwaInstallOutcome::Accepted) => Ok(BaseMsg::PwaInstallSuccess),
+                            Ok(functora_egui::pwa::PwaInstallOutcome::Rejected) => Ok(BaseMsg::PwaInstallRejected),
+                            Ok(functora_egui::pwa::PwaInstallOutcome::NotAvailable) => {
+                                functora_egui::pwa::install_hint()
                                     .await
                                     .map(|hint| match hint {
-                                        functora_egui::camera::InstallHint::Ios => BaseMsg::PwaInstallIos,
-                                        functora_egui::camera::InstallHint::Mac => BaseMsg::PwaInstallMac,
-                                        functora_egui::camera::InstallHint::Unavailable => {
-                                            BaseMsg::PwaInstallUnavailable
-                                        }
+                                        functora_egui::pwa::InstallHint::Ios => BaseMsg::PwaInstallIos,
+                                        functora_egui::pwa::InstallHint::Mac => BaseMsg::PwaInstallMac,
+                                        functora_egui::pwa::InstallHint::Unavailable => BaseMsg::PwaInstallUnavailable,
                                     })
                                     .map_err(AppError::from)
                             }

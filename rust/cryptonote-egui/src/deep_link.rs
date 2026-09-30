@@ -18,19 +18,7 @@ pub fn take_archive() -> Option<ArchiveSource> {
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_dev_dioxus_main_MainActivity_handleDeepLinkFile<'local>(
-    mut env: jni::JNIEnv<'local>,
-    _class: jni::objects::JClass<'local>,
-    path: jni::objects::JString<'local>,
-) {
-    if let Ok(raw) = env.get_string(&path) {
-        store_archive(ArchiveSource::Path(String::from(raw).into()));
-    }
-}
-
-#[cfg(target_os = "android")]
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_functora_app_MainActivity_handleDeepLinkFile<'local>(
+pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeepLinkFile<'local>(
     mut env: jni::JNIEnv<'local>,
     _class: jni::objects::JClass<'local>,
     path: jni::objects::JString<'local>,

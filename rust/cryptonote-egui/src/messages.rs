@@ -2,7 +2,7 @@ use crate::error::MsgError;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, strum::EnumCount)]
 pub enum Msg {
     Base(BaseMsg),
     Error(MsgError),
@@ -29,7 +29,6 @@ pub enum Msg {
     ActionOpen,
     ActionScan,
     AboutText,
-    Print,
     Clear,
     AttachFiles,
     RemoveFile,
@@ -96,7 +95,6 @@ Cryptonote follows modern cryptographic best practices:
 - No data ever leaves your device unless you explicitly choose to share it
 
 Secure, private, and truly offline - your notes remain yours alone.".into(),
-            Self::Print => "Print".into(),
             Self::Clear => "Clear".into(),
             Self::AttachFiles => "Attach files".into(),
             Self::RemoveFile => "Remove".into(),
@@ -167,7 +165,6 @@ Cryptonote sigue las mejores prácticas criptográficas modernas:
 - Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
 
 Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".into(),
-            Self::Print => "Imprimir".into(),
             Self::Clear => "Borrar".into(),
             Self::AttachFiles => "Adjuntar archivos".into(),
             Self::RemoveFile => "Eliminar".into(),
@@ -240,7 +237,6 @@ Cryptonote следует современным криптографическ�
 - Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 
 Безопасно, приватно и по-настоящему автономно - ваши заметки остаются только вашими.".into(),
-            Self::Print => "Печать".into(),
             Self::Clear => "Очистить".into(),
             Self::AttachFiles => "Прикрепить файлы".into(),
             Self::RemoveFile => "Удалить".into(),

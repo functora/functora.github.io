@@ -2,7 +2,7 @@
 name = "functora-egui"
 version = "0.1.0"
 edition = "2024"
-description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 50+ more components with light/dark theming"
+description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 70+ more components with light/dark theming"
 license = "MIT"
 keywords = ["egui", "ui", "widgets", "shadcn", "gui"]
 categories = ["gui", "rendering"]
@@ -126,10 +126,6 @@ optional = true
 version = "0.8"
 optional = true
 
-[dependencies.egui_router]
-version = "0.9"
-optional = true
-
 [dependencies.data-url]
 version = "0.3"
 optional = true
@@ -140,7 +136,7 @@ default-features = false
 optional = true
 
 [features]
-default = ["platform", "clipboard", "files", "runtime", "storage", "crypto", "zip", "package", "html-markdown", "thumbnail", "functora-core/qr"]
+default = ["platform", "clipboard", "files", "runtime", "storage", "crypto", "zip", "package", "html-markdown", "thumbnail", "qr"]
 platform = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:web-sys", "dep:jni", "dep:android-activity"]
 clipboard = ["platform", "runtime", "dep:arboard"]
 files = ["platform", "dep:rfd"]
@@ -175,7 +171,6 @@ build = ["dep:askama", "dep:toml"]
 images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif", "egui_extras/webp", "egui_extras/svg", "egui_extras/file", "egui_extras/http"]
 qr = ["functora-core/qr"]
 camera = ["files", "qr", "dep:image"]
-router = ["platform", "dep:egui_router"]
 markdown = [
     "dep:data-url",
     "dep:egui_commonmark",

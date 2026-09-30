@@ -22,5 +22,16 @@ pub(crate) mod android {
         });
     }
 
+    #[unsafe(no_mangle)]
+    pub extern "system" fn Java_com_functora_functora_egui_demo_MainActivity_handleDeepLink(
+        mut env: jni::JNIEnv,
+        _class: jni::objects::JClass,
+        url: jni::objects::JString,
+    ) {
+        if let Ok(s) = env.get_string(&url).map(String::from) {
+            functora_egui::deep_link::store_url(s);
+        }
+    }
+
     pub use functora_egui::android::poll_ime;
 }

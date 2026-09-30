@@ -2,15 +2,19 @@
 
 [shadcn/ui](https://ui.shadcn.com)-inspired widget library for [egui](https://github.com/emilk/egui).
 
-60+ beautifully styled, ready-to-use components with built-in light and dark theming. Drop-in replacements for native egui widgets plus higher-level components like dialogs, date pickers, sidebars, and editor-ready controls.
-
-**[Live Demo](https://functora.github.io/apps/functora-egui-demo/)** (runs in your browser via WebAssembly)
+70+ beautifully styled, ready-to-use components with built-in light and dark theming. Drop-in replacements for native egui widgets plus higher-level components like dialogs, date pickers, sidebars, and editor-ready controls.
 
 ## Quick start
 
+`functora-egui` is not published to crates.io yet, so depend on the path in
+this repository (or point `git` at the same path):
+
 ```toml
 [dependencies]
-functora-egui = "0.1"
+functora-egui = { path = "rust/functora-egui" }
+
+# Or from git:
+# functora-egui = { git = "https://github.com/functora/functora.github.io", path = "rust/functora-egui" }
 ```
 
 ```rust
@@ -30,13 +34,14 @@ ui.add(functora_egui::Select::new(&mut selected, &options).placeholder("Pick one
 
 | Category | Widgets |
 |----------|---------|
-| **Inputs** | Button, Checkbox, ColorSwatch, Input, InputOtp, Radio, RadioGroup, Select, Slider, Switch, Textarea, Toggle, ToggleGroup, Combobox, DatePicker |
-| **Layout** | Accordion, AspectRatio, Card, Collapsible, Resizable, ScrollArea, Separator, StatusBar, Tabs, Toolbar, Flex |
-| **Overlay** | AlertDialog, Command, ContextMenu, Dialog, DropdownMenu, HoverCard, Menubar, NavigationMenu, Popover, Sheet, Tooltip |
-| **Feedback** | Alert, Badge, Progress, Skeleton, Spinner, Toast |
-| **Data** | Avatar, Breadcrumb, Calendar, Carousel, Pagination, Sidebar, Table |
-| **Typography** | Typography, Label, Kbd |
+| **Inputs** | Button, Checkbox, ColorSwatch, Combobox, DatePicker, Input, InputOtp, InputPasteClear, NumberInput, Radio, RadioGroup, Select, Slider, Switch, Textarea, TextareaPasteClear, Toggle, ToggleGroup |
+| **Layout** | Accordion, AspectRatio, Card, Collapsible, Flex, Footer, Navbar, Resizable, ScrollArea, Separator, StatusBar, Tabs, Toolbar |
+| **Overlay** | AlertDialog, BlockingOverlay, Command, ContextMenu, Dialog, DropdownMenu, HoverCard, Menubar, NavigationMenu, Popover, Sheet, Tooltip |
+| **Feedback** | Alert, Badge, Empty, Progress, Skeleton, Spinner, Toast |
+| **Data** | AreaChart, Avatar, Breadcrumb, Calendar, Carousel, Item, Pagination, Sidebar, Table |
+| **Display** | Typography, Label, Kbd, Hyperlink, Hypertext |
 | **Grouping** | ButtonGroup, InputGroup, FieldGroup, FieldSet, FieldLegend, FieldDescription, PropertyGrid, PropertyRow |
+| **Media** | CameraView, QrImage, QrScanner |
 | **Icons** | 1600+ Lucide icons via `LucideIcon` |
 
 ## Theming
@@ -46,7 +51,7 @@ Built-in light and dark themes:
 ```rust
 let light = functora_egui::theme::shadcn_theme_light::light();
 let dark = functora_egui::theme::shadcn_theme_dark::dark();
-functora_egui::ShadcnThemeExt::set_shadcn_theme(ctx, dark);
+functora_egui::ShadcnThemeExt::set_shadcn_theme(&ctx, dark);
 ```
 
 ## Responsive design
@@ -70,8 +75,10 @@ if ui.on_mobile() {
 
 Widgets pick this up automatically:
 
-- Buttons, inputs, selects, date pickers, comboboxes, navigation menus,
-  pagination, and tabs use the touch height (44) and padding (14) on mobile.
+- Buttons, inputs, selects, and paste-clear controls use the touch height
+  (44) and padding (14) on mobile. Date pickers, comboboxes, navigation
+  menus, pagination, and tabs use the touch height (44) with their own
+  widget-specific horizontal padding.
 - `Dialog` and `AlertDialog` become bottom sheets on mobile, with top-rounded
   corners and page padding, and stay centered windows on desktop.
 - `Sheet` clamps its size so the panel always stays inside the screen.
@@ -95,13 +102,12 @@ functora_egui::Flex::row()
 
 The `functora-egui-demo` crate in this repository is a full interactive
 showcase of every layout, component, widget, and feature, with light/dark
-theming and responsive mobile behavior. Run it locally (from `rust/`):
+theming and responsive mobile behavior. Run it locally:
 
 ```sh
-cargo run -p functora-egui-demo
+cd functora-egui-demo
+cargo run
 ```
-
-Or try the [live web demo](https://functora.github.io/apps/functora-egui-demo/).
 
 ## License
 

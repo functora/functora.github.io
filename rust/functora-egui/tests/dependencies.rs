@@ -243,7 +243,9 @@ fn cargo_tree(krate: &str, extra: &[String]) -> Result<BTreeSet<String>, TestErr
     })
 }
 
-fn features_of(krate: &str) -> Result<Vec<String>, TestError> {
+fn features_object_of(
+    krate: &str,
+) -> Result<serde_json::Map<String, serde_json::Value>, TestError> {
     let root = rust_root()?;
     let manifest = root
         .join(krate)
@@ -290,19 +292,41 @@ fn features_of(krate: &str) -> Result<Vec<String>, TestError> {
                         .ok_or_else(|| {
                             TestError::Metadata(format!("metadata is missing features for {krate}"))
                         })
-                })
-                .map(|features| {
-                    features
-                        .keys()
-                        .filter(|key| key.as_str() != "default")
                         .cloned()
-                        .collect::<Vec<String>>()
                 })
         } else {
             Err(TestError::Metadata(
                 String::from_utf8_lossy(&output.stderr).into_owned(),
             ))
         }
+    })
+}
+
+fn features_of(krate: &str) -> Result<Vec<String>, TestError> {
+    features_object_of(krate).map(|features| {
+        features
+            .keys()
+            .filter(|key| key.as_str() != "default")
+            .cloned()
+            .collect::<Vec<String>>()
+    })
+}
+
+fn default_features_of(krate: &str) -> Result<Vec<String>, TestError> {
+    features_object_of(krate).and_then(|features| {
+        features
+            .get("default")
+            .and_then(serde_json::Value::as_array)
+            .ok_or_else(|| {
+                TestError::Metadata(format!("metadata is missing default features for {krate}"))
+            })
+            .map(|defaults| {
+                defaults
+                    .iter()
+                    .filter_map(serde_json::Value::as_str)
+                    .map(str::to_owned)
+                    .collect::<Vec<String>>()
+            })
     })
 }
 
@@ -495,6 +519,26 @@ fn widgets_defaults_preserve_capabilities() {
     assert!(
         missing.is_empty(),
         "functora-egui default build lost capabilities: {missing:?}"
+    );
+}
+
+#[test]
+fn default_features_include_own_qr() {
+    let missing = default_features_of("functora-egui").map_or_else(
+        |error| error_lines(&error),
+        |defaults| {
+            if defaults.iter().any(|feature| feature == "qr") {
+                Vec::new()
+            } else {
+                vec![defaults.join(", ")]
+            }
+        },
+    );
+    assert!(
+        missing.is_empty(),
+        "default features must enable the crate's own `qr` feature, otherwise \
+         `functora_egui::qr` is unavailable and QrImage renders nothing under defaults; \
+         defaults were: {missing:?}"
     );
 }
 

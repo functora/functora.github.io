@@ -587,130 +587,19 @@ pub fn pick_files_sync_web_with_cancel(
 #[cfg(target_arch = "wasm32")]
 async fn collect_files_chunked_web(
     file_list: web_sys::FileList,
-    mut progress: Option<&mut Option<Job<Stage>>>,
+    progress: Option<&mut Option<Job<Stage>>>,
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
-    use wasm_bindgen::JsCast;
-    let len = file_list.length();
-    if len == 0 {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Ok(Vec::new());
+    let shared = progress
+        .as_ref()
+        .map(|p| Arc::new(Mutex::new((*p).clone())));
+    let result = collect_files_chunked_web_shared(file_list, shared.clone(), cancel).await;
+    if let (Some(slot), Some(arc)) = (progress, shared)
+        && let Ok(guard) = arc.lock()
+    {
+        slot.clone_from(&guard);
     }
-    let mut total: u64 = 0;
-    for i in 0..len {
-        if let Some(token) = cancel
-            && token.load(Ordering::Relaxed)
-        {
-            return Err(Error::Cancelled);
-        }
-        let file = file_list
-            .get(i)
-            .ok_or_else(|| Error::JS("No file".into()))?;
-        let blob: &web_sys::Blob = file.unchecked_ref();
-        let size = crate::utils::f64_to_u64_clamped(blob.size());
-        total = total.saturating_add(size);
-    }
-    if let Some(slot) = progress.as_deref_mut() {
-        *slot = Some(Job {
-            stage: Stage::Attach,
-            done: 0,
-            total: total.max(1),
-            name: None,
-        });
-    }
-    yield_to_paint().await;
-    let mut out: Vec<(String, Vec<u8>)> = Vec::with_capacity(len as usize);
-    let mut done: u64 = 0;
-    for i in 0..len {
-        if let Some(token) = cancel
-            && token.load(Ordering::Relaxed)
-        {
-            return Err(Error::Cancelled);
-        }
-        let file = file_list
-            .get(i)
-            .ok_or_else(|| Error::JS("No file".into()))?;
-        let name = file.name();
-        let data = read_single_file_chunked(
-            &file,
-            progress.as_deref_mut(),
-            total,
-            &mut done,
-            &name,
-            cancel,
-        )
-        .await?;
-        out.push((name, data));
-    }
-    if let Some(slot) = progress {
-        *slot = None;
-    }
-    Ok(out)
-}
-
-#[cfg(target_arch = "wasm32")]
-async fn read_single_file_chunked(
-    file: &web_sys::File,
-    mut progress: Option<&mut Option<Job<Stage>>>,
-    total: u64,
-    done: &mut u64,
-    name: &str,
-    cancel: Option<&CancelToken>,
-) -> Result<Vec<u8>, Error> {
-    use wasm_bindgen::JsCast;
-    let blob: &web_sys::Blob = file.unchecked_ref();
-    let size = crate::utils::f64_to_u64_clamped(blob.size());
-    yield_to_paint().await;
-    if size == 0 {
-        return Ok(Vec::new());
-    }
-    let size_usize = usize::try_from(size).map_err(|e| Error::JS(format!("{e:?}")))?;
-    let mut buf = vec![0u8; size_usize];
-    let mut offset: u64 = 0;
-    let mut write_pos: usize = 0;
-    while offset < size {
-        if let Some(token) = cancel
-            && token.load(Ordering::Relaxed)
-        {
-            return Err(Error::Cancelled);
-        }
-        let end = offset
-            .saturating_add(u64::from(u32::try_from(PICK_CHUNK).unwrap_or(u32::MAX)))
-            .min(size);
-        let chunk_blob = blob
-            .slice_with_f64_and_f64(
-                crate::utils::u64_to_f64_js(offset),
-                crate::utils::u64_to_f64_js(end),
-            )
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let promise = chunk_blob.array_buffer();
-        let buffer = wasm_bindgen_futures::JsFuture::from(promise)
-            .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let uint8 = js_sys::Uint8Array::new(&buffer);
-        let chunk_len = uint8.length() as usize;
-        if chunk_len == 0 {
-            offset = end;
-            continue;
-        }
-        uint8.copy_to(&mut buf[write_pos..write_pos + chunk_len]);
-        write_pos += chunk_len;
-        offset = end;
-        *done = done.saturating_add(chunk_len as u64);
-        if let Some(slot) = progress.as_deref_mut() {
-            *slot = Some(Job {
-                stage: Stage::Attach,
-                done: *done,
-                total: total.max(1),
-                name: Some(name.to_string()),
-            });
-        }
-        yield_to_paint().await;
-    }
-    buf.truncate(write_pos);
-    Ok(buf)
+    result
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -719,184 +608,34 @@ async fn pick_via_web(
     progress: Option<&mut Option<Job<Stage>>>,
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
-    use wasm_bindgen::JsCast;
-    use wasm_bindgen::closure::Closure;
-    use wasm_bindgen_futures::JsFuture;
-
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    let document = window
-        .document()
-        .ok_or_else(|| Error::JS("No document".into()))?;
-    let input: web_sys::HtmlInputElement = document
-        .create_element("input")
-        .map_err(|e| Error::JS(format!("{e:?}")))?
-        .dyn_into()
-        .map_err(|_| Error::JS("Not an input".into()))?;
-    input.set_type("file");
-    input.set_multiple(multiple);
-    input
-        .style()
-        .set_property("display", "none")
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
-    let promise = {
-        let input_clone = input.clone();
-        js_sys::Promise::new(&mut |resolve, _reject| {
-            let resolve_change = resolve.clone();
-            let closure_change = Closure::once(move |_event: web_sys::Event| {
-                drop(resolve_change.call0(&wasm_bindgen::JsValue::NULL));
-            });
-            input_clone.set_onchange(Some(closure_change.as_ref().unchecked_ref()));
-            closure_change.forget();
-            let input_cancel = input.clone();
-            let resolve_cancel = resolve.clone();
-            let closure_cancel = Closure::once(move |_event: web_sys::Event| {
-                drop(resolve_cancel.call0(&wasm_bindgen::JsValue::NULL));
-            });
-            drop(input_cancel.add_event_listener_with_callback(
-                "cancel",
-                closure_cancel.as_ref().unchecked_ref(),
-            ));
-            closure_cancel.forget();
-        })
-    };
-    drop(
-        document
-            .body()
-            .ok_or_else(|| Error::JS("No body".into()))?
-            .append_child(&input)
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
-    );
-    let _cleanup = DomRemoval::new(&input);
-    input.click();
-    drop(
-        JsFuture::from(promise)
-            .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
-    );
-    if let Some(token) = cancel
-        && token.load(Ordering::Relaxed)
+    let shared = progress
+        .as_ref()
+        .map(|p| Arc::new(Mutex::new((*p).clone())));
+    let result = pick_via_web_shared(multiple, shared.clone(), cancel).await;
+    if let (Some(slot), Some(arc)) = (progress, shared)
+        && let Ok(guard) = arc.lock()
     {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Err(Error::Cancelled);
+        slot.clone_from(&guard);
     }
-    let Some(file_list) = input.files() else {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Ok(Vec::new());
-    };
-    if file_list.length() == 0 {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Ok(Vec::new());
-    }
-    collect_files_chunked_web(file_list, progress, cancel).await
+    result
 }
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
 async fn pick_via_rfd(
     multiple: bool,
-    mut progress: Option<&mut Option<Job<Stage>>>,
+    progress: Option<&mut Option<Job<Stage>>>,
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
-    use std::io::Read;
-
-    if let Some(token) = cancel
-        && token.load(Ordering::Relaxed)
+    let shared = progress
+        .as_ref()
+        .map(|p| Arc::new(Mutex::new((*p).clone())));
+    let result = pick_via_rfd_shared(multiple, shared.clone(), cancel).await;
+    if let (Some(slot), Some(arc)) = (progress, shared)
+        && let Ok(guard) = arc.lock()
     {
-        return Err(Error::Cancelled);
+        slot.clone_from(&guard);
     }
-    let dialog = rfd::AsyncFileDialog::new();
-    let handles = if multiple {
-        dialog.pick_files().await.unwrap_or_default()
-    } else {
-        dialog
-            .pick_file()
-            .await
-            .map(|h| vec![h])
-            .unwrap_or_default()
-    };
-    if handles.is_empty() {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Ok(Vec::new());
-    }
-    if let Some(token) = cancel
-        && token.load(Ordering::Relaxed)
-    {
-        if let Some(slot) = progress {
-            *slot = None;
-        }
-        return Err(Error::Cancelled);
-    }
-    let mut total: u64 = 0;
-    for handle in &handles {
-        if let Some(token) = cancel
-            && token.load(Ordering::Relaxed)
-        {
-            return Err(Error::Cancelled);
-        }
-        let path = handle.path();
-        let meta = std::fs::metadata(path).map_err(Error::from)?;
-        let size = meta.len();
-        total = total.saturating_add(size);
-    }
-    if let Some(slot) = progress.as_deref_mut() {
-        *slot = Some(Job {
-            stage: Stage::Attach,
-            done: 0,
-            total: total.max(1),
-            name: None,
-        });
-    }
-    yield_to_paint().await;
-    let mut out: Vec<(String, Vec<u8>)> = Vec::with_capacity(handles.len());
-    let mut done: u64 = 0;
-    let mut chunk = vec![0u8; PICK_CHUNK];
-    for handle in handles {
-        if let Some(token) = cancel
-            && token.load(Ordering::Relaxed)
-        {
-            return Err(Error::Cancelled);
-        }
-        let name = handle.file_name();
-        let path = handle.path().to_path_buf();
-        let file_len =
-            std::fs::metadata(&path).map_or(0, |m| usize::try_from(m.len()).unwrap_or(0));
-        let mut data: Vec<u8> = Vec::with_capacity(file_len);
-        let mut file = std::fs::File::open(&path).map_err(Error::from)?;
-        loop {
-            if let Some(token) = cancel
-                && token.load(Ordering::Relaxed)
-            {
-                return Err(Error::Cancelled);
-            }
-            let n = file.read(&mut chunk).map_err(Error::from)?;
-            if n == 0 {
-                break;
-            }
-            data.extend_from_slice(&chunk[..n]);
-            done = done.saturating_add(n as u64);
-            if let Some(slot) = progress.as_deref_mut() {
-                *slot = Some(Job {
-                    stage: Stage::Attach,
-                    done,
-                    total: total.max(1),
-                    name: Some(name.clone()),
-                });
-            }
-            yield_to_paint().await;
-        }
-        out.push((name, data));
-    }
-    if let Some(slot) = progress {
-        *slot = None;
-    }
-    Ok(out)
+    result
 }
 
 #[cfg(target_arch = "wasm32")]

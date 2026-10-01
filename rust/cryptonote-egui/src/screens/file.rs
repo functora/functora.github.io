@@ -19,7 +19,12 @@ impl CryptonoteApp {
             _ = ui.label(egui::RichText::new(&att.name).size(18.0).strong());
             _ = ui.label(egui::RichText::new(size).small().weak());
             let () = ui.add_space(8.0);
-            let preview = preview(&att.name, &att.data);
+            let preview = self
+                .temporary
+                .preview_cache
+                .get(&att.name)
+                .cloned()
+                .unwrap_or_else(|| preview(&att.name, &att.data));
             match preview {
                 Preview::Image(_) => {
                     let uri = format!("{BYTES_URI_PREFIX}{}", att.name);
@@ -35,15 +40,12 @@ impl CryptonoteApp {
                     let rendered = crate::markdown::render_markdown(&t);
                     _ = ui.label(rendered);
                 }
-                Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) => {
+                Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
                     _ = Alert::new()
                         .title(Msg::PreviewUnavailable.render(lang))
                         .show(ui, |inner| {
                             _ = inner.label(Msg::PreviewUnavailable.render(lang));
                         });
-                }
-                Preview::Download => {
-                    _ = ui.label(Msg::PreviewUnavailable.render(lang));
                 }
                 Preview::Missing => {
                     _ = ui.label(Msg::FileNotFound.render(lang));

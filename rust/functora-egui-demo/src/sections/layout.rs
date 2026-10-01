@@ -230,10 +230,14 @@ impl crate::app::ShowcaseApp {
                 .show(ui52);
         });
         ui.add_space(8.0);
+        _ = Card::new().heading("Card Heading").show(ui, |ui53| {
+            _ = ui53.label("Card with a built-in heading section.");
+        });
+        ui.add_space(8.0);
 
         snippet(
             ui,
-            "// Card: bordered container for grouping content\nuse functora_egui::{Card, Button, ButtonVariant, ComponentSize};\n\nCard::new().show(ui, |card| {\n    card.add(Typography::h4(\"Card Title\"));\n    card.add_space(4.0);\n    card.label(\"This is a card with some descriptive content inside.\");\n    card.add_space(8.0);\n    Button::new(\"Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(card);\n});",
+            "// Card: bordered container for grouping content\nuse functora_egui::{Card, Button, ButtonVariant, ComponentSize};\n\nCard::new().show(ui, |card| {\n    card.add(Typography::h4(\"Card Title\"));\n    card.add_space(4.0);\n    card.label(\"This is a card with some descriptive content inside.\");\n    card.add_space(8.0);\n    Button::new(\"Action\")\n        .variant(ButtonVariant::Outline)\n        .size(ComponentSize::Sm)\n        .show(card);\n});\n\n// Card with a built-in heading\nCard::new()\n    .heading(\"Card Heading\")\n    .show(ui, |card| {\n        card.label(\"Card with a built-in heading section.\");\n    });",
         );
     }
 
@@ -374,10 +378,23 @@ impl crate::app::ShowcaseApp {
                 _ = ui76.label("Configure application settings.");
             }
         });
+        _ = TabsValue::new(&entries)
+            .fill_width()
+            .show(ui, &mut self.settings_tab, |ui77, tab| match tab {
+                SettingsTab::Account => {
+                    _ = ui77.label("Equal-width account tab.");
+                }
+                SettingsTab::Password => {
+                    _ = ui77.label("Equal-width password tab.");
+                }
+                SettingsTab::Settings => {
+                    _ = ui77.label("Equal-width settings tab.");
+                }
+            });
 
         snippet(
             ui,
-            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Manage your account settings and preferences.\"),\n        SettingsTab::Password => content.label(\"Change your password and security settings.\"),\n        SettingsTab::Settings => content.label(\"Configure application settings.\"),\n    }\n});",
+            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Manage your account settings and preferences.\"),\n        SettingsTab::Password => content.label(\"Change your password and security settings.\"),\n        SettingsTab::Settings => content.label(\"Configure application settings.\"),\n    }\n});\n\n// Stretched tab bar with equal-width tabs\nTabsValue::new(&entries).fill_width().show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Stretched tab bar.\"),\n        SettingsTab::Password => content.label(\"Stretched tab bar.\"),\n        SettingsTab::Settings => content.label(\"Stretched tab bar.\"),\n    }\n});",
         );
     }
 
@@ -513,10 +530,29 @@ impl crate::app::ShowcaseApp {
         ])
         .multiple()
         .show(ui, &mut self.accordion_open);
+        ui.add_space(12.0);
+        _ = Typography::small("Single mode (only one open at a time)").show(ui);
+        ui.add_space(4.0);
+        let mut single_open = vec![0];
+        _ = Accordion::new(vec![
+            (
+                "What is Rust?".to_owned(),
+                "A systems programming language focused on safety and performance.".to_owned(),
+            ),
+            (
+                "What is egui?".to_owned(),
+                "An immediate-mode GUI library for Rust.".to_owned(),
+            ),
+            (
+                "What is shadcn/ui?".to_owned(),
+                "A component library design system.".to_owned(),
+            ),
+        ])
+        .show(ui, &mut single_open);
 
         snippet(
             ui,
-            "// Accordion: expandable sections\nuse functora_egui::Accordion;\n\nlet items = vec![\n    (\"Is it accessible?\", \"Yes. It adheres to the WAI-ARIA design pattern.\"),\n    (\"Is it styled?\", \"Yes. It comes with default styles matching shadcn/ui.\"),\n    (\"Is it animated?\", \"Yes. It has smooth open/close transitions.\"),\n];\nlet mut open_indices = vec![0];\n\nAccordion::new(items)\n    .multiple()\n    .show(ui, &mut open_indices);",
+            "// Accordion: expandable sections\nuse functora_egui::Accordion;\n\n// Multiple mode (default)\nlet items = vec![\n    (\"Is it accessible?\", \"Yes. It adheres to the WAI-ARIA design pattern.\"),\n    (\"Is it styled?\", \"Yes. It comes with default styles matching shadcn/ui.\"),\n    (\"Is it animated?\", \"Yes. It has smooth open/close transitions.\"),\n];\nlet mut open_indices = vec![0];\n\nAccordion::new(items)\n    .multiple()\n    .show(ui, &mut open_indices);\n\n// Single mode (only one open at a time)\nlet mut single_open = vec![0];\nAccordion::new(items)\n    .show(ui, &mut single_open);",
         );
     }
 

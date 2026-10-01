@@ -1363,6 +1363,7 @@ pub struct DialogState {
 #[derive(Default)]
 pub struct SheetState {
     pub sheet_open: bool,
+    pub sheet_side: functora_egui::SheetSide,
 }
 
 pub struct CheckState {
@@ -1751,7 +1752,7 @@ impl ShowcaseApp {
             Sheet::new()
                 .title("Sheet Panel")
                 .description("A side sheet that slides in from the edge.")
-                .side(functora_egui::SheetSide::Right)
+                .side(self.sheet_state.sheet_side)
                 .show(ctx, &mut self.sheet_state.sheet_open, |ui| {
                     _ = Label::new("Notifications").show(ui);
                     ui.add_space(4.0);

@@ -76,7 +76,9 @@ pub fn persist_value<T: Serialize>(key: &str, value: &T) {
 #[cfg(target_arch = "wasm32")]
 fn web_load<T: DeserializeOwned>(key: &str) -> Option<T> {
     let raw = crate::platform::web::storage_get(key)?;
-    serde_json::from_str(&raw).ok()
+    serde_json::from_str(&raw)
+        .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
+        .ok()
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -93,7 +95,9 @@ fn android_load<T: DeserializeOwned>(key: &str) -> Option<T> {
     files_dir().ok().and_then(|p| {
         let json = read_json_object(p.join("storage.json")).ok()?;
         let value = json.get(key)?;
-        serde_json::from_value(value.clone()).ok()
+        serde_json::from_value(value.clone())
+            .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
+            .ok()
     })
 }
 
@@ -111,7 +115,9 @@ fn desktop_load<T: DeserializeOwned>(key: &str) -> Option<T> {
     storage_file().ok().and_then(|p| {
         let json = read_json_object(&p).ok()?;
         let value = json.get(key)?;
-        serde_json::from_value(value.clone()).ok()
+        serde_json::from_value(value.clone())
+            .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
+            .ok()
     })
 }
 
@@ -172,7 +178,11 @@ pub fn load_from_eframe<T: DeserializeOwned>(
 ) -> Option<T> {
     storage
         .and_then(|s| s.get_string(key))
-        .and_then(|raw| serde_json::from_str(&raw).ok())
+        .and_then(|raw| {
+            serde_json::from_str(&raw)
+                .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
+                .ok()
+        })
         .or_else(|| load_state(key))
 }
 

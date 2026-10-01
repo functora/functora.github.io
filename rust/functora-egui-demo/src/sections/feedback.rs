@@ -24,10 +24,31 @@ impl crate::app::ShowcaseApp {
             .show(ui, |ui24| {
                 _ = ui24.label("Your session has expired. Please log in again.");
             });
+        ui.add_space(8.0);
+        _ = Alert::new()
+            .title("Success")
+            .variant(AlertVariant::Success)
+            .show(ui, |ui25| {
+                _ = ui25.label("Your changes have been saved.");
+            });
+        ui.add_space(8.0);
+        _ = Alert::new()
+            .title("Warning")
+            .variant(AlertVariant::Warning)
+            .show(ui, |ui26| {
+                _ = ui26.label("Your account will expire soon.");
+            });
+        ui.add_space(8.0);
+        _ = Alert::new()
+            .title("Info")
+            .variant(AlertVariant::Info)
+            .show(ui, |ui27| {
+                _ = ui27.label("A new version is available.");
+            });
 
         snippet(
             ui,
-            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .variant(AlertVariant::Default)\n    .show(ui, |ui| {\n        ui.label(\"You can add components to your app using the CLI.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });",
+            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .variant(AlertVariant::Default)\n    .show(ui, |ui| {\n        ui.label(\"You can add components to your app using the CLI.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });\n\nAlert::new()\n    .title(\"Success\")\n    .variant(AlertVariant::Success)\n    .show(ui, |ui| {\n        ui.label(\"Your changes have been saved.\");\n    });",
         );
     }
 

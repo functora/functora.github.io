@@ -4,7 +4,10 @@ fn js_escape(value: &str) -> String {
     value
         .replace('\\', "\\\\")
         .replace('\'', "\\'")
+        .replace('"', "\\\"")
         .replace('\n', "\\n")
+        .replace('\r', "\\r")
+        .replace('\t', "\\t")
 }
 
 #[must_use]

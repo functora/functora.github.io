@@ -799,7 +799,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Files: pick + preview + mime\nuse functora_egui::files::{pick_files, preview, preview_blob, preview_cached, mime_for_name, format_size, CancelToken};\nuse std::sync::Arc;\n\n// Pick files (multiple = true)\nlet cancel = Arc::new(std::sync::atomic::AtomicBool::new(false));\nlet files = pick_files(true).await?;\n\nfor (name, data) in files {\n    // Get mime type\n    let mime = mime_for_name(&name).unwrap_or(\"application/octet-stream\");\n    \n    // Preview (text/image/pdf)\n    let preview = preview(&name, &data);\n    \n    // Or create a revocable blob URL (web)\n    let blob_url = preview_blob(&name, &data);\n    \n    // Or cached preview (avoids re-decoding)\n    let cached = preview_cached(&name, &data);\n    \n    let size = format_size(data.len() as u64);\n    eprintln!(\"picked: {name} ({mime}, {size})\");\n    \n    // Cancel if needed\n    // cancel.store(true, Ordering::Relaxed);\n}",
+            "// Files: pick + preview + mime\nuse functora_egui::files::{pick_files_with_shared_progress, new_cancel_token, preview, preview_blob, mime_for_name, format_size};\nuse std::sync::{Arc, Mutex};\n\n// Pick files with shared progress + cancel token (overlay reads progress)\nlet cancel = new_cancel_token();\nlet progress = Arc::new(Mutex::new(None));\nlet rx = functora_egui::spawn_async(async move {\n    pick_files_with_shared_progress(true, Some(progress), Some(&cancel)).await\n});\n\n// Cancel from the overlay close button\n// functora_egui::files::cancel(&cancel);\n\nfor (name, data) in files {\n    // Get mime type\n    let mime = mime_for_name(&name).unwrap_or(\"application/octet-stream\");\n    \n    // Preview (text/image/pdf)\n    let preview = preview(&name, &data);\n    \n    // Or create a revocable blob URL (web)\n    let blob_url = preview_blob(&name, &data);\n    \n    let size = format_size(data.len() as u64);\n    eprintln!(\"picked: {name} ({mime}, {size})\");\n}",
         );
     }
 
@@ -857,19 +857,19 @@ impl crate::app::ShowcaseApp {
                 .inner
                 .clicked()
             {
-                _ = self.router.go_back(&mut ());
+                _ = self.router.go_back();
             }
             if f.add(Button::new("Go forward").icon(functora_egui::LucideIcon::ArrowRight))
                 .inner
                 .clicked()
             {
-                _ = self.router.go_forward(&mut ());
+                _ = self.router.go_forward();
             }
             if f.add(Button::new("Navigate to Overview").variant(ButtonVariant::Outline))
                 .inner
                 .clicked()
             {
-                self.router.navigate(&mut (), AppRoute::Overview);
+                self.router.navigate(AppRoute::Overview);
             }
         });
         ui.add_space(8.0);
@@ -878,12 +878,12 @@ impl crate::app::ShowcaseApp {
             ui2.add_space(4.0);
             snippet(
                 ui2,
-                "// NavHistory: push / go_back / go_forward / sync\nuse crate::route::AppRoute;\nuse crate::app::ComponentId;\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::AppRouter;\n\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(ComponentId::Button));\nassert_eq!(history.current(), &AppRoute::Component(ComponentId::Button));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&AppRoute::Overview);\nrouter.navigate(&mut (), AppRoute::Component(ComponentId::Button));\nrouter.go_back(&mut ());",
+                "// NavHistory: push / go_back / go_forward / sync\nuse functora_egui::nav::NavHistory;\nuse functora_egui::route::AppRouter;\n\n// AppRoute + ComponentId are your own route types\nlet mut history = NavHistory::new(AppRoute::Overview);\n\n// Push a route\nhistory.push(AppRoute::Component(ComponentId::Button));\nassert_eq!(history.current(), &AppRoute::Component(ComponentId::Button));\n\n// Go back\nhistory.go_back();\nassert_eq!(history.current(), &AppRoute::Overview);\n\n// Check state\nhistory.can_go_back(); // false\nhistory.can_go_forward(); // true\n\n// AppRouter integrates with browser history\nlet mut router = AppRouter::new(&AppRoute::Overview);\nrouter.navigate(AppRoute::Component(ComponentId::Button));\nrouter.go_back();",
             );
         });
     }
 
-    pub(crate) fn demo_progress_worker(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_progress_worker(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
             "Progress Job + Worker::run (thread on desktop, inline on wasm) with Stage enum.",
         )
@@ -969,7 +969,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Progress: Job<Stage> + claim_job for exclusive access\nuse functora_egui::progress::{Job, Stage, claim_job, Progress};\n\nlet mut job = Job {\n    stage: Stage::Download,\n    done: 0,\n    total: 100,\n    name: Some(\"file.zip\".to_owned()),\n};\n\n// Update progress\njob.done = 50;\n\n// Claim for exclusive access (returns Some(guard) if available)\nif let Some(_guard) = claim_job(&mut job, Stage::Zip) {\n    // Exclusive access - do zip work\n    job.done = 100;\n}\n\n// Render progress bar\n// Progress::new(f32::from(job.percent()) / 100.0).show(ui);",
+            "// Progress: Job<Stage> + claim_job for exclusive access\nuse functora_egui::Progress;\nuse functora_egui::progress::{Job, Stage, claim_job};\n\nlet mut slot: Option<Job<Stage>> = None;\n\n// Start a fake job\nslot = Some(Job { stage: Stage::Zip, done: 0, total: 100, name: None });\n\n// Tick\nif let Some(job) = &mut slot {\n    job.done = (job.done + 10).min(job.total);\n}\n\n// Claim guard demo: clone-then-claim for exclusive access\nlet mut other = slot.clone();\nif claim_job(&mut other, Stage::Download).is_some() {\n    other = Some(Job { stage: Stage::Download, done: 0, total: 1, name: None });\n}\n\n// Render progress bar\nif let Some(job) = &slot {\n    Progress::new(f32::from(job.percent()) / 100.0).show(ui);\n}\n\n// Clear\nslot = None;",
         );
     }
 
@@ -1284,10 +1284,17 @@ impl crate::app::ShowcaseApp {
             self.platform.qr_error_notified = None;
         }
         ui.add_space(8.0);
+        _ = Typography::small("Scan target (test fixture): point the scanner below at this code.")
+            .show(ui);
+        ui.add_space(4.0);
         let generated = self.platform.qr_input.clone();
         _ = functora_egui::QrImage::new(&generated).show(ui);
         ui.add_space(4.0);
-        _ = Typography::small(format!("Preview content: {} chars", generated.len())).show(ui);
+        _ = Typography::small(format!(
+            "Preview content (scan target): {} chars",
+            generated.len()
+        ))
+        .show(ui);
         ui.add_space(12.0);
         _ = Card::new().show(ui, |ui2| {
             _ = Typography::small(
@@ -1749,7 +1756,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         snippet(
             ui,
-            "// Package: compile-time metadata via env! + functora-core stamps\nuse functora_egui::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};\n\n// From Cargo.toml, resolved at compile time\nlet name = env!(\"CARGO_PKG_NAME\");\nlet version = env!(\"CARGO_PKG_VERSION\");\n\n// build.rs: println!(\"cargo:rustc-env=MY_TITLE={}\", title);\nlet title = env!(\"MY_TITLE\");\nlet theme_color = env!(\"MY_THEME_COLOR\");\n\n// Library build stamps\nlet date = FUNCTORA_CORE_DATE;\nlet year = FUNCTORA_CORE_YEAR;\n\neprintln!(\"{name} {version} - {title} ({date}, {year})\");",
+            "// Package: compile-time metadata via env! + functora-core stamps\nuse functora_egui::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};\n\n// From Cargo.toml, resolved at compile time\nlet name = env!(\"CARGO_PKG_NAME\");\nlet version = env!(\"CARGO_PKG_VERSION\");\n\n// build.rs resolves these from Cargo.toml [package.metadata.functora-egui-web]\nlet title = env!(\"DEMO_WEB_TITLE\");\nlet theme_color = env!(\"DEMO_WEB_THEME_COLOR\");\n\n// Library build stamps\nlet date = FUNCTORA_CORE_DATE;\nlet year = FUNCTORA_CORE_YEAR;\n\neprintln!(\"{name} {version} - {title} ({date}, {year})\");",
         );
     }
 

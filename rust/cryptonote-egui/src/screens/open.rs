@@ -95,10 +95,11 @@ impl CryptonoteApp {
                 }
             }
             External::Archive(archive) => {
+                let progress = self.track_progress();
                 let rx = functora_egui::spawn_async(async move {
                     let bytes = archive.untag();
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-                    crate::archive::extract_archive_package_async_with_progress(source, &password, |_| {})
+                    crate::archive::extract_archive_package_async_with_progress(source, &password, progress)
                         .await
                         .map(|(text, _)| text)
                 });

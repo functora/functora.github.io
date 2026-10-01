@@ -155,12 +155,11 @@ fn app_router_handle_back_goes_back() {
     }]);
     let mut out = ctx.run_ui(raw, |ui| {
         let egui_ctx = ui.ctx();
-        let mut state = ();
-        let mut router = functora_egui::route::AppRouter::<DemoRoute, ()>::new(&DemoRoute::Home);
-        router.navigate(&mut state, DemoRoute::PageA);
-        router.navigate(&mut state, DemoRoute::PageB);
+        let mut router = functora_egui::route::AppRouter::<DemoRoute>::new(&DemoRoute::Home);
+        router.navigate(DemoRoute::PageA);
+        router.navigate(DemoRoute::PageB);
         assert_eq!(router.current(), &DemoRoute::PageB);
-        let outcome = router.handle_back(egui_ctx, &mut state);
+        let outcome = router.handle_back(egui_ctx);
         assert_eq!(outcome, Some(BackOutcome::ConsumedNav));
         assert_eq!(router.current(), &DemoRoute::PageA);
         assert!(router.can_go_back());
@@ -179,10 +178,9 @@ fn app_router_handle_back_not_consumed_at_root() {
     }]);
     let mut out = ctx.run_ui(raw, |ui| {
         let egui_ctx = ui.ctx();
-        let mut state = ();
-        let mut router = functora_egui::route::AppRouter::<DemoRoute, ()>::new(&DemoRoute::Home);
+        let mut router = functora_egui::route::AppRouter::<DemoRoute>::new(&DemoRoute::Home);
         assert_eq!(router.current(), &DemoRoute::Home);
-        let outcome = router.handle_back(egui_ctx, &mut state);
+        let outcome = router.handle_back(egui_ctx);
         assert_eq!(outcome, None);
         assert_eq!(router.current(), &DemoRoute::Home);
     });
@@ -200,11 +198,10 @@ fn app_router_system_back_opt_out() {
     }]);
     let mut out = ctx.run_ui(raw, |ui| {
         let egui_ctx = ui.ctx();
-        let mut state = ();
-        let mut router = functora_egui::route::AppRouter::<DemoRoute, ()>::new(&DemoRoute::Home)
+        let mut router = functora_egui::route::AppRouter::<DemoRoute>::new(&DemoRoute::Home)
             .with_system_back(false);
-        router.navigate(&mut state, DemoRoute::PageA);
-        let outcome = router.handle_back(egui_ctx, &mut state);
+        router.navigate(DemoRoute::PageA);
+        let outcome = router.handle_back(egui_ctx);
         assert_eq!(outcome, None);
         assert_eq!(router.current(), &DemoRoute::PageA);
     });

@@ -3,15 +3,13 @@ use crate::crypto::CipherType;
 use crate::encoding::{NoteData, build_url, decode_note, extract_note_param, generate_qr_code};
 use crate::error::AppError;
 use crate::messages::Msg;
-use crate::progress::{Job, Stage, clear_progress};
+use crate::progress::{Job, Stage};
 use crate::route::Screen;
 use crate::state::{External, ExternalNote, OpenedArchive, TemporaryState};
 use crate::storage::APP_ATTRS;
 use functora_egui::Routable;
 use functora_tagged::InfallibleInto;
 use zeroize::Zeroizing;
-
-pub use functora_egui::files::format_size as fmt_size;
 
 #[must_use]
 pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
@@ -30,7 +28,10 @@ pub fn remove_attachment(state: &mut TemporaryState, index: crate::state::Attach
     }
 }
 
-pub async fn load_archive_async(source: ArchiveSource) -> Result<OpenedArchive, AppError> {
+pub async fn load_archive_async(
+    source: ArchiveSource,
+    progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
+) -> Result<OpenedArchive, AppError> {
     use crate::state::OpenedArchive;
     let meta = crate::archive::read_archive_metadata(&source)?;
     if meta.cipher.is_some() {
@@ -45,7 +46,7 @@ pub async fn load_archive_async(source: ArchiveSource) -> Result<OpenedArchive, 
             attachments: Vec::new(),
         })
     } else {
-        let (text, files) = crate::archive::extract_archive_package_async(source, "", |_| {}).await?;
+        let (text, files) = crate::archive::extract_archive_package_async(source, "", progress).await?;
         Ok(OpenedArchive {
             screen: Screen::View,
             external: External::Nothing,
@@ -74,10 +75,9 @@ async fn build_note(
     let base = format!("{}{}", APP_ATTRS.origin(), Screen::Open.to_url());
     let u = build_url(&base, &note_data)?;
     match generate_qr_code(&u) {
-        Ok(qr) => Ok(External::Note(ExternalNote {
+        Ok(_) => Ok(External::Note(ExternalNote {
             data: note_data,
             url: u,
-            qr,
         })),
         Err(e) => {
             tracing::warn!("QR code generation failed: {e}");
@@ -122,30 +122,6 @@ pub async fn build_external(
     .await
 }
 
-pub async fn generate_share_async(state: &mut TemporaryState) -> Result<(), AppError> {
-    let shared_progress = std::sync::Arc::new(std::sync::Mutex::new(None::<Job<Stage>>));
-    let shared_clone = std::sync::Arc::clone(&shared_progress);
-    let progress_fn = move |job: Option<Job<Stage>>| {
-        if let Ok(mut guard) = shared_progress.lock() {
-            *guard = job;
-        }
-    };
-    let external = build_external(
-        &state.note.clone(),
-        &state.password.clone(),
-        state.cipher,
-        &state.attachments.clone(),
-        progress_fn,
-    )
-    .await?;
-    if let Ok(guard) = shared_clone.lock() {
-        state.progress.clone_from(&guard);
-    }
-    state.external = external;
-    clear_progress(&mut state.progress);
-    Ok(())
-}
-
 pub fn handle_open_url(url: &str, state: &mut TemporaryState) -> Result<Screen, AppError> {
     let note = extract_note_param(url)?;
     match decode_note(&note)? {
@@ -153,7 +129,6 @@ pub fn handle_open_url(url: &str, state: &mut TemporaryState) -> Result<Screen, 
             state.external = External::Note(ExternalNote {
                 data: NoteData::CipherText(enc),
                 url: String::new(),
-                qr: String::new(),
             });
             Ok(Screen::Open)
         }

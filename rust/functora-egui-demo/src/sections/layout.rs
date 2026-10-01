@@ -157,7 +157,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n    f.add(Badge::new(\"Third\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type a message...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Next\"));\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"shadcn\", \"flexbox\", \"layout\", \"widgets\", \"responsive\", \"wrap\", \"gap\", \"grow\", \"theming\", \"buttons\", \"inputs\", \"cards\", \"dialogs\", \"toasts\", \"badges\"] {\n        f.add(Badge::new(tag));\n    }\n});",
+            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n    f.add(Badge::new(\"Third\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type a message...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify end\nFlex::row().justify_end().gap(8.0).w_full().show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Confirm\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Next\"));\n});\n\n// Justify center\nFlex::row().justify_center().gap(8.0).w_full().show(ui, |f| {\n    f.add(Spinner::new().size(20.0));\n    f.ui(|ui| { ui.label(\"Loading...\"); });\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Nested flex: two-column form\nFlex::row().gap(16.0).w_full().show(ui, |f| {\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut first).placeholder(\"John\"));\n        col.add(Input::new(&mut last).placeholder(\"Doe\"));\n    });\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut email).placeholder(\"john@example.com\"));\n    });\n});\n\n// Center utility\ncenter(ui, |ui| {\n    ui.label(\"Centered content\");\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"shadcn\", \"flexbox\", \"layout\", \"widgets\", \"responsive\", \"wrap\", \"gap\", \"grow\", \"theming\", \"buttons\", \"inputs\", \"cards\", \"dialogs\", \"toasts\", \"badges\"] {\n        f.add(Badge::new(tag));\n    }\n});",
         );
     }
 
@@ -216,7 +216,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_card(ui: &mut egui::Ui) {
+    pub fn demo_card(ui: &mut egui::Ui) {
         _ = Typography::muted("Bordered container for grouping content.").show(ui);
         ui.add_space(12.0);
         _ = Card::new().show(ui, |ui52| {
@@ -359,7 +359,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_tabs(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_tabs(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Tabbed content panels.").show(ui);
         ui.add_space(12.0);
         let entries = [
@@ -394,7 +394,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Manage your account settings and preferences.\"),\n        SettingsTab::Password => content.label(\"Change your password and security settings.\"),\n        SettingsTab::Settings => content.label(\"Configure application settings.\"),\n    }\n});\n\n// Stretched tab bar with equal-width tabs\nTabsValue::new(&entries).fill_width().show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Stretched tab bar.\"),\n        SettingsTab::Password => content.label(\"Stretched tab bar.\"),\n        SettingsTab::Settings => content.label(\"Stretched tab bar.\"),\n    }\n});",
+            "// TabsValue: tabbed content panels bound to an enum\nuse functora_egui::TabsValue;\n\n#[derive(Clone, Copy, PartialEq)]\nenum SettingsTab { Account, Password, Settings }\n\nlet entries = [(SettingsTab::Account, \"Account\".to_owned()), (SettingsTab::Password, \"Password\".to_owned()), (SettingsTab::Settings, \"Settings\".to_owned())];\nlet mut active = SettingsTab::Account;\n\nTabsValue::new(&entries).show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Manage your account settings and preferences.\"),\n        SettingsTab::Password => content.label(\"Change your password and security settings.\"),\n        SettingsTab::Settings => content.label(\"Configure application settings.\"),\n    }\n});\n\n// Stretched tab bar with equal-width tabs\nTabsValue::new(&entries).fill_width().show(ui, &mut active, |content, tab| {\n    match tab {\n        SettingsTab::Account => content.label(\"Equal-width account tab.\"),\n        SettingsTab::Password => content.label(\"Equal-width password tab.\"),\n        SettingsTab::Settings => content.label(\"Equal-width settings tab.\"),\n    }\n});",
         );
     }
 
@@ -601,11 +601,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Navbar: top navigation bar\nuse functora_egui::{Navbar, LucideIcon};\nuse functora_egui::i18n::Language;\nuse functora_egui::theme_extra::Theme;\nuse std::cell::Cell;\n\nlet mut collapsed = false;\nlet mut theme = persistent.theme;\nlet mut language = Cell::new(Language::default());\n\nNavbar::new(\"functora-egui\")\n    .brand_icon(Some(LucideIcon::Sparkles))\n    .version(\"0.2\")\n    .search(\"Search...\", Some(\"Ctrl K\"))\n    .show(ui, &mut collapsed, Some(&mut theme), Some(&mut language), None, None);",
+            "// Navbar: top navigation bar\nuse functora_egui::{Navbar, LucideIcon};\nuse functora_egui::i18n::Language;\nuse functora_egui::theme_extra::Theme;\nuse std::cell::Cell;\n\nlet mut collapsed = false;\nlet mut theme = persistent.theme;\nlet language = Cell::new(Language::default());\nlet action = Cell::new(\"\");\nlet mut on_brand = || { action.set(\"brand\"); };\nlet mut on_search = || { action.set(\"search\"); };\n\nNavbar::new(\"functora-egui\")\n    .brand_icon(Some(LucideIcon::Sparkles))\n    .version(\"0.2\")\n    .search(\"Search...\", Some(\"Ctrl K\"))\n    .show(ui, &mut collapsed, Some(&mut theme), Some(&language), Some(&mut on_brand), Some(&mut on_search));\n\nmatch action.get() {\n    \"brand\" => toast.add(\"Brand clicked\", ToastVariant::Default, now),\n    \"search\" => toast.add(\"Search clicked\", ToastVariant::Default, now),\n    _ => {}\n}",
         );
     }
 
-    pub(crate) fn demo_footer(ui: &mut egui::Ui) {
+    pub fn demo_footer(ui: &mut egui::Ui) {
         _ = Typography::muted("Centered, muted footer for page bottoms.").show(ui);
         ui.add_space(12.0);
         _ = Footer::new().show(ui, |inner| {

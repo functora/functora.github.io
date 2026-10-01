@@ -16,26 +16,10 @@ pub enum DExternalArchive {}
 
 pub type ExternalArchive = Tagged<Vec<u8>, DExternalArchive, FCrude>;
 
-pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, AppError> {
-    functora_core::crypto::derive_key(password, salt, kdf)?.pipe(Ok)
-}
-
 pub fn encrypt_symmetric(plaintext: &[u8], password: &str, cipher: CipherType) -> Result<EncryptedNote, AppError> {
     functora_core::crypto::encrypt_symmetric(plaintext, password, cipher, &aad(cipher, Kdf::Argon2id))?.pipe(Ok)
 }
 
 pub fn decrypt_symmetric(data: &EncryptedNote, password: &str) -> Result<Vec<u8>, AppError> {
     functora_core::crypto::decrypt_symmetric(data, password, &aad(data.cipher, data.kdf))?.pipe(Ok)
-}
-
-pub fn stream_encrypt_symmetric(
-    plaintext: &[u8],
-    password: &str,
-    cipher: CipherType,
-) -> Result<EncryptedNote, AppError> {
-    functora_core::crypto::stream_encrypt_symmetric(plaintext, password, cipher, &aad(cipher, Kdf::Argon2id))?.pipe(Ok)
-}
-
-pub fn stream_decrypt_symmetric(data: &EncryptedNote, password: &str) -> Result<Vec<u8>, AppError> {
-    functora_core::crypto::stream_decrypt_symmetric(data, password, &aad(data.cipher, data.kdf))?.pipe(Ok)
 }

@@ -5,7 +5,7 @@ use crate::messages::Msg;
 use crate::progress::{Stage, claim_job};
 use crate::route::Screen;
 use crate::state::{ActionMode, AttachmentIdx, External};
-use functora_egui::files::{Preview, format_size, preview};
+use functora_egui::files::{Preview, format_size};
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{Alert, Button, ButtonVariant, Card, ComponentSize, Flex, Progress, Separator, ToastVariant};
@@ -77,7 +77,7 @@ impl CryptonoteApp {
                         .preview_cache
                         .get(&att.name)
                         .cloned()
-                        .unwrap_or_else(|| preview(&att.name, &att.data));
+                        .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
                     match preview {
                         Preview::Text(t) => {
                             _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
@@ -91,8 +91,9 @@ impl CryptonoteApp {
                             );
                         }
                         Preview::Markdown(t) => {
-                            let rendered = crate::markdown::render_markdown(&t);
-                            _ = ui.label(rendered);
+                            _ = egui::ScrollArea::vertical().max_height(200.0).show(ui, |inner| {
+                                _ = functora_egui::markdown_view::show(inner, &mut self.md_cache, &t);
+                            });
                         }
                         Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
                             _ = ui.label(Msg::PreviewUnavailable.render(lang));
@@ -114,8 +115,9 @@ impl CryptonoteApp {
                 {
                     let files = self.temporary.attachments.clone();
                     if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
+                        let progress = self.track_progress();
                         let rx = functora_egui::spawn_async(async move {
-                            let zipped = functora_egui::zip::create_zip_async(&files, |_| {}, Stage::Zip).await?;
+                            let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip).await?;
                             functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
                                 .await
                                 .map_err(AppError::from)
@@ -158,8 +160,9 @@ impl CryptonoteApp {
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
+                    let progress = self.track_progress();
                     let rx = functora_egui::spawn_async(async move {
-                        build_external(&note, &password, cipher, &attachments, |_| {}).await
+                        build_external(&note, &password, cipher, &attachments, progress).await
                     });
                     self.generate_rx = Some(rx);
                 }

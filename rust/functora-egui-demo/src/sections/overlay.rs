@@ -93,7 +93,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_sheet(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_sheet(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A side panel that slides in from the edge.").show(ui);
         ui.add_space(12.0);
         _ = Typography::small("On mobile the sheet opens from the bottom.").show(ui);
@@ -212,7 +212,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Tooltip: small hint on hover\nuse functora_egui::{Tooltip, Button, ButtonVariant, LucideIcon, ComponentSize};\n\nlet settings = Button::icon_only(LucideIcon::Settings)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Settings\").show(&settings);\n\nlet notifications = Button::icon_only(LucideIcon::Bell)\n    .variant(ButtonVariant::Outline)\n    .size(ComponentSize::Sm)\n    .show(ui);\nTooltip::new(\"Notifications\").show(&notifications);",
+            "// Tooltip: small hint on hover\nuse functora_egui::{Tooltip, Button, ButtonVariant, LucideIcon, ComponentSize, Flex};\n\nFlex::row().gap(8.0).show(ui, |f| {\n    let settings = f.add(\n        Button::icon_only(LucideIcon::Settings)\n            .variant(ButtonVariant::Outline)\n            .size(ComponentSize::Sm),\n    );\n    Tooltip::new(\"Settings\").show(&settings.inner);\n    let notifications = f.add(\n        Button::icon_only(LucideIcon::Bell)\n            .variant(ButtonVariant::Outline)\n            .size(ComponentSize::Sm),\n    );\n    Tooltip::new(\"Notifications\").show(&notifications.inner);\n});",
         );
     }
 
@@ -366,7 +366,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_blocking_overlay(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_blocking_overlay(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("A modal overlay that blocks interaction during long operations.")
             .show(ui);
         ui.add_space(12.0);

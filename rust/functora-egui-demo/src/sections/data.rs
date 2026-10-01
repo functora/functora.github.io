@@ -27,7 +27,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_breadcrumb(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_breadcrumb(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Navigation trail using generic Breadcrumb with NavHistory.")
             .show(ui);
         ui.add_space(12.0);
@@ -37,10 +37,10 @@ impl crate::app::ShowcaseApp {
         {
             match action {
                 NavAction::Back => {
-                    _ = self.router.go_back(&mut ());
+                    _ = self.router.go_back();
                 }
                 NavAction::Forward => {
-                    _ = self.router.go_forward(&mut ());
+                    _ = self.router.go_forward();
                 }
                 NavAction::Route(route) => {
                     self.navigate_to(route.component());
@@ -56,10 +56,10 @@ impl crate::app::ShowcaseApp {
         {
             match action {
                 NavAction::Back => {
-                    _ = self.router.go_back(&mut ());
+                    _ = self.router.go_back();
                 }
                 NavAction::Forward => {
-                    _ = self.router.go_forward(&mut ());
+                    _ = self.router.go_forward();
                 }
                 NavAction::Route(route) => {
                     self.navigate_to(route.component());
@@ -69,7 +69,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Generic Breadcrumb with NavHistory\nuse functora_egui::{Breadcrumb, NavAction};\n\nlet lang = functora_egui::i18n::detect_browser_language();\nif let Some(action) = Breadcrumb::new(router.current(), router.history())\n    .show(ui, lang)\n{\n    match action {\n        NavAction::Back => router.go_back(&mut ()),\n        NavAction::Forward => router.go_forward(&mut ()),\n        NavAction::Route(route) => router.navigate(&mut (), route),\n    }\n}",
+            "// Generic Breadcrumb with NavHistory\nuse functora_egui::{Breadcrumb, NavAction};\n\nlet lang = functora_egui::i18n::detect_browser_language();\nif let Some(action) = Breadcrumb::new(router.current(), router.history())\n    .show(ui, lang)\n{\n    match action {\n        NavAction::Back => router.go_back(),\n        NavAction::Forward => router.go_forward(),\n        NavAction::Route(route) => router.navigate(route),\n    }\n}\n\n// Custom separator (uses router history)\nif let Some(action) = Breadcrumb::new(router.current(), router.history())\n    .separator(\" > \")\n    .show(ui, lang)\n{\n    match action {\n        NavAction::Back => router.go_back(),\n        NavAction::Forward => router.go_forward(),\n        NavAction::Route(route) => router.navigate(route),\n    }\n}",
         );
     }
 
@@ -143,7 +143,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet slides = [(\"Slide 1\", Color32::from_rgb(25, 113, 194)), (\"Slide 2\", Color32::from_rgb(18, 184, 134)), (\"Slide 3\", Color32::from_rgb(245, 159, 0)), (\"Slide 4\", Color32::from_rgb(224, 49, 49))];\nlet mut index = 0;\n\nCarousel::new(slides.len()).show(ui, &mut index, |slide, idx| {\n    if let Some((name, color)) = slides.get(idx).copied() {\n        let width = slide.available_width().min(420.0);\n        let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n        slide.painter().rect_filled(rect, theme.radius, color);\n        slide.painter().galley(rect.center() - galley.size() / 2.0, galley, Color32::WHITE);\n    }\n});",
+            "// Carousel: slider with prev/next + dots\nuse functora_egui::Carousel;\n\nlet slides = [(\"Slide 1\", Color32::from_rgb(25, 113, 194)), (\"Slide 2\", Color32::from_rgb(18, 184, 134)), (\"Slide 3\", Color32::from_rgb(245, 159, 0)), (\"Slide 4\", Color32::from_rgb(224, 49, 49))];\nlet mut index = 0;\n\nCarousel::new(slides.len()).show(ui, &mut index, |slide, idx| {\n    if let Some((name, color)) = slides.get(idx).copied() {\n        let width = slide.available_width().min(420.0);\n        let (rect, _) = slide.allocate_exact_size(egui::vec2(width, 200.0), egui::Sense::hover());\n        if slide.is_rect_visible(rect) {\n            let theme = ShadcnThemeExt::shadcn_theme(slide.ctx());\n            let painter = slide.painter();\n            let _ = painter.rect_filled(rect, egui::CornerRadius::from(theme.radius), color);\n            let galley = painter.layout_no_wrap(name.to_owned(), egui::FontId::proportional(24.0), egui::Color32::WHITE);\n            painter.galley(\n                egui::pos2(rect.center().x - galley.size().x / 2.0, rect.center().y - galley.size().y / 2.0),\n                galley,\n                egui::Color32::WHITE,\n            );\n        }\n    }\n});",
         );
     }
 
@@ -176,7 +176,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nShell::new(\"functora-egui\", &mut collapsed, |side| {\n    for (cat_id, _, items) in CATEGORIES.iter() {\n        category_header(side, *cat_id, lang);\n        side.add_space(8.0);\n        for def in items.iter() {\n            if let Some(id) = def.id {\n                let selected = Some(id) == selected;\n                if side.add(section_button(def, selected).full_width()).clicked() {\n                    selected = Some(id);\n                }\n            }\n        }\n        side.add_space(8.0);\n    }\n    false\n})\n.theme(&mut theme)\n.search(\"Search\", Some(\"Ctrl K\"))\n.breadcrumb(route, history)\n.show(ui, |content| {\n    // page content, no second Sidebar here\n});",
+            "// Sidebar: the app shell owns the only live sidebar, so this page is snippet-only\nuse functora_egui::{ResponsiveExt, Shell};\n\nlet mut collapsed = ui.on_mobile();\nlet mut selected = Some(\"Home\");\nShell::new(\"My app\", &mut collapsed, |side| {\n    for item in [\"Home\", \"Settings\", \"About\"] {\n        if side.selectable_label(Some(item) == selected, item).clicked() {\n            selected = Some(item);\n        }\n    }\n    false\n})\n.breadcrumb(route, history)\n.show(ui, |_content| {\n    // page content, no second Sidebar here\n});",
         );
     }
 

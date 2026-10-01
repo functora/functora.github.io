@@ -102,7 +102,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "Flex::row().gap(8.0).wrap().show(ui, |f| { ... });\nFlex::row().gap(8.0).no_wrap_on_mobile().show(ui, |f| { ... });",
+            "// FlexWrap: rows wrap by default; no_wrap_on_mobile keeps toolbars on one line\nuse functora_egui::{Button, ButtonVariant, Flex};\n\nFlex::row().gap(8.0).wrap().show(ui, |f| {\n    for i in 0..8 {\n        f.add(Button::new(format!(\"Action {i}\")).variant(ButtonVariant::Outline));\n    }\n});\n\nFlex::row().gap(8.0).no_wrap_on_mobile().show(ui, |f| {\n    for i in 0..4 {\n        f.add(Button::new(format!(\"Item {i}\")).variant(ButtonVariant::Outline));\n    }\n});",
         );
     }
 
@@ -138,7 +138,7 @@ impl crate::app::ShowcaseApp {
         ui.add_space(12.0);
         _ = Typography::small("Slider with responsive height").show(ui);
         ui.add_space(4.0);
-        _ = Slider::new(&mut self.slider_val, 0.0..=100.0)
+        _ = Slider::new(&mut self.touch_slider_val, 0.0..=100.0)
             .step(1.0)
             .width(ui.available_width().min(360.0))
             .show(ui);

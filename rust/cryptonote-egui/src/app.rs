@@ -12,7 +12,7 @@ use functora_egui::{
 use crate::encoding::{NoteData, decode_note, extract_note_param};
 use crate::error::AppError;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job, clear_progress};
+use crate::progress::{Job, Stage, claim_job, clear_progress};
 use crate::route::Screen;
 use crate::state::{External, TemporaryState};
 use crate::storage::{APP_ATTRS, PersistentState};
@@ -22,9 +22,10 @@ const PERSISTENT_KEY: &str = "cryptonote_persistent";
 pub(crate) const BYTES_URI_PREFIX: &str = "bytes://";
 
 type PickResult = Result<Vec<(String, Vec<u8>)>, AppError>;
+type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
 
 pub struct CryptonoteApp {
-    pub(crate) router: AppRouter<Screen, ()>,
+    pub(crate) router: AppRouter<Screen>,
     pub(crate) persistent: PersistentState<()>,
     pub temporary: TemporaryState,
     pub toast: ToastState,
@@ -41,6 +42,7 @@ pub struct CryptonoteApp {
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
     preview_rx: Vec<std::sync::mpsc::Receiver<(String, functora_egui::files::Preview)>>,
+    progress_slot: Option<SharedProgress>,
     pub(crate) qr_state: functora_egui::QrScannerState,
     pub(crate) qr_error_notified: Option<String>,
     pub(crate) md_cache: functora_egui::CommonMarkCache,
@@ -65,6 +67,7 @@ impl Default for CryptonoteApp {
             archive_rx: None,
             pwa_rx: None,
             preview_rx: Vec::new(),
+            progress_slot: None,
             qr_state: functora_egui::QrScannerState::new(),
             qr_error_notified: None,
             md_cache: functora_egui::CommonMarkCache::default(),
@@ -100,7 +103,7 @@ impl CryptonoteApp {
 
     pub(crate) fn navigate(&mut self, screen: Screen) {
         self.temporary.screen = screen;
-        self.router.navigate(&mut (), screen);
+        self.router.navigate(screen);
     }
 
     fn apply_theme(&self, ctx: &egui::Context) {
@@ -109,7 +112,7 @@ impl CryptonoteApp {
 
     pub(crate) fn reset(&mut self) {
         self.temporary.reset();
-        self.router.reset(&mut (), Screen::Home);
+        self.router.reset(Screen::Home);
         self.temporary.screen = Screen::Home;
     }
 
@@ -182,6 +185,24 @@ impl CryptonoteApp {
         self.preview_rx = remaining;
     }
 
+    pub(crate) fn track_progress(&mut self) -> impl FnMut(Option<Job<Stage>>) + Send + 'static {
+        let slot: SharedProgress = std::sync::Arc::new(std::sync::Mutex::new(None));
+        self.progress_slot = Some(std::sync::Arc::clone(&slot));
+        move |job| {
+            *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
+        }
+    }
+
+    fn sync_progress(&mut self) {
+        let reported = self
+            .progress_slot
+            .as_ref()
+            .and_then(|slot| slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone());
+        if let Some(job) = reported {
+            self.temporary.progress = Some(job);
+        }
+    }
+
     fn cancel_all(&mut self) {
         self.clipboard_write_rx = None;
         self.share_rx = None;
@@ -193,12 +214,16 @@ impl CryptonoteApp {
         self.pwa_rx = None;
         self.preview_rx.clear();
         clear_progress(&mut self.temporary.progress);
-        self.pick_cancel = None;
+        if let Some(token) = self.pick_cancel.take() {
+            functora_egui::files::cancel(&token);
+        }
         self.pick_overlay_open = false;
+        self.progress_slot = None;
     }
 
     pub fn poll_receivers(&mut self, ctx: &egui::Context) {
         self.poll_previews();
+        self.sync_progress();
         let lang = self.lang();
         let time = ctx.input(|i| i.time);
 
@@ -303,6 +328,7 @@ impl CryptonoteApp {
                 Ok(Ok(external)) => {
                     self.temporary.external = external;
                     clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
                     self.navigate(Screen::Share);
                 }
                 Ok(Err(e)) => {
@@ -314,9 +340,13 @@ impl CryptonoteApp {
                         );
                     }
                     clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.generate_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
+                }
             }
         }
         if let Some(rx) = self.decrypt_rx.take() {
@@ -325,6 +355,7 @@ impl CryptonoteApp {
                     self.temporary.note = text;
                     self.temporary.external = External::Nothing;
                     clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
                     self.navigate(Screen::View);
                 }
                 Ok(Err(e)) => {
@@ -336,9 +367,13 @@ impl CryptonoteApp {
                         );
                     }
                     clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.decrypt_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
+                }
             }
         }
         if let Some(rx) = self.archive_rx.take() {
@@ -352,6 +387,7 @@ impl CryptonoteApp {
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.progress_slot = None;
                     self.generate_previews();
                     self.navigate(opened.screen);
                 }
@@ -365,9 +401,13 @@ impl CryptonoteApp {
                     }
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
+                    self.progress_slot = None;
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.archive_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
+                    clear_progress(&mut self.temporary.progress);
+                    self.progress_slot = None;
+                }
             }
         }
         if let Some(rx) = self.pwa_rx.take() {
@@ -401,8 +441,11 @@ impl CryptonoteApp {
             || self.decrypt_rx.is_some()
             || self.archive_rx.is_some()
             || self.pwa_rx.is_some()
+            || !self.preview_rx.is_empty()
         {
             ctx.request_repaint();
+        } else {
+            self.progress_slot = None;
         }
     }
 
@@ -416,7 +459,6 @@ impl CryptonoteApp {
                     self.temporary.external = External::Note(crate::state::ExternalNote {
                         data: NoteData::CipherText(enc),
                         url: String::new(),
-                        qr: String::new(),
                     });
                     self.navigate(Screen::Open);
                 }
@@ -432,7 +474,9 @@ impl CryptonoteApp {
             && claim_job(&mut self.temporary.progress, Stage::Preview).is_some()
             && let Some(source) = crate::deep_link::take_archive()
         {
-            let rx = functora_egui::spawn_async(async move { crate::hooks::load_archive_async(source).await });
+            let progress = self.track_progress();
+            let rx =
+                functora_egui::spawn_async(async move { crate::hooks::load_archive_async(source, progress).await });
             self.archive_rx = Some(rx);
         }
     }
@@ -479,7 +523,7 @@ impl eframe::App for CryptonoteApp {
         self.apply_theme(&ctx);
         self.poll_receivers(&ctx);
         self.handle_deep_link();
-        self.router.ui(ui, &mut ());
+        self.router.ui(ui);
         #[cfg(target_os = "android")]
         functora_egui::android::poll_ime(&ctx);
         let routed = *self.router.current();
@@ -592,11 +636,11 @@ impl eframe::App for CryptonoteApp {
         if let Some(action) = breadcrumb_action {
             match action {
                 functora_egui::NavAction::Back => {
-                    let _ = self.router.go_back(&mut ());
+                    let _ = self.router.go_back();
                     self.temporary.screen = *self.router.current();
                 }
                 functora_egui::NavAction::Forward => {
-                    let _ = self.router.go_forward(&mut ());
+                    let _ = self.router.go_forward();
                     self.temporary.screen = *self.router.current();
                 }
                 functora_egui::NavAction::Route(r) => {

@@ -96,9 +96,8 @@ where
     let progress_arc = Arc::new(Mutex::new(progress_box));
     let progress_clone = Arc::clone(&progress_arc);
     let inner = functora_egui::package::extract_package_async(source, password, AAD_PREFIX, stages(), move |job| {
-        if let Ok(mut guard) = progress_arc.lock() {
-            guard(job);
-        }
+        let mut guard = progress_arc.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        guard(job);
     })
     .await?;
     let mut note = String::new();
@@ -106,9 +105,8 @@ where
     for (name, data) in functora_egui::zip::unzip_async(
         inner,
         move |job| {
-            if let Ok(mut guard) = progress_clone.lock() {
-                guard(job);
-            }
+            let mut guard = progress_clone.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            guard(job);
         },
         Stage::Unzip,
     )

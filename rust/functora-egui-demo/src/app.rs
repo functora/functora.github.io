@@ -1456,7 +1456,7 @@ pub struct ShowcaseApp {
     pub sidebar_collapsed: bool,
     pub selected: Option<ComponentId>,
     pub prev_selected: Option<ComponentId>,
-    pub router: functora_egui::route::AppRouter<AppRoute, ()>,
+    pub router: functora_egui::route::AppRouter<AppRoute>,
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
@@ -1469,6 +1469,7 @@ pub struct ShowcaseApp {
     pub toggle_group_align: Align,
     pub slider_val: f64,
     pub slider_price: f64,
+    pub touch_slider_val: f64,
     pub input_text: String,
     pub number_f64: f64,
     pub number_f32: f32,
@@ -1477,6 +1478,7 @@ pub struct ShowcaseApp {
     pub input_group_search: String,
     pub input_paste_clear_text: String,
     pub input_paste_clear_password: String,
+    pub input_paste_clear_password_custom: String,
     pub input_paste_clear_custom_default: String,
     pub input_paste_clear_custom_icons: String,
     pub input_paste_clear_copy: String,
@@ -1554,6 +1556,7 @@ impl Default for ShowcaseApp {
             toggle_group_align: Align::default(),
             slider_val: 50.0,
             slider_price: 200.0,
+            touch_slider_val: 50.0,
             input_text: String::new(),
             number_f64: 42.0,
             number_f32: std::f32::consts::PI,
@@ -1562,6 +1565,7 @@ impl Default for ShowcaseApp {
             input_group_search: String::new(),
             input_paste_clear_text: String::new(),
             input_paste_clear_password: String::new(),
+            input_paste_clear_password_custom: String::new(),
             input_paste_clear_custom_default: "default value".to_owned(),
             input_paste_clear_custom_icons: String::new(),
             input_paste_clear_copy: String::new(),
@@ -1652,7 +1656,7 @@ impl ShowcaseApp {
         }
         self.sidebar_collapsed = ctx.on_mobile();
         self.prev_selected = previous;
-        self.router.reset(&mut (), AppRoute::default());
+        self.router.reset(AppRoute::default());
         self.selected = None;
         self.apply_theme(ctx);
         ctx.request_repaint();
@@ -1672,7 +1676,7 @@ impl ShowcaseApp {
             Some(id) => AppRoute::Component(id),
             None => AppRoute::Overview,
         };
-        self.router.navigate(&mut (), route);
+        self.router.navigate(route);
     }
 
     fn sync_from_router(&mut self) {
@@ -1921,7 +1925,7 @@ impl eframe::App for ShowcaseApp {
         self.apply_theme(&ctx);
         self.handle_shortcuts(&ctx);
         self.poll_platform_promises(&ctx);
-        self.router.ui(ui, &mut ());
+        self.router.ui(ui);
         self.sync_from_router();
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
@@ -2024,11 +2028,11 @@ impl eframe::App for ShowcaseApp {
         if let Some(action) = breadcrumb_action {
             match action {
                 functora_egui::NavAction::Back => {
-                    let _ = self.router.go_back(&mut ());
+                    let _ = self.router.go_back();
                     ctx.request_repaint();
                 }
                 functora_egui::NavAction::Forward => {
-                    let _ = self.router.go_forward(&mut ());
+                    let _ = self.router.go_forward();
                     ctx.request_repaint();
                 }
                 functora_egui::NavAction::Route(nav_route) => {

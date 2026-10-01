@@ -6,9 +6,7 @@ pub use functora_egui::deep_link::{poll_deep_link, set_schedule_update, store_ur
 static PENDING_ARCHIVE: Mutex<Option<ArchiveSource>> = Mutex::new(None);
 
 pub fn store_archive(source: ArchiveSource) {
-    if let Ok(mut guard) = PENDING_ARCHIVE.lock() {
-        *guard = Some(source);
-    }
+    *PENDING_ARCHIVE.lock().unwrap_or_else(PoisonError::into_inner) = Some(source);
     functora_egui::deep_link::trigger_update();
 }
 

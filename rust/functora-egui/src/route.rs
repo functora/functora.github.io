@@ -123,19 +123,16 @@ where
 pub mod router_impl {
     use super::Routable;
     use crate::nav::NavHistory;
-    use std::marker::PhantomData;
 
-    pub struct AppRouter<R: Routable, S> {
+    pub struct AppRouter<R: Routable> {
         current: R,
         history: NavHistory<R>,
         system_back: bool,
-        _s: PhantomData<S>,
     }
 
-    impl<R, S> AppRouter<R, S>
+    impl<R> AppRouter<R>
     where
         R: Routable + Default,
-        S: 'static,
     {
         #[must_use]
         pub fn new(default: &R) -> Self {
@@ -156,7 +153,6 @@ pub mod router_impl {
                 current,
                 history,
                 system_back: true,
-                _s: PhantomData,
             }
         }
 
@@ -194,7 +190,6 @@ pub mod router_impl {
         pub fn handle_back(
             &mut self,
             ctx: &egui::Context,
-            _state: &mut S,
         ) -> Option<crate::platform::android_back::BackOutcome> {
             if !self.system_back {
                 return None;
@@ -208,8 +203,7 @@ pub mod router_impl {
             })
         }
 
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn navigate(&mut self, _state: &mut S, route: R) {
+        pub fn navigate(&mut self, route: R) {
             if route == self.current {
                 return;
             }
@@ -218,22 +212,19 @@ pub mod router_impl {
             history_push(&self.current);
         }
 
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn replace(&mut self, _state: &mut S, route: R) {
+        pub fn replace(&mut self, route: R) {
             self.history.replace(route.clone());
             self.current = route;
             history_replace(&self.current);
         }
 
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn reset(&mut self, _state: &mut S, route: R) {
+        pub fn reset(&mut self, route: R) {
             self.history.reset(route.clone());
             self.current = route;
             history_replace(&self.current);
         }
 
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn go_back(&mut self, _state: &mut S) -> Option<&R> {
+        pub fn go_back(&mut self) -> Option<&R> {
             if let Some(r) = self.history.go_back() {
                 self.current = r.clone();
                 history_push(&self.current);
@@ -243,8 +234,7 @@ pub mod router_impl {
             }
         }
 
-        #[allow(clippy::needless_pass_by_value)]
-        pub fn go_forward(&mut self, _state: &mut S) -> Option<&R> {
+        pub fn go_forward(&mut self) -> Option<&R> {
             if let Some(r) = self.history.go_forward() {
                 self.current = r.clone();
                 history_push(&self.current);
@@ -265,14 +255,14 @@ pub mod router_impl {
             }
         }
 
-        pub fn ui(&mut self, ui: &mut egui::Ui, state: &mut S) {
+        pub fn ui(&mut self, ui: &mut egui::Ui) {
             #[cfg(all(target_arch = "wasm32", feature = "platform"))]
             {
                 if let Some(href) = crate::platform::web::location_href() {
                     drop(self.sync_from_url(&href));
                 }
             }
-            let _ = self.handle_back(ui.ctx(), state);
+            let _ = self.handle_back(ui.ctx());
         }
 
         pub fn active_route(&self) -> Option<String> {

@@ -16,11 +16,6 @@ impl AttachmentIdx {
     pub fn get(self) -> usize {
         self.0
     }
-
-    #[must_use]
-    pub fn as_usize(self) -> usize {
-        self.0
-    }
 }
 
 #[derive(Debug, Clone, PartialEq, Copy, Default)]
@@ -63,7 +58,6 @@ impl From<CipherChoice> for Option<CipherType> {
 pub struct ExternalNote {
     pub data: NoteData,
     pub url: String,
-    pub qr: String,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -76,17 +70,17 @@ pub enum External {
 
 impl External {
     #[must_use]
-    pub fn note_url(self) -> String {
+    pub fn note_url(&self) -> String {
         match self {
-            Self::Note(n) => n.url,
+            Self::Note(n) => n.url.clone(),
             Self::Nothing | Self::Archive(_) => String::new(),
         }
     }
 
     #[must_use]
-    pub fn archive_bytes(self) -> Vec<u8> {
+    pub fn archive_bytes(&self) -> Vec<u8> {
         match self {
-            Self::Archive(a) => a.untag(),
+            Self::Archive(a) => a.clone().untag(),
             Self::Nothing | Self::Note(_) => Vec::new(),
         }
     }

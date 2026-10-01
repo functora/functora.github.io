@@ -1,4 +1,6 @@
 use crate::error::Error;
+#[cfg(all(target_arch = "wasm32", feature = "web"))]
+use wasm_bindgen::JsCast;
 
 fn js_escape(value: &str) -> String {
     value
@@ -8,6 +10,9 @@ fn js_escape(value: &str) -> String {
         .replace('\n', "\\n")
         .replace('\r', "\\r")
         .replace('\t', "\\t")
+        .replace('\u{8}', "\\b")
+        .replace('\u{c}', "\\f")
+        .replace("</script", "<\\/script")
 }
 
 #[must_use]
@@ -49,16 +54,22 @@ pub async fn trigger_pwa_install() -> Result<PwaInstallOutcome, Error> {
         if val.is_undefined() || val.is_null() {
             return Ok(PwaInstallOutcome::NotAvailable);
         }
-        let deferred = js_sys::Object::from(val);
+        let deferred = val
+            .dyn_into::<js_sys::Object>()
+            .map_err(|e| Error::JS(format!("{e:?}")))?;
         let prompt = js_sys::Reflect::get(&deferred, &js_sys::JsString::from("prompt"))
             .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let func = js_sys::Function::from(prompt);
+        let func = prompt
+            .dyn_into::<js_sys::Function>()
+            .map_err(|e| Error::JS(format!("{e:?}")))?;
         let _ = func
             .call0(&deferred)
             .map_err(|e| Error::JS(format!("{e:?}")))?;
         let user_choice = js_sys::Reflect::get(&deferred, &js_sys::JsString::from("userChoice"))
             .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let promise = js_sys::Promise::from(user_choice);
+        let promise = user_choice
+            .dyn_into::<js_sys::Promise>()
+            .map_err(|e| Error::JS(format!("{e:?}")))?;
         let result = wasm_bindgen_futures::JsFuture::from(promise)
             .await
             .map_err(|e| Error::JS(format!("{e:?}")))?;
@@ -109,7 +120,6 @@ pub async fn install_hint() -> Result<InstallHint, Error> {
             return Ok(InstallHint::Ios);
         }
         if ua.contains("Macintosh")
-            && window.navigator().user_agent().is_ok()
             && ua.contains("Safari/")
             && !ua.contains("Chrome")
             && !ua.contains("CriOS")

@@ -72,7 +72,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_kbd(ui: &mut egui::Ui) {
+    pub fn demo_kbd(ui: &mut egui::Ui) {
         _ = Typography::muted("Keyboard hint chips for shortcuts.").show(ui);
         ui.add_space(12.0);
         _ = Flex::row().gap(6.0).align_center().show(ui, |f| {
@@ -99,7 +99,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Kbd: keyboard hint chips\nuse functora_egui::{Kbd, Flex};\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Ctrl\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"K\"));\n    f.label(\"opens the command palette\");\n});\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Shift\"));\n    f.label(\"+\");\n    f.add(Kbd::new(\"Tab\"));\n    f.label(\"cycles focus\");\n});",
+            "// Kbd: keyboard hint chips\nuse functora_egui::{Kbd, Flex};\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Ctrl\"));\n    f.ui(|ui| { ui.label(\"+\"); });\n    f.add(Kbd::new(\"K\"));\n    f.ui(|ui| { ui.label(\"opens the command palette\"); });\n});\n\nFlex::row().gap(6.0).align_center().show(ui, |f| {\n    f.add(Kbd::new(\"Shift\"));\n    f.ui(|ui| { ui.label(\"+\"); });\n    f.add(Kbd::new(\"Tab\"));\n    f.ui(|ui| { ui.label(\"cycles focus\"); });\n});",
         );
     }
 
@@ -763,11 +763,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Hypertext: paragraph with inline links and internal actions\nuse functora_egui::Hypertext;\n\nlet (_, action) = Hypertext::new()\n    .text(\"Read the \")\n    .link(\"docs\", \"https://docs.rs/functora-egui\")\n    .text(\" or continue with the \")\n    .action(\"onboarding guide\", \"onboarding\")\n    .text(\" to get started.\")\n    .show_action(ui);\n\nif let Some(id) = action {\n    eprintln!(\"action: {id}\");\n}\n\n// Uniform size for mixed paragraphs\nHypertext::new()\n    .text(\"\u{a9} 2026 Functora. \")\n    .link(\"Functora\", \"https://functora.github.io/\")\n    .size(11.0)\n    .centered()\n                .show(ui);",
+            "// Hypertext: paragraph with inline links and internal actions\nuse functora_egui::Hypertext;\n\nlet (_, action) = Hypertext::new()\n    .text(\"Read the \")\n    .link(\"docs\", \"https://docs.rs/functora-egui\")\n    .text(\" or continue with the \")\n    .action(\"onboarding guide\", \"onboarding\")\n    .text(\" to get started.\")\n    .show_action(ui);\n\nif let Some(id) = action {\n    eprintln!(\"action: {id}\");\n}\n\n// Uniform size for mixed paragraphs\nHypertext::new()\n    .text(format!(\"\u{a9} {} Functora. \", functora_egui::FUNCTORA_CORE_YEAR))\n    .link(\"Functora\", \"https://functora.github.io/\")\n    .size(11.0)\n    .centered()\n                .show(ui);",
         );
     }
 
-    pub(crate) fn demo_code_snippet(ui: &mut egui::Ui) {
+    pub fn demo_code_snippet(ui: &mut egui::Ui) {
         _ = Typography::muted("Themed monospace block for displaying code examples.").show(ui);
         ui.add_space(12.0);
         _ = Typography::small("snippet(): normal wrapping").show(ui);

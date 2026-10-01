@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 
-use functora_egui::Routable;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::route::{RouteKind, RouteMetadata};
@@ -73,15 +72,5 @@ impl RouteMetadata for Screen {
 
     fn kind(&self) -> RouteKind {
         RouteKind::Page
-    }
-}
-
-impl Screen {
-    #[must_use]
-    pub fn to_url_with_note(&self, note: Option<&str>) -> String {
-        note.map_or_else(
-            || self.to_url(),
-            |n| functora_core::encoding::append_query_param(&self.to_url(), crate::encoding::NOTE_PARAM, n),
-        )
     }
 }

@@ -48,7 +48,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .variant(AlertVariant::Default)\n    .show(ui, |ui| {\n        ui.label(\"You can add components to your app using the CLI.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });\n\nAlert::new()\n    .title(\"Success\")\n    .variant(AlertVariant::Success)\n    .show(ui, |ui| {\n        ui.label(\"Your changes have been saved.\");\n    });",
+            "// Alert: styled alert messages\nuse functora_egui::{Alert, AlertVariant};\n\nAlert::new()\n    .title(\"Heads up!\")\n    .variant(AlertVariant::Default)\n    .show(ui, |ui| {\n        ui.label(\"You can add components to your app using the CLI.\");\n    });\n\nAlert::new()\n    .title(\"Error\")\n    .variant(AlertVariant::Destructive)\n    .show(ui, |ui| {\n        ui.label(\"Your session has expired. Please log in again.\");\n    });\n\nAlert::new()\n    .title(\"Success\")\n    .variant(AlertVariant::Success)\n    .show(ui, |ui| {\n        ui.label(\"Your changes have been saved.\");\n    });\n\nAlert::new()\n    .title(\"Warning\")\n    .variant(AlertVariant::Warning)\n    .show(ui, |ui| {\n        ui.label(\"Your account will expire soon.\");\n    });\n\nAlert::new()\n    .title(\"Info\")\n    .variant(AlertVariant::Info)\n    .show(ui, |ui| {\n        ui.label(\"A new version is available.\");\n    });",
         );
     }
 
@@ -132,11 +132,11 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Spinner: animated loading indicator\nuse functora_egui::{Spinner, Button, LucideIcon, Flex};\n\nFlex::row().gap(16.0).align_center().show(ui, |f| {\n    f.add(Spinner::new().size(16.0));\n    f.add(Spinner::new().size(24.0));\n    f.add(Spinner::new().size(32.0));\n    f.add(Spinner::new().size(48.0));\n});\n\n// Inside a button\nButton::new(\"Loading\")\n    .icon(LucideIcon::LoaderCircle)\n    .enabled(false)\n    .show(ui);",
+            "// Spinner: animated loading indicator\nuse functora_egui::{Spinner, Button, LucideIcon, Flex};\n\nFlex::row().gap(16.0).align_center().show(ui, |f| {\n    f.ui(|ui| { Spinner::new().size(16.0).show(ui); });\n    f.ui(|ui| { Spinner::new().size(24.0).show(ui); });\n    f.ui(|ui| { Spinner::new().size(32.0).show(ui); });\n    f.ui(|ui| { Spinner::new().size(48.0).show(ui); });\n});\n\n// Inside a button\nButton::new(\"Loading\")\n    .icon(LucideIcon::LoaderCircle)\n    .enabled(false)\n    .show(ui);",
         );
     }
 
-    pub(crate) fn demo_toast(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_toast(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Transient notifications with variants and descriptions.").show(ui);
         ui.add_space(12.0);
         let ctx = ui.ctx().clone();
@@ -201,7 +201,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Toast: transient notifications\nuse functora_egui::{ToastState, ToastVariant, Button, ButtonVariant, Flex};\n\nlet mut toast = ToastState::new();\nlet ctx = ui.ctx();\n\nFlex::row().gap(8.0).wrap().show(ui, |f| {\n    if f.add(Button::new(\"Default\").variant(ButtonVariant::Outline)).clicked() {\n        toast.add(\"Default toast\", ToastVariant::Default, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Success\").variant(ButtonVariant::Outline)).clicked() {\n        toast.add(\"Success toast\", ToastVariant::Success, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Destructive\").variant(ButtonVariant::Destructive)).clicked() {\n        toast.add(\"Destructive toast\", ToastVariant::Error, ctx.input(|i| i.time));\n    }\n});\n\n// With description\ntoast.add_with_description(\n    \"Scheduled: Catch up\",\n    \"Friday, February 10, 2026 at 5:57 PM\",\n    ToastVariant::Default,\n    ctx.input(|i| i.time),\n);\n\n// Call toast.show(&ctx) in your render loop",
+            "// Toast: transient notifications\nuse functora_egui::{ToastState, ToastVariant, Button, ButtonVariant, Flex};\n\nlet mut toast = ToastState::new();\nlet ctx = ui.ctx();\n\nFlex::row().gap(8.0).wrap().show(ui, |f| {\n    if f.add(Button::new(\"Default\").variant(ButtonVariant::Outline)).inner.clicked() {\n        toast.add(\"Default toast\", ToastVariant::Default, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Success\").variant(ButtonVariant::Outline)).inner.clicked() {\n        toast.add(\"Success toast\", ToastVariant::Success, ctx.input(|i| i.time));\n    }\n    if f.add(Button::new(\"Destructive\").variant(ButtonVariant::Destructive)).inner.clicked() {\n        toast.add(\"Destructive toast\", ToastVariant::Error, ctx.input(|i| i.time));\n    }\n});\n\n// With description\ntoast.add_with_description(\n    \"Scheduled: Catch up\",\n    \"Friday, February 10, 2026 at 5:57 PM\",\n    ToastVariant::Default,\n    ctx.input(|i| i.time),\n);\n\n// Long multiline toast\ntoast.add_with_description(\n    \"Sync completed with a very long multiline title that wraps across several lines\",\n    \"Uploaded 128 files, skipped 3 files, and downloaded 42 files in the background.\",\n    ToastVariant::Success,\n    ctx.input(|i| i.time),\n);\n\n// Call toast.show(&ctx) in your render loop",
         );
     }
 

@@ -113,13 +113,9 @@ impl CryptonoteApp {
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
                     if claim_job(&mut self.temporary.progress, Stage::Encrypt).is_some() {
+                        let progress = self.track_progress();
                         let rx = functora_egui::spawn_async(async move {
-                            let res =
-                                crate::hooks::build_external(&note, &password, cipher, &attachments, |_| {}).await;
-                            match res {
-                                Ok(ext) => Ok(ext),
-                                Err(e) => Err(e),
-                            }
+                            crate::hooks::build_external(&note, &password, cipher, &attachments, progress).await
                         });
                         self.generate_rx = Some(rx);
                     }
@@ -145,9 +141,9 @@ impl CryptonoteApp {
                 self.pick_rx = Some(rx);
             }
             if f.add(
-                Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::RotateCcw)
-                    .variant(ButtonVariant::Ghost),
+                Button::new(Msg::ViewButton.render(lang))
+                    .icon(functora_egui::LucideIcon::Eye)
+                    .variant(ButtonVariant::Outline),
             )
             .inner
             .clicked()
@@ -216,6 +212,7 @@ impl CryptonoteApp {
             {
                 let cancel = functora_egui::new_cancel_token();
                 self.pick_cancel = Some(cancel.clone());
+                let progress = self.track_progress();
                 let rx = functora_egui::spawn_async(async move {
                     let files = functora_egui::files::pick_files_with_cancel(false, None, Some(&cancel)).await?;
                     let bytes = files
@@ -224,7 +221,7 @@ impl CryptonoteApp {
                         .ok_or(AppError::NoFileSelected)
                         .map(|(_, data)| data)?;
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-                    crate::hooks::load_archive_async(source).await
+                    crate::hooks::load_archive_async(source, progress).await
                 });
                 self.archive_rx = Some(rx);
             }

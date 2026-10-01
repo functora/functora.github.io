@@ -254,33 +254,19 @@ pub async fn pick_files_with_shared_progress(
 #[cfg(target_os = "android")]
 async fn pick_via_android(
     multiple: bool,
-    mut progress: Option<&mut Option<Job<Stage>>>,
+    progress: Option<&mut Option<Job<Stage>>>,
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
-    if let Some(slot) = progress.as_deref_mut() {
-        *slot = Some(Job {
-            stage: Stage::Attach,
-            done: 0,
-            total: 1,
-            name: None,
-        });
+    let shared = progress
+        .as_ref()
+        .map(|p| Arc::new(Mutex::new((*p).clone())));
+    let result = pick_via_android_shared(multiple, shared.clone(), cancel).await;
+    if let (Some(slot), Some(arc)) = (progress, shared)
+        && let Ok(guard) = arc.lock()
+    {
+        slot.clone_from(&guard);
     }
-    yield_to_paint().await;
-    let files = android_pick_files(multiple, cancel).await?;
-    let total: u64 = files.iter().map(|(_, data)| data.len() as u64).sum();
-    if let Some(slot) = progress.as_deref_mut() {
-        *slot = Some(Job {
-            stage: Stage::Attach,
-            done: total,
-            total: total.max(1),
-            name: None,
-        });
-    }
-    yield_to_paint().await;
-    if let Some(slot) = progress {
-        *slot = None;
-    }
-    Ok(files)
+    result
 }
 
 #[cfg(target_os = "android")]

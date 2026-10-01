@@ -408,7 +408,7 @@ impl crate::app::ShowcaseApp {
         );
     }
 
-    pub(crate) fn demo_input_paste_clear(&mut self, ui: &mut egui::Ui) {
+    pub fn demo_input_paste_clear(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted("Single-line input with paste on the left and clear on the right.")
             .show(ui);
         ui.add_space(12.0);
@@ -468,6 +468,22 @@ impl crate::app::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
+        _ = Typography::small("Password + custom icons").show(ui);
+        ui.add_space(4.0);
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_password_custom)
+            .placeholder("secret with custom icons")
+            .password()
+            .paste_icon(LucideIcon::Clipboard)
+            .clear_icon(LucideIcon::Trash)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Password custom len: {}",
+            self.input_paste_clear_password_custom.len()
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
         _ = Typography::small("Custom icons").show(ui);
         ui.add_space(4.0);
         let _ = InputPasteClear::new(&mut self.input_paste_clear_custom_icons)
@@ -504,8 +520,8 @@ impl crate::app::ShowcaseApp {
         ui.add_space(4.0);
         _ = Typography::small(format!(
             "Copy demo - pasted={} copied={} cleared={} len={}",
-            resp_copy.copied,
             resp_copy.pasted,
+            resp_copy.copied,
             resp_copy.cleared,
             self.input_paste_clear_copy.len()
         ))

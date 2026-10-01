@@ -1,9 +1,27 @@
 //! functora-egui: shadcn/ui-inspired widgets for egui.
+//!
+//! Feature flags (see `Cargo.toml`):
+//! - `platform`: cross-platform bridge (web/wasm, Android JNI, desktop)
+//! - `clipboard`: clipboard read/write plus paste/clear input widgets
+//! - `files`: file picking, downloads, blob previews, QR scanner widget
+//! - `runtime`: async task spawning (`spawn_async`, worker)
+//! - `storage`: persistent key-value storage
+//! - `crypto`, `zip`, `package`: re-exported functora-core crypto/archive APIs
+//! - `html-markdown`, `thumbnail`, `qr`: re-exported functora-core APIs
+//! - `web`, `android`, `build`: platform runners, templates and codegen
+//! - `images`: image loaders and bundled sample fixtures
+//! - `camera`: camera capture APIs (module itself is gated on `platform`)
+//! - `markdown`: markdown rendering (`markdown_view`, data-URL loader)
 
 #[cfg(any(feature = "android", feature = "build"))]
 pub mod android;
 #[cfg(feature = "platform")]
 pub mod camera;
+#[cfg(feature = "platform")]
+pub use camera::{
+    FrameData, begin_capture_session, capture_frame, check_camera, sleep, start_camera,
+    stop_camera, stop_capture_worker,
+};
 #[cfg(feature = "clipboard")]
 pub mod clipboard;
 #[cfg(any(feature = "web", feature = "android", feature = "build"))]
@@ -16,15 +34,35 @@ pub mod error;
 pub mod files;
 
 #[cfg(feature = "files")]
+pub use files::BlobMemo;
+#[cfg(feature = "files")]
 pub use files::CancelToken;
 #[cfg(feature = "files")]
 pub use files::PickResult;
 #[cfg(feature = "files")]
 pub use files::cancel;
 #[cfg(feature = "files")]
+pub use files::data_url_mime;
+#[cfg(feature = "files")]
 pub use files::is_cancelled;
 #[cfg(feature = "files")]
+pub use files::mime_for_name;
+#[cfg(feature = "files")]
 pub use files::new_cancel_token;
+#[cfg(feature = "files")]
+pub use files::pick_files;
+#[cfg(feature = "files")]
+pub use files::pick_files_with_cancel;
+#[cfg(feature = "files")]
+pub use files::pick_files_with_progress;
+#[cfg(feature = "files")]
+pub use files::pick_files_with_shared_progress;
+#[cfg(feature = "files")]
+pub use files::preview_blob;
+#[cfg(feature = "files")]
+pub use files::revoke_blob_url;
+#[cfg(all(feature = "files", feature = "thumbnail"))]
+pub use files::video_thumbnail;
 
 pub mod icons;
 #[cfg(feature = "images")]
@@ -35,12 +73,17 @@ pub mod paint;
 pub mod platform;
 pub mod progress;
 pub mod pwa;
+pub use pwa::{InstallHint, PwaInstallOutcome, install_hint, trigger_pwa_install};
 pub mod responsive;
 pub mod route;
 #[cfg(feature = "clipboard")]
 pub mod share;
 #[cfg(feature = "storage")]
 pub mod storage;
+#[cfg(feature = "storage")]
+pub use storage::Persistent;
+#[cfg(feature = "storage")]
+pub use storage::{files_dir, load_state, persist_value};
 pub mod theme;
 pub mod theme_extra;
 pub mod tokens;
@@ -114,19 +157,30 @@ pub use icons::paint_icon::paint_icon;
 pub use icons::paint_icon::paint_icon_svg;
 #[cfg(feature = "images")]
 pub use image_samples::{ImageBytes, ImageSamples, ImageType, image_samples};
+pub use in_flight::{InFlight, InFlightGuard};
 pub use layout::center::center;
 pub use layout::flex::Flex;
 pub use layout::flex_instance::FlexInst;
 pub use nav::NavHistory;
+pub use progress::JobGuard;
+pub use progress::{claim_job, clear_progress, report, report_progress, report_progress_named};
+pub use route::AppRouter;
+pub use route::BreadcrumbPosition;
 pub use route::BreadcrumbSegment;
+pub use route::COMPONENT_PARAM;
+pub use route::ROOT_PATH;
 pub use route::Routable;
 pub use route::RouteKind;
 pub use route::RouteMetadata;
+pub use route::SCREEN_PARAM;
 pub use route::breadcrumbs_for;
+pub use route::{history_push, history_replace};
+pub use state::PersistentState;
 pub use theme::setup_fonts::setup_fonts;
 pub use theme::setup_image_loaders::setup_image_loaders;
 pub use theme::shadcn_theme::ShadcnTheme;
 pub use theme::shadcn_theme_ext::ShadcnThemeExt;
+pub use theme_extra::{default_theme, detect_system_theme, detect_system_theme_wasm};
 pub use tokens::alert_variant::AlertVariant;
 pub use tokens::badge_variant::BadgeVariant;
 pub use tokens::button_variant::ButtonVariant;
@@ -239,6 +293,8 @@ pub use widgets::toggle_group::widget::ToggleGroupValue;
 pub use widgets::toolbar::widget::Toolbar;
 pub use widgets::tooltip::widget::Tooltip;
 pub use widgets::typography::widget::Typography;
+pub use worker::Reporter;
+pub use worker::run as worker_run;
 
 pub use functora_core::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};
 pub use theme_extra::{Theme, current_theme, set_theme};

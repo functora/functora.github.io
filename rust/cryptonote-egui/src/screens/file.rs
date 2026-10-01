@@ -3,7 +3,7 @@ use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::{Stage, claim_job};
 use egui::ScrollArea;
-use functora_egui::files::{Preview, format_size, preview};
+use functora_egui::files::{Preview, format_size};
 use functora_egui::i18n::I18N;
 use functora_egui::{Alert, Button, ButtonVariant, Progress};
 
@@ -14,7 +14,7 @@ impl CryptonoteApp {
             .temporary
             .attachment
             .and_then(|idx| self.temporary.attachments.get(idx.get()).cloned());
-        if let Some(att) = att_opt.clone() {
+        if let Some(att) = att_opt {
             let size = format_size(att.data.len() as u64);
             _ = ui.label(egui::RichText::new(&att.name).size(18.0).strong());
             _ = ui.label(egui::RichText::new(size).small().weak());
@@ -24,7 +24,7 @@ impl CryptonoteApp {
                 .preview_cache
                 .get(&att.name)
                 .cloned()
-                .unwrap_or_else(|| preview(&att.name, &att.data));
+                .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
             match preview {
                 Preview::Image(_) => {
                     let uri = format!("{BYTES_URI_PREFIX}{}", att.name);
@@ -37,8 +37,9 @@ impl CryptonoteApp {
                     });
                 }
                 Preview::Markdown(t) => {
-                    let rendered = crate::markdown::render_markdown(&t);
-                    _ = ui.label(rendered);
+                    _ = ScrollArea::vertical().max_height(400.0).show(ui, |inner| {
+                        _ = functora_egui::markdown_view::show(inner, &mut self.md_cache, &t);
+                    });
                 }
                 Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
                     _ = Alert::new()

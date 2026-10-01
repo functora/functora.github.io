@@ -12,7 +12,7 @@ impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let toast_time = ui.ctx().input(|i| i.time);
-        let url = self.temporary.external.clone().note_url();
+        let url = self.temporary.external.note_url();
         let pkg_ready = matches!(self.temporary.external, External::Archive(_));
         if pkg_ready {
             _ = ui.label(egui::RichText::new(Msg::ArchiveReady.render(lang)).size(16.0).strong());
@@ -60,7 +60,7 @@ impl CryptonoteApp {
                     .inner
                     .clicked()
                 {
-                    let bytes = self.temporary.external.clone().archive_bytes();
+                    let bytes = self.temporary.external.archive_bytes();
                     if !bytes.is_empty() && claim_job(&mut self.temporary.progress, Stage::Download).is_some() {
                         let rx = functora_egui::spawn_async(async move {
                             functora_egui::download::download(bytes, "archive.cryptonote")

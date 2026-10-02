@@ -1,10 +1,13 @@
 //! functora-egui-demo: showcase app for the functora-egui widget library.
 
 pub mod app;
+pub mod catalog;
 pub mod route;
-pub mod sections;
+pub mod screens;
+pub mod state;
 
-pub use app::*;
+pub use catalog::*;
+pub use state::*;
 
 #[cfg(target_arch = "wasm32")]
 pub mod web;
@@ -13,7 +16,7 @@ pub mod web;
 pub(crate) mod android {
     use android_activity::AndroidApp;
 
-    use crate::app::ShowcaseApp;
+    use crate::state::ShowcaseApp;
 
     #[unsafe(export_name = "android_main")]
     pub fn android_main(app: AndroidApp) {

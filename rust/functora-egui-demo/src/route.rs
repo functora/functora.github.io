@@ -2,7 +2,7 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::{RouteKind, RouteMetadata};
 use std::borrow::Cow;
 
-use crate::app::{CategoryId, ComponentId};
+use crate::catalog::{CategoryId, ComponentId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum AppRoute {

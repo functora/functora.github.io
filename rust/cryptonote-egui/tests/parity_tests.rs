@@ -5,7 +5,11 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 const APP_SRC: &str = include_str!("../src/app.rs");
-const HOME_SRC: &str = include_str!("../src/screens/home.rs");
+const HOME_SRC: &str = include_str!("../src/screens/home/mod.rs");
+const HOME_CREATE_SRC: &str = include_str!("../src/screens/home/create.rs");
+const HOME_OPEN_SRC: &str = include_str!("../src/screens/home/open.rs");
+const HOME_SCAN_SRC: &str = include_str!("../src/screens/home/scan.rs");
+const HOME_ATTACHMENTS_SRC: &str = include_str!("../src/screens/home/attachments.rs");
 const OPEN_SRC: &str = include_str!("../src/screens/open.rs");
 const VIEW_SRC: &str = include_str!("../src/screens/view.rs");
 const SHARE_SRC: &str = include_str!("../src/screens/share.rs");
@@ -16,10 +20,14 @@ const LICENSE_SRC: &str = include_str!("../src/screens/license.rs");
 const PRIVACY_SRC: &str = include_str!("../src/screens/privacy.rs");
 const ROUTE_SRC: &str = include_str!("../src/route.rs");
 
-fn ui_sources() -> [&'static str; 11] {
+fn ui_sources() -> [&'static str; 15] {
     [
         APP_SRC,
         HOME_SRC,
+        HOME_CREATE_SRC,
+        HOME_OPEN_SRC,
+        HOME_SCAN_SRC,
+        HOME_ATTACHMENTS_SRC,
         OPEN_SRC,
         VIEW_SRC,
         SHARE_SRC,
@@ -225,18 +233,26 @@ fn route_labels_are_localized() {
 
 #[test]
 fn text_fields_use_paste_clear_widgets() {
-    for (name, src) in [("home", HOME_SRC), ("open", OPEN_SRC), ("share", SHARE_SRC)] {
+    for (name, src) in [
+        ("home", HOME_SRC),
+        ("home_create", HOME_CREATE_SRC),
+        ("home_open", HOME_OPEN_SRC),
+        ("home_scan", HOME_SCAN_SRC),
+        ("home_attachments", HOME_ATTACHMENTS_SRC),
+        ("open", OPEN_SRC),
+        ("share", SHARE_SRC),
+    ] {
         assert!(
             !src.contains("clipboard::read"),
             "{name} screen must not hand-roll clipboard reads"
         );
     }
     assert!(
-        HOME_SRC.contains("InputPasteClear"),
+        HOME_CREATE_SRC.contains("InputPasteClear"),
         "home password field must be an InputPasteClear"
     );
     assert!(
-        HOME_SRC.contains("TextareaPasteClear"),
+        HOME_CREATE_SRC.contains("TextareaPasteClear") || HOME_OPEN_SRC.contains("TextareaPasteClear"),
         "home note and url fields must be TextareaPasteClear"
     );
     assert!(

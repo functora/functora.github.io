@@ -11,15 +11,15 @@ pub const ROOT_PATH: &str = "/";
 pub trait Routable:
     Display + FromStr + Clone + PartialEq + Eq + std::fmt::Debug + Send + Sync + 'static
 {
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     fn screen_param() -> &'static str {
         SCREEN_PARAM
     }
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     fn to_slug(&self) -> String {
         self.to_string().to_lowercase()
     }
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     fn to_url(&self) -> String
     where
         Self: Default,
@@ -34,7 +34,7 @@ pub trait Routable:
             )
         }
     }
-    #[allow(clippy::must_use_candidate)]
+    #[must_use]
     fn from_url(url: &str) -> Option<Self>
     where
         Self: Default,
@@ -270,7 +270,6 @@ pub mod router_impl {
         }
     }
 
-    #[allow(clippy::needless_pass_by_value)]
     pub fn history_push<R>(route: &R)
     where
         R: Routable + Default,
@@ -288,7 +287,6 @@ pub mod router_impl {
         }
     }
 
-    #[allow(clippy::needless_pass_by_value)]
     pub fn history_replace<R>(route: &R)
     where
         R: Routable + Default,

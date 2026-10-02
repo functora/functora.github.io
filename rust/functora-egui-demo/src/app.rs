@@ -424,6 +424,7 @@ impl Swatch {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ComponentId {
     Button,
+    ButtonGroup,
     Checkbox,
     Switch,
     Radio,
@@ -529,8 +530,9 @@ pub enum ComponentId {
 }
 
 impl ComponentId {
-    pub const ALL: [Self; 103] = [
+    pub const ALL: [Self; 104] = [
         Self::Button,
+        Self::ButtonGroup,
         Self::Checkbox,
         Self::Switch,
         Self::Radio,
@@ -640,6 +642,7 @@ impl ComponentId {
     pub fn name(self) -> &'static str {
         match self {
             Self::Button => "Button",
+            Self::ButtonGroup => "ButtonGroup",
             Self::Checkbox => "Checkbox",
             Self::Switch => "Switch",
             Self::Radio => "Radio",
@@ -756,6 +759,7 @@ impl ComponentId {
     pub fn from_slug(slug: &str) -> Option<Self> {
         match slug.trim().to_ascii_lowercase().as_str() {
             "button" => Some(Self::Button),
+            "buttongroup" => Some(Self::ButtonGroup),
             "checkbox" => Some(Self::Checkbox),
             "switch" => Some(Self::Switch),
             "radio" => Some(Self::Radio),
@@ -949,6 +953,11 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 Some(ComponentId::Button),
             ),
             ComponentDef::new(
+                "ButtonGroup",
+                LucideIcon::Columns2,
+                Some(ComponentId::ButtonGroup),
+            ),
+            ComponentDef::new(
                 "Checkbox",
                 LucideIcon::SquareCheckBig,
                 Some(ComponentId::Checkbox),
@@ -989,7 +998,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ),
             ComponentDef::new(
                 "TextareaPasteClear",
-                LucideIcon::ClipboardPaste,
+                LucideIcon::ClipboardX,
                 Some(ComponentId::TextareaPasteClear),
             ),
             ComponentDef::new(
@@ -1057,7 +1066,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 LucideIcon::PanelBottom,
                 Some(ComponentId::StatusBar),
             ),
-            ComponentDef::new("Tabs", LucideIcon::SquareMenu, Some(ComponentId::Tabs)),
+            ComponentDef::new("Tabs", LucideIcon::NotebookTabs, Some(ComponentId::Tabs)),
             ComponentDef::new(
                 "IconTabs",
                 LucideIcon::AppWindow,
@@ -1070,14 +1079,18 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 Some(ComponentId::Accordion),
             ),
             ComponentDef::new("Navbar", LucideIcon::PanelTop, Some(ComponentId::Navbar)),
-            ComponentDef::new("Footer", LucideIcon::PanelBottom, Some(ComponentId::Footer)),
+            ComponentDef::new("Footer", LucideIcon::Dock, Some(ComponentId::Footer)),
         ],
     ),
     (
         CategoryId::Overlays,
         LucideIcon::Layers,
         &[
-            ComponentDef::new("Dialog", LucideIcon::AppWindow, Some(ComponentId::Dialog)),
+            ComponentDef::new(
+                "Dialog",
+                LucideIcon::MessageSquare,
+                Some(ComponentId::Dialog),
+            ),
             ComponentDef::new(
                 "AlertDialog",
                 LucideIcon::TriangleAlert,
@@ -1144,7 +1157,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 LucideIcon::LoaderCircle,
                 Some(ComponentId::Spinner),
             ),
-            ComponentDef::new("Toast", LucideIcon::BellRing, Some(ComponentId::Toast)),
+            ComponentDef::new("Toast", LucideIcon::Bell, Some(ComponentId::Toast)),
             ComponentDef::new("Empty", LucideIcon::Inbox, Some(ComponentId::Empty)),
         ],
     ),
@@ -1160,7 +1173,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ),
             ComponentDef::new(
                 "Calendar",
-                LucideIcon::Calendar,
+                LucideIcon::CalendarDays,
                 Some(ComponentId::Calendar),
             ),
             ComponentDef::new("Carousel", LucideIcon::Images, Some(ComponentId::Carousel)),
@@ -1184,7 +1197,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
         &[
             ComponentDef::new(
                 "Typography",
-                LucideIcon::Type,
+                LucideIcon::Heading1,
                 Some(ComponentId::Typography),
             ),
             ComponentDef::new("Label", LucideIcon::Tag, Some(ComponentId::Label)),
@@ -1217,7 +1230,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("FieldSet", LucideIcon::Box, Some(ComponentId::FieldSet)),
             ComponentDef::new(
                 "FieldLegend",
-                LucideIcon::List,
+                LucideIcon::ListOrdered,
                 Some(ComponentId::FieldLegend),
             ),
             ComponentDef::new(
@@ -1232,7 +1245,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ),
             ComponentDef::new(
                 "PropertyRow",
-                LucideIcon::Rows3,
+                LucideIcon::Rows2,
                 Some(ComponentId::PropertyRow),
             ),
         ],
@@ -1243,13 +1256,13 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
         &[
             ComponentDef::new(
                 "Breakpoint",
-                LucideIcon::MonitorSmartphone,
+                LucideIcon::TabletSmartphone,
                 Some(ComponentId::Breakpoint),
             ),
             ComponentDef::new("Spacing", LucideIcon::Ruler, Some(ComponentId::Spacing)),
             ComponentDef::new(
                 "FlexWrap",
-                LucideIcon::GripHorizontal,
+                LucideIcon::FoldHorizontal,
                 Some(ComponentId::FlexWrap),
             ),
             ComponentDef::new(
@@ -1263,24 +1276,24 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
         CategoryId::Platform,
         LucideIcon::Smartphone,
         &[
-            ComponentDef::new("Storage", LucideIcon::Database, Some(ComponentId::Storage)),
+            ComponentDef::new("Storage", LucideIcon::HardDrive, Some(ComponentId::Storage)),
             ComponentDef::new(
                 "Clipboard",
                 LucideIcon::Clipboard,
                 Some(ComponentId::Clipboard),
             ),
             ComponentDef::new("Share", LucideIcon::Share2, Some(ComponentId::Share)),
-            ComponentDef::new("DeepLink", LucideIcon::Link, Some(ComponentId::DeepLink)),
+            ComponentDef::new("DeepLink", LucideIcon::Link2, Some(ComponentId::DeepLink)),
             ComponentDef::new("Files", LucideIcon::Files, Some(ComponentId::Files)),
             ComponentDef::new(
                 "Download",
                 LucideIcon::Download,
                 Some(ComponentId::Download),
             ),
-            ComponentDef::new("Nav", LucideIcon::Navigation, Some(ComponentId::Nav)),
+            ComponentDef::new("Nav", LucideIcon::Compass, Some(ComponentId::Nav)),
             ComponentDef::new(
                 "ProgressWorker",
-                LucideIcon::LoaderCircle,
+                LucideIcon::LoaderPinwheel,
                 Some(ComponentId::ProgressWorker),
             ),
             ComponentDef::new("PWA", LucideIcon::Globe, Some(ComponentId::Pwa)),
@@ -1297,7 +1310,11 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 Some(ComponentId::QrScanner),
             ),
             ComponentDef::new("QrImage", LucideIcon::QrCode, Some(ComponentId::QrImage)),
-            ComponentDef::new("Thumbnail", LucideIcon::Image, Some(ComponentId::Thumbnail)),
+            ComponentDef::new(
+                "Thumbnail",
+                LucideIcon::FileImage,
+                Some(ComponentId::Thumbnail),
+            ),
             ComponentDef::new("Zip", LucideIcon::FileArchive, Some(ComponentId::Zip)),
             ComponentDef::new("Crypto", LucideIcon::Lock, Some(ComponentId::Crypto)),
             ComponentDef::new("Worker", LucideIcon::Cog, Some(ComponentId::Worker)),
@@ -1313,11 +1330,15 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ),
             ComponentDef::new(
                 "Markdown",
-                LucideIcon::FileText,
+                LucideIcon::FileCode,
                 Some(ComponentId::Markdown),
             ),
             ComponentDef::new("Package", LucideIcon::Package, Some(ComponentId::Package)),
-            ComponentDef::new("WhiteLabel", LucideIcon::Tag, Some(ComponentId::WhiteLabel)),
+            ComponentDef::new(
+                "WhiteLabel",
+                LucideIcon::Tags,
+                Some(ComponentId::WhiteLabel),
+            ),
         ],
     ),
 ];
@@ -1446,6 +1467,7 @@ impl Default for FormState {
 #[derive(Default)]
 pub struct DemoState {
     pub button_selected: bool,
+    pub button_group_selected: usize,
     pub navbar_collapsed: bool,
     pub blocking_overlay_open: bool,
 }
@@ -1484,6 +1506,7 @@ pub struct ShowcaseApp {
     pub input_paste_clear_copy: String,
     pub input_paste_clear_copy_custom: String,
     pub textarea_text: String,
+    pub textarea_compact: String,
     pub textarea_paste_clear_text: String,
     pub textarea_paste_clear_custom: String,
     pub textarea_paste_clear_copy: String,
@@ -1571,6 +1594,7 @@ impl Default for ShowcaseApp {
             input_paste_clear_copy: String::new(),
             input_paste_clear_copy_custom: String::new(),
             textarea_text: String::new(),
+            textarea_compact: String::new(),
             textarea_paste_clear_text: String::new(),
             textarea_paste_clear_custom: String::new(),
             textarea_paste_clear_copy: String::new(),
@@ -1813,6 +1837,7 @@ impl ShowcaseApp {
         match self.selected {
             None => self.demo_overview(ui, lang),
             Some(ComponentId::Button) => self.demo_button(ui),
+            Some(ComponentId::ButtonGroup) => self.demo_button_group(ui),
             Some(ComponentId::Checkbox) => self.demo_checkbox(ui),
             Some(ComponentId::Switch) => self.demo_switch(ui),
             Some(ComponentId::Radio) => self.demo_radio(ui),

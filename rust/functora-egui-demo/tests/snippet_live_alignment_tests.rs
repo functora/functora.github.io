@@ -85,6 +85,10 @@ fn flex_snippet_covers_rendered_modes() {
 fn field_group_snippet_month_compiles_conceptually() {
     let text = rendered_app(ShowcaseApp::demo_field_group);
     assert!(
+        text.contains("Groups related fields"),
+        "live demo must render its intro: {text}"
+    );
+    assert!(
         text.contains("#[derive(Debug, Clone, Copy, PartialEq, Eq)]")
             && text.contains("struct Month(u8);"),
         "snippet Month must carry the Clone+PartialEq derives SelectLabeled requires: {text}"
@@ -94,6 +98,10 @@ fn field_group_snippet_month_compiles_conceptually() {
 #[test]
 fn toast_snippet_uses_inner_click_and_long_example() {
     let text = rendered_app(ShowcaseApp::demo_toast);
+    assert!(
+        text.contains("Transient notifications with variants"),
+        "live demo must render its intro: {text}"
+    );
     assert!(
         text.contains(".inner.clicked()"),
         "toast snippet must use .inner.clicked() like Flex::add requires: {text}"
@@ -108,6 +116,10 @@ fn toast_snippet_uses_inner_click_and_long_example() {
 fn navbar_snippet_teaches_callbacks() {
     let text = rendered_app(ShowcaseApp::demo_navbar);
     assert!(
+        text.contains("language switcher"),
+        "live demo must render its intro: {text}"
+    );
+    assert!(
         text.contains("Some(&mut on_brand)"),
         "navbar snippet must wire brand/search callbacks like live: {text}"
     );
@@ -116,6 +128,10 @@ fn navbar_snippet_teaches_callbacks() {
 #[test]
 fn files_snippet_matches_shared_progress_flow() {
     let text = rendered_app(ShowcaseApp::demo_files);
+    assert!(
+        text.contains("Preview via"),
+        "live demo must render its description: {text}"
+    );
     assert!(
         text.contains("pick_files_with_shared_progress"),
         "files snippet must teach the live shared-progress flow: {text}"
@@ -130,6 +146,10 @@ fn files_snippet_matches_shared_progress_flow() {
 fn progress_worker_snippet_claims_option_slot() {
     let text = rendered_app(ShowcaseApp::demo_progress_worker);
     assert!(
+        text.contains("Worker::run"),
+        "live demo must render its description: {text}"
+    );
+    assert!(
         text.contains("Option<Job<Stage>>"),
         "snippet must claim an Option slot like claim_job requires: {text}"
     );
@@ -139,6 +159,10 @@ fn progress_worker_snippet_claims_option_slot() {
 fn qr_scanner_labels_its_fixture() {
     let text = rendered_app(ShowcaseApp::demo_qr_scanner);
     assert!(
+        text.contains("QrScanner widget"),
+        "live demo must render its description: {text}"
+    );
+    assert!(
         text.contains("Scan target"),
         "scanner demo must label its QrImage as a scan fixture: {text}"
     );
@@ -147,6 +171,10 @@ fn qr_scanner_labels_its_fixture() {
 #[test]
 fn package_snippet_uses_demo_env_names() {
     let text = rendered_text(ShowcaseApp::demo_package);
+    assert!(
+        text.contains("crate: "),
+        "live demo must render its package line: {text}"
+    );
     assert!(
         text.contains("DEMO_WEB_TITLE"),
         "package snippet must use the real build.rs env names: {text}"
@@ -161,6 +189,10 @@ fn package_snippet_uses_demo_env_names() {
 fn hypertext_snippet_uses_year_constant() {
     let text = rendered_app(ShowcaseApp::demo_hypertext);
     assert!(
+        text.contains("internal action segments"),
+        "live demo must render its description: {text}"
+    );
+    assert!(
         text.contains("FUNCTORA_CORE_YEAR"),
         "hypertext snippet must use the year constant like live: {text}"
     );
@@ -170,6 +202,10 @@ fn hypertext_snippet_uses_year_constant() {
 fn kbd_snippet_uses_flex_ui_blocks() {
     let text = rendered_text(ShowcaseApp::demo_kbd);
     assert!(
+        text.contains("Keyboard hint chips"),
+        "live demo must render its description: {text}"
+    );
+    assert!(
         text.contains("f.ui(|ui|"),
         "kbd snippet must use f.ui blocks like live (Flex has no .label): {text}"
     );
@@ -178,6 +214,10 @@ fn kbd_snippet_uses_flex_ui_blocks() {
 #[test]
 fn alert_snippet_covers_all_live_variants() {
     let text = rendered_text(ShowcaseApp::demo_alert);
+    assert!(
+        text.contains("A status message container"),
+        "live demo must render its description: {text}"
+    );
     for needle in [
         "AlertVariant::Default",
         "AlertVariant::Destructive",
@@ -195,6 +235,10 @@ fn alert_snippet_covers_all_live_variants() {
 #[test]
 fn sheet_snippet_covers_all_sides() {
     let text = rendered_app(ShowcaseApp::demo_sheet);
+    assert!(
+        text.contains("slides in from the edge"),
+        "live demo must render its description: {text}"
+    );
     for needle in [
         "SheetSide::Right",
         "SheetSide::Left",
@@ -212,6 +256,10 @@ fn sheet_snippet_covers_all_sides() {
 fn tabs_snippet_matches_fill_width_demo() {
     let text = rendered_app(ShowcaseApp::demo_tabs);
     assert!(
+        text.contains("Tabbed content panels."),
+        "live demo must render its description: {text}"
+    );
+    assert!(
         text.contains(".fill_width()"),
         "tabs snippet must teach fill_width: {text}"
     );
@@ -224,6 +272,10 @@ fn tabs_snippet_matches_fill_width_demo() {
 #[test]
 fn card_snippet_teaches_heading() {
     let text = rendered_text(ShowcaseApp::demo_card);
+    assert!(
+        text.contains("Bordered container"),
+        "live demo must render its description: {text}"
+    );
     assert!(
         text.contains(".heading("),
         "card snippet must teach the real heading() API: {text}"

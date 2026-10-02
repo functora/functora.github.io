@@ -455,7 +455,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Storage: persist + load + files_dir\nuse functora_egui::storage::{persist_value, load_state, files_dir};\n\nlet key = \"my_key\";\nlet val = \"hello world\";\npersist_value(key, val);\nlet loaded: Option<String> = load_state(key);\nlet dir = files_dir()?;\neprintln!(\"files dir: {}\", dir.display());",
+            "// Storage: persist + load + files_dir\nuse functora_egui::storage::{persist_value, load_state, files_dir};\n\nlet key = \"my_key\";\nlet val = \"hello world\";\npersist_value(key, val);\nlet loaded: Option<String> = load_state(key);\nmatch files_dir() {\n    Ok(dir) => eprintln!(\"files dir: {}\", dir.display()),\n    Err(e) => eprintln!(\"files_dir error: {e}\"),\n}",
         );
     }
 
@@ -518,7 +518,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Clipboard: write + read\nuse functora_egui::clipboard::{write, read};\n\n// Write\nlet text = \"hello clipboard\";\nwrite(text).await?;\n\n// Read\nlet text = read().await?;\neprintln!(\"pasted: {text}\");",
+            "// Clipboard: write + read (async, polled each frame)\nuse functora_egui::clipboard::{write, read};\nuse functora_egui::spawn_async;\n\n// Write (non-blocking: result arrives via receiver)\nlet rx = spawn_async(async move {\n    write(\"hello clipboard\".to_owned()).await.map_err(|e| e.to_string())\n});\n\n// Read (non-blocking: result arrives via receiver)\nlet rx = spawn_async(async move {\n    read().await.map_err(|e| e.to_string())\n});\n// eprintln!(\"pasted: {text}\"); once the receiver is ready",
         );
     }
 
@@ -557,7 +557,7 @@ impl crate::app::ShowcaseApp {
 
         snippet(
             ui,
-            "// Share: title + text + url\nuse functora_egui::share::{share, ShareData};\n\nlet data = ShareData {\n    title: \"My App\".to_owned(),\n    text: \"Check this out!\".to_owned(),\n    url: \"https://example.com\".to_owned(),\n};\nshare(data).await?;",
+            "// Share: title + text + url (async, polled each frame)\nuse functora_egui::share::{share, ShareData};\nuse functora_egui::spawn_async;\n\nlet data = ShareData {\n    title: \"My App\".to_owned(),\n    text: \"Check this out!\".to_owned(),\n    url: \"https://example.com\".to_owned(),\n};\nlet rx = spawn_async(async move {\n    share(data).await.map_err(|e| e.to_string())\n});",
         );
     }
 

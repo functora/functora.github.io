@@ -84,11 +84,6 @@ impl External {
             Self::Nothing | Self::Note(_) => Vec::new(),
         }
     }
-
-    #[must_use]
-    pub fn is_nothing(&self) -> bool {
-        matches!(self, Self::Nothing)
-    }
 }
 
 #[derive(Debug, Clone)]

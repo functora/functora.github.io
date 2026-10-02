@@ -27,10 +27,12 @@ impl<R: Routable> NavHistory<R> {
 
     #[must_use]
     pub fn current(&self) -> &R {
+        debug_assert!(self.pos.0 < self.stack.len());
         &self.stack[self.pos.0]
     }
 
     pub fn push(&mut self, route: R) {
+        debug_assert!(self.pos.0 < self.stack.len());
         if self.stack[self.pos.0] == route {
             return;
         }
@@ -40,6 +42,7 @@ impl<R: Routable> NavHistory<R> {
     }
 
     pub fn replace(&mut self, route: R) {
+        debug_assert!(self.pos.0 < self.stack.len());
         self.stack[self.pos.0] = route;
     }
 

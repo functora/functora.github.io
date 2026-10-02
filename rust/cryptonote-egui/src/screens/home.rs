@@ -261,7 +261,7 @@ impl CryptonoteApp {
             }
         }
         if let Some(err) = self.qr_state.error() {
-            let text = Msg::Error(crate::error::MsgError::from(AppError::InvalidFormat(err.to_string()))).render(lang);
+            let text = Msg::Error(crate::error::MsgError::from(AppError::QrScan(err))).render(lang);
             if self.unseen_qr_error(&text) {
                 self.toast.add(text, ToastVariant::Error, toast_time);
             }

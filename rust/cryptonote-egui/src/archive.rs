@@ -25,15 +25,6 @@ fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, Vec<u8>)> 
     entries
 }
 
-pub async fn create_zip_async(
-    files: &[Attachment],
-    progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
-) -> Result<Vec<u8>, AppError> {
-    functora_egui::zip::create_zip_async(files, progress, Stage::Zip)
-        .await?
-        .pipe(Ok)
-}
-
 pub(crate) async fn create_archive_package(
     note: &str,
     attachments: &[Attachment],

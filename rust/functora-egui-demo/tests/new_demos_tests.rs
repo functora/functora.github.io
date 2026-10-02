@@ -59,6 +59,26 @@ fn new_demos_are_registered_catalog_entries() {
 }
 
 #[test]
+fn button_group_demo_renders_options_and_snippet() {
+    let id = ComponentId::ButtonGroup;
+    assert!(ComponentId::ALL.contains(&id));
+    assert_eq!(ComponentId::from_slug(&id.slug()), Some(id));
+    let text = rendered_app(ShowcaseApp::demo_button_group);
+    assert!(
+        text.contains("Selectable group"),
+        "button group demo must render its selectable section: {text}"
+    );
+    assert!(
+        text.contains("ButtonGroup::show(ui, |g|"),
+        "button group demo must teach ButtonGroup::show: {text}"
+    );
+    assert!(
+        text.contains("Disabled group"),
+        "button group demo must render its disabled section: {text}"
+    );
+}
+
+#[test]
 fn navbar_demo_renders_brand_and_snippet() {
     let text = rendered_app(ShowcaseApp::demo_navbar);
     assert!(

@@ -98,7 +98,10 @@ fn enum_bound_snippets_list_every_live_entry() {
         ),
         (
             rendered_app(ShowcaseApp::demo_field_group),
-            vec!["(1..=12)", "(2030, \"2030\".to_owned())"],
+            vec![
+                "Month::ALL.map(|month| (month, month.label()))",
+                "Year::ALL.map(|year| (year, year.label()))",
+            ],
         ),
         (
             rendered_app(ShowcaseApp::demo_property_row),
@@ -167,7 +170,7 @@ fn data_and_button_snippets_carry_the_full_lists() {
     let cases = vec![
         (
             rendered_text(ShowcaseApp::demo_table),
-            "vec![\"Edsger Dijkstra\", \"Active\", \"Editor\"]",
+            "vec![\"Edsger Dijkstra\".to_owned(), \"Active\".to_owned(), \"Editor\".to_owned()]",
         ),
         (
             rendered_app(ShowcaseApp::demo_carousel),

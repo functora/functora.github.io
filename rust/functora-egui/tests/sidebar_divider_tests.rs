@@ -1,9 +1,10 @@
-//! Sidebar divider visibility (root cause: the 1px divider was painted at
-//! `frame.min.x + 0.5` while its clip edge jitters against the frame origin
-//! with subpixel rounding as content width changes. On some widths the clip
-//! consumes the line almost entirely, e.g. Russian labels hiding the
-//! desktop sidebar's left border. The divider must keep clearance from the
-//! actual clip edge on every content width.
+//! Sidebar divider alignment (root cause: the 1px divider was painted 1px
+//! inside the sidebar frame edge, leaving a 1px strip of sidebar fill
+//! between the content background and the border -- a visible light stripe
+//! on the left side of the border. The divider must sit exactly on the
+//! sidebar edge with no fill stripe, while staying fully inside the clip
+//! rect on every content width, including subpixel jitter from translated
+//! labels).
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -12,8 +13,9 @@ use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
 
 /// Renders the desktop shell nesting (right panel + scroll + sidebar) with
-/// the given labels and returns `(vline_x, clip_min_x)` of the divider.
-fn divider_geometry(labels: &[String]) -> Option<(f32, f32)> {
+/// the given labels and returns `(divider_left, divider_right, clip_min_x)`
+/// of the divider, whether painted as a line or a 1px fill.
+fn divider_geometry(labels: &[String]) -> Option<(f32, f32, f32)> {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);
     let raw = RawInput {
@@ -54,14 +56,20 @@ fn divider_geometry(labels: &[String]) -> Option<(f32, f32)> {
             if (points[0].x - points[1].x).abs() < 1.0
                 && (points[0].y - points[1].y).abs() > 100.0 =>
         {
-            Some((points[0].x, clipped.clip_rect.min.x))
+            Some((points[0].x, points[0].x, clipped.clip_rect.min.x))
+        }
+        Shape::Rect(shape)
+            if (shape.rect.max.x - shape.rect.min.x) < 2.0
+                && (shape.rect.max.y - shape.rect.min.y) > 100.0 =>
+        {
+            Some((shape.rect.min.x, shape.rect.max.x, clipped.clip_rect.min.x))
         }
         _ => None,
     })
 }
 
 #[test]
-fn divider_keeps_clearance_from_clip_on_every_width() {
+fn divider_sits_on_sidebar_edge_without_fill_stripe() {
     let mut cases: Vec<Vec<String>> = [5, 10, 15, 20, 25, 30, 35, 40]
         .iter()
         .map(|n| vec!["X".repeat(*n)])
@@ -79,11 +87,20 @@ fn divider_keeps_clearance_from_clip_on_every_width() {
         .collect(),
     );
     for labels in &cases {
-        let (vline_x, clip_min_x) = divider_geometry(labels).expect("divider line must be painted");
-        let margin = vline_x - clip_min_x;
+        let (left, right, clip_min_x) = divider_geometry(labels).expect("divider must be painted");
         assert!(
-            (0.75..=1.5).contains(&margin),
-            "divider must keep ~1px clearance from the clip edge, got margin {margin:.2} for {labels:?}"
+            left - clip_min_x >= -0.1,
+            "divider must stay inside the clip rect, got left {left:.2} before clip {clip_min_x:.2} for {labels:?}"
+        );
+        assert!(
+            left - clip_min_x <= 0.6,
+            "no fill stripe may sit left of the divider, got gap {:.2} for {labels:?}",
+            left - clip_min_x
+        );
+        assert!(
+            (0.9..=1.1).contains(&(right - left)),
+            "divider must be exactly 1px wide, got {:.2} for {labels:?}",
+            right - left
         );
     }
 }

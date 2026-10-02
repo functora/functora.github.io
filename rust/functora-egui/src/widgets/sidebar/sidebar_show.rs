@@ -1,12 +1,15 @@
 //! Show method for Sidebar -- renders a fixed sidebar panel.
 
-/// X of the sidebar divider: 1px inside the clip edge, never the frame
-/// edge. The frame origin jitters against the clip origin with subpixel
-/// rounding as content width changes, which used to clip the 1px line away
-/// entirely on some widths (e.g. wide translated labels hiding the
-/// desktop sidebar's left border).
-fn divider_x(ui: &egui::Ui, frame: egui::Rect) -> f32 {
-    ui.clip_rect().min.x.max(frame.min.x) + 1.0
+/// The sidebar's 1px left border: exactly on the sidebar edge, spanning
+/// one pixel inside, so no fill stripe sits left of the border. Starts at
+/// the clip edge when the frame origin jitters behind it with subpixel
+/// rounding, keeping the full pixel inside the clip rect on every width.
+fn divider_rect(ui: &egui::Ui, frame: egui::Rect) -> egui::Rect {
+    let left = ui.clip_rect().min.x.max(frame.min.x);
+    egui::Rect::from_min_max(
+        egui::pos2(left, frame.min.y),
+        egui::pos2(left + 1.0, frame.max.y),
+    )
 }
 
 impl super::widget::Sidebar {
@@ -231,10 +234,10 @@ impl super::widget::Sidebar {
                 );
             }
         });
-        _ = ui.painter().vline(
-            divider_x(ui, inner.response.rect),
-            inner.response.rect.y_range(),
-            egui::Stroke::new(1.0, theme.border),
+        _ = ui.painter().rect_filled(
+            divider_rect(ui, inner.response.rect),
+            egui::CornerRadius::ZERO,
+            theme.border,
         );
         inner.response
     }
@@ -365,10 +368,10 @@ impl super::widget::Sidebar {
                             .set_cursor_icon(egui::CursorIcon::PointingHand);
                     }
                 });
-                _ = inner_ui.painter().vline(
-                    divider_x(inner_ui, inner.response.rect),
-                    inner.response.rect.y_range(),
-                    egui::Stroke::new(1.0, theme.border),
+                _ = inner_ui.painter().rect_filled(
+                    divider_rect(inner_ui, inner.response.rect),
+                    egui::CornerRadius::ZERO,
+                    theme.border,
                 );
             });
 

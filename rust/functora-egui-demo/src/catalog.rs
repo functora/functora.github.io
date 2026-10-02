@@ -1,5 +1,5 @@
 use functora_egui::i18n::{I18N, Language};
-use functora_egui::{Button, ButtonVariant, LucideIcon, Separator};
+use functora_egui::{Button, ButtonVariant, CommandItem, LucideIcon, Separator};
 
 /// A single showcase entry: one component or feature with a nav icon.
 pub struct ComponentDef {
@@ -1233,4 +1233,38 @@ pub fn category_header(ui: &mut egui::Ui, id: CategoryId, lang: Language) {
         .text(id.render(lang))
         .icon(id.icon())
         .show(ui);
+}
+
+/// Search palette entries with an ungrouped Overview button first, then
+/// every component in catalog order grouped by category. Single source of
+/// truth for the command palette so the sidebar, palette, and tests share
+/// one ordering.
+#[must_use]
+pub fn palette_entries(lang: Language) -> Vec<(Option<ComponentId>, CommandItem)> {
+    [(
+        None,
+        CommandItem {
+            group: String::new(),
+            group_icon: LucideIcon::Sparkles,
+            label: "Overview".to_owned(),
+            icon: LucideIcon::Sparkles,
+        },
+    )]
+    .into_iter()
+    .chain(CATEGORIES.iter().flat_map(|(cat, _, defs)| {
+        defs.iter().filter_map(|def| {
+            def.id.map(|id| {
+                (
+                    Some(id),
+                    CommandItem {
+                        group: (*cat).render(lang),
+                        group_icon: cat.icon(),
+                        label: def.name.to_owned(),
+                        icon: def.icon,
+                    },
+                )
+            })
+        })
+    }))
+    .collect()
 }

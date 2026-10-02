@@ -1,6 +1,6 @@
 use crate::catalog::{
     CATEGORIES, CategoryId, ComponentId, FooterSuffix, SearchCommandPlaceholder, SearchLabel,
-    category_header, section_button,
+    category_header, palette_entries, section_button,
 };
 use crate::route::AppRoute;
 use crate::state::ShowcaseApp;
@@ -8,10 +8,16 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::state::PersistentState;
 use functora_egui::storage::persist_value;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandItem, CommandValue, Dialog,
-    FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Sheet,
-    Shell, ToastVariant, Typography,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, Dialog, FieldDescription,
+    Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Sheet, Shell, ToastVariant,
+    Typography,
 };
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PendingNav {
+    Overview,
+    Component(ComponentId),
+}
 
 impl ShowcaseApp {
     #[must_use]
@@ -170,30 +176,13 @@ impl ShowcaseApp {
         if self.dialogs.command_open {
             let lang = self.persistent.language;
             let placeholder = SearchCommandPlaceholder.render(lang);
-            let entries: Vec<(ComponentId, CommandItem)> = CATEGORIES
-                .iter()
-                .flat_map(|(cat, _, defs)| {
-                    defs.iter().filter_map(|def| {
-                        def.id.map(|id| {
-                            (
-                                id,
-                                CommandItem {
-                                    group: (*cat).render(lang),
-                                    group_icon: cat.icon(),
-                                    label: def.name.to_owned(),
-                                    icon: def.icon,
-                                },
-                            )
-                        })
-                    })
-                })
-                .collect();
-            if let Some(id) = CommandValue::new(entries).placeholder(placeholder).show(
+            let entries = palette_entries(lang);
+            if let Some(target) = CommandValue::new(entries).placeholder(placeholder).show(
                 ctx,
                 &mut self.dialogs.command_open,
                 &mut self.command_search,
             ) {
-                self.navigate_to(Some(id));
+                self.navigate_to(target);
                 ctx.request_repaint();
             }
         }
@@ -333,7 +322,7 @@ impl eframe::App for ShowcaseApp {
         let history = self.router.history().clone();
         let needs_reset = std::cell::Cell::new(false);
         let needs_search = std::cell::Cell::new(false);
-        let pending_nav = std::cell::Cell::new(None::<ComponentId>);
+        let pending_nav = std::cell::Cell::new(None::<PendingNav>);
         let selected_snapshot = self.selected;
         let lang_cell = std::cell::Cell::new(persistent.language);
         let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, {
@@ -351,16 +340,27 @@ impl eframe::App for ShowcaseApp {
                         side_ui.add_space(8.0);
                     }
                     for def in *items {
-                        let Some(id) = def.id else {
-                            continue;
+                        let (is_selected, pending) = match def.id {
+                            None => (
+                                selected_snapshot.is_none()
+                                    && pending_ref
+                                        .get()
+                                        .is_none_or(|next| next == PendingNav::Overview),
+                                PendingNav::Overview,
+                            ),
+                            Some(id) => (
+                                Some(id) == selected_snapshot
+                                    && pending_ref
+                                        .get()
+                                        .is_none_or(|next| next == PendingNav::Component(id)),
+                                PendingNav::Component(id),
+                            ),
                         };
-                        let is_selected = Some(id) == selected_snapshot
-                            && pending_ref.get().is_none_or(|next| next == id);
                         if side_ui
                             .add(section_button(def, is_selected).full_width())
                             .clicked()
                         {
-                            pending_ref.set(Some(id));
+                            pending_ref.set(Some(pending));
                             close |= side_ui.on_mobile();
                             side_ui.ctx().request_repaint();
                         }
@@ -404,8 +404,11 @@ impl eframe::App for ShowcaseApp {
         persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
-        if let Some(id) = pending_nav.get() {
-            self.navigate_to(Some(id));
+        if let Some(target) = pending_nav.get() {
+            match target {
+                PendingNav::Overview => self.navigate_to(None),
+                PendingNav::Component(id) => self.navigate_to(Some(id)),
+            }
             ctx.request_repaint();
         }
         if prev_persistent != self.persistent {

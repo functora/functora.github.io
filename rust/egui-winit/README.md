@@ -1,10 +1,5 @@
-# egui-winit
+# egui-winit (patch shim)
 
-[![Latest version](https://img.shields.io/crates/v/egui-winit.svg)](https://crates.io/crates/egui-winit)
-[![Documentation](https://docs.rs/egui-winit/badge.svg)](https://docs.rs/egui-winit)
-![MIT](https://img.shields.io/badge/license-MIT-blue.svg)
-![Apache](https://img.shields.io/badge/license-Apache-blue.svg)
+Internal `[patch.crates-io]` shim. It re-exports `functora-egui-winit` under the `egui-winit` package name so `eframe` keeps using the fork with the Android IME fix.
 
-This crates provides bindings between [`egui`](https://github.com/emilk/egui) and [`winit`](https://crates.io/crates/winit).
-
-The library translates winit events to egui, handled copy/paste, updates the cursor, open links clicked in egui, etc.
+The real code lives in `../functora-egui-winit`. This crate is marked `publish = false` and must never be published.

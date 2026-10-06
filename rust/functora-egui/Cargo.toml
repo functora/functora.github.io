@@ -15,7 +15,7 @@ egui_extras = { version = "0.36.1", default-features = false, optional = true }
 egui_flex = "0.8"
 log = "0.4"
 num-traits = "0.2"
-functora-core = { path = "../functora-core", default-features = false }
+functora-core = { version = "0.1.0", path = "../functora-core", default-features = false }
  serde = { version = "1.0", features = ["derive"] }
  serde_json = "1.0"
  base64 = "0.22"

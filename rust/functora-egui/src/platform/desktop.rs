@@ -28,11 +28,34 @@ pub struct ShareData {
     pub url: String,
 }
 
+pub async fn open_url(url: String) -> Result<(), Error> {
+    std::future::ready(()).await;
+    std::process::Command::new("xdg-open")
+        .arg(&url)
+        .stdin(std::process::Stdio::null())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .output()
+        .map_err(Error::from)
+        .and_then(|output| {
+            output
+                .status
+                .success()
+                .then_some(())
+                .ok_or_else(|| Error::JS(format!("xdg-open failed for {url}")))
+        })
+}
+
 #[cfg(feature = "clipboard")]
 pub async fn share(data: ShareData) -> Result<(), Error> {
     let full = format!("{}\n{}\n{}", data.title, data.text, data.url);
-    if let Err(e) = clipboard_write(full).await {
-        tracing::warn!("Share fallback clipboard failed: {e}");
+    if let Err(write_error) = clipboard_write(full).await {
+        tracing::warn!("Share fallback clipboard failed: {write_error}");
+    }
+    if data.url.starts_with("http")
+        && let Err(open_error) = open_url(data.url).await
+    {
+        tracing::warn!("Share open_url failed: {open_error}");
     }
     Ok(())
 }
@@ -56,11 +79,25 @@ pub async fn sleep(millis: u64) {
     std::thread::sleep(std::time::Duration::from_millis(millis));
 }
 
+#[cfg(feature = "storage")]
+#[must_use]
+pub fn storage_get(key: &str) -> Option<String> {
+    crate::storage::load_state::<String>(key)
+}
+
+#[cfg(not(feature = "storage"))]
 #[must_use]
 pub fn storage_get(_key: &str) -> Option<String> {
     None
 }
 
+#[cfg(feature = "storage")]
+pub fn storage_set(key: &str, value: &str) -> Result<(), Error> {
+    crate::storage::persist_value(key, &value.to_owned());
+    Ok(())
+}
+
+#[cfg(not(feature = "storage"))]
 pub fn storage_set(_key: &str, _value: &str) -> Result<(), Error> {
     Ok(())
 }

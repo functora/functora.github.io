@@ -93,6 +93,8 @@ impl CryptonoteApp {
             this.router = router;
             this.temporary.screen = current;
         }
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        crate::deep_link::ingest_desktop_args();
         this
     }
 

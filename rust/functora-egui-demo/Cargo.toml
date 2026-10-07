@@ -20,7 +20,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-functora-egui = { path = "../functora-egui", features = ["web", "android", "qr", "camera", "images", "markdown"] }
+functora-egui = { path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
 log = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -36,6 +36,11 @@ jni = "0.21.1"
 
 [package.metadata.functora-egui-android]
 camera = true
+
+[package.metadata.functora-egui-desktop]
+title = "Functora Egui Demo"
+comment = "Showcase app for functora-egui - all layouts, components, widgets and features"
+categories = "Development;Utility;"
 
 [build-dependencies]
 askama = "0.12"

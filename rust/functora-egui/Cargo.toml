@@ -97,6 +97,12 @@ optional = true
 version = "0.15"
 optional = true
 
+[target.'cfg(not(any(target_arch = "wasm32", target_os = "android")))'.dependencies.eframe]
+version = "0.36.1"
+optional = true
+default-features = false
+features = ["default_fonts", "glow", "links", "x11", "wayland"]
+
 [target.'cfg(target_os = "android")'.dependencies.eframe]
 version = "0.36.1"
 optional = true
@@ -166,6 +172,13 @@ android = [
     "dep:android-activity",
     "dep:jni",
     "dep:winit",
+]
+desktop = [
+    "platform",
+    "storage",
+    "dep:askama",
+    "dep:toml",
+    "dep:eframe",
 ]
 build = ["dep:askama", "dep:toml"]
 images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif", "egui_extras/webp", "egui_extras/svg", "egui_extras/file", "egui_extras/http"]

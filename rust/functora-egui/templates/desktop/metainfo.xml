@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>{{ app_id }}.desktop</id>
+  <metadata_license>MIT</metadata_license>
+  <name>{{ title }}</name>
+  <summary>{{ comment }}</summary>
+  <description>
+    <p>{{ comment }}</p>
+  </description>
+  <launchable type="desktop-id">{{ app_id }}.desktop</launchable>
+  <releases>
+    <release version="{{ version }}" />
+  </releases>
+</component>

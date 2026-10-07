@@ -27,9 +27,14 @@ fn main() {
     println!("cargo:rerun-if-changed=assets/favicon/mipmap-xhdpi.png");
     println!("cargo:rerun-if-changed=assets/favicon/mipmap-xxhdpi.png");
     println!("cargo:rerun-if-changed=assets/favicon/mipmap-xxxhdpi.png");
+    println!("cargo:rerun-if-changed=../functora-egui/templates/desktop/app.desktop");
+    println!("cargo:rerun-if-changed=../functora-egui/templates/desktop/metainfo.xml");
+    println!("cargo:rerun-if-changed=assets/icon.png");
 
     let android_cfg = functora_egui::android::config::load_android_config("Cargo.toml");
     let web_cfg = functora_egui::web::config::load_config("Cargo.toml");
+    let desktop_cfg = functora_egui::desktop::config::load_desktop_config("Cargo.toml");
+    println!("cargo:rustc-env=DEMO_DESKTOP_APP_ID={}", desktop_cfg.app_id);
 
     println!("cargo:rustc-env=DEMO_WEB_TITLE={}", web_cfg.title);
     println!("cargo:rustc-env=DEMO_WEB_SHORT_NAME={}", web_cfg.short_name);
@@ -113,6 +118,44 @@ fn main() {
         std::path::Path::new("assets/favicon"),
     )
     .expect("copy launcher icons");
+
+    let desktop_entry = functora_egui::desktop::templates::LinuxDesktop {
+        title: &desktop_cfg.title,
+        comment: &desktop_cfg.comment,
+        exec_name: &desktop_cfg.exec_name,
+        icon_name: &desktop_cfg.icon_name,
+        categories: &desktop_cfg.categories,
+        mime_types: &desktop_cfg.mime_types,
+        schemes: &desktop_cfg.schemes,
+    }
+    .render()
+    .expect("askama desktop entry");
+    let metainfo = functora_egui::desktop::templates::Metainfo {
+        app_id: &desktop_cfg.app_id,
+        title: &desktop_cfg.title,
+        comment: &desktop_cfg.comment,
+        version: &desktop_cfg.version,
+    }
+    .render()
+    .expect("askama metainfo");
+    std::fs::create_dir_all("desktop/linux").unwrap();
+    std::fs::write(
+        format!("desktop/linux/{}.desktop", desktop_cfg.app_id),
+        desktop_entry,
+    )
+    .unwrap();
+    std::fs::create_dir_all("desktop/metainfo").unwrap();
+    std::fs::write(
+        format!("desktop/metainfo/{}.metainfo.xml", desktop_cfg.app_id),
+        metainfo,
+    )
+    .unwrap();
+    let _ = functora_egui::desktop::icons::copy_desktop_icons(
+        std::path::Path::new("desktop"),
+        std::path::Path::new("assets"),
+        &desktop_cfg.app_id,
+    )
+    .expect("copy desktop icons");
 
     if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default() != "wasm32" {
         return;

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name={{ title }}
+Comment={{ comment }}
+Exec={{ exec_name }} %F
+Icon={{ icon_name }}
+Terminal=false
+Categories={{ categories }}
+{% if mime_types != "" %}MimeType={{ mime_types }}
+{% endif %}

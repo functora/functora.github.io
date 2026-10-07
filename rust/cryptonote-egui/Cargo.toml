@@ -23,7 +23,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.36.1"
-functora-egui = { path = "../functora-egui", features = ["web", "android", "qr", "camera", "images", "markdown"] }
+functora-egui = { path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
 functora-core = { path = "../functora-core" }
 functora = { path = "../functora" }
 functora-tagged = { path = "../functora-tagged" }
@@ -66,6 +66,12 @@ extra_intent_filters = '''
     <data android:scheme="file" android:mimeType="*/*" android:pathPattern=".*\.cryptonote" />
 </intent-filter>
 '''
+
+[package.metadata.functora-egui-desktop]
+title = "Cryptonote"
+comment = "Cryptonote is a cross-platform, serverless app for encrypted offline notes."
+categories = "Utility;Security;"
+mime_types = "application/x-cryptonote;"
 
 [build-dependencies]
 askama = "0.12"

@@ -14,6 +14,19 @@ pub fn take_archive() -> Option<ArchiveSource> {
     PENDING_ARCHIVE.lock().unwrap_or_else(PoisonError::into_inner).take()
 }
 
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+pub fn ingest_desktop_args() {
+    for path in functora_egui::desktop::take_file_args() {
+        let is_archive = path
+            .extension()
+            .and_then(|ext| ext.to_str())
+            .is_some_and(|ext| ext == "cryptonote");
+        if is_archive {
+            store_archive(ArchiveSource::Path(path));
+        }
+    }
+}
+
 #[must_use]
 pub fn has_pending_archive() -> bool {
     PENDING_ARCHIVE.lock().unwrap_or_else(PoisonError::into_inner).is_some()

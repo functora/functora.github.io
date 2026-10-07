@@ -17,6 +17,8 @@
 pub mod android;
 #[cfg(feature = "platform")]
 pub mod camera;
+#[cfg(any(feature = "desktop", feature = "build"))]
+pub mod desktop;
 #[cfg(feature = "platform")]
 pub use camera::{
     FrameData, begin_capture_session, capture_frame, check_camera, sleep, start_camera,
@@ -24,7 +26,12 @@ pub use camera::{
 };
 #[cfg(feature = "clipboard")]
 pub mod clipboard;
-#[cfg(any(feature = "web", feature = "android", feature = "build"))]
+#[cfg(any(
+    feature = "web",
+    feature = "android",
+    feature = "desktop",
+    feature = "build"
+))]
 pub mod config;
 pub mod deep_link;
 #[cfg(feature = "files")]

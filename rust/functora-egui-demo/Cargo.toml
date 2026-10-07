@@ -34,14 +34,7 @@ gloo-timers = { version = "0.3", features = ["futures"] }
 android-activity = { version = "0.6.1", features = ["game-activity"] }
 jni = "0.21.1"
 
-[package.metadata.functora-egui-web]
-title = "functora-egui Showcase"
-short_name = "functora-egui"
-theme_color = "#0a0a0a"
-
 [package.metadata.functora-egui-android]
-host = "functora.github.io"
-path_prefix = "/apps/functora-egui-demo/"
 camera = true
 
 [build-dependencies]

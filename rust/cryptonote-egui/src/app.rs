@@ -5,8 +5,7 @@ use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
 use functora_egui::storage::persist_value;
 use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell, ToastState,
-    ToastVariant,
+    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
 };
 
 use crate::encoding::{NoteData, decode_note, extract_note_param};
@@ -556,9 +555,7 @@ impl eframe::App for CryptonoteApp {
         .collect();
         let sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, {
-            let lang_ref = &lang_cell;
             let pending_ref = &pending_nav;
-            let reset_ref = &needs_reset;
             move |side_ui| {
                 let mut close = false;
                 for (screen, label, icon) in &nav_items {
@@ -578,21 +575,6 @@ impl eframe::App for CryptonoteApp {
                         close |= side_ui.on_mobile();
                         side_ui.ctx().request_repaint();
                     }
-                }
-                side_ui.add_space(12.0);
-                let _ = Separator::horizontal().show(side_ui);
-                side_ui.add_space(8.0);
-                if side_ui
-                    .add(
-                        Button::new(Msg::CreateNewNote.render(lang_ref.get()))
-                            .icon(functora_egui::LucideIcon::RotateCcw)
-                            .variant(ButtonVariant::Ghost)
-                            .full_width(),
-                    )
-                    .clicked()
-                {
-                    reset_ref.set(true);
-                    close |= side_ui.on_mobile();
                 }
                 close
             }

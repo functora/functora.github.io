@@ -22,7 +22,6 @@ fn msg_all() -> Vec<Msg> {
         Msg::EncryptedNote,
         Msg::EncryptedNoteDesc,
         Msg::DecryptButton,
-        Msg::CreateNewNote,
         Msg::EditNote,
         Msg::ViewButton,
         Msg::OpenUrlLabel,

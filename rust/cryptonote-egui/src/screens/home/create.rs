@@ -102,16 +102,6 @@ impl CryptonoteApp {
             {
                 self.navigate(Screen::View);
             }
-            if f.add(
-                Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::RotateCcw)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .inner
-            .clicked()
-            {
-                self.reset();
-            }
         });
     }
 }

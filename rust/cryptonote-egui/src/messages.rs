@@ -18,7 +18,6 @@ pub enum Msg {
     EncryptedNote,
     EncryptedNoteDesc,
     DecryptButton,
-    CreateNewNote,
     EditNote,
     ViewButton,
     OpenUrlLabel,
@@ -62,7 +61,6 @@ impl I18N for Msg {
                 "This note is encrypted. Enter the password to decrypt it.".into()
             }
             Self::DecryptButton => "Decrypt".into(),
-            Self::CreateNewNote => "Reset".into(),
             Self::EditNote => "Edit".into(),
             Self::ViewButton => "View".into(),
             Self::OpenUrlLabel => "URL".into(),
@@ -129,7 +127,6 @@ Secure, private, and truly offline - your notes remain yours alone.".into(),
                 "Esta nota está cifrada. Ingresa la contraseña para descifrarla.".into()
             }
             Self::DecryptButton => "Descifrar".into(),
-            Self::CreateNewNote => "Reiniciar".into(),
             Self::EditNote => "Editar".into(),
             Self::ViewButton => "Ver".into(),
             Self::OpenUrlLabel => "URL".into(),
@@ -198,7 +195,6 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".
                 "Эта заметка зашифрована. Введите пароль для расшифровки.".into()
             }
             Self::DecryptButton => "Расшифровать".into(),
-            Self::CreateNewNote => "Сброс".into(),
             Self::EditNote => "Правка".into(),
             Self::ViewButton => "Смотреть".into(),
             Self::OpenUrlLabel => "URL".into(),

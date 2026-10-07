@@ -178,16 +178,6 @@ impl CryptonoteApp {
                 self.temporary.action = ActionMode::Create;
                 self.navigate(Screen::Home);
             }
-            if f.add(
-                Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::RotateCcw)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .inner
-            .clicked()
-            {
-                self.reset();
-            }
         });
         if let Some(job) = self.temporary.progress.clone() {
             let () = ui.add_space(8.0);

@@ -3,7 +3,7 @@ use crate::error::AppError;
 use crate::hooks::handle_open_url;
 use crate::messages::Msg;
 use functora_egui::i18n::I18N;
-use functora_egui::{Button, ButtonVariant, Flex, Progress, ToastVariant};
+use functora_egui::{Progress, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn home_scan(&mut self, ui: &mut egui::Ui) {
@@ -32,19 +32,6 @@ impl CryptonoteApp {
         } else {
             self.qr_error_notified = None;
         }
-        let () = ui.add_space(8.0);
-        _ = Flex::row().gap(8.0).show(ui, |f| {
-            if f.add(
-                Button::new(Msg::CreateNewNote.render(lang))
-                    .icon(functora_egui::LucideIcon::RotateCcw)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .inner
-            .clicked()
-            {
-                self.reset();
-            }
-        });
         if let Some(job) = self.temporary.progress.clone() {
             let () = ui.add_space(8.0);
             _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));

@@ -84,7 +84,7 @@ const BANNED: &[(&str, &str)] = &[
     ("\"License\"", "Base::TermsOfServiceTitle"),
     ("\"Privacy\"", "Base::PrivacyPolicyTitle"),
     ("\"Back\"", "Base::Back"),
-    ("\"Reset\"", "Msg::CreateNewNote"),
+    ("\"Reset\"", "removed Reset button"),
     ("\"Home\"", "Base::Home"),
     ("\"Paste\"", "Base::Paste"),
 ];

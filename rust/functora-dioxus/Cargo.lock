@@ -1012,7 +1012,7 @@ dependencies = [
 
 [[package]]
 name = "functora"
-version = "0.1.10"
+version = "0.2.0"
 
 [[package]]
 name = "functora-core"
@@ -1095,7 +1095,7 @@ dependencies = [
 
 [[package]]
 name = "functora-tagged"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "derive_more",
  "num-traits",

@@ -84,6 +84,23 @@ impl ShowcaseApp {
         }
     }
 
+    pub fn show_app_footer(ui: &mut egui::Ui, lang: Language) {
+        let suffix = FooterSuffix.render(lang);
+        let _ = Footer::new().show(ui, |inner| {
+            let _ = Hypertext::new()
+                .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
+                .link("Functora", "https://functora.github.io/")
+                .text(suffix)
+                .text(format!(
+                    " {} {}.",
+                    functora_egui::messages::Msg::VersionLabel.render(lang),
+                    Self::DEMO_ATTRS.vsn
+                ))
+                .centered()
+                .show(inner);
+        });
+    }
+
     fn render_overlays(&mut self, ctx: &egui::Context) {
         if self.dialogs.dialog_open {
             let mut close = false;
@@ -385,16 +402,7 @@ impl eframe::App for ShowcaseApp {
         .footer({
             let lang_ref = &lang_cell;
             move |footer_ui| {
-                let cur_lang = lang_ref.get();
-                let suffix = FooterSuffix.render(cur_lang);
-                let _ = Footer::new().show(footer_ui, |inner| {
-                    let _ = Hypertext::new()
-                        .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
-                        .link("Functora", "https://functora.github.io/")
-                        .text(suffix)
-                        .centered()
-                        .show(inner);
-                });
+                Self::show_app_footer(footer_ui, lang_ref.get());
             }
         })
         .show(ui, |content_ui| {

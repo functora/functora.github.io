@@ -129,6 +129,11 @@ impl AppAttrs {
     }
 
     #[must_use]
+    pub fn app_version_url(self) -> String {
+        format!("{}/{}", self.app_url(), self.vsn)
+    }
+
+    #[must_use]
     pub fn origin(self) -> String {
         #[cfg(target_arch = "wasm32")]
         {
@@ -145,7 +150,7 @@ impl AppAttrs {
         }
         #[cfg(not(target_arch = "wasm32"))]
         {
-            self.app_url()
+            self.app_version_url()
         }
     }
 

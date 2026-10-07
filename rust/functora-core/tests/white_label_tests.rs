@@ -1,5 +1,26 @@
 use functora_core::i18n::{I18N, Language};
-use functora_core::{Msg, WhiteLabelContent, donate_blocks};
+use functora_core::{AppAttrs, Msg, WhiteLabelContent, donate_blocks};
+
+const ATTRS: AppAttrs = AppAttrs {
+    app: "cryptonote-egui",
+    vsn: "0.1.10",
+    org: "functora",
+    src: Some("rust"),
+    dst: "apps",
+    description: "Cryptonote is a cross-platform, serverless app for encrypted offline notes.",
+};
+
+#[test]
+fn versioned_urls_carry_app_version() {
+    assert_eq!(
+        ATTRS.app_version_url(),
+        "https://functora.github.io/apps/cryptonote-egui/0.1.10"
+    );
+    assert_eq!(
+        ATTRS.origin(),
+        "https://functora.github.io/apps/cryptonote-egui/0.1.10"
+    );
+}
 
 #[test]
 fn default_content_uses_functora_defaults() {

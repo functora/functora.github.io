@@ -8,6 +8,17 @@ pub const SCREEN_PARAM: &str = "screen";
 pub const COMPONENT_PARAM: &str = "component";
 pub const ROOT_PATH: &str = "/";
 
+#[must_use]
+pub fn resolve_history_url(pathname: &str, url: &str) -> String {
+    if url == ROOT_PATH {
+        pathname.to_owned()
+    } else if let Some(query) = url.strip_prefix("/?") {
+        format!("{pathname}?{query}")
+    } else {
+        url.to_owned()
+    }
+}
+
 pub trait Routable:
     Display + FromStr + Clone + PartialEq + Eq + std::fmt::Debug + Send + Sync + 'static
 {

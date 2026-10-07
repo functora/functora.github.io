@@ -429,11 +429,20 @@ pub fn location_hash() -> Option<String> {
     web_sys::window()?.location().hash().ok()
 }
 
+#[must_use]
+pub fn location_pathname() -> Option<String> {
+    web_sys::window()?.location().pathname().ok()
+}
+
 pub fn history_push(url: &str) -> Result<(), Error> {
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    let target = location_pathname().map_or_else(
+        || url.to_owned(),
+        |pathname| crate::route::resolve_history_url(&pathname, url),
+    );
     history
-        .push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(url))
+        .push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&target))
         .map_err(|e| Error::JS(format!("{e:?}")))?;
     Ok(())
 }
@@ -441,8 +450,12 @@ pub fn history_push(url: &str) -> Result<(), Error> {
 pub fn history_replace(url: &str) -> Result<(), Error> {
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
     let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    let target = location_pathname().map_or_else(
+        || url.to_owned(),
+        |pathname| crate::route::resolve_history_url(&pathname, url),
+    );
     history
-        .replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(url))
+        .replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&target))
         .map_err(|e| Error::JS(format!("{e:?}")))?;
     Ok(())
 }

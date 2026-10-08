@@ -53,6 +53,10 @@
             nativeCheckInputs = [nodejs_latest];
             doCheck = false;
           };
+        appimage-runtime-x86_64 = pkgs.fetchurl {
+          url = "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64";
+          hash = "sha256-L8qLRDySUQ8Ug6iD9gBhrQm0a5eLJjHIB82HOkfsJg0=";
+        };
         android-sdk-args = {
           platformVersions = ["34" "35"];
           buildToolsVersions = ["34.0.0" "35.0.0"];
@@ -321,6 +325,64 @@
               PYEOF
             '';
           };
+        mkFunctoraEguiDesktop = app: icons:
+          pkgs.writeShellApplication rec {
+            name = "release-desktop-${app}";
+            runtimeInputs = with pkgs; [coreutils gnugrep gnused squashfsTools patchelf linuxdeploy desktop-file-utils appstream];
+            text = ''
+              (
+                cd "${app}"
+                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+                OUT="target/desktop-release"
+                IMG="$OUT/${app}-v$VSN-x86_64.AppImage"
+                if [ -f "$IMG" ]
+                then
+                  echo "$IMG does already exist!"
+                  exit 1
+                else
+                  mkdir -p "$OUT"
+                fi
+                ${rustToolchain}/bin/cargo build --release
+                DESKTOP="$(echo desktop/linux/*.desktop)"
+                APPID="$(basename "$DESKTOP" .desktop)"
+                desktop-file-validate "$DESKTOP"
+                appstreamcli validate --no-net desktop/metainfo/*.metainfo.xml
+                rm -rf "$OUT/AppDir"
+                mkdir -p "$OUT/AppDir/usr/bin" "$OUT/AppDir/usr/share/metainfo"
+                cp "target/release/${app}" "$OUT/AppDir/usr/bin/${app}"
+                cp "$DESKTOP" "$OUT/AppDir/$APPID.desktop"
+                cp "${icons}/android-chrome-512x512.png" "$OUT/AppDir/$APPID.png"
+                cp "$OUT/AppDir/$APPID.png" "$OUT/AppDir/.DirIcon"
+                cp desktop/metainfo/*.metainfo.xml "$OUT/AppDir/usr/share/metainfo/$APPID.metainfo.xml"
+                cp -R desktop/icons/hicolor "$OUT/AppDir/usr/share/icons/"
+                (
+                  cd "$OUT"
+                  linuxdeploy --appdir AppDir \
+                    -d "$APPID.desktop" \
+                    -i "$APPID.png" \
+                    -e "AppDir/usr/bin/${app}"
+                )
+                mksquashfs "$OUT/AppDir" "$OUT/payload.squashfs" -root-owned -noappend -comp xz
+                cat "${appimage-runtime-x86_64}" "$OUT/payload.squashfs" > "$IMG"
+                chmod +x "$IMG"
+                rm -f "$OUT/payload.squashfs"
+                [ -x "$IMG" ] || {
+                  echo "AppImage was not produced!"
+                  exit 1
+                }
+                echo "READY: ${app}/$IMG"
+              )
+            '';
+          };
+        srFunctoraEguiDesktop = app:
+          pkgs.writeShellApplication {
+            name = "serve-desktop-${app}";
+            runtimeInputs = with pkgs; [coreutils];
+            text = ''
+              cd "${app}"
+              exec ${rustToolchain}/bin/cargo run --release -- "$@"
+            '';
+          };
         mkFunctoraEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
@@ -538,6 +600,16 @@
           AR_i686_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
           AR_x86_64_linux_android = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
           AR_thumbv7neon_linux_androideabi = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar";
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
+            libGL
+            wayland
+            libxkbcommon
+            libx11
+            libxcursor
+            libxrandr
+            libxi
+            libxext
+          ]);
           packages = with pkgs;
             [
               bacon
@@ -558,6 +630,14 @@
               clean-css-cli
               # linux
               pkg-config
+              libGL
+              wayland
+              libxkbcommon
+              libx11
+              libxcursor
+              libxrandr
+              libxi
+              libxext
               xvfb-run
               webkitgtk_4_1
               openssl
@@ -597,9 +677,13 @@
               (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
               (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
+              (mkFunctoraEguiDesktop "cryptonote-egui" "../cryptonote/assets/favicon")
+              (srFunctoraEguiDesktop "cryptonote-egui")
               (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
               (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
+              (mkFunctoraEguiDesktop "functora-egui-demo" "assets/favicon")
+              (srFunctoraEguiDesktop "functora-egui-demo")
               (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
               # tools
               gemini-cli

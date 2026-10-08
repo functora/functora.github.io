@@ -43,4 +43,6 @@ cargo build --target wasm32-unknown-unknown
 release-desktop-cryptonote-egui
 # AppImages need FUSE (e.g. libfuse2 on Debian/Ubuntu);
 # without FUSE, run the AppImage with --appimage-extract-and-run
+# desktop Linux via nix (from rust/, default flake output)
+nix run .#cryptonote-egui
 ```

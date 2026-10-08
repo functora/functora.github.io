@@ -383,6 +383,96 @@
               exec ${rustToolchain}/bin/cargo run --release -- "$@"
             '';
           };
+        mkEguiDesktop = app: let
+          manifest = builtins.fromTOML (builtins.readFile (./. + "/${app}/Cargo.toml"));
+        in
+          pkgs.rustPlatform.buildRustPackage {
+            pname = app;
+            version = manifest.package.version;
+            src = pkgs.lib.fileset.toSource {
+              root = ./.;
+              fileset = pkgs.lib.fileset.unions ([
+                (./. + "/${app}/Cargo.toml")
+                (./. + "/${app}/Cargo.lock")
+                (./. + "/${app}/build.rs")
+                (./. + "/${app}/src")
+                (./. + "/${app}/tests")
+                (./. + "/${app}/assets")
+                (./. + "/${app}/android/.gitignore")
+                (./. + "/${app}/desktop/.gitignore")
+                ./cryptonote-egui/android/.gitignore
+                ./cryptonote-egui/desktop/.gitignore
+                ./functora-egui-demo/android/.gitignore
+                ./functora-egui-demo/desktop/.gitignore
+                ./functora-egui/Cargo.toml
+                ./functora-egui/src
+                ./functora-egui/templates
+                ./functora-egui/assets
+                ./functora-core/Cargo.toml
+                ./functora-core/build.rs
+                ./functora-core/src
+                ./functora/Cargo.toml
+                ./functora/README.md
+                ./functora/src
+                ./functora-tagged/Cargo.toml
+                ./functora-tagged/README.md
+                ./functora-tagged/src
+                ./egui-winit/Cargo.toml
+                ./egui-winit/src
+                ./functora-egui-winit/Cargo.toml
+                ./functora-egui-winit/src
+              ]);
+            };
+            cargoLock.lockFile = (./. + "/${app}/Cargo.lock");
+            cargoRoot = app;
+            buildAndTestSubdir = app;
+            nativeBuildInputs = with pkgs; [
+              pkg-config
+              makeWrapper
+              desktop-file-utils
+              appstream
+            ];
+            buildInputs = with pkgs; [
+              libGL
+              wayland
+              libxkbcommon
+              libx11
+              libxcursor
+              libxrandr
+              libxi
+              libxext
+            ];
+            postInstall = ''
+              desktop-file-validate ${app}/desktop/linux/*.desktop
+              appstreamcli validate --no-net ${app}/desktop/metainfo/*.metainfo.xml
+              appid="$(basename ${app}/desktop/linux/*.desktop .desktop)"
+              mkdir -p $out/share/applications $out/share/metainfo $out/share/icons
+              cp "${app}/desktop/linux/$appid.desktop" $out/share/applications/
+              cp "${app}/desktop/metainfo/$appid.metainfo.xml" $out/share/metainfo/
+              cp -R "${app}/desktop/icons/hicolor" $out/share/icons/
+              wrapProgram $out/bin/${app} \
+                --prefix LD_LIBRARY_PATH : "${
+                pkgs.lib.makeLibraryPath (with pkgs; [
+                  libGL
+                  wayland
+                  libxkbcommon
+                  libx11
+                  libxcursor
+                  libxrandr
+                  libxi
+                  libxext
+                ])
+              }" \
+                --suffix PATH : "${pkgs.lib.makeBinPath [ pkgs.xdg-utils ]}"
+            '';
+            meta = with pkgs.lib; {
+              description = manifest.package.description;
+              homepage = manifest.package.repository;
+              license = licenses.mit;
+              mainProgram = app;
+              platforms = platforms.linux;
+            };
+          };
         mkFunctoraEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
@@ -783,7 +873,9 @@
         devShells.default = pkgs.mkShell shell;
         packages = {
           dioxus-cli-08 = dioxusCli08;
-          default = self.packages.${system}.dioxus-cli-08;
+          cryptonote-egui = mkEguiDesktop "cryptonote-egui";
+          functora-egui-demo = mkEguiDesktop "functora-egui-demo";
+          default = self.packages.${system}.cryptonote-egui;
         };
       }
     );

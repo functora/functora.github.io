@@ -11,10 +11,11 @@ use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{Alert, Button, ButtonVariant, Card, ComponentSize, Flex, Progress, Separator, ToastVariant};
 
 impl CryptonoteApp {
-    pub(crate) fn screen_view(&mut self, ui: &mut egui::Ui) {
+    pub fn screen_view(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let toast_time = ui.ctx().input(|i| i.time);
-        if self.temporary.note.is_empty() && self.temporary.attachments.is_empty() {
+        let nothing_to_show = self.temporary.note.is_empty() && self.temporary.attachments.is_empty();
+        if nothing_to_show {
             _ = Alert::new()
                 .title(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang))
                 .variant(functora_egui::AlertVariant::Destructive)
@@ -22,108 +23,107 @@ impl CryptonoteApp {
                     _ = inner.label(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang));
                 });
             let () = ui.add_space(8.0);
-        } else {
-            let note = self.temporary.note.clone();
-            _ = Card::new().show(ui, |inner| {
-                let _ = egui::ScrollArea::vertical().max_height(400.0).show(inner, |scroll| {
-                    _ = functora_egui::markdown_view::show(scroll, &mut self.md_cache, &note);
-                });
+        }
+        let note = self.temporary.note.clone();
+        _ = Card::new().show(ui, |inner| {
+            let _ = egui::ScrollArea::vertical().max_height(400.0).show(inner, |scroll| {
+                _ = functora_egui::markdown_view::show(scroll, &mut self.md_cache, &note);
             });
+        });
+        let () = ui.add_space(8.0);
+        if !self.temporary.attachments.is_empty() {
+            _ = Separator::horizontal().show(ui);
             let () = ui.add_space(8.0);
-            if !self.temporary.attachments.is_empty() {
-                _ = Separator::horizontal().show(ui);
-                let () = ui.add_space(8.0);
-                let attachments = self.temporary.attachments.clone();
-                for (idx, att) in attachments.iter().enumerate() {
-                    let size = format_size(att.data.len() as u64);
-                    let name = att.name.clone();
-                    _ = Flex::row().gap(8.0).show(ui, |f| {
-                        let _ = f.ui(|inner| {
-                            _ = inner.label(format!("{name} ({size})"));
-                        });
-                        if f.add(
-                            Button::new(Msg::ViewButton.render(lang))
-                                .icon(functora_egui::LucideIcon::Eye)
-                                .size(ComponentSize::Sm),
-                        )
-                        .inner
-                        .clicked()
-                        {
-                            self.temporary.attachment = Some(AttachmentIdx(idx));
-                            self.navigate(Screen::File);
-                        }
-                        if f.add(
-                            Button::new(Msg::Download.render(lang))
-                                .icon(functora_egui::LucideIcon::Download)
-                                .size(ComponentSize::Sm),
-                        )
-                        .inner
-                        .clicked()
-                        {
-                            let att_clone = att.clone();
-                            if claim_job(&mut self.temporary.progress, Stage::Download).is_some() {
-                                let rx = functora_egui::spawn_async(async move {
-                                    functora_egui::download::download(att_clone.data.to_vec(), &att_clone.name)
-                                        .await
-                                        .map_err(AppError::from)
-                                });
-                                self.download_rx = Some(rx);
-                            }
-                        }
+            let attachments = self.temporary.attachments.clone();
+            for (idx, att) in attachments.iter().enumerate() {
+                let size = format_size(att.data.len() as u64);
+                let name = att.name.clone();
+                _ = Flex::row().gap(8.0).show(ui, |f| {
+                    let _ = f.ui(|inner| {
+                        _ = inner.label(format!("{name} ({size})"));
                     });
-                    let () = ui.add_space(4.0);
-                    let preview = self
-                        .temporary
-                        .preview_cache
-                        .get(&att.name)
-                        .cloned()
-                        .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
-                    match preview {
-                        Preview::Text(t) => {
-                            _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
-                        }
-                        Preview::Image(_) => {
-                            let uri = format!("{}thumb-{}", crate::app::BYTES_URI_PREFIX, att.name);
-                            _ = ui.add(
-                                egui::Image::from_bytes(uri, att.data.to_vec())
-                                    .maintain_aspect_ratio(true)
-                                    .max_width(200.0),
-                            );
-                        }
-                        Preview::Markdown(t) => {
-                            _ = egui::ScrollArea::vertical().max_height(200.0).show(ui, |inner| {
-                                _ = functora_egui::markdown_view::show(inner, &mut self.md_cache, &t);
-                            });
-                        }
-                        Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
-                            _ = ui.label(Msg::PreviewUnavailable.render(lang));
-                        }
-                        Preview::Missing => {
-                            _ = ui.label(Msg::FileNotFound.render(lang));
-                        }
-                    }
-                    let () = ui.add_space(4.0);
-                }
-                let () = ui.add_space(8.0);
-                if ui
-                    .add(
-                        Button::new(Msg::DownloadAll.render(lang))
-                            .icon(functora_egui::LucideIcon::Download)
-                            .variant(ButtonVariant::Outline),
+                    if f.add(
+                        Button::new(Msg::ViewButton.render(lang))
+                            .icon(functora_egui::LucideIcon::Eye)
+                            .size(ComponentSize::Sm),
                     )
+                    .inner
                     .clicked()
-                {
-                    let files = self.temporary.attachments.clone();
-                    if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
-                        let progress = self.track_progress();
-                        let rx = functora_egui::spawn_async(async move {
-                            let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip).await?;
-                            functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
-                                .await
-                                .map_err(AppError::from)
-                        });
-                        self.download_rx = Some(rx);
+                    {
+                        self.temporary.attachment = Some(AttachmentIdx(idx));
+                        self.navigate(Screen::File);
                     }
+                    if f.add(
+                        Button::new(Msg::Download.render(lang))
+                            .icon(functora_egui::LucideIcon::Download)
+                            .size(ComponentSize::Sm),
+                    )
+                    .inner
+                    .clicked()
+                    {
+                        let att_clone = att.clone();
+                        if claim_job(&mut self.temporary.progress, Stage::Download).is_some() {
+                            let rx = functora_egui::spawn_async(async move {
+                                functora_egui::download::download(att_clone.data.to_vec(), &att_clone.name)
+                                    .await
+                                    .map_err(AppError::from)
+                            });
+                            self.download_rx = Some(rx);
+                        }
+                    }
+                });
+                let () = ui.add_space(4.0);
+                let preview = self
+                    .temporary
+                    .preview_cache
+                    .get(&att.name)
+                    .cloned()
+                    .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
+                match preview {
+                    Preview::Text(t) => {
+                        _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
+                    }
+                    Preview::Image(_) => {
+                        let uri = format!("{}thumb-{}", crate::app::BYTES_URI_PREFIX, att.name);
+                        _ = ui.add(
+                            egui::Image::from_bytes(uri, att.data.to_vec())
+                                .maintain_aspect_ratio(true)
+                                .max_width(200.0),
+                        );
+                    }
+                    Preview::Markdown(t) => {
+                        _ = egui::ScrollArea::vertical().max_height(200.0).show(ui, |inner| {
+                            _ = functora_egui::markdown_view::show(inner, &mut self.md_cache, &t);
+                        });
+                    }
+                    Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
+                        _ = ui.label(Msg::PreviewUnavailable.render(lang));
+                    }
+                    Preview::Missing => {
+                        _ = ui.label(Msg::FileNotFound.render(lang));
+                    }
+                }
+                let () = ui.add_space(4.0);
+            }
+            let () = ui.add_space(8.0);
+            if ui
+                .add(
+                    Button::new(Msg::DownloadAll.render(lang))
+                        .icon(functora_egui::LucideIcon::Download)
+                        .variant(ButtonVariant::Outline),
+                )
+                .clicked()
+            {
+                let files = self.temporary.attachments.clone();
+                if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
+                    let progress = self.track_progress();
+                    let rx = functora_egui::spawn_async(async move {
+                        let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip).await?;
+                        functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
+                            .await
+                            .map_err(AppError::from)
+                    });
+                    self.download_rx = Some(rx);
                 }
             }
         }
@@ -156,13 +156,13 @@ impl CryptonoteApp {
                 } else if !matches!(self.temporary.external, External::Nothing) {
                     self.navigate(Screen::Share);
                 } else if claim_job(&mut self.temporary.progress, Stage::Encrypt).is_some() {
-                    let note = self.temporary.note.clone();
+                    let share_note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
                     let progress = self.track_progress();
                     let rx = functora_egui::spawn_async(async move {
-                        build_external(&note, &password, cipher, &attachments, progress).await
+                        build_external(&share_note, &password, cipher, &attachments, progress).await
                     });
                     self.generate_rx = Some(rx);
                 }

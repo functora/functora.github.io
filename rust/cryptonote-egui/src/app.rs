@@ -20,6 +20,7 @@ const PERSISTENT_KEY: &str = "cryptonote_persistent";
 pub(crate) const BYTES_URI_PREFIX: &str = "bytes://";
 
 type PickResult = Result<Vec<(String, Vec<u8>)>, AppError>;
+type DecryptResult = Result<(String, Vec<crate::archive::Attachment>), AppError>;
 type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
 
 pub struct CryptonoteApp {
@@ -37,7 +38,7 @@ pub struct CryptonoteApp {
     pub(crate) pick_cancel: Option<functora_egui::CancelToken>,
     pub pick_overlay_open: bool,
     pub(crate) generate_rx: Option<std::sync::mpsc::Receiver<Result<External, AppError>>>,
-    pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
+    pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<DecryptResult>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
     preview_rx: Vec<std::sync::mpsc::Receiver<(String, functora_egui::files::Preview)>>,
@@ -353,11 +354,13 @@ impl CryptonoteApp {
         }
         if let Some(rx) = self.decrypt_rx.take() {
             match rx.try_recv() {
-                Ok(Ok(text)) => {
+                Ok(Ok((text, files))) => {
                     self.temporary.note = text;
+                    self.temporary.attachments = files;
                     self.temporary.external = External::Nothing;
                     clear_progress(&mut self.temporary.progress);
                     self.progress_slot = None;
+                    self.generate_previews();
                     self.navigate(Screen::View);
                 }
                 Ok(Err(e)) => {

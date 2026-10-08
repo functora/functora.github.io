@@ -46,18 +46,26 @@ where
 
     #[must_use]
     #[cfg(feature = "storage")]
-    pub fn load_or_default(ctx: &egui::Context, key: &str, extra: Extra) -> Self {
-        crate::storage::load_state::<Self>(key)
+    pub fn load_or_default(
+        ctx: &egui::Context,
+        app: &'static str,
+        key: &str,
+        extra: Extra,
+    ) -> Self {
+        crate::storage::Storage::new(app)
+            .load(key)
             .unwrap_or_else(|| Self::with_system_defaults(ctx, extra))
     }
 
     #[must_use]
     #[cfg(feature = "storage")]
-    pub fn load_or_default_no_ctx(key: &str, extra: Extra) -> Self {
-        crate::storage::load_state::<Self>(key).unwrap_or_else(|| Self {
-            theme: Theme::Light,
-            language: detect_browser_language(),
-            extra,
-        })
+    pub fn load_or_default_no_ctx(app: &'static str, key: &str, extra: Extra) -> Self {
+        crate::storage::Storage::new(app)
+            .load(key)
+            .unwrap_or_else(|| Self {
+                theme: Theme::Light,
+                language: detect_browser_language(),
+                extra,
+            })
     }
 }

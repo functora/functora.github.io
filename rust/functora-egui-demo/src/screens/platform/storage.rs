@@ -6,7 +6,7 @@ use functora_egui::{
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_storage(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "Unified persistent storage: localStorage on web, storage.json via ProjectDirs on desktop, MediaStore dir on Android. Single API `load_state`/`persist_value`.",
+            "Unified persistent storage: localStorage on web, per-app storage.json via ProjectDirs on desktop, MediaStore dir on Android. Single API `Storage::load`/`Storage::persist`.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -26,7 +26,7 @@ impl crate::state::ShowcaseApp {
             {
                 let key = self.platform.storage_key.clone();
                 let val = self.platform.storage_value.clone();
-                functora_egui::storage::persist_value(&key, &val);
+                self.platform.storage.persist(&key, &val);
                 self.toast.add(
                     format!("Saved {key} = {val}"),
                     ToastVariant::Success,
@@ -38,7 +38,7 @@ impl crate::state::ShowcaseApp {
                 .clicked()
             {
                 let key = self.platform.storage_key.clone();
-                let loaded: Option<String> = functora_egui::storage::load_state(&key);
+                let loaded: Option<String> = self.platform.storage.load(&key);
                 match loaded {
                     Some(v) => {
                         self.platform.storage_value.clone_from(&v);
@@ -59,7 +59,9 @@ impl crate::state::ShowcaseApp {
                 .inner
                 .clicked()
             {
-                functora_egui::storage::persist_value(&self.platform.storage_key, &String::new());
+                self.platform
+                    .storage
+                    .persist(&self.platform.storage_key, &String::new());
                 self.toast.add(
                     "Cleared (set to empty)",
                     ToastVariant::Default,
@@ -76,9 +78,9 @@ impl crate::state::ShowcaseApp {
             .add(Input::new(&mut self.platform.storage_persistent_text).placeholder("persistent"));
         ui.add_space(4.0);
         if ui.add(Button::new("Persist")).clicked() {
-            functora_egui::storage::persist_value(
+            self.platform.storage.persist(
                 "demo_persistent",
-                &self.platform.storage_persistent_text,
+                &self.platform.storage_persistent_text.clone(),
             );
             self.toast.add(
                 "Persistent saved",
@@ -87,18 +89,18 @@ impl crate::state::ShowcaseApp {
             );
         }
         ui.add_space(4.0);
-        if let Some(v) = functora_egui::storage::load_state::<String>("demo_persistent") {
+        if let Some(v) = self.platform.storage.load::<String>("demo_persistent") {
             _ = Typography::small(format!("Stored persistent: {v}")).show(ui);
         }
         ui.add_space(4.0);
-        match functora_egui::storage::files_dir() {
+        match self.platform.storage.files_dir() {
             Ok(p) => _ = Typography::small(format!("files_dir: {}", p.display())).show(ui),
             Err(e) => _ = Typography::small(format!("files_dir error: {e}")).show(ui),
         }
 
         snippet(
             ui,
-            "// Storage: persist + load + files_dir\nuse functora_egui::storage::{persist_value, load_state, files_dir};\n\nlet key = \"my_key\";\nlet val = \"hello world\";\npersist_value(key, val);\nlet loaded: Option<String> = load_state(key);\nmatch files_dir() {\n    Ok(dir) => eprintln!(\"files dir: {}\", dir.display()),\n    Err(e) => eprintln!(\"files_dir error: {e}\"),\n}",
+            "// Storage: persist + load + files_dir\nuse functora_egui::storage::Storage;\n\nlet storage = Storage::new(\"my-app\");\nlet key = \"my_key\";\nlet val = \"hello world\";\nstorage.persist(key, val);\nlet loaded: Option<String> = storage.load(key);\nmatch storage.files_dir() {\n    Ok(dir) => eprintln!(\"files dir: {}\", dir.display()),\n    Err(e) => eprintln!(\"files_dir error: {e}\"),\n}",
         );
     }
 }

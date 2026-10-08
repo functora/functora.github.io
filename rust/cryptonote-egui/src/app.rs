@@ -3,7 +3,6 @@ use std::str::FromStr;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
-use functora_egui::storage::persist_value;
 use functora_egui::{
     Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
 };
@@ -14,7 +13,7 @@ use crate::messages::Msg;
 use crate::progress::{Job, Stage, claim_job, clear_progress};
 use crate::route::Screen;
 use crate::state::{External, TemporaryState};
-use crate::storage::{APP_ATTRS, PersistentState};
+use crate::storage::{APP_ATTRS, APP_SCOPE, PersistentState};
 use functora_egui::messages::Msg as BaseMsg;
 
 const PERSISTENT_KEY: &str = "cryptonote_persistent";
@@ -25,6 +24,7 @@ type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
 
 pub struct CryptonoteApp {
     pub(crate) router: AppRouter<Screen>,
+    pub(crate) storage: functora_egui::Storage,
     pub(crate) persistent: PersistentState<()>,
     pub temporary: TemporaryState,
     pub toast: ToastState,
@@ -51,6 +51,7 @@ impl Default for CryptonoteApp {
     fn default() -> Self {
         Self {
             router: AppRouter::new(&Screen::default()),
+            storage: functora_egui::Storage::new(APP_SCOPE),
             persistent: PersistentState::default(),
             temporary: TemporaryState::default(),
             toast: ToastState::new(),
@@ -79,7 +80,7 @@ impl CryptonoteApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
         functora_egui::setup_image_loaders(&cc.egui_ctx);
-        let persistent = PersistentState::load_or_default(&cc.egui_ctx, PERSISTENT_KEY, ());
+        let persistent = PersistentState::load_or_default(&cc.egui_ctx, APP_SCOPE, PERSISTENT_KEY, ());
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
         let mut this = Self {
             persistent,
@@ -611,7 +612,7 @@ impl eframe::App for CryptonoteApp {
             ctx.request_repaint();
         }
         if prev_persistent != self.persistent {
-            persist_value(PERSISTENT_KEY, &self.persistent);
+            self.storage.persist(PERSISTENT_KEY, &self.persistent);
             self.apply_theme(&ctx);
         }
         if needs_reset.get() {

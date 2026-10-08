@@ -20,7 +20,10 @@ pub enum CryptoOp {
     Decrypt,
 }
 
+pub(crate) const APP_SCOPE: &str = "functora-egui-demo";
+
 pub struct PlatformState {
+    pub storage: functora_egui::Storage,
     pub storage_key: String,
     pub storage_value: String,
     pub storage_persistent_text: String,
@@ -78,13 +81,14 @@ pub struct PlatformState {
 
 impl Default for PlatformState {
     fn default() -> Self {
+        let storage = functora_egui::Storage::new(APP_SCOPE);
         Self {
+            storage,
             storage_key: "demo_key".to_owned(),
             storage_value: "hello".to_owned(),
-            storage_persistent_text: functora_egui::storage::load_state::<String>(
-                "demo_persistent",
-            )
-            .unwrap_or_else(|| "persistent hello".to_owned()),
+            storage_persistent_text: storage
+                .load("demo_persistent")
+                .unwrap_or_else(|| "persistent hello".to_owned()),
             clipboard_write: "Hello from functora-egui!".to_owned(),
             clipboard_read: String::new(),
             clipboard_rx: None,

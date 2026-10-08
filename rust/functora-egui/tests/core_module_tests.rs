@@ -158,7 +158,8 @@ fn cancel_token_cancel_sets_flag() {
 #[test]
 fn persistent_default() {
     let _persistent: functora_egui::storage::Persistent<String> =
-        functora_egui::storage::Persistent::new("test", "default".to_string());
+        functora_egui::storage::Storage::new("functora-egui-test")
+            .persistent("test", "default".to_string());
 }
 
 #[test]

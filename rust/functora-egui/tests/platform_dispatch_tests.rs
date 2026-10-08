@@ -62,10 +62,11 @@ mod desktop {
     #[test]
     #[cfg(feature = "clipboard")]
     fn share_falls_back_to_clipboard_and_succeeds() {
+        const BROWSER_FREE_URL: &str = "";
         let data = functora_egui::share::ShareData {
             title: "title".into(),
             text: "text".into(),
-            url: "https://example.com".into(),
+            url: BROWSER_FREE_URL.into(),
         };
         pollster::block_on(functora_egui::share::share(data)).unwrap();
     }

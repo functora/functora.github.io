@@ -1,4 +1,6 @@
-pub use functora_egui::storage::{Persistent, load_state, persist_value};
+pub use functora_egui::storage::{Persistent, Storage};
+
+pub(crate) const APP_SCOPE: &str = "cryptonote-egui";
 
 use serde::{Deserialize, Serialize};
 
@@ -54,10 +56,12 @@ where
     }
 
     #[must_use]
-    pub fn load_or_default(ctx: &egui::Context, key: &str, extra: Extra) -> Self
+    pub fn load_or_default(ctx: &egui::Context, app: &'static str, key: &str, extra: Extra) -> Self
     where
         Extra: Serialize + serde::de::DeserializeOwned,
     {
-        load_state::<Self>(key).unwrap_or_else(|| Self::with_system_defaults(ctx, extra))
+        Storage::new(app)
+            .load(key)
+            .unwrap_or_else(|| Self::with_system_defaults(ctx, extra))
     }
 }

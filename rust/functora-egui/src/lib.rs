@@ -90,7 +90,7 @@ pub mod storage;
 #[cfg(feature = "storage")]
 pub use storage::Persistent;
 #[cfg(feature = "storage")]
-pub use storage::{files_dir, load_state, persist_value};
+pub use storage::{Storage, files_dir_for};
 pub mod theme;
 pub mod theme_extra;
 pub mod tokens;

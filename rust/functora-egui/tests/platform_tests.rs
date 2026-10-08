@@ -33,12 +33,12 @@ fn storage_persistent_wrapper() {
     let _guard = deep_link_lock()
         .lock()
         .unwrap_or_else(PoisonError::into_inner);
-    let mut p: storage::Persistent<u32> =
-        storage::Persistent::new("test_persistent_u32_clippy", 42);
+    let scope = storage::Storage::new("functora-egui-test");
+    let mut p: storage::Persistent<u32> = scope.persistent("test_persistent_u32_clippy", 42);
     assert_eq!(*p.get(), 42);
     p.set(99);
     assert_eq!(*p.get(), 99);
-    let q: storage::Persistent<u32> = storage::Persistent::new("test_persistent_u32_clippy", 0);
+    let q: storage::Persistent<u32> = scope.persistent("test_persistent_u32_clippy", 0);
     assert_eq!(*q.get(), 99);
     let mut r = q;
     r.set(42);

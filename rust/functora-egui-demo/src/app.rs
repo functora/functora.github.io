@@ -3,10 +3,10 @@ use crate::catalog::{
     category_header, palette_entries, section_button,
 };
 use crate::route::AppRoute;
+use crate::state::APP_SCOPE;
 use crate::state::ShowcaseApp;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::state::PersistentState;
-use functora_egui::storage::persist_value;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, Dialog, FieldDescription,
     Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Sheet, Shell, ToastVariant,
@@ -24,8 +24,12 @@ impl ShowcaseApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
         functora_egui::setup_image_loaders(&cc.egui_ctx);
-        let persistent =
-            PersistentState::load_or_default(&cc.egui_ctx, "functora_egui_demo_persistent", ());
+        let persistent = PersistentState::load_or_default(
+            &cc.egui_ctx,
+            APP_SCOPE,
+            "functora_egui_demo_persistent",
+            (),
+        );
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
         let initial_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         let mut this = Self {
@@ -50,7 +54,9 @@ impl ShowcaseApp {
         *self = Self::default();
         self.persistent = PersistentState::with_system_defaults(ctx, ());
         if self.persistent != prev_persistent {
-            persist_value("functora_egui_demo_persistent", &self.persistent);
+            self.platform
+                .storage
+                .persist("functora_egui_demo_persistent", &self.persistent);
         }
         self.sidebar_collapsed = ctx.on_mobile();
         self.prev_selected = previous;
@@ -420,7 +426,9 @@ impl eframe::App for ShowcaseApp {
             ctx.request_repaint();
         }
         if prev_persistent != self.persistent {
-            persist_value("functora_egui_demo_persistent", &self.persistent);
+            self.platform
+                .storage
+                .persist("functora_egui_demo_persistent", &self.persistent);
         }
         if needs_reset.get() {
             self.reset_to_home(&ctx);

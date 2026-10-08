@@ -18,5 +18,10 @@ pub struct Metainfo<'a> {
     pub app_id: &'a str,
     pub title: &'a str,
     pub comment: &'a str,
+    pub description: &'a str,
     pub version: &'a str,
+    pub date: &'a str,
+    pub homepage: &'a str,
+    pub developer: &'a str,
+    pub developer_id: &'a str,
 }

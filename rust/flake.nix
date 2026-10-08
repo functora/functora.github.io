@@ -355,14 +355,12 @@
                 cp "$OUT/AppDir/$APPID.png" "$OUT/AppDir/.DirIcon"
                 cp desktop/metainfo/*.metainfo.xml "$OUT/AppDir/usr/share/metainfo/$APPID.metainfo.xml"
                 cp -R desktop/icons/hicolor "$OUT/AppDir/usr/share/icons/"
-                (
-                  cd "$OUT"
-                  linuxdeploy --appdir AppDir \
-                    -d "$APPID.desktop" \
-                    -i "$APPID.png" \
-                    -e "AppDir/usr/bin/${app}"
-                )
-                mksquashfs "$OUT/AppDir" "$OUT/payload.squashfs" -root-owned -noappend -comp xz
+                APPDIR="$PWD/$OUT/AppDir"
+                linuxdeploy --appdir "$APPDIR" \
+                  -d "$APPDIR/$APPID.desktop" \
+                  -i "$APPDIR/$APPID.png" \
+                  -e "$APPDIR/usr/bin/${app}"
+                mksquashfs "$OUT/AppDir" "$OUT/payload.squashfs" -root-owned -noappend -comp zstd
                 cat "${appimage-runtime-x86_64}" "$OUT/payload.squashfs" > "$IMG"
                 chmod +x "$IMG"
                 rm -f "$OUT/payload.squashfs"

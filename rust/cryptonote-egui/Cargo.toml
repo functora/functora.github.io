@@ -69,9 +69,11 @@ extra_intent_filters = '''
 
 [package.metadata.functora-egui-desktop]
 title = "Cryptonote"
-comment = "Cryptonote is a cross-platform, serverless app for encrypted offline notes."
+comment = "Cryptonote is a cross-platform, serverless app for encrypted offline notes"
+description = "Cryptonote is a cross-platform, serverless app for encrypted offline notes with Markdown support, AES-GCM and ChaCha20-Poly1305 encryption, QR sharing and .cryptonote archives with attachments."
 categories = "Utility;Security;"
 mime_types = "application/x-cryptonote;"
+developer = "Functora"
 
 [build-dependencies]
 askama = "0.12"

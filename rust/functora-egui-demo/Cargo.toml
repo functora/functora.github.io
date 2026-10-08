@@ -40,7 +40,9 @@ camera = true
 [package.metadata.functora-egui-desktop]
 title = "Functora Egui Demo"
 comment = "Showcase app for functora-egui - all layouts, components, widgets and features"
-categories = "Development;Utility;"
+description = "Showcase app for functora-egui - explore all layouts, components, widgets and features, including inputs, overlays, data display, camera and QR tools, with light and dark themes."
+categories = "Development;"
+developer = "Functora"
 
 [build-dependencies]
 askama = "0.12"

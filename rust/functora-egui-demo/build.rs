@@ -130,11 +130,17 @@ fn main() {
     }
     .render()
     .expect("askama desktop entry");
+    let release_date = functora_egui::desktop::config::release_date();
     let metainfo = functora_egui::desktop::templates::Metainfo {
         app_id: &desktop_cfg.app_id,
         title: &desktop_cfg.title,
         comment: &desktop_cfg.comment,
+        description: &desktop_cfg.description,
         version: &desktop_cfg.version,
+        date: &release_date,
+        homepage: &desktop_cfg.homepage,
+        developer: &desktop_cfg.developer,
+        developer_id: &desktop_cfg.developer_id,
     }
     .render()
     .expect("askama metainfo");

@@ -369,6 +369,8 @@
                   exit 1
                 }
                 echo "READY: ${app}/$IMG"
+                echo "Run it with: $IMG"
+                echo "Note: running AppImages requires FUSE (e.g. libfuse2 on Debian/Ubuntu); without FUSE use: $IMG --appimage-extract-and-run"
               )
             '';
           };

@@ -161,6 +161,24 @@ fn error_derives_standard_traits() {
 }
 
 #[test]
+fn qr_not_found_renders_all_languages() {
+    use functora_core::i18n::{I18N, Language};
+
+    assert_eq!(
+        Error::QrNotFound.render(Language::Eng),
+        "No QR found in image"
+    );
+    assert_eq!(
+        Error::QrNotFound.render(Language::Spa),
+        "No se encontró ningún QR en la imagen"
+    );
+    assert_eq!(
+        Error::QrNotFound.render(Language::Rus),
+        "QR-код не найден на изображении"
+    );
+}
+
+#[test]
 fn worker_stopped_unit_error() {
     let a = Error::Worker(WorkerStopped);
     let b = Error::Worker(WorkerStopped);

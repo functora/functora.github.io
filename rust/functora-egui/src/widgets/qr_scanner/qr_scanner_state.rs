@@ -320,10 +320,6 @@ impl PickSlots {
             cb(err);
         }
     }
-
-    pub(crate) fn set_error_message(&self, message: &str) {
-        self.set_error(&Error::JS(message.into()));
-    }
 }
 
 #[cfg(test)]

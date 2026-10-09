@@ -314,7 +314,7 @@ async fn android_pick_files(
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
     use jni::objects::{JByteArray, JObjectArray, JString, JValue};
     use std::time::{Duration, Instant};
-    const PICKER_TIMEOUT: Duration = Duration::from_secs(300);
+    const PICKER_TIMEOUT: Duration = Duration::from_mins(5);
     if let Some(token) = cancel
         && token.load(Ordering::Relaxed)
     {

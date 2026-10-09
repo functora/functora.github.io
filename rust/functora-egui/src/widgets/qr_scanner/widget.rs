@@ -162,7 +162,7 @@ impl QrScanner {
                     inner.add_space(6.0);
                     fire_on_error(state, &err);
                     let _ = inner.label(
-                        egui::RichText::new(err.to_string())
+                        egui::RichText::new(err.render(lang))
                             .color(theme.destructive)
                             .size(12.0),
                     );
@@ -176,8 +176,22 @@ impl QrScanner {
                             .strong(),
                     );
                 }
-                inner.add_space(8.0);
-                controls_row(inner, state, lang);
+                #[cfg(any(
+                    all(target_arch = "wasm32", feature = "web"),
+                    not(any(target_arch = "wasm32", target_os = "android"))
+                ))]
+                {
+                    inner.add_space(8.0);
+                    if inner
+                        .add(
+                            crate::Button::new(Msg::PickImage.render(lang))
+                                .variant(crate::ButtonVariant::Outline),
+                        )
+                        .clicked()
+                    {
+                        spawn_pick_image(state, inner.ctx());
+                    }
+                }
             })
             .response
     }
@@ -202,49 +216,6 @@ fn placeholder(
             theme.muted_foreground,
         );
     }
-}
-
-fn controls_row(ui: &mut egui::Ui, state: &mut QrScannerState, lang: Language) {
-    let _ = ui.horizontal(|row| {
-        let running = state.is_scanning();
-        let label = if running {
-            Msg::Stop.render(lang)
-        } else {
-            Msg::Start.render(lang)
-        };
-        if row
-            .add(crate::Button::new(label).variant(crate::ButtonVariant::Secondary))
-            .clicked()
-        {
-            if running {
-                state.stop();
-            } else {
-                state.clear_error();
-                let ctx = row.ctx().clone();
-                let _ = state.start(&ctx);
-            }
-        }
-        #[cfg(any(
-            all(target_arch = "wasm32", feature = "web"),
-            not(any(target_arch = "wasm32", target_os = "android"))
-        ))]
-        if row
-            .add(
-                crate::Button::new(Msg::PickImage.render(lang))
-                    .variant(crate::ButtonVariant::Outline),
-            )
-            .clicked()
-        {
-            spawn_pick_image(state, row.ctx());
-        }
-        if row
-            .add(crate::Button::new(Msg::Clear.render(lang)).variant(crate::ButtonVariant::Ghost))
-            .clicked()
-        {
-            state.clear_error();
-            state.clear_decoded();
-        }
-    });
 }
 
 fn fire_on_error(state: &QrScannerState, err: &Error) {
@@ -272,7 +243,7 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
                             return;
                         }
                     }
-                    slots.set_error_message("No QR found in image");
+                    slots.set_error(&crate::error::Error::QrNotFound);
                     ctx.request_repaint();
                 }
                 Err(e) => {
@@ -293,7 +264,7 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
                 if let Some(txt) = decode_bytes(&data) {
                     slots.set_decoded(txt);
                 } else {
-                    slots.set_error_message("No QR found in image");
+                    slots.set_error(&crate::error::Error::QrNotFound);
                 }
                 ctx.request_repaint();
             }

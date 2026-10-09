@@ -82,7 +82,7 @@ pub fn handle_system_back(
         }
         #[cfg(all(target_os = "android", feature = "platform"))]
         {
-            let _ = crate::platform::android::hide_soft_input();
+            let _hide_outcome = crate::platform::android::hide_soft_input();
         }
         ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
         ctx.request_repaint();

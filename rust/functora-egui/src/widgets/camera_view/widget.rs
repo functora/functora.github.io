@@ -116,7 +116,7 @@ impl CameraView {
                 if let Some(err) = error {
                     inner.add_space(6.0);
                     let _ = inner.label(
-                        egui::RichText::new(err.to_string())
+                        egui::RichText::new(err.render(lang))
                             .color(theme.destructive)
                             .size(12.0),
                     );

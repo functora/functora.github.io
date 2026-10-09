@@ -97,6 +97,8 @@ pub enum Error {
     Channel(#[from] std::sync::mpsc::RecvError),
     #[error("JS error: {0}")]
     JS(String),
+    #[error("No QR found in image")]
+    QrNotFound,
     #[error("Eval channel died before completion (dioxus internal GC/drop race)")]
     EvalFinished,
     #[cfg(feature = "crypto")]
@@ -200,6 +202,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Environment variable error: {e}"),
             Self::Channel(e) => format!("Channel receive error: {e}"),
             Self::JS(e) => format!("JavaScript evaluation error: {e}"),
+            Self::QrNotFound => "No QR found in image".into(),
             Self::EvalFinished => "The connection to the browser was lost; please try again".into(),
             #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Cipher initialization error: {e}"),
@@ -241,6 +244,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Error de variable de entorno: {e}"),
             Self::Channel(e) => format!("Error de recepción en canal: {e}"),
             Self::JS(e) => format!("Error de evaluación JavaScript: {e}"),
+            Self::QrNotFound => "No se encontró ningún QR en la imagen".into(),
             Self::EvalFinished => {
                 "Se perdió la conexión con el navegador; inténtalo de nuevo".into()
             }
@@ -286,6 +290,7 @@ impl I18N for Error {
             Self::Env(e) => format!("Ошибка переменной окружения: {e}"),
             Self::Channel(e) => format!("Ошибка получения из канала: {e}"),
             Self::JS(e) => format!("Ошибка выполнения JavaScript: {e}"),
+            Self::QrNotFound => "QR-код не найден на изображении".into(),
             Self::EvalFinished => "Соединение с браузером потеряно; попробуйте ещё раз".into(),
             #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Ошибка инициализации шифра: {e}"),

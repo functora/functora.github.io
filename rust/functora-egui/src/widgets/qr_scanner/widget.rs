@@ -111,6 +111,7 @@ impl QrScanner {
         if self.auto_start && !state.is_scanning() && state.error().is_none() {
             let _ = state.start(ui.ctx());
         }
+        state.show_picked_preview(ui.ctx());
         egui::Frame::new()
             .fill(theme.card)
             .stroke(egui::Stroke::new(1.0, theme.border))
@@ -237,8 +238,12 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
             match crate::files::pick_files(false).await {
                 Ok(files) => {
                     for (_, data) in files {
-                        if let Some(txt) = decode_bytes(&data) {
-                            slots.set_decoded(txt);
+                        let Some((text, rgba, width, height)) = decode_bytes(&data) else {
+                            continue;
+                        };
+                        slots.set_picked(rgba, width, height);
+                        if let Some(code) = text {
+                            slots.set_decoded(code);
                             ctx.request_repaint();
                             return;
                         }
@@ -261,10 +266,18 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
                 .pick_file();
             if let Some(path) = picked {
                 let data = std::fs::read(&path).unwrap_or_default();
-                if let Some(txt) = decode_bytes(&data) {
-                    slots.set_decoded(txt);
-                } else {
-                    slots.set_error(&crate::error::Error::QrNotFound);
+                match decode_bytes(&data) {
+                    Some((text, rgba, width, height)) => {
+                        slots.set_picked(rgba, width, height);
+                        if let Some(code) = text {
+                            slots.set_decoded(code);
+                        } else {
+                            slots.set_error(&crate::error::Error::QrNotFound);
+                        }
+                    }
+                    None => {
+                        slots.set_error(&crate::error::Error::QrNotFound);
+                    }
                 }
                 ctx.request_repaint();
             }
@@ -280,12 +293,13 @@ fn spawn_pick_image(state: &mut QrScannerState, ui_ctx: &egui::Context) {
         not(any(target_arch = "wasm32", target_os = "android"))
     )
 ))]
-fn decode_bytes(data: &[u8]) -> Option<String> {
+fn decode_bytes(data: &[u8]) -> Option<(Option<String>, Vec<u8>, u32, u32)> {
     let img = image::load_from_memory(data).ok()?;
     let rgba = img.to_rgba8();
     let (w, h) = (rgba.width(), rgba.height());
     let raw = rgba.into_raw();
-    crate::qr::decode_qr_rgba(&raw, w, h)
+    let text = crate::qr::decode_qr_rgba(&raw, w, h);
+    Some((text, raw, w, h))
 }
 
 #[cfg(all(
@@ -295,6 +309,6 @@ fn decode_bytes(data: &[u8]) -> Option<String> {
         not(any(target_arch = "wasm32", target_os = "android"))
     )
 ))]
-fn decode_bytes(_data: &[u8]) -> Option<String> {
+fn decode_bytes(_data: &[u8]) -> Option<(Option<String>, Vec<u8>, u32, u32)> {
     None
 }

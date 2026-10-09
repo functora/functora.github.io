@@ -51,12 +51,19 @@ fn downscaled_luma(data: &[u8], width: u32, height: u32) -> Option<(Vec<u8>, u32
         .then_some((narrow, narrow_w, narrow_h))
 }
 
+pub(crate) struct PickedFrame {
+    rgba: Vec<u8>,
+    width: u32,
+    height: u32,
+}
+
 /// State for the automatic QR scanner. Embeds the shared camera feed engine
 /// (`CameraViewState`) and adds rate-limited decoding plus callbacks.
 pub struct QrScannerState {
     pub(crate) camera: CameraViewState,
     runtime: Arc<Mutex<ScanRuntime>>,
     decoded: Arc<Mutex<Option<String>>>,
+    picked: Arc<Mutex<Option<PickedFrame>>>,
 }
 
 impl Default for QrScannerState {
@@ -75,6 +82,7 @@ impl Default for QrScannerState {
                 last_hit: None,
             })),
             decoded: Arc::new(Mutex::new(None)),
+            picked: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -148,6 +156,16 @@ impl QrScannerState {
         self.camera.preview_size()
     }
 
+    pub(crate) fn show_picked_preview(&mut self, ctx: &egui::Context) {
+        if self.camera.is_running() {
+            return;
+        }
+        if let Some(frame) = self.picked.lock().ok().and_then(|mut slot| slot.take()) {
+            self.camera
+                .store_texture(ctx, &frame.rgba, frame.width, frame.height);
+        }
+    }
+
     pub(crate) fn on_error_callback(&self) -> Option<ErrorCallback> {
         self.runtime.lock().ok().and_then(|rt| rt.on_error.clone())
     }
@@ -161,6 +179,7 @@ impl QrScannerState {
         PickSlots {
             decoded: Arc::clone(&self.decoded),
             runtime: Arc::clone(&self.runtime),
+            picked: Arc::clone(&self.picked),
         }
     }
 
@@ -296,6 +315,7 @@ fn handle_frame(
 pub(crate) struct PickSlots {
     decoded: Arc<Mutex<Option<String>>>,
     runtime: Arc<Mutex<ScanRuntime>>,
+    picked: Arc<Mutex<Option<PickedFrame>>>,
 }
 
 #[cfg(any(
@@ -318,6 +338,16 @@ impl PickSlots {
     pub(crate) fn set_error(&self, err: &Error) {
         if let Some(cb) = self.runtime.lock().ok().and_then(|rt| rt.on_error.clone()) {
             cb(err);
+        }
+    }
+
+    pub(crate) fn set_picked(&self, rgba: Vec<u8>, width: u32, height: u32) {
+        if let Ok(mut slot) = self.picked.lock() {
+            *slot = Some(PickedFrame {
+                rgba,
+                width,
+                height,
+            });
         }
     }
 }
@@ -472,6 +502,51 @@ mod tests {
                 Some("https://functora.github.io".to_owned())
             );
         }
+    }
+
+    #[cfg(any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    ))]
+    #[test]
+    fn picked_preview_presents_texture_and_dims() {
+        let mut state = QrScannerState::new();
+        assert!(state.preview_texture().is_none());
+        state.pick_slots().set_picked(vec![128u8; 4 * 4 * 4], 4, 4);
+        let ctx = egui::Context::default();
+        state.show_picked_preview(&ctx);
+        assert_eq!(state.preview_size(), Some((4, 4)));
+        assert!(state.preview_texture().is_some());
+    }
+
+    #[cfg(any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    ))]
+    #[test]
+    fn picked_preview_replaces_previous() {
+        let mut state = QrScannerState::new();
+        let ctx = egui::Context::default();
+        state.pick_slots().set_picked(vec![128u8; 4 * 4 * 4], 4, 4);
+        state.show_picked_preview(&ctx);
+        state.pick_slots().set_picked(vec![200u8; 6 * 2 * 4], 6, 2);
+        state.show_picked_preview(&ctx);
+        assert_eq!(state.preview_size(), Some((6, 2)));
+        assert!(state.preview_texture().is_some());
+    }
+
+    #[cfg(any(
+        all(target_arch = "wasm32", feature = "web"),
+        not(any(target_arch = "wasm32", target_os = "android"))
+    ))]
+    #[test]
+    fn picked_preview_rejects_malformed_buffer() {
+        let mut state = QrScannerState::new();
+        let ctx = egui::Context::default();
+        state.pick_slots().set_picked(vec![0u8; 10], 4, 4);
+        state.show_picked_preview(&ctx);
+        assert!(state.preview_texture().is_none());
+        assert_eq!(state.preview_size(), None);
     }
 
     #[cfg(feature = "qr")]

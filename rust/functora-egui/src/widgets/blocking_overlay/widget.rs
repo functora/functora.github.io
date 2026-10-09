@@ -1,3 +1,5 @@
+use crate::i18n::{I18N, Language};
+use crate::messages::Msg;
 use crate::progress::{Job, Stage};
 use std::sync::{
     Arc,
@@ -30,6 +32,7 @@ impl BlockingOverlay {
         open: &mut bool,
         job: Option<&Job<Stage>>,
         cancel: &Arc<AtomicBool>,
+        lang: Language,
     ) {
         if !*open {
             return;
@@ -111,7 +114,7 @@ impl BlockingOverlay {
                         } else {
                             inner.add_space(12.0);
                             let _ = inner.label(
-                                egui::RichText::new("Preparing...")
+                                egui::RichText::new(Msg::Preparing.render(lang))
                                     .color(theme.muted_foreground)
                                     .size(12.0),
                             );
@@ -123,14 +126,14 @@ impl BlockingOverlay {
                             |right| {
                                 if is_cancelling {
                                     let _ = right.add(
-                                        crate::Button::new("Cancelling...")
+                                        crate::Button::new(Msg::Cancelling.render(lang))
                                             .variant(crate::ButtonVariant::Outline)
                                             .size(crate::ComponentSize::Sm)
                                             .enabled(false),
                                     );
                                 } else if right
                                     .add(
-                                        crate::Button::new("Cancel")
+                                        crate::Button::new(Msg::Cancel.render(lang))
                                             .variant(crate::ButtonVariant::Outline)
                                             .size(crate::ComponentSize::Sm),
                                     )

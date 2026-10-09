@@ -88,9 +88,10 @@ impl crate::state::ShowcaseApp {
             .show(ui2);
             ui2.add_space(4.0);
             self.platform.camera_view_state.ensure_default_handler();
+            let lang = self.persistent.language;
             let _ = functora_egui::CameraView::new()
                 .controls(true)
-                .show(ui2, &mut self.platform.camera_view_state);
+                .show(ui2, &mut self.platform.camera_view_state, lang);
             if self.platform.camera_view_state.is_running() {
                 ui2.add_space(8.0);
                 _ = ui2.add(Badge::new("Live preview running"));
@@ -107,7 +108,7 @@ impl crate::state::ShowcaseApp {
 
         snippet(
             ui,
-            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;\n\n// Live preview: stateful CameraView (call every frame)\nuse functora_egui::{CameraView, CameraViewState};\n\nlet mut camera_view = CameraViewState::new();\ncamera_view.ensure_default_handler();\nCameraView::new().controls(true).show(ui, &mut camera_view);",
+            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;\n\n// Live preview: stateful CameraView (call every frame)\nuse functora_egui::{CameraView, CameraViewState};\n\nlet mut camera_view = CameraViewState::new();\ncamera_view.ensure_default_handler();\nCameraView::new().controls(true).show(ui, &mut camera_view, lang);",
         );
     }
 }

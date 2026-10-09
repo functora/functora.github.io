@@ -1,4 +1,6 @@
 use super::camera_view_state::CameraViewState;
+use crate::i18n::{I18N, Language};
+use crate::messages::Msg;
 use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 
 /// A live camera feed widget: `aspect-video` preview driven by the shared
@@ -49,7 +51,12 @@ impl CameraView {
 
     /// Renders the feed. The state must have a handler installed (see
     /// `CameraViewState::set_handler`); without one only errors are shown.
-    pub fn show(self, ui: &mut egui::Ui, state: &mut CameraViewState) -> egui::Response {
+    pub fn show(
+        self,
+        ui: &mut egui::Ui,
+        state: &mut CameraViewState,
+        lang: Language,
+    ) -> egui::Response {
         let theme = ui.ctx().shadcn_theme();
         if self.auto_start && !state.is_running() && state.error().is_none() {
             state.set_fps(self.fps);
@@ -99,11 +106,11 @@ impl CameraView {
                         }
                     }
                     None if running => {
-                        placeholder(inner, fitted, &theme, "Starting camera…");
+                        placeholder(inner, fitted, &theme, &Msg::CameraStarting.render(lang));
                         inner.ctx().request_repaint();
                     }
                     None => {
-                        placeholder(inner, fitted, &theme, "Camera off");
+                        placeholder(inner, fitted, &theme, &Msg::CameraOff.render(lang));
                     }
                 }
                 if let Some(err) = error {
@@ -117,7 +124,11 @@ impl CameraView {
                 if self.controls {
                     inner.add_space(8.0);
                     let _ = inner.horizontal(|row| {
-                        let label = if running { "Stop" } else { "Start" };
+                        let label = if running {
+                            Msg::Stop.render(lang)
+                        } else {
+                            Msg::Start.render(lang)
+                        };
                         if row
                             .add(crate::Button::new(label).variant(crate::ButtonVariant::Secondary))
                             .clicked()

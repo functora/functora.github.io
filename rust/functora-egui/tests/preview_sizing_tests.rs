@@ -1,4 +1,5 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
+use functora_egui::i18n::Language;
 use functora_egui::utils::responsive_preview_size;
 
 const NARROW: (f32, f32) = (390.0, 844.0);
@@ -65,11 +66,11 @@ fn run_on(
 fn qr_scanner_fills_narrow_phone_width() {
     let mut state = functora_egui::QrScannerState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {
-        *slot = Some(
-            functora_egui::QrScanner::new()
-                .auto_start(false)
-                .show(ui, &mut state),
-        );
+        *slot = Some(functora_egui::QrScanner::new().auto_start(false).show(
+            ui,
+            &mut state,
+            Language::Eng,
+        ));
     };
     let response = run_on(egui::vec2(NARROW.0, NARROW.1), &mut body);
     assert!(
@@ -84,11 +85,11 @@ fn qr_scanner_fills_narrow_phone_width() {
 fn qr_scanner_is_capped_on_wide_desktop() {
     let mut state = functora_egui::QrScannerState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {
-        *slot = Some(
-            functora_egui::QrScanner::new()
-                .auto_start(false)
-                .show(ui, &mut state),
-        );
+        *slot = Some(functora_egui::QrScanner::new().auto_start(false).show(
+            ui,
+            &mut state,
+            Language::Eng,
+        ));
     };
     let response = run_on(egui::vec2(WIDE.0, WIDE.1), &mut body);
     assert!(
@@ -103,11 +104,11 @@ fn qr_scanner_is_capped_on_wide_desktop() {
 fn camera_view_fills_narrow_phone_width() {
     let mut state = functora_egui::CameraViewState::new();
     let mut body = |ui: &mut egui::Ui, slot: &mut Option<egui::Response>| {
-        *slot = Some(
-            functora_egui::CameraView::new()
-                .auto_start(false)
-                .show(ui, &mut state),
-        );
+        *slot = Some(functora_egui::CameraView::new().auto_start(false).show(
+            ui,
+            &mut state,
+            Language::Eng,
+        ));
     };
     let response = run_on(egui::vec2(NARROW.0, NARROW.1), &mut body);
     assert!(

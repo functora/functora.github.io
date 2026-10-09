@@ -6,6 +6,7 @@ use functora_egui::{
 
 impl crate::state::ShowcaseApp {
     pub fn demo_files(&mut self, ui: &mut egui::Ui) {
+        let lang = self.persistent.language;
         if let Some(cancel) = self.platform.pick_cancel.clone() {
             let mut open = self.platform.pick_overlay_open;
             BlockingOverlay::new("Uploading...")
@@ -15,6 +16,7 @@ impl crate::state::ShowcaseApp {
                     &mut open,
                     self.platform.pick_job.as_ref(),
                     &cancel,
+                    lang,
                 );
             self.platform.pick_overlay_open = open;
         }

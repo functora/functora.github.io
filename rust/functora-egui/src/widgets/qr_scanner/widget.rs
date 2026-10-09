@@ -1,4 +1,6 @@
 use crate::error::Error;
+use crate::i18n::{I18N, Language};
+use crate::messages::Msg;
 use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 use crate::widgets::qr_scanner::qr_scanner_state::QrScannerState;
 use std::sync::Arc;
@@ -91,7 +93,12 @@ impl QrScanner {
         self
     }
 
-    pub fn show(self, ui: &mut egui::Ui, state: &mut QrScannerState) -> egui::Response {
+    pub fn show(
+        self,
+        ui: &mut egui::Ui,
+        state: &mut QrScannerState,
+        lang: Language,
+    ) -> egui::Response {
         let theme = ui.ctx().shadcn_theme();
         state.configure(
             self.fps,
@@ -146,7 +153,7 @@ impl QrScanner {
                         inner.ctx().request_repaint();
                     }
                 } else {
-                    placeholder(inner, fitted, &theme, "Starting camera…");
+                    placeholder(inner, fitted, &theme, &Msg::CameraStarting.render(lang));
                     if running {
                         inner.ctx().request_repaint();
                     }
@@ -163,14 +170,14 @@ impl QrScanner {
                 if let Some(txt) = state.decoded() {
                     inner.add_space(4.0);
                     let _ = inner.label(
-                        egui::RichText::new(format!("Decoded: {txt}"))
+                        egui::RichText::new(format!("{}: {txt}", Msg::Decoded.render(lang)))
                             .color(theme.foreground)
                             .size(13.0)
                             .strong(),
                     );
                 }
                 inner.add_space(8.0);
-                controls_row(inner, state);
+                controls_row(inner, state, lang);
             })
             .response
     }
@@ -197,10 +204,14 @@ fn placeholder(
     }
 }
 
-fn controls_row(ui: &mut egui::Ui, state: &mut QrScannerState) {
+fn controls_row(ui: &mut egui::Ui, state: &mut QrScannerState, lang: Language) {
     let _ = ui.horizontal(|row| {
         let running = state.is_scanning();
-        let label = if running { "Stop" } else { "Start" };
+        let label = if running {
+            Msg::Stop.render(lang)
+        } else {
+            Msg::Start.render(lang)
+        };
         if row
             .add(crate::Button::new(label).variant(crate::ButtonVariant::Secondary))
             .clicked()
@@ -218,13 +229,16 @@ fn controls_row(ui: &mut egui::Ui, state: &mut QrScannerState) {
             not(any(target_arch = "wasm32", target_os = "android"))
         ))]
         if row
-            .add(crate::Button::new("Pick Image").variant(crate::ButtonVariant::Outline))
+            .add(
+                crate::Button::new(Msg::PickImage.render(lang))
+                    .variant(crate::ButtonVariant::Outline),
+            )
             .clicked()
         {
             spawn_pick_image(state, row.ctx());
         }
         if row
-            .add(crate::Button::new("Clear").variant(crate::ButtonVariant::Ghost))
+            .add(crate::Button::new(Msg::Clear.render(lang)).variant(crate::ButtonVariant::Ghost))
             .clicked()
         {
             state.clear_error();

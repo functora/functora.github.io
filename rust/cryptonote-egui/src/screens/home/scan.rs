@@ -12,7 +12,7 @@ impl CryptonoteApp {
         let () = ui.add_space(8.0);
         _ = functora_egui::QrScanner::new()
             .continuous(true)
-            .show(ui, &mut self.qr_state);
+            .show(ui, &mut self.qr_state, lang);
         if let Some(text) = self.qr_state.decoded() {
             self.qr_state.clear_decoded();
             match handle_open_url(&text, &mut self.temporary) {

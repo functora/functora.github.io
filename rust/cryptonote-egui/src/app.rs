@@ -637,6 +637,7 @@ impl eframe::App for CryptonoteApp {
             }
         }
         self.toast.show(&ctx);
+        let lang = self.lang();
         if let Some(job) = self.temporary.progress.clone() {
             _ = egui::Panel::bottom("progress_bottom")
                 .frame(egui::Frame::NONE.fill(theme_bg.card))
@@ -644,8 +645,16 @@ impl eframe::App for CryptonoteApp {
                 .show(ui, |bottom_ui| {
                     bottom_ui.add_space(4.0);
                     let _ = bottom_ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-                    let _ = bottom_ui.label(format!("{:?} {} / {}", job.stage, job.done, job.total));
-                    if bottom_ui.add(Button::new("Cancel").size(ComponentSize::Sm)).clicked() {
+                    let _ = bottom_ui.label(format!(
+                        "{} {} / {}",
+                        BaseMsg::Stage(job.stage).render(lang),
+                        job.done,
+                        job.total
+                    ));
+                    if bottom_ui
+                        .add(Button::new(BaseMsg::Cancel.render(lang)).size(ComponentSize::Sm))
+                        .clicked()
+                    {
                         self.cancel_all();
                     }
                     bottom_ui.add_space(4.0);

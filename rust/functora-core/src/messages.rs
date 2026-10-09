@@ -74,6 +74,16 @@ pub enum Msg {
     CipherChaChaLabel,
     PickingFiles,
     FilesAttached(usize),
+    Cancel,
+    Start,
+    Stop,
+    PickImage,
+    Clear,
+    Preparing,
+    Cancelling,
+    CameraStarting,
+    CameraOff,
+    Decoded,
 }
 
 impl I18N for Msg {
@@ -207,6 +217,16 @@ If you have any questions regarding privacy while using the Application, or have
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (encryption)".into(),
             Self::PickingFiles => "Picking files...".into(),
             Self::FilesAttached(count) => format!("Attached {count} file(s)"),
+            Self::Cancel => "Cancel".into(),
+            Self::Start => "Start".into(),
+            Self::Stop => "Stop".into(),
+            Self::PickImage => "Pick Image".into(),
+            Self::Clear => "Clear".into(),
+            Self::Preparing => "Preparing...".into(),
+            Self::Cancelling => "Cancelling...".into(),
+            Self::CameraStarting => "Starting camera…".into(),
+            Self::CameraOff => "Camera off".into(),
+            Self::Decoded => "Decoded".into(),
         }
     }
 
@@ -341,6 +361,16 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (cifrado)".into(),
             Self::PickingFiles => "Seleccionando archivos...".into(),
             Self::FilesAttached(count) => format!("Archivo(s) adjuntado(s): {count}"),
+            Self::Cancel => "Cancelar".into(),
+            Self::Start => "Iniciar".into(),
+            Self::Stop => "Detener".into(),
+            Self::PickImage => "Elegir imagen".into(),
+            Self::Clear => "Borrar".into(),
+            Self::Preparing => "Preparando...".into(),
+            Self::Cancelling => "Cancelando...".into(),
+            Self::CameraStarting => "Iniciando cámara…".into(),
+            Self::CameraOff => "Cámara apagada".into(),
+            Self::Decoded => "Decodificado".into(),
         }
     }
 
@@ -477,6 +507,16 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::CipherChaChaLabel => "ChaCha20-Poly1305 (шифрование)".into(),
             Self::PickingFiles => "Выбор файлов...".into(),
             Self::FilesAttached(count) => format!("Прикреплено файлов: {count}"),
+            Self::Cancel => "Отмена".into(),
+            Self::Start => "Начать".into(),
+            Self::Stop => "Остановить".into(),
+            Self::PickImage => "Выбрать изображение".into(),
+            Self::Clear => "Очистить".into(),
+            Self::Preparing => "Подготовка...".into(),
+            Self::Cancelling => "Отмена...".into(),
+            Self::CameraStarting => "Запуск камеры…".into(),
+            Self::CameraOff => "Камера выключена".into(),
+            Self::Decoded => "Декодировано".into(),
         }
     }
 }

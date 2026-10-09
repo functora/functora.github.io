@@ -36,7 +36,13 @@ impl CryptonoteApp {
         if let Some(job) = self.temporary.progress.clone() {
             _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
             let () = ui.add_space(4.0);
-            _ = Label::new(format!("{:?} {} / {}", job.stage, job.done, job.total)).show(ui);
+            _ = Label::new(format!(
+                "{} {} / {}",
+                BaseMsg::Stage(job.stage).render(lang),
+                job.done,
+                job.total
+            ))
+            .show(ui);
         }
     }
 
@@ -51,6 +57,7 @@ impl CryptonoteApp {
                 &mut open,
                 self.temporary.progress.as_ref(),
                 &cancel,
+                lang,
             );
             self.pick_overlay_open = open;
         }

@@ -1,9 +1,11 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
+#[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::ArchiveSource;
+use cryptonote_egui::Attachment;
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::crypto::CipherType;
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::{Attachment, create_archive_package_async, extract_archive_package_async, load_archive_async};
+use cryptonote_egui::{create_archive_package_async, extract_archive_package_async, load_archive_async};
 #[cfg(not(target_arch = "wasm32"))]
 use std::future::Future;
 use std::io::Write;

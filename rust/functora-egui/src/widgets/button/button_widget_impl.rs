@@ -96,11 +96,15 @@ impl egui::Widget for super::widget::Button<'_> {
             text_galley.size().x + shortcut_width + style.h_padding * 2.0
         };
 
-        let desired = egui::vec2(content_width, style.height);
+        let width = self.fixed_width.unwrap_or(content_width);
+        let desired = egui::vec2(width, style.height);
 
+        // fixed_width: exact size for equal-width strips (e.g. stretched tabs).
         // full_width: use allocate_at_least so the button stretches to fill
         // the menu/list width without inflating the menu's own desired size.
-        let (rect, response) = if self.full_width {
+        let (rect, response) = if self.fixed_width.is_some() {
+            ui.allocate_exact_size(desired, egui::Sense::click())
+        } else if self.full_width {
             ui.allocate_at_least(desired, egui::Sense::click())
         } else {
             ui.allocate_exact_size(desired, egui::Sense::click())

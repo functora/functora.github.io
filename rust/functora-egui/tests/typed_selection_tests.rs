@@ -426,8 +426,15 @@ fn tabs_value_fill_width_stretches_tabs_equally() {
         (Fruit::Cherry, "Very long label text here".to_owned()),
     ];
     let tab_rects = |out: &egui::FullOutput| {
-        let mut rects: Vec<Rect> = Harness::filled_rects(out)
-            .into_iter()
+        let mut rects: Vec<Rect> = out
+            .shapes
+            .iter()
+            .filter_map(|clipped| match &clipped.shape {
+                Shape::Rect(rect_shape) if rect_shape.fill != egui::Color32::TRANSPARENT => {
+                    Some(rect_shape.rect)
+                }
+                _ => None,
+            })
             .filter(|r| (r.height() - 32.0).abs() < 1.0 && r.width() > 20.0)
             .collect();
         rects.sort_by(|a, b| {

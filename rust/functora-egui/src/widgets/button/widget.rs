@@ -19,6 +19,7 @@ pub struct Button<'a> {
     pub(crate) shortcut_text: Option<String>,
     pub(crate) selected: bool,
     pub(crate) full_width: bool,
+    pub(crate) fixed_width: Option<f32>,
     _phantom: std::marker::PhantomData<&'a ()>,
 }
 
@@ -33,6 +34,7 @@ impl Button<'_> {
             shortcut_text: None,
             selected: false,
             full_width: false,
+            fixed_width: None,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -48,6 +50,7 @@ impl Button<'_> {
             shortcut_text: None,
             selected: false,
             full_width: false,
+            fixed_width: None,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -88,6 +91,13 @@ impl Button<'_> {
     /// Ideal for menu items and list actions.
     pub fn full_width(mut self) -> Self {
         self.full_width = true;
+        self
+    }
+
+    /// Forces an exact width (e.g. equal-width tabs in a stretched bar).
+    /// Content stays centered; the group ring still wraps the final rect.
+    pub fn fixed_width(mut self, width: f32) -> Self {
+        self.fixed_width = Some(width);
         self
     }
 

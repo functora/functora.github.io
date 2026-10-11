@@ -23,12 +23,14 @@ impl CryptonoteApp {
             let () = ui.add_space(8.0);
         }
         let note = self.temporary.note.clone();
-        _ = Card::new().show(ui, |inner| {
-            let _ = egui::ScrollArea::vertical().max_height(400.0).show(inner, |scroll| {
-                _ = functora_egui::markdown_view::show(scroll, &mut self.md_cache, &note);
+        if !note.is_empty() {
+            _ = Card::new().show(ui, |inner| {
+                let _ = egui::ScrollArea::vertical().max_height(400.0).show(inner, |scroll| {
+                    _ = functora_egui::markdown_view::show(scroll, &mut self.md_cache, &note);
+                });
             });
-        });
-        let () = ui.add_space(8.0);
+            let () = ui.add_space(8.0);
+        }
         if !self.temporary.attachments.is_empty() {
             _ = Separator::horizontal().show(ui);
             let () = ui.add_space(8.0);

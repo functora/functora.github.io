@@ -127,6 +127,54 @@ fn collect_shape(shape: &egui::Shape, rendered: &mut String) {
     }
 }
 
+fn count_rects(shape: &egui::Shape) -> usize {
+    match shape {
+        egui::Shape::Rect(_) => 1,
+        egui::Shape::Vec(shapes) => shapes.iter().map(count_rects).sum(),
+        _ => 0,
+    }
+}
+
+fn render_rects(app: &mut cryptonote_egui::app::CryptonoteApp) -> usize {
+    use egui::{Pos2, RawInput, Rect, Vec2};
+    let ctx = egui::Context::default();
+    let raw = RawInput {
+        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280.0, 800.0))),
+        ..Default::default()
+    };
+    let mut output = ctx.run_ui(raw, |ui| {
+        _ = egui::CentralPanel::default().show(ui, |inner| {
+            app.screen_view(inner);
+        });
+    });
+    output.textures_delta.clear();
+    output.shapes.iter().map(|clipped| count_rects(&clipped.shape)).sum()
+}
+
+#[test]
+fn view_hides_note_card_when_note_empty() {
+    use cryptonote_egui::app::CryptonoteApp;
+    use std::sync::Arc;
+
+    let mut with_note = CryptonoteApp::default();
+    with_note.temporary.note = "hello".to_owned();
+    with_note.temporary.attachments = vec![Attachment {
+        name: "a.txt".to_owned(),
+        data: Arc::from(b"alpha" as &[u8]),
+    }];
+    let mut without_note = CryptonoteApp::default();
+    without_note.temporary.attachments = vec![Attachment {
+        name: "a.txt".to_owned(),
+        data: Arc::from(b"alpha" as &[u8]),
+    }];
+    let full = render_rects(&mut with_note);
+    let empty = render_rects(&mut without_note);
+    assert!(
+        empty < full,
+        "empty note must not render the note card box (rects {empty} vs {full})"
+    );
+}
+
 fn render_text(app: &mut cryptonote_egui::app::CryptonoteApp) -> String {
     use egui::{Pos2, RawInput, Rect, Vec2};
     let ctx = egui::Context::default();

@@ -500,15 +500,14 @@ impl CryptonoteApp {
             .text(format!(" {} ", BaseMsg::YouAgree.render(lang)))
             .action(BaseMsg::PrivacyPolicyAnd.render(lang), Screen::Privacy.to_string())
             .text(". ")
-            .action(BaseMsg::DonateLink.render(lang), Screen::Donate.to_string())
-            .text(format!(" {} ", BaseMsg::And.render(lang)))
             .action(BaseMsg::FooterShareWord.render(lang), Screen::About.to_string())
             .text(format!(
-                " {} {} {}.",
+                " {} {} ",
                 BaseMsg::FooterAppWord.render(lang),
-                BaseMsg::VersionLabel.render(lang),
-                APP_ATTRS.vsn
+                BaseMsg::And.render(lang)
             ))
+            .action(BaseMsg::DonateLink.render(lang), Screen::Donate.to_string())
+            .text(format!(". {} {}.", BaseMsg::VersionLabel.render(lang), APP_ATTRS.vsn))
             .size(11.0)
             .centered()
             .show_action(ui);

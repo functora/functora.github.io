@@ -149,6 +149,22 @@ fn footer_is_one_uniform_hypertext_layout() {
 }
 
 #[test]
+fn footer_orders_share_app_and_donate_before_version() {
+    // Required sentence: "... Share app and Donate. Version X.".
+    assert!(
+        APP_SRC.contains("\" {} {} \""),
+        "footer must join the app word and And between Share and Donate"
+    );
+    assert!(
+        APP_SRC.contains("\". {} {}.\""),
+        "footer version clause must put a dot before Version"
+    );
+    let share = APP_SRC.find("FooterShareWord").unwrap_or(usize::MAX);
+    let donate = APP_SRC.find("DonateLink").unwrap_or(0);
+    assert!(share < donate, "footer must order Share before Donate");
+}
+
+#[test]
 fn about_screen_has_full_content() {
     for fragment in [
         "AboutText",

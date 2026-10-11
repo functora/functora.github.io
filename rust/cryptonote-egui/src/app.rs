@@ -106,6 +106,14 @@ impl CryptonoteApp {
         self.persistent.language
     }
 
+    pub fn set_language(&mut self, lang: Language) {
+        if self.persistent.language != lang {
+            self.persistent.language = lang;
+            self.toast = ToastState::new();
+            self.qr_error_notified = None;
+        }
+    }
+
     pub(crate) fn navigate(&mut self, screen: Screen) {
         self.temporary.screen = screen;
         self.router.navigate(screen);
@@ -539,6 +547,7 @@ impl eframe::App for CryptonoteApp {
             self.temporary.screen = routed;
         }
         let mut persistent = std::mem::take(&mut self.persistent);
+        self.persistent = persistent.clone();
         let prev_persistent = persistent.clone();
         let mut collapsed_val = self.sidebar_collapsed;
         let route = *self.router.current();
@@ -610,9 +619,9 @@ impl eframe::App for CryptonoteApp {
             content_ui.add_space(16.0);
             self.footer(content_ui, content_lang);
         });
-        persistent.language = lang_cell.get();
         self.sidebar_collapsed = collapsed_val;
         self.persistent = persistent;
+        self.set_language(lang_cell.get());
         if let Some(screen) = pending_nav.get() {
             self.navigate(screen);
             ctx.request_repaint();

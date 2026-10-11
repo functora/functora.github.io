@@ -1,5 +1,5 @@
-//! Tabs must paint exactly like `ButtonGroup` + Outline `Button`s:
-//! selected tab uses the accent pair, idle tabs use the background,
+//! Tabs must paint like primary buttons when active: the selected tab uses
+//! the primary pair, idle tabs use the background (Outline) fill,
 //! and the muted pill container is gone.
 
 use egui::{Color32, Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
@@ -81,7 +81,7 @@ fn has_fill(out: &egui::FullOutput, target: Color32) -> bool {
 }
 
 #[test]
-fn tabs_value_matches_buttongroup_colors() {
+fn tabs_value_uses_primary_for_active_tab() {
     let all = entries();
     let mut selected = Fruit::Banana;
     let mut app = Harness::new();
@@ -98,9 +98,9 @@ fn tabs_value_matches_buttongroup_colors() {
         "tab bar must paint three opaque tab rects, got {fills:?}"
     );
     assert_eq!(
-        fills.iter().filter(|fill| **fill == theme.accent).count(),
+        fills.iter().filter(|fill| **fill == theme.primary).count(),
         1,
-        "exactly one tab must use the ButtonGroup selected (accent) fill, got {fills:?}"
+        "exactly one tab must use the primary fill like primary buttons, got {fills:?}"
     );
     assert_eq!(
         fills
@@ -117,7 +117,7 @@ fn tabs_value_matches_buttongroup_colors() {
 }
 
 #[test]
-fn icon_tabs_value_matches_buttongroup_colors() {
+fn icon_tabs_value_uses_primary_for_active_tab() {
     let all = [
         (
             Fruit::Apple,
@@ -156,9 +156,9 @@ fn icon_tabs_value_matches_buttongroup_colors() {
         "icon tab bar must paint three opaque tab rects, got {fills:?}"
     );
     assert_eq!(
-        fills.iter().filter(|fill| **fill == theme.accent).count(),
+        fills.iter().filter(|fill| **fill == theme.primary).count(),
         1,
-        "exactly one icon tab must use the ButtonGroup selected (accent) fill, got {fills:?}"
+        "exactly one icon tab must use the primary fill like primary buttons, got {fills:?}"
     );
     assert_eq!(
         fills

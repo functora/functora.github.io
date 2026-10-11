@@ -48,8 +48,11 @@ impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
                 for (value, label) in entries {
                     let is_active = *value == *selected;
                     let mut button = crate::widgets::button::widget::Button::new(label.clone())
-                        .variant(crate::tokens::button_variant::ButtonVariant::Outline)
-                        .selected(is_active);
+                        .variant(if is_active {
+                            crate::tokens::button_variant::ButtonVariant::Default
+                        } else {
+                            crate::tokens::button_variant::ButtonVariant::Outline
+                        });
                     if let Some(width) = share {
                         button = button.fixed_width(width);
                     }
@@ -119,30 +122,37 @@ impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
             let _ = crate::widgets::button_group::widget::ButtonGroup::show(inner_ui, |group_ui| {
                 for (value, entry) in entries {
                     let is_active = *value == *selected;
-                    let response = match entry {
-                        super::widget::TabEntry::Text(label) => {
-                            let mut button =
-                                crate::widgets::button::widget::Button::new(label.clone())
-                                    .variant(crate::tokens::button_variant::ButtonVariant::Outline)
-                                    .selected(is_active);
-                            if let Some(width) = share {
-                                button = button.fixed_width(width);
+                    let response =
+                        match entry {
+                            super::widget::TabEntry::Text(label) => {
+                                let mut button =
+                                    crate::widgets::button::widget::Button::new(label.clone())
+                                        .variant(if is_active {
+                                            crate::tokens::button_variant::ButtonVariant::Default
+                                        } else {
+                                            crate::tokens::button_variant::ButtonVariant::Outline
+                                        });
+                                if let Some(width) = share {
+                                    button = button.fixed_width(width);
+                                }
+                                button.show(group_ui)
                             }
-                            button.show(group_ui)
-                        }
-                        super::widget::TabEntry::Icon { icon, tooltip } => {
-                            let mut button =
-                                crate::widgets::button::widget::Button::icon_only(*icon)
-                                    .variant(crate::tokens::button_variant::ButtonVariant::Outline)
-                                    .selected(is_active);
-                            if let Some(width) = share {
-                                button = button.fixed_width(width);
+                            super::widget::TabEntry::Icon { icon, tooltip } => {
+                                let mut button =
+                                    crate::widgets::button::widget::Button::icon_only(*icon)
+                                        .variant(if is_active {
+                                            crate::tokens::button_variant::ButtonVariant::Default
+                                        } else {
+                                            crate::tokens::button_variant::ButtonVariant::Outline
+                                        });
+                                if let Some(width) = share {
+                                    button = button.fixed_width(width);
+                                }
+                                let response = button.show(group_ui);
+                                let _ = response.clone().on_hover_text(tooltip);
+                                response
                             }
-                            let response = button.show(group_ui);
-                            let _ = response.clone().on_hover_text(tooltip);
-                            response
-                        }
-                    };
+                        };
                     if response.clicked() {
                         *selected = value.clone();
                         group_ui.ctx().request_repaint();

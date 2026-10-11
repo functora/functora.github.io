@@ -191,6 +191,16 @@ pub(crate) fn show_input_paste_clear(
 
     let response = child_ui.add(text_edit);
 
+    if readonly && copy {
+        let field_copy_id = base_id.with("field_copy");
+        if ui
+            .interact(input_rect, field_copy_id, egui::Sense::click())
+            .clicked()
+        {
+            request_copy(ui, &slots.copy, text);
+        }
+    }
+
     if let Some(rect) = copy_rect
         && let Some(resp) = &copy_resp
         && ui.is_rect_visible(rect)

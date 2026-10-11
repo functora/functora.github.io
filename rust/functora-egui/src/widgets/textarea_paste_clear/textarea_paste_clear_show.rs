@@ -194,6 +194,16 @@ pub(crate) fn show_textarea_paste_clear(
         response.request_focus();
     }
 
+    if readonly && copy {
+        let field_copy_id = base_id.with("field_copy");
+        if ui
+            .interact(content_rect, field_copy_id, egui::Sense::click())
+            .clicked()
+        {
+            request_copy(ui, &slots.copy, text);
+        }
+    }
+
     if response.has_focus() {
         paint_focused(ui, outer_rect, &theme);
     }

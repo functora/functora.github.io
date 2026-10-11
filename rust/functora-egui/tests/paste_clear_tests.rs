@@ -313,6 +313,142 @@ fn input_paste_clear_password_eye_does_not_clear() {
     assert_eq!(text, "secret123");
 }
 
+fn pump_copy_outcome(
+    app: &mut App,
+    body: &mut dyn FnMut(&mut egui::Ui),
+    copied: &std::cell::Cell<bool>,
+    errored: &std::cell::Cell<bool>,
+) {
+    for _ in 0..200 {
+        if copied.get() || errored.get() {
+            break;
+        }
+        let _ = app.step(vec![], body);
+        std::thread::sleep(std::time::Duration::from_millis(5));
+    }
+}
+
+fn latch_copy_outcome(
+    copied: &std::cell::Cell<bool>,
+    errored: &std::cell::Cell<bool>,
+    resp: &functora_egui::InputPasteClearResponse,
+) {
+    copied.set(copied.get() || resp.copied);
+    errored.set(errored.get() || resp.clipboard_error.is_some());
+}
+
+#[test]
+fn input_readonly_click_copies_text_like_copy_button() {
+    let mut text = "hello copy".to_owned();
+    let copied = std::cell::Cell::new(false);
+    let errored = std::cell::Cell::new(false);
+    let mut body = |ui: &mut egui::Ui| {
+        let resp = functora_egui::InputPasteClear::new(&mut text)
+            .readonly()
+            .show(ui);
+        latch_copy_outcome(&copied, &errored, &resp);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    click_at(&mut app, outer.center(), &mut body);
+    pump_copy_outcome(&mut app, &mut body, &copied, &errored);
+    assert!(
+        copied.get() || errored.get(),
+        "clicking readonly input text must copy like the copy button"
+    );
+    assert_eq!(text, "hello copy");
+}
+
+#[test]
+fn textarea_readonly_click_copies_text_like_copy_button() {
+    let mut text = "hello textarea copy".to_owned();
+    let copied = std::cell::Cell::new(false);
+    let errored = std::cell::Cell::new(false);
+    let mut body = |ui: &mut egui::Ui| {
+        let resp = functora_egui::TextareaPasteClear::new(&mut text)
+            .min_height(80.0)
+            .readonly()
+            .show(ui);
+        latch_copy_outcome(&copied, &errored, &resp);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    click_at(&mut app, outer.center(), &mut body);
+    pump_copy_outcome(&mut app, &mut body, &copied, &errored);
+    assert!(
+        copied.get() || errored.get(),
+        "clicking readonly textarea text must copy like the copy button"
+    );
+    assert_eq!(text, "hello textarea copy");
+}
+
+#[test]
+fn input_editable_click_does_not_copy() {
+    let mut text = "hello edit".to_owned();
+    let copied = std::cell::Cell::new(false);
+    let errored = std::cell::Cell::new(false);
+    let mut body = |ui: &mut egui::Ui| {
+        let resp = functora_egui::InputPasteClear::new(&mut text).show(ui);
+        latch_copy_outcome(&copied, &errored, &resp);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    click_at(&mut app, outer.center(), &mut body);
+    pump_copy_outcome(&mut app, &mut body, &copied, &errored);
+    assert!(
+        !copied.get() && !errored.get(),
+        "clicking editable input text must focus, not copy"
+    );
+    assert_eq!(text, "hello edit");
+}
+
+#[test]
+fn input_readonly_click_without_copy_button_does_nothing() {
+    let mut text = "hello bare".to_owned();
+    let copied = std::cell::Cell::new(false);
+    let errored = std::cell::Cell::new(false);
+    let mut body = |ui: &mut egui::Ui| {
+        let resp = functora_egui::InputPasteClear::new(&mut text)
+            .readonly()
+            .with_copy(false)
+            .show(ui);
+        latch_copy_outcome(&copied, &errored, &resp);
+    };
+    let mut app = App::new();
+    let _ = app.step(vec![], &mut body);
+    let out = app.step(vec![], &mut body);
+    let outer = find_rects(&out)
+        .iter()
+        .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
+        .copied()
+        .expect("outer rect not found");
+    click_at(&mut app, outer.center(), &mut body);
+    pump_copy_outcome(&mut app, &mut body, &copied, &errored);
+    assert!(
+        !copied.get() && !errored.get(),
+        "clicking readonly text must not copy when the copy button is opted out"
+    );
+    assert_eq!(text, "hello bare");
+}
+
 fn painted_icon_shapes_in(output: &egui::FullOutput, region: Rect) -> usize {
     output
         .shapes

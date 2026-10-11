@@ -26,7 +26,8 @@ pub fn build_url(base_url: &str, note: &NoteData) -> Result<String, AppError> {
 }
 
 pub fn extract_note_param(url: &str) -> Result<String, AppError> {
-    functora_core::encoding::extract_query_param(url, NOTE_PARAM)
+    let bare = url.split('#').next().unwrap_or(url);
+    functora_core::encoding::extract_query_param(bare, NOTE_PARAM)
         .ok_or(AppError::NoNoteParam)?
         .pipe(Ok)
 }

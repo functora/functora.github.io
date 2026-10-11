@@ -19,9 +19,7 @@ impl CryptonoteApp {
             _ = Alert::new()
                 .title(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang))
                 .variant(functora_egui::AlertVariant::Destructive)
-                .show(ui, |inner| {
-                    _ = inner.label(Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang));
-                });
+                .show(ui, |_| {});
             let () = ui.add_space(8.0);
         }
         let note = self.temporary.note.clone();

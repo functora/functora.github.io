@@ -94,3 +94,27 @@ fn downloaded_message_embeds_location() {
     let rendered = Msg::Downloaded("/tmp/note.txt".to_owned()).render(Language::Eng);
     assert!(rendered.contains("/tmp/note.txt"));
 }
+
+#[test]
+fn note_url_errors_are_localized() {
+    for make_err in [AppError::NoNoteInUrl, AppError::NoNoteParam] {
+        let eng = make_err.render(Language::Eng);
+        let spa = make_err.render(Language::Spa);
+        let rus = make_err.render(Language::Rus);
+        assert!(!eng.is_empty());
+        assert!(!spa.is_empty());
+        assert!(!rus.is_empty());
+        assert_ne!(eng, spa);
+        assert_ne!(eng, rus);
+    }
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        assert_eq!(
+            Msg::Error(AppError::NoNoteInUrl.into()).render(lang),
+            AppError::NoNoteInUrl.render(lang),
+        );
+        assert_eq!(
+            Msg::Error(AppError::NoNoteParam.into()).render(lang),
+            AppError::NoNoteParam.render(lang),
+        );
+    }
+}

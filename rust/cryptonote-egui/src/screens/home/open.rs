@@ -30,7 +30,7 @@ impl CryptonoteApp {
                 let url = self.temporary.url_input.trim().to_string();
                 if url.is_empty() {
                     self.toast.add(
-                        Msg::Error(crate::error::MsgError::from(AppError::NoNoteInUrl)).render(lang),
+                        Msg::Error(crate::error::MsgError::from(AppError::NoNoteParam)).render(lang),
                         ToastVariant::Error,
                         toast_time,
                     );

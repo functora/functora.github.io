@@ -44,9 +44,7 @@ impl CryptonoteApp {
                 Preview::Video(_) | Preview::Audio(_) | Preview::Pdf(_) | Preview::Download => {
                     _ = Alert::new()
                         .title(Msg::PreviewUnavailable.render(lang))
-                        .show(ui, |inner| {
-                            _ = inner.label(Msg::PreviewUnavailable.render(lang));
-                        });
+                        .show(ui, |_| {});
                 }
                 Preview::Missing => {
                     _ = ui.label(Msg::FileNotFound.render(lang));
@@ -79,9 +77,7 @@ impl CryptonoteApp {
             _ = Alert::new()
                 .title(Msg::FileNotFound.render(lang))
                 .variant(functora_egui::AlertVariant::Destructive)
-                .show(ui, |inner| {
-                    _ = inner.label(Msg::FileNotFound.render(lang));
-                });
+                .show(ui, |_| {});
         }
     }
 }

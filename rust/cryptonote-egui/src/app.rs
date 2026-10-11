@@ -7,8 +7,8 @@ use functora_egui::{
     Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
 };
 
-use crate::encoding::{NoteData, decode_note, extract_note_param};
 use crate::error::AppError;
+use crate::hooks::handle_open_url;
 use crate::messages::Msg;
 use crate::progress::{Job, Stage, claim_job, clear_progress};
 use crate::route::Screen;
@@ -46,6 +46,7 @@ pub struct CryptonoteApp {
     pub(crate) qr_state: functora_egui::QrScannerState,
     pub(crate) qr_error_notified: Option<String>,
     pub(crate) md_cache: functora_egui::CommonMarkCache,
+    pub(crate) last_deep_link: Option<String>,
 }
 
 impl Default for CryptonoteApp {
@@ -72,6 +73,7 @@ impl Default for CryptonoteApp {
             qr_state: functora_egui::QrScannerState::new(),
             qr_error_notified: None,
             md_cache: functora_egui::CommonMarkCache::default(),
+            last_deep_link: None,
         }
     }
 }
@@ -454,24 +456,26 @@ impl CryptonoteApp {
         }
     }
 
-    fn handle_deep_link(&mut self) {
-        if let Some(url) = functora_egui::deep_link::poll_deep_link()
-            && let Ok(note) = extract_note_param(&url)
-            && let Ok(data) = decode_note(&note)
+    fn handle_deep_link(&mut self, ctx: &egui::Context) {
+        #[cfg(target_arch = "wasm32")]
+        let pending_url: Option<String> = functora_egui::deep_link::poll_deep_link_web();
+        #[cfg(not(target_arch = "wasm32"))]
+        let pending_url: Option<String> = functora_egui::deep_link::poll_deep_link();
+        if let Some(url) = pending_url
+            && self.last_deep_link.as_deref() != Some(url.as_str())
         {
-            match data {
-                NoteData::CipherText(enc) => {
-                    self.temporary.external = External::Note(crate::state::ExternalNote {
-                        data: NoteData::CipherText(enc),
-                        url: String::new(),
-                    });
-                    self.navigate(Screen::Open);
-                }
-                NoteData::PlainText(text) => {
-                    self.temporary.note = text;
-                    self.temporary.cipher = None;
-                    self.temporary.external = External::Nothing;
-                    self.navigate(Screen::View);
+            self.last_deep_link = Some(url.clone());
+            match handle_open_url(&url, &mut self.temporary) {
+                Ok(screen) => self.navigate(screen),
+                Err(AppError::NoNoteParam) => {}
+                Err(e) => {
+                    let lang = self.lang();
+                    let time = ctx.input(|i| i.time);
+                    self.toast.add(
+                        Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                        ToastVariant::Error,
+                        time,
+                    );
                 }
             }
         }
@@ -526,7 +530,7 @@ impl eframe::App for CryptonoteApp {
         let ctx = ui.ctx().clone();
         self.apply_theme(&ctx);
         self.poll_receivers(&ctx);
-        self.handle_deep_link();
+        self.handle_deep_link(&ctx);
         self.router.ui(ui);
         #[cfg(target_os = "android")]
         functora_egui::android::poll_ime(&ctx);

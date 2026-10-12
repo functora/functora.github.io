@@ -4,7 +4,8 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
 use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
+    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell, ToastState,
+    ToastVariant,
 };
 
 use crate::error::AppError;
@@ -26,7 +27,7 @@ type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
 pub struct CryptonoteApp {
     pub(crate) router: AppRouter<Screen>,
     pub(crate) storage: functora_egui::Storage,
-    pub(crate) persistent: PersistentState<()>,
+    pub persistent: PersistentState<()>,
     pub temporary: TemporaryState,
     pub toast: ToastState,
     pub(crate) sidebar_collapsed: bool,
@@ -123,8 +124,18 @@ impl CryptonoteApp {
         functora_egui::theme_extra::set_theme(ctx, self.persistent.theme);
     }
 
-    pub(crate) fn reset(&mut self) {
+    pub fn reset(&mut self) {
+        self.cancel_all();
         self.temporary.reset();
+        self.toast = ToastState::new();
+        self.qr_error_notified = None;
+        self.qr_state = functora_egui::QrScannerState::new();
+        self.md_cache = functora_egui::CommonMarkCache::default();
+        self.last_deep_link = None;
+        let _ = crate::deep_link::take_url();
+        if crate::deep_link::has_pending_archive() {
+            let _ = crate::deep_link::take_archive();
+        }
         self.router.reset(Screen::Home);
         self.temporary.screen = Screen::Home;
     }
@@ -554,6 +565,7 @@ impl eframe::App for CryptonoteApp {
         let history = self.router.history().clone();
         let needs_reset = std::cell::Cell::new(false);
         let pending_nav = std::cell::Cell::new(None::<Screen>);
+        let pending_reset = std::cell::Cell::new(false);
         let selected_snapshot = self.temporary.screen;
         let lang_cell = std::cell::Cell::new(persistent.language);
         let theme_bg = ShadcnThemeExt::shadcn_theme(&ctx);
@@ -571,9 +583,12 @@ impl eframe::App for CryptonoteApp {
         .iter()
         .map(|(screen, icon)| (*screen, screen.label(lang_cell.get()).into_owned(), *icon))
         .collect();
-        let sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
+        let mut sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
+        sidebar_names.push(Msg::Reset.render(lang_cell.get()));
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, {
             let pending_ref = &pending_nav;
+            let reset_ref = &pending_reset;
+            let lang_ref = &lang_cell;
             move |side_ui| {
                 let mut close = false;
                 for (screen, label, icon) in &nav_items {
@@ -593,6 +608,22 @@ impl eframe::App for CryptonoteApp {
                         close |= side_ui.on_mobile();
                         side_ui.ctx().request_repaint();
                     }
+                }
+                let () = side_ui.add_space(8.0);
+                _ = Separator::horizontal().show(side_ui);
+                let () = side_ui.add_space(8.0);
+                if side_ui
+                    .add(
+                        Button::new(Msg::Reset.render(lang_ref.get()))
+                            .icon(functora_egui::LucideIcon::RotateCcw)
+                            .variant(ButtonVariant::Ghost)
+                            .full_width(),
+                    )
+                    .clicked()
+                {
+                    reset_ref.set(true);
+                    close |= side_ui.on_mobile();
+                    side_ui.ctx().request_repaint();
                 }
                 close
             }
@@ -626,12 +657,12 @@ impl eframe::App for CryptonoteApp {
             self.navigate(screen);
             ctx.request_repaint();
         }
+        if needs_reset.get() || pending_reset.get() {
+            self.reset();
+        }
         if prev_persistent != self.persistent {
             self.storage.persist(PERSISTENT_KEY, &self.persistent);
             self.apply_theme(&ctx);
-        }
-        if needs_reset.get() {
-            self.reset();
         }
         if let Some(action) = breadcrumb_action {
             match action {

@@ -19,6 +19,7 @@ pub enum Msg {
     EncryptedNoteDesc,
     DecryptButton,
     EditNote,
+    Reset,
     ViewButton,
     OpenUrlLabel,
     OpenUrlPlaceholder,
@@ -62,6 +63,7 @@ impl I18N for Msg {
             }
             Self::DecryptButton => "Decrypt".into(),
             Self::EditNote => "Edit".into(),
+            Self::Reset => "Reset".into(),
             Self::ViewButton => "View".into(),
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Paste shared note URL here...".into(),
@@ -128,6 +130,7 @@ Secure, private, and truly offline - your notes remain yours alone.".into(),
             }
             Self::DecryptButton => "Descifrar".into(),
             Self::EditNote => "Editar".into(),
+            Self::Reset => "Restablecer".into(),
             Self::ViewButton => "Ver".into(),
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Pega la URL de la nota compartida aquí...".into(),
@@ -196,6 +199,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".
             }
             Self::DecryptButton => "Расшифровать".into(),
             Self::EditNote => "Правка".into(),
+            Self::Reset => "Сбросить".into(),
             Self::ViewButton => "Смотреть".into(),
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Вставьте URL заметки здесь...".into(),

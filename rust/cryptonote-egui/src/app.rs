@@ -571,14 +571,8 @@ impl eframe::App for CryptonoteApp {
         let theme_bg = ShadcnThemeExt::shadcn_theme(&ctx);
         let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
             (Screen::Home, functora_egui::LucideIcon::House),
-            (Screen::Open, functora_egui::LucideIcon::FolderOpen),
-            (Screen::View, functora_egui::LucideIcon::Eye),
-            (Screen::Share, functora_egui::LucideIcon::Share2),
-            (Screen::File, functora_egui::LucideIcon::File),
             (Screen::About, functora_egui::LucideIcon::Info),
             (Screen::Donate, functora_egui::LucideIcon::Heart),
-            (Screen::License, functora_egui::LucideIcon::Scale),
-            (Screen::Privacy, functora_egui::LucideIcon::Shield),
         ]
         .iter()
         .map(|(screen, icon)| (*screen, screen.label(lang_cell.get()).into_owned(), *icon))

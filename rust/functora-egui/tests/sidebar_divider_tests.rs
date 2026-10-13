@@ -13,20 +13,30 @@ use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
 
 /// Renders the desktop shell nesting (right panel + scroll + sidebar) with
-/// the given labels and returns `(divider_left, divider_right, clip_min_x)`
+/// the given labels and returns
+/// `(divider_left, divider_right, clip_min_x, pixels_per_point)`
 /// of the divider, whether painted as a line or a 1px fill.
-fn divider_geometry(labels: &[String]) -> Option<(f32, f32, f32)> {
+fn divider_geometry_on_width(labels: &[String], screen_width: f32) -> Option<(f32, f32, f32, f32)> {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);
+    let ppp = ctx.pixels_per_point();
     let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
+        screen_rect: Some(Rect::from_min_size(
+            Pos2::ZERO,
+            Vec2::new(screen_width, SCREEN.y),
+        )),
         time: Some(1.0 / 60.0),
         ..Default::default()
     };
     let mut out = ctx.run_ui(raw, |ui| {
         let refs: Vec<&str> = labels.iter().map(String::as_str).collect();
         let effective = functora_egui::layout::shell::sidebar_effective_width(ui.ctx(), &refs);
-        let panel_outer = effective + 16.0;
+        let ppp_in = ui.ctx().pixels_per_point();
+        let panel_outer = if ppp_in > 0.0 {
+            ((effective + 16.0) * ppp_in).round() / ppp_in
+        } else {
+            effective + 16.0
+        };
         let _ = egui::Panel::right("sidebar_panel")
             .exact_size(panel_outer)
             .frame(egui::Frame::NONE)
@@ -56,16 +66,28 @@ fn divider_geometry(labels: &[String]) -> Option<(f32, f32, f32)> {
             if (points[0].x - points[1].x).abs() < 1.0
                 && (points[0].y - points[1].y).abs() > 100.0 =>
         {
-            Some((points[0].x, points[0].x, clipped.clip_rect.min.x))
+            Some((points[0].x, points[0].x, clipped.clip_rect.min.x, ppp))
         }
         Shape::Rect(shape)
             if (shape.rect.max.x - shape.rect.min.x) < 2.0
                 && (shape.rect.max.y - shape.rect.min.y) > 100.0 =>
         {
-            Some((shape.rect.min.x, shape.rect.max.x, clipped.clip_rect.min.x))
+            Some((
+                shape.rect.min.x,
+                shape.rect.max.x,
+                clipped.clip_rect.min.x,
+                ppp,
+            ))
         }
         _ => None,
     })
+}
+
+/// Renders the desktop shell nesting (right panel + scroll + sidebar) with
+/// the given labels and returns `(divider_left, divider_right, clip_min_x)`
+/// of the divider, whether painted as a line or a 1px fill.
+fn divider_geometry(labels: &[String]) -> Option<(f32, f32, f32)> {
+    divider_geometry_on_width(labels, SCREEN.x).map(|(left, right, clip, _)| (left, right, clip))
 }
 
 #[test]
@@ -102,5 +124,50 @@ fn divider_sits_on_sidebar_edge_without_fill_stripe() {
             "divider must be exactly 1px wide, got {:.2} for {labels:?}",
             right - left
         );
+    }
+}
+
+#[test]
+fn divider_snaps_to_physical_pixels_across_widths() {
+    let label_sets: Vec<Vec<String>> = vec![
+        ["Home", "Application", "Donate", "Reset"]
+            .iter()
+            .map(ToString::to_string)
+            .collect(),
+        vec!["X".repeat(40)],
+        [
+            "Главная",
+            "Открыть URL",
+            "Условия использования",
+            "Политика конфиденциальности",
+            "Пожертвовать",
+        ]
+        .iter()
+        .map(ToString::to_string)
+        .collect(),
+    ];
+    let widths = [
+        800.0, 1000.0, 1152.0, 1280.0, 1366.0, 1440.0, 1600.0, 1920.0,
+    ];
+    for labels in &label_sets {
+        for width in widths {
+            let (left, right, clip_min_x, ppp) =
+                divider_geometry_on_width(labels, width).expect("divider must be painted");
+            assert!(
+                left - clip_min_x >= -0.1,
+                "divider must stay inside the clip rect, got left {left:.2} before clip {clip_min_x:.2} for {labels:?} at {width}"
+            );
+            let snapped = (left * ppp).round() / ppp;
+            assert!(
+                (left - snapped).abs() * ppp <= 0.05,
+                "divider must snap to a physical pixel, got left {left:.3} (fract {:.3}) for {labels:?} at {width}",
+                left * ppp - (left * ppp).round()
+            );
+            assert!(
+                (0.9..=1.1).contains(&(right - left)),
+                "divider must be exactly 1px wide, got {:.2} for {labels:?} at {width}",
+                right - left
+            );
+        }
     }
 }

@@ -5,7 +5,13 @@
 /// the clip edge when the frame origin jitters behind it with subpixel
 /// rounding, keeping the full pixel inside the clip rect on every width.
 fn divider_rect(ui: &egui::Ui, frame: egui::Rect) -> egui::Rect {
-    let left = ui.clip_rect().min.x.max(frame.min.x);
+    let ppp = ui.ctx().pixels_per_point();
+    let raw = ui.clip_rect().min.x.max(frame.min.x);
+    let left = if ppp > 0.0 {
+        (raw * ppp).ceil() / ppp
+    } else {
+        raw
+    };
     egui::Rect::from_min_max(
         egui::pos2(left, frame.min.y),
         egui::pos2(left + 1.0, frame.max.y),

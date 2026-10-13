@@ -332,7 +332,12 @@ where
             } else {
                 clamped_sidebar_width(&ctx, &sidebar_labels)
             };
-            let panel_outer = effective + 16.0;
+            let ppp = ctx.pixels_per_point();
+            let panel_outer = if ppp > 0.0 {
+                ((effective + 16.0) * ppp).round() / ppp
+            } else {
+                effective + 16.0
+            };
             let panel_fill = if is_rail {
                 theme_bg.background
             } else {

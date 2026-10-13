@@ -5,7 +5,7 @@ use crate::route::Screen;
 use crate::storage::APP_ATTRS;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex};
+use functora_egui::{Button, ButtonVariant, Flex, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_about(&mut self, ui: &mut egui::Ui) {
@@ -29,6 +29,13 @@ impl CryptonoteApp {
         let app_url = APP_ATTRS.app_url();
         let ctx = ui.ctx().clone();
         _ = functora_egui::QrImage::new(&app_url).show(ui);
+        let () = ui.add_space(8.0);
+        let mut app_url_text = app_url.clone();
+        let resp = TextareaPasteClear::new(&mut app_url_text)
+            .readonly()
+            .min_height(80.0)
+            .show(ui);
+        self.paste_clear_feedback(resp, ui.ctx().input(|i| i.time));
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             self.dock_back_flex(f);

@@ -179,6 +179,8 @@ fn about_screen_has_full_content() {
         "GooglePlayButton",
         "DownloadApkButton",
         "QrImage",
+        "TextareaPasteClear",
+        "readonly()",
     ] {
         assert!(ABOUT_SRC.contains(fragment), "about screen must include {fragment}");
     }

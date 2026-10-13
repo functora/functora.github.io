@@ -47,6 +47,7 @@ impl CryptonoteApp {
         self.show_attachments(ui);
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            self.dock_back_flex(f);
             let can_share = self.temporary.progress.is_none();
             if f.add(
                 Button::new(Msg::Share.render(lang))

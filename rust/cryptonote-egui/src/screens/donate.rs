@@ -1,9 +1,8 @@
 use crate::app::CryptonoteApp;
 use crate::error::AppError;
-use crate::route::Screen;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Card, ComponentSize};
+use functora_egui::{Button, Card, ComponentSize};
 
 impl CryptonoteApp {
     pub(crate) fn screen_donate(&mut self, ui: &mut egui::Ui) {
@@ -39,15 +38,6 @@ impl CryptonoteApp {
             });
             let () = ui.add_space(8.0);
         }
-        if ui
-            .add(
-                Button::new(BaseMsg::Back.render(lang))
-                    .icon(functora_egui::LucideIcon::ArrowLeft)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .clicked()
-        {
-            self.navigate(Screen::Home);
-        }
+        self.dock_back(ui);
     }
 }

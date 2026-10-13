@@ -51,6 +51,8 @@ impl CryptonoteApp {
                 }
             }
             let () = ui.add_space(12.0);
+            self.dock_back(ui);
+            let () = ui.add_space(8.0);
             if ui
                 .add(
                     Button::new(Msg::Download.render(lang))

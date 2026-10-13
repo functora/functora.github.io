@@ -120,6 +120,11 @@ impl CryptonoteApp {
         self.router.navigate(screen);
     }
 
+    pub(crate) fn go_back(&mut self) {
+        let _ = self.router.go_back();
+        self.temporary.screen = *self.router.current();
+    }
+
     fn apply_theme(&self, ctx: &egui::Context) {
         functora_egui::theme_extra::set_theme(ctx, self.persistent.theme);
     }
@@ -660,10 +665,7 @@ impl eframe::App for CryptonoteApp {
         }
         if let Some(action) = breadcrumb_action {
             match action {
-                functora_egui::NavAction::Back => {
-                    let _ = self.router.go_back();
-                    self.temporary.screen = *self.router.current();
-                }
+                functora_egui::NavAction::Back => self.go_back(),
                 functora_egui::NavAction::Forward => {
                     let _ = self.router.go_forward();
                     self.temporary.screen = *self.router.current();

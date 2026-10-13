@@ -1,4 +1,5 @@
 pub mod about;
+pub mod dock;
 pub mod donate;
 pub mod file;
 pub mod home;

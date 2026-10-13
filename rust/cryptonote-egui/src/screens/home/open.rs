@@ -19,6 +19,7 @@ impl CryptonoteApp {
         self.paste_clear_feedback(resp, toast_time);
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            self.dock_back_flex(f);
             if f.add(
                 Button::new(Msg::OpenButton.render(lang))
                     .icon(functora_egui::LucideIcon::FolderOpen)

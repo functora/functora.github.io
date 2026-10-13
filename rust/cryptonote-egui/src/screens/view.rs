@@ -129,6 +129,7 @@ impl CryptonoteApp {
         }
         let () = ui.add_space(12.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            self.dock_back_flex(f);
             if f.add(
                 Button::new(BaseMsg::Copy.render(lang))
                     .icon(functora_egui::LucideIcon::Copy)

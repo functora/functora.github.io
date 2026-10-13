@@ -36,5 +36,6 @@ impl CryptonoteApp {
             let () = ui.add_space(8.0);
             _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
         }
+        self.dock_back(ui);
     }
 }

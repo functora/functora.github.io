@@ -31,6 +31,7 @@ impl CryptonoteApp {
         _ = functora_egui::QrImage::new(&app_url).show(ui);
         let () = ui.add_space(8.0);
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            self.dock_back_flex(f);
             if f.add(
                 Button::new(BaseMsg::CopyAppLink.render(lang))
                     .icon(functora_egui::LucideIcon::Copy)
@@ -152,16 +153,6 @@ impl CryptonoteApp {
             .clicked()
             {
                 self.navigate(Screen::Donate);
-            }
-            if f.add(
-                Button::new(BaseMsg::Back.render(lang))
-                    .icon(functora_egui::LucideIcon::ArrowLeft)
-                    .variant(ButtonVariant::Ghost),
-            )
-            .inner
-            .clicked()
-            {
-                self.navigate(Screen::Home);
             }
         });
     }

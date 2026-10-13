@@ -9,6 +9,7 @@ pub struct TextareaPasteClear<'a> {
     pub(crate) copy: bool,
     pub(crate) copy_icon: crate::icons::lucide_icon::LucideIcon,
     pub(crate) readonly: bool,
+    pub(crate) max_height: f32,
 }
 
 impl<'a> TextareaPasteClear<'a> {
@@ -23,6 +24,7 @@ impl<'a> TextareaPasteClear<'a> {
             copy: true,
             copy_icon: crate::icons::lucide_icon::LucideIcon::Copy,
             readonly: false,
+            max_height: f32::INFINITY,
         }
     }
 
@@ -69,6 +71,11 @@ impl<'a> TextareaPasteClear<'a> {
 
     pub fn readonly(mut self) -> Self {
         self.readonly = true;
+        self
+    }
+
+    pub fn max_height(mut self, height: f32) -> Self {
+        self.max_height = height;
         self
     }
 

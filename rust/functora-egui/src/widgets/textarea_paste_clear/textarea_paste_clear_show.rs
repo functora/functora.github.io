@@ -22,6 +22,7 @@ pub(crate) fn show_textarea_paste_clear(
         copy,
         copy_icon,
         readonly,
+        max_height,
     } = widget;
     let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
     let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx());
@@ -29,13 +30,18 @@ pub(crate) fn show_textarea_paste_clear(
     let v_padding: f32 = 8.0;
     let width = ui.available_width();
 
-    let desired = egui::vec2(width, min_height);
+    let toolbar_h: f32 = 28.0;
+    let text_height = wrap_anywhere_layouter(ui, text, (width - h_padding * 2.0).max(0.0))
+        .size()
+        .y;
+    let fitted = toolbar_h + v_padding + text_height + v_padding;
+    let outer_height = fitted.max(min_height).min(max_height);
+    let desired = egui::vec2(width, outer_height);
     let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
     paint_outer(ui, outer_rect, &theme, outer_hovered);
 
-    let toolbar_h: f32 = 28.0;
     let toolbar_rect = egui::Rect::from_min_max(
         outer_rect.min,
         egui::pos2(outer_rect.max.x, outer_rect.min.y + toolbar_h),
@@ -183,7 +189,7 @@ pub(crate) fn show_textarea_paste_clear(
                 .text_color(theme.foreground)
                 .interactive(!readonly)
                 .desired_width(content_rect.width())
-                .desired_rows(8)
+                .desired_rows(1)
                 .layouter(&mut wrap);
             inner_ui.add(text_edit)
         });

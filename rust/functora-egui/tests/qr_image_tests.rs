@@ -161,6 +161,48 @@ fn qr_image_distinct_contents_use_distinct_textures() {
     );
 }
 
+#[test]
+#[cfg(feature = "qr")]
+fn qr_layout_holds_across_widths() {
+    for width in [320.0, 390.0, 528.0, 800.0, 1440.0] {
+        let screen = Vec2::new(width, 900.0);
+        let mut body =
+            |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
+        let (response, available, out) = run_on(screen, &mut body);
+        assert!(
+            (response.rect.width() - available).abs() < 2.0,
+            "QrImage outer must stay full width at {width}, got {} expected {available}",
+            response.rect.width()
+        );
+        let rendered = textured_rects(&out);
+        assert!(!rendered.is_empty(), "QR image must render at {width}");
+        let side = rendered.iter().map(Rect::width).fold(0.0, f32::max);
+        assert!(
+            side <= 481.0,
+            "QR image must respect the max side at {width}, got {side:.1}"
+        );
+        let whites = white_rects(&out);
+        assert!(
+            !whites.is_empty(),
+            "white quiet-zone box must render at {width}"
+        );
+        for white in &whites {
+            assert!(
+                (white.width() - (side + 24.0)).abs() <= 3.0,
+                "white box must hug the QR square at {width}, got {white:?} for side {side:.1}"
+            );
+            assert!(
+                white.width() <= available + 1.0,
+                "white box must not overflow at {width}, got {white:?} for {available}"
+            );
+            assert!(
+                (white.center().x - screen.x * 0.5).abs() < 8.0,
+                "white box must stay centered at {width}, got {white:?}"
+            );
+        }
+    }
+}
+
 #[cfg(feature = "qr")]
 fn white_rects(out: &FullOutput) -> Vec<Rect> {
     out.shapes

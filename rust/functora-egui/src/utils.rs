@@ -329,6 +329,11 @@ pub fn u32_to_f32(value: u32) -> f32 {
     value.to_f32().unwrap_or(0.0)
 }
 
+#[must_use]
+pub fn cap_to_available(desired: f32, available: f32) -> f32 {
+    desired.min(available.max(0.0))
+}
+
 /// Spawns an async task and returns a receiver for the result.
 /// Works on both wasm32 (using `wasm_bindgen_futures::spawn_local`)
 /// and native (using `std::thread::spawn` with `pollster::block_on`).

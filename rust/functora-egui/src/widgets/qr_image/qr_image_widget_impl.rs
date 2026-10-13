@@ -4,6 +4,8 @@ use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 const TEX_SIDE: u32 = 256;
 const FALLBACK_SIDE: f32 = 320.0;
 const MAX_SIDE: f32 = 480.0;
+const OUTER_FRAME_MARGINS: f32 = 26.0;
+const WHITE_FRAME_MARGINS: f32 = 24.0;
 
 impl egui::Widget for super::widget::QrImage<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
@@ -23,8 +25,9 @@ impl egui::Widget for super::widget::QrImage<'_> {
                         .into_iter()
                         .find(|side| side.is_finite() && *side > 0.0)
                         .unwrap_or(FALLBACK_SIDE)
-                        .min(MAX_SIDE);
-                    let boxed = (side + 24.0).min(outer.max(0.0));
+                        .min(MAX_SIDE)
+                        .min((outer - OUTER_FRAME_MARGINS - WHITE_FRAME_MARGINS).max(0.0));
+                    let boxed = crate::utils::cap_to_available(side + WHITE_FRAME_MARGINS, outer);
                     band.set_max_width(boxed);
                     let _ = egui::Frame::new()
                         .fill(egui::Color32::WHITE)

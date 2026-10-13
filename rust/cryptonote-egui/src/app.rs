@@ -4,8 +4,7 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
 use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, Separator, ShadcnThemeExt, Shell, ToastState,
-    ToastVariant,
+    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
 };
 
 use crate::error::AppError;
@@ -608,9 +607,6 @@ impl eframe::App for CryptonoteApp {
                         side_ui.ctx().request_repaint();
                     }
                 }
-                let () = side_ui.add_space(8.0);
-                _ = Separator::horizontal().show(side_ui);
-                let () = side_ui.add_space(8.0);
                 if side_ui
                     .add(
                         Button::new(Msg::Reset.render(lang_ref.get()))

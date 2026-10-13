@@ -103,11 +103,20 @@ pub(crate) fn wrap_anywhere_layouter(
     text: &dyn egui::TextBuffer,
     wrap_width: f32,
 ) -> std::sync::Arc<egui::Galley> {
+    wrap_anywhere_layouter_with_color(ui, text, wrap_width, ui.visuals().text_color())
+}
+
+pub(crate) fn wrap_anywhere_layouter_with_color(
+    ui: &egui::Ui,
+    text: &dyn egui::TextBuffer,
+    wrap_width: f32,
+    color: egui::Color32,
+) -> std::sync::Arc<egui::Galley> {
     let mut job = egui::text::LayoutJob::single_section(
         text.as_str().to_owned(),
         egui::TextFormat {
             font_id: egui::FontId::proportional(14.0),
-            color: ui.visuals().text_color(),
+            color,
             ..Default::default()
         },
     );

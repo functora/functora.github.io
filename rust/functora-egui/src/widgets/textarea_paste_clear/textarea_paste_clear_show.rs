@@ -4,7 +4,7 @@ use crate::widgets::paste_clear_core::{
     paint_tool_icon, paste_pending, pending_color, poll_copy, poll_paste, request_copy,
     request_paste, respond, take_slots,
 };
-use crate::widgets::textarea::textarea_widget_impl::wrap_anywhere_layouter;
+use crate::widgets::textarea::textarea_widget_impl::wrap_anywhere_layouter_with_color;
 
 pub use crate::widgets::paste_clear_core::PasteClearResponse;
 
@@ -31,16 +31,18 @@ pub(crate) fn show_textarea_paste_clear(
     let width = ui.available_width();
 
     let toolbar_h: f32 = 28.0;
-    let text_height = wrap_anywhere_layouter(ui, text, (width - h_padding * 2.0).max(0.0))
-        .size()
-        .y;
+    let text_color = theme.foreground;
+    let text_height =
+        wrap_anywhere_layouter_with_color(ui, text, (width - h_padding * 2.0).max(0.0), text_color)
+            .size()
+            .y;
     let fitted = toolbar_h + v_padding + text_height + v_padding;
     let outer_height = fitted.max(min_height).min(max_height);
     let desired = egui::vec2(width, outer_height);
     let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
-    paint_outer(ui, outer_rect, &theme, outer_hovered);
+    paint_outer(ui, outer_rect, &theme, outer_hovered, readonly);
 
     let toolbar_rect = egui::Rect::from_min_max(
         outer_rect.min,
@@ -182,11 +184,14 @@ pub(crate) fn show_textarea_paste_clear(
     let scroll_resp = egui::ScrollArea::vertical()
         .max_height(content_rect.height())
         .show(&mut child_ui, |inner_ui| {
-            let mut wrap = wrap_anywhere_layouter;
+            let mut wrap =
+                move |inner: &egui::Ui, buffer: &dyn egui::TextBuffer, wrap_width: f32| {
+                    wrap_anywhere_layouter_with_color(inner, buffer, wrap_width, text_color)
+                };
             let text_edit = egui::TextEdit::multiline(text)
                 .frame(egui::Frame::NONE)
                 .hint_text(&placeholder)
-                .text_color(theme.foreground)
+                .text_color(text_color)
                 .interactive(!readonly)
                 .desired_width(content_rect.width())
                 .desired_rows(1)

@@ -32,7 +32,7 @@ pub(crate) fn show_input_paste_clear(
     let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
-    paint_outer(ui, outer_rect, &theme, outer_hovered);
+    paint_outer(ui, outer_rect, &theme, outer_hovered, readonly);
 
     let copy_width: f32 = if copy { 40.0 } else { 0.0 };
     let paste_width: f32 = if readonly { 0.0 } else { 40.0 };

@@ -127,6 +127,73 @@ fn control_plain_area_wheel_scrolls_page() {
 
 #[test]
 #[cfg(feature = "clipboard")]
+fn textarea_readonly_renders_muted_background() {
+    let ctx = Context::default();
+    functora_egui::setup_fonts(&ctx);
+    functora_egui::theme_extra::set_theme(&ctx, functora_egui::theme_extra::Theme::Dark);
+    let dark = functora_egui::theme::shadcn_theme_dark::dark();
+    let mut readonly_text = "READONLY-CONTENT-0123456789".to_owned();
+    let mut editable_text = "EDITABLE-CONTENT-0123456789".to_owned();
+    let mut body = |ui: &mut egui::Ui| {
+        let _ = functora_egui::TextareaPasteClear::new(&mut readonly_text)
+            .readonly()
+            .min_height(80.0)
+            .show(ui);
+        let _ = functora_egui::TextareaPasteClear::new(&mut editable_text)
+            .min_height(80.0)
+            .show(ui);
+    };
+    let out = run_with(&ctx, 2, Vec::new(), &mut body);
+    let fills: Vec<(f32, egui::Color32)> = out
+        .shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            Shape::Rect(rect) if (rect.rect.height() - 80.0).abs() <= 1.0 => {
+                Some((rect.rect.min.y, rect.fill))
+            }
+            _ => None,
+        })
+        .collect();
+    let muted_y = fills
+        .iter()
+        .find(|(_, color)| *color == dark.muted)
+        .map(|(y, _)| *y)
+        .expect("readonly field must render a muted inactive background");
+    let plain_y = fills
+        .iter()
+        .find(|(_, color)| *color == dark.background)
+        .map(|(y, _)| *y)
+        .expect("editable field must keep the default background");
+    assert!(
+        muted_y < plain_y,
+        "muted box must belong to the first (readonly) field"
+    );
+    let mut readonly_colors = Vec::new();
+    let mut editable_colors = Vec::new();
+    for clipped in &out.shapes {
+        if let Shape::Text(text) = &clipped.shape {
+            if text.galley.text() == readonly_text {
+                readonly_colors.extend(text.galley.job.sections.iter().map(|s| s.format.color));
+            }
+            if text.galley.text() == editable_text {
+                editable_colors.extend(text.galley.job.sections.iter().map(|s| s.format.color));
+            }
+        }
+    }
+    assert!(!readonly_colors.is_empty(), "readonly content must render");
+    assert!(
+        readonly_colors.iter().all(|c| *c == dark.foreground),
+        "readonly text must stay fully readable, got {readonly_colors:?}"
+    );
+    assert!(!editable_colors.is_empty(), "editable content must render");
+    assert!(
+        editable_colors.iter().all(|c| *c == dark.foreground),
+        "editable text must render in full foreground, got {editable_colors:?}"
+    );
+}
+
+#[test]
+#[cfg(feature = "clipboard")]
 fn textarea_wheel_reaches_page_when_content_fits() {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);

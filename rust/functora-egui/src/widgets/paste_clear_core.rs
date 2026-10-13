@@ -183,16 +183,20 @@ pub(crate) fn paint_tool_icon(
     crate::icons::paint_icon::paint_icon(painter, icon_rect, &icon, color);
 }
 
-/// Paints the shared outer frame: theme background (accent-tinted on hover)
-/// with a 1px inside border that switches to the input color on hover.
+/// Paints the shared outer frame: muted background for readonly fields,
+/// theme background (accent-tinted on hover) otherwise, with a 1px inside
+/// border that switches to the input color on hover.
 pub(crate) fn paint_outer(
     ui: &egui::Ui,
     outer_rect: egui::Rect,
     theme: &ShadcnTheme,
     hovered: bool,
+    readonly: bool,
 ) {
     let cr = egui::CornerRadius::same(f32_to_u8_clamped(theme.radius));
-    let bg = if hovered {
+    let bg = if readonly {
+        theme.muted
+    } else if hovered {
         crate::paint::interpolate_color::interpolate_color(theme.background, theme.accent, 0.35)
     } else {
         theme.background

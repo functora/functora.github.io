@@ -186,7 +186,14 @@ fn about_screen_has_full_content() {
 
 #[test]
 fn donate_screen_uses_greeting_and_blocks() {
-    for fragment in ["DonateGreeting", "DonateIntro", "donate_blocks", "QrImage"] {
+    for fragment in [
+        "DonateGreeting",
+        "DonateIntro",
+        "donate_blocks",
+        "QrImage",
+        "TextareaPasteClear",
+        "readonly()",
+    ] {
         assert!(DONATE_SRC.contains(fragment), "donate screen must include {fragment}");
     }
 }

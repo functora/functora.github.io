@@ -1,12 +1,12 @@
 use crate::app::CryptonoteApp;
-use crate::error::AppError;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, Card, ComponentSize};
+use functora_egui::{Card, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_donate(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        let toast_time = ui.ctx().input(|i| i.time);
         _ = ui.label(egui::RichText::new(BaseMsg::Donate.render(lang)).size(20.0).strong());
         let () = ui.add_space(8.0);
         _ = ui.label(BaseMsg::DonateGreeting.render(lang));
@@ -19,22 +19,12 @@ impl CryptonoteApp {
                 let () = inner.add_space(4.0);
                 _ = functora_egui::QrImage::new(&block.address).show(inner);
                 let () = inner.add_space(4.0);
-                _ = inner.label(&block.address);
-                let () = inner.add_space(4.0);
-                if inner
-                    .add(
-                        Button::new(BaseMsg::Copy.render(lang))
-                            .icon(functora_egui::LucideIcon::Copy)
-                            .size(ComponentSize::Sm),
-                    )
-                    .clicked()
-                {
-                    let addr = block.address.clone();
-                    let rx = functora_egui::spawn_async(async move {
-                        functora_egui::clipboard::write(addr).await.map_err(AppError::from)
-                    });
-                    self.clipboard_write_rx = Some(rx);
-                }
+                let mut address = block.address.clone();
+                let resp = TextareaPasteClear::new(&mut address)
+                    .readonly()
+                    .min_height(80.0)
+                    .show(inner);
+                self.paste_clear_feedback(resp, toast_time);
             });
             let () = ui.add_space(8.0);
         }

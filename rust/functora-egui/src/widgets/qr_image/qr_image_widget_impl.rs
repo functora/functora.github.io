@@ -11,24 +11,36 @@ impl egui::Widget for super::widget::QrImage<'_> {
         let outer = ui.available_width();
         ui.with_layout(egui::Layout::top_down(egui::Align::Center), |centered| {
             egui::Frame::new()
-                .fill(egui::Color32::WHITE)
+                .fill(theme.card)
                 .stroke(egui::Stroke::new(1.0, theme.border))
                 .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
                     theme.radius,
                 )))
                 .inner_margin(egui::Margin::same(12))
-                .show(centered, |inner| {
-                    let side = [inner.available_width(), outer, FALLBACK_SIDE]
+                .show(centered, |band| {
+                    let band_full = band.available_width();
+                    let side = [band_full, outer, FALLBACK_SIDE]
                         .into_iter()
                         .find(|side| side.is_finite() && *side > 0.0)
                         .unwrap_or(FALLBACK_SIDE)
                         .min(MAX_SIDE);
-                    match cached_texture(inner.ctx(), self.content) {
-                        Some(tex) => {
-                            inner.add(egui::Image::new((tex.id(), egui::Vec2::splat(side))))
-                        }
-                        None => fallback(inner, side),
-                    }
+                    let boxed = (side + 24.0).min(outer.max(0.0));
+                    band.set_max_width(boxed);
+                    let _ = egui::Frame::new()
+                        .fill(egui::Color32::WHITE)
+                        .inner_margin(egui::Margin::same(12))
+                        .show(band, |inner| {
+                            let image_side = side.min(inner.available_width().max(0.0));
+                            match cached_texture(inner.ctx(), self.content) {
+                                Some(tex) => inner.add(egui::Image::new((
+                                    tex.id(),
+                                    egui::Vec2::splat(image_side),
+                                ))),
+                                None => fallback(inner, image_side),
+                            }
+                        });
+                    let _ = band
+                        .allocate_exact_size(egui::Vec2::new(band_full, 0.0), egui::Sense::hover());
                 })
                 .response
         })

@@ -12,6 +12,7 @@ fn run_on(
     body: &mut dyn FnMut(&mut egui::Ui) -> egui::Response,
 ) -> (egui::Response, f32, FullOutput) {
     let ctx = egui::Context::default();
+    functora_egui::theme_extra::set_theme(&ctx, functora_egui::theme_extra::Theme::Dark);
     let mut captured: Option<(egui::Response, f32)> = None;
     let raw = RawInput {
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
@@ -158,4 +159,51 @@ fn qr_image_distinct_contents_use_distinct_textures() {
         egui::util::hash("https://example.com/1"),
         egui::util::hash("https://example.com/2")
     );
+}
+
+#[cfg(feature = "qr")]
+fn white_rects(out: &FullOutput) -> Vec<Rect> {
+    out.shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            egui::Shape::Rect(rect_shape)
+                if rect_shape.fill == egui::Color32::WHITE
+                    && rect_shape.brush.as_ref().is_none_or(|brush| {
+                        brush.fill_texture_id == egui::TextureId::default()
+                    })
+                    && rect_shape.rect.height() > 100.0 =>
+            {
+                Some(rect_shape.rect)
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+#[test]
+#[cfg(feature = "qr")]
+fn qr_white_inset_hugs_square_on_wide_desktop() {
+    let mut body = |ui: &mut egui::Ui| functora_egui::QrImage::new("https://example.com").show(ui);
+    let (_, available, out) = run_on(WIDE_SCREEN, &mut body);
+    let rendered = textured_rects(&out);
+    assert!(
+        !rendered.is_empty(),
+        "wide desktop must still render the QR image"
+    );
+    let side = rendered.iter().map(egui::Rect::width).fold(0.0, f32::max);
+    let whites = white_rects(&out);
+    assert!(
+        !whites.is_empty(),
+        "white quiet-zone box must render around the QR image"
+    );
+    for white in &whites {
+        assert!(
+            (white.width() - (side + 24.0)).abs() <= 3.0,
+            "white box must hug the QR square plus quiet-zone margin, got {white:?} for image side {side:.1}"
+        );
+        assert!(
+            white.width() < available * 0.5,
+            "white box must not bleed full width on dark theme, got {white:?} for {available}"
+        );
+    }
 }

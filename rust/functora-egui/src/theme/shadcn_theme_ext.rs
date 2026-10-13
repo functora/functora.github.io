@@ -21,6 +21,17 @@ impl ShadcnThemeExt for egui::Context {
             style.visuals.window_fill = theme.popover;
             style.visuals.window_stroke = egui::Stroke::new(1.0, theme.border);
             style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(1.0, theme.border);
+            style.visuals.override_text_color = Some(theme.foreground);
+            style.visuals.weak_text_color = Some(theme.muted_foreground);
+            style.visuals.hyperlink_color = theme.primary;
+            style.visuals.selection.bg_fill = theme.primary;
+            style.visuals.selection.stroke = egui::Stroke::new(1.0, theme.primary_foreground);
+            style.visuals.extreme_bg_color = theme.secondary;
+            style.visuals.code_bg_color = theme.accent;
+            style.visuals.faint_bg_color = theme.secondary;
+            style.visuals.widgets.noninteractive.fg_stroke.color = theme.foreground;
+            style.visuals.widgets.inactive.fg_stroke.color = theme.foreground;
+            style.visuals.widgets.active.fg_stroke.color = theme.foreground;
             style.visuals.window_shadow = egui::Shadow {
                 offset: [0, 4],
                 blur: 12,

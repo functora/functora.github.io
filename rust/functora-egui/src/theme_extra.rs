@@ -41,6 +41,10 @@ pub fn set_theme(ctx: &egui::Context, theme: Theme) {
     ctx.data_mut(|d| {
         let _ = d.insert_temp(theme_key(), theme);
     });
+    ctx.set_theme(match theme {
+        Theme::Light => egui::Theme::Light,
+        Theme::Dark => egui::Theme::Dark,
+    });
     match theme {
         Theme::Light => {
             let light = crate::theme::shadcn_theme_light::light();

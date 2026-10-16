@@ -24,6 +24,7 @@ fn msg_all() -> Vec<Msg> {
         Msg::DecryptButton,
         Msg::EditNote,
         Msg::Reset,
+        Msg::ResetDone,
         Msg::ViewButton,
         Msg::OpenUrlLabel,
         Msg::OpenUrlPlaceholder,

@@ -96,7 +96,7 @@ fn dirty_app() -> CryptonoteApp {
 #[test]
 fn reset_restores_temporary_defaults() {
     let mut app = dirty_app();
-    app.reset();
+    app.reset(0.0);
     assert_eq!(app.temporary.note, "");
     assert_eq!(app.temporary.password, "");
     assert_eq!(app.temporary.url_input, "");
@@ -118,16 +118,22 @@ fn sidebar_reset_button_clears_state() {
     let _ = driver.run(&mut app, vec![]);
     assert_eq!(app.temporary.note, "");
     assert_eq!(app.temporary.screen, Screen::Home);
+    assert_eq!(app.toast.next_id(), 1);
 }
 
 #[test]
 fn reset_preserves_persistent_state_and_drains_intents() {
+    use cryptonote_egui::i18n::I18N;
     let mut app = dirty_app();
     let persistent_before = app.persistent.clone();
-    app.reset();
+    app.reset(1.0);
     assert_eq!(app.persistent, persistent_before);
     assert_eq!(app.persistent.language, Language::Rus);
-    assert_eq!(app.toast.next_id(), 0);
+    assert_eq!(app.toast.next_id(), 1);
+    assert_eq!(
+        cryptonote_egui::Msg::ResetDone.render(Language::Rus),
+        "Приложение сброшено"
+    );
     assert!(app.unseen_qr_error("boom"));
     assert!(cryptonote_egui::take_url().is_none());
     assert!(cryptonote_egui::take_archive().is_none());

@@ -128,10 +128,12 @@ impl CryptonoteApp {
         functora_egui::theme_extra::set_theme(ctx, self.persistent.theme);
     }
 
-    pub fn reset(&mut self) {
+    pub fn reset(&mut self, now: f64) {
         self.cancel_all();
         self.temporary.reset();
         self.toast = ToastState::new();
+        let lang = self.persistent.language;
+        self.toast.add(Msg::ResetDone.render(lang), ToastVariant::Success, now);
         self.qr_error_notified = None;
         self.qr_state = functora_egui::QrScannerState::new();
         self.md_cache = functora_egui::CommonMarkCache::default();
@@ -653,7 +655,8 @@ impl eframe::App for CryptonoteApp {
             ctx.request_repaint();
         }
         if needs_reset.get() || pending_reset.get() {
-            self.reset();
+            let now = ctx.input(|i| i.time);
+            self.reset(now);
         }
         if prev_persistent != self.persistent {
             self.storage.persist(PERSISTENT_KEY, &self.persistent);

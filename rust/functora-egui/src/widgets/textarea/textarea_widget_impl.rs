@@ -62,14 +62,18 @@ impl egui::Widget for super::widget::Textarea<'_> {
                     .text_color(theme.foreground)
                     .desired_width(inner_rect.width())
                     .desired_rows(8)
+                    .min_size(inner_rect.size())
                     .layouter(&mut wrap);
 
                 inner_ui.add(text_edit)
             });
 
-        let response = scroll_resp.inner;
+        let outer_clicked = outer_response.clicked();
+        let mut response = scroll_resp.inner.union(outer_response);
+        response.rect = outer_rect;
+        response.interact_rect = outer_rect;
 
-        if outer_response.clicked() && !response.has_focus() {
+        if outer_clicked && !response.has_focus() {
             response.request_focus();
         }
 

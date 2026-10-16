@@ -39,7 +39,7 @@ pub(crate) fn show_textarea_paste_clear(
     let fitted = toolbar_h + v_padding + text_height + v_padding;
     let outer_height = fitted.max(min_height).min(max_height);
     let desired = egui::vec2(width, outer_height);
-    let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+    let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::click());
     let outer_hovered = outer_response.hovered() || ui.rect_contains_pointer(outer_rect);
 
     paint_outer(ui, outer_rect, &theme, outer_hovered, readonly);
@@ -195,13 +195,22 @@ pub(crate) fn show_textarea_paste_clear(
                 .interactive(!readonly)
                 .desired_width(content_rect.width())
                 .desired_rows(1)
+                .min_size(content_rect.size())
                 .layouter(&mut wrap);
             inner_ui.add(text_edit)
         });
 
-    let response = scroll_resp.inner;
+    let outer_clicked = outer_response.clicked();
+    let response = if readonly {
+        scroll_resp.inner
+    } else {
+        let mut united = scroll_resp.inner.union(outer_response);
+        united.rect = outer_rect;
+        united.interact_rect = outer_rect;
+        united
+    };
 
-    if !readonly && outer_response.clicked() && !response.has_focus() {
+    if !readonly && outer_clicked && !response.has_focus() {
         response.request_focus();
     }
 

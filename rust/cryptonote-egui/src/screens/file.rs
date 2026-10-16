@@ -1,4 +1,4 @@
-use crate::app::{BYTES_URI_PREFIX, CryptonoteApp};
+use crate::app::CryptonoteApp;
 use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::{Stage, claim_job};
@@ -19,15 +19,17 @@ impl CryptonoteApp {
             _ = ui.label(egui::RichText::new(&att.name).size(18.0).strong());
             _ = ui.label(egui::RichText::new(size).small().weak());
             let () = ui.add_space(8.0);
-            let preview = self
-                .temporary
-                .preview_cache
-                .get(&att.name)
-                .cloned()
-                .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
+            let preview = {
+                let key = crate::screens::attachment_thumb::preview_cache_key(&att.name, &att.data);
+                self.temporary
+                    .preview_cache
+                    .get(&key)
+                    .cloned()
+                    .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data))
+            };
             match preview {
                 Preview::Image(_) => {
-                    let uri = format!("{BYTES_URI_PREFIX}{}", att.name);
+                    let uri = crate::screens::attachment_thumb::attachment_uri(&att.name);
                     _ = ui
                         .add(egui::Image::from_bytes(uri, att.data.clone()).max_width(ui.available_width().min(400.0)));
                 }

@@ -41,7 +41,12 @@ pub struct CryptonoteApp {
     pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<DecryptResult>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
-    preview_rx: Vec<std::sync::mpsc::Receiver<(String, functora_egui::files::Preview)>>,
+    preview_rx: Vec<
+        std::sync::mpsc::Receiver<(
+            crate::screens::attachment_thumb::PreviewCacheKey,
+            functora_egui::files::Preview,
+        )>,
+    >,
     progress_slot: Option<SharedProgress>,
     pub(crate) qr_state: functora_egui::QrScannerState,
     pub(crate) qr_error_notified: Option<String>,
@@ -183,19 +188,26 @@ impl CryptonoteApp {
     }
 
     fn generate_previews(&mut self) {
+        use crate::screens::attachment_thumb::preview_cache_key;
         let new_attachments: Vec<_> = self
             .temporary
             .attachments
             .iter()
-            .filter(|att| !self.temporary.preview_cache.contains_key(&att.name))
+            .filter(|att| {
+                !self
+                    .temporary
+                    .preview_cache
+                    .contains_key(&preview_cache_key(&att.name, &att.data))
+            })
             .cloned()
             .collect();
         for att in new_attachments {
+            let key = preview_cache_key(&att.name, &att.data);
             let name = att.name.clone();
             let data = att.data.clone();
             let rx = functora_egui::spawn_async(async move {
-                let preview = functora_egui::files::preview(&name, &data);
-                (name, preview)
+                let preview = functora_egui::files::preview_cached(&name, &data);
+                (key, preview)
             });
             self.preview_rx.push(rx);
         }
@@ -205,8 +217,8 @@ impl CryptonoteApp {
         let mut remaining = Vec::with_capacity(self.preview_rx.len());
         for rx in self.preview_rx.drain(..) {
             match rx.try_recv() {
-                Ok((name, preview)) => {
-                    let _ = self.temporary.preview_cache.insert(name, preview);
+                Ok((key, preview)) => {
+                    let _ = self.temporary.preview_cache.insert(key, preview);
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => remaining.push(rx),
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => {}

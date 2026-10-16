@@ -18,6 +18,14 @@ impl CryptonoteApp {
         for (idx, att) in self.temporary.attachments.iter().enumerate() {
             let size = format_size(att.data.len() as u64);
             _ = Flex::row().gap(8.0).show(ui, |f| {
+                let thumb_clicked = f
+                    .ui(|inner| crate::screens::attachment_thumb::show_attachment_thumb(inner, &att.name, &att.data))
+                    .inner
+                    .as_ref()
+                    .is_some_and(egui::Response::clicked);
+                if thumb_clicked {
+                    to_open = Some(AttachmentIdx(idx));
+                }
                 _ = f.ui(|inner| {
                     _ = inner.label(format!("{} ({})", att.name, size));
                 });

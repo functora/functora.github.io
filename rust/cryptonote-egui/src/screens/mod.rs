@@ -1,4 +1,5 @@
 pub mod about;
+pub mod attachment_thumb;
 pub mod dock;
 pub mod donate;
 pub mod file;

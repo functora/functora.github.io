@@ -98,7 +98,7 @@ pub struct TemporaryState {
     pub external: External,
     pub progress: Option<Job<Stage>>,
     pub attachment: Option<AttachmentIdx>,
-    pub preview_cache: HashMap<String, functora_egui::files::Preview>,
+    pub preview_cache: HashMap<crate::screens::attachment_thumb::PreviewCacheKey, functora_egui::files::Preview>,
 }
 
 impl Default for TemporaryState {

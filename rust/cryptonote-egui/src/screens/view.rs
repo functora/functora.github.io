@@ -39,6 +39,17 @@ impl CryptonoteApp {
                 let size = format_size(att.data.len() as u64);
                 let name = att.name.clone();
                 _ = Flex::row().gap(8.0).show(ui, |f| {
+                    let thumb_clicked = f
+                        .ui(|inner| {
+                            crate::screens::attachment_thumb::show_attachment_thumb(inner, &att.name, &att.data)
+                        })
+                        .inner
+                        .as_ref()
+                        .is_some_and(egui::Response::clicked);
+                    if thumb_clicked {
+                        self.temporary.attachment = Some(AttachmentIdx(idx));
+                        self.navigate(Screen::File);
+                    }
                     let _ = f.ui(|inner| {
                         _ = inner.label(format!("{name} ({size})"));
                     });
@@ -73,18 +84,20 @@ impl CryptonoteApp {
                     }
                 });
                 let () = ui.add_space(4.0);
-                let preview = self
-                    .temporary
-                    .preview_cache
-                    .get(&att.name)
-                    .cloned()
-                    .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data));
+                let preview = {
+                    let key = crate::screens::attachment_thumb::preview_cache_key(&att.name, &att.data);
+                    self.temporary
+                        .preview_cache
+                        .get(&key)
+                        .cloned()
+                        .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data))
+                };
                 match preview {
                     Preview::Text(t) => {
                         _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
                     }
                     Preview::Image(_) => {
-                        let uri = format!("{}thumb-{}", crate::app::BYTES_URI_PREFIX, att.name);
+                        let uri = crate::screens::attachment_thumb::attachment_uri(&att.name);
                         _ = ui.add(
                             egui::Image::from_bytes(uri, att.data.to_vec())
                                 .maintain_aspect_ratio(true)

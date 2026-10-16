@@ -210,6 +210,18 @@ fn share_screen_uses_full_width_qr() {
 }
 
 #[test]
+fn share_dock_has_copy_button_like_about() {
+    assert!(
+        SHARE_SRC.contains("BaseMsg::Copy"),
+        "share dock must offer a copy button like the about dock"
+    );
+    assert!(
+        SHARE_SRC.contains("clipboard_write_rx"),
+        "share copy button must report through clipboard_write_rx for toast feedback"
+    );
+}
+
+#[test]
 fn license_and_privacy_use_full_texts() {
     assert!(
         LICENSE_SRC.contains("LicenseText"),

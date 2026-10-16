@@ -6,6 +6,7 @@ use crate::route::Screen;
 use crate::state::ActionMode;
 use crate::state::External;
 use functora_egui::i18n::I18N;
+use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::{Alert, Button, ButtonVariant, Flex, Progress, TextareaPasteClear};
 
 impl CryptonoteApp {
@@ -34,6 +35,21 @@ impl CryptonoteApp {
         if pkg_ready || !url.is_empty() {
             _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
                 self.dock_back_flex(f);
+                if !url.is_empty()
+                    && f.add(
+                        Button::new(BaseMsg::Copy.render(lang))
+                            .icon(functora_egui::LucideIcon::Copy)
+                            .variant(ButtonVariant::Default),
+                    )
+                    .inner
+                    .clicked()
+                {
+                    let to_copy = url.clone();
+                    let rx = functora_egui::spawn_async(async move {
+                        functora_egui::clipboard::write(to_copy).await.map_err(AppError::from)
+                    });
+                    self.clipboard_write_rx = Some(rx);
+                }
                 if !url.is_empty()
                     && f.add(
                         Button::new(Msg::Share.render(lang))

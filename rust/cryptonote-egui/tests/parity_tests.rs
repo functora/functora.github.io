@@ -222,6 +222,14 @@ fn license_and_privacy_use_full_texts() {
 }
 
 #[test]
+fn privacy_renders_subheadings_as_markdown() {
+    assert!(
+        PRIVACY_SRC.contains("markdown_view"),
+        "privacy screen must render PrivacyText via markdown_view so sub-headings show as bold"
+    );
+}
+
+#[test]
 fn document_screens_have_no_nested_scroll() {
     // Whole-screen document text must flow in the single page scroll:
     // a nested scroll container fragments scrolling (inner box plus page

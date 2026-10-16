@@ -19,6 +19,7 @@ pub fn GenStaticPage<
     lang: Language,
     children: Element,
 ) -> Element {
+    let html = content.render_markdown(lang);
     rsx! {
         Breadcrumb {
             title,
@@ -28,7 +29,7 @@ pub fn GenStaticPage<
             lang,
         }
         section {
-            p { "{content.render(lang)}" }
+            div { dangerous_inner_html: "{html}" }
             {children}
         }
     }

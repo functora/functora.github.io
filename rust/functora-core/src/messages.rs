@@ -142,7 +142,8 @@ impl I18N for Msg {
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => format!(r#"Copyright (c) {FUNCTORA_CORE_YEAR} Functora
+            Self::LicenseText => format!(r#"The MIT License (MIT)
+Copyright (c) {FUNCTORA_CORE_YEAR} Functora
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -286,7 +287,8 @@ If you have any questions regarding privacy while using the Application, or have
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => format!(r#"Copyright (c) {FUNCTORA_CORE_YEAR} Functora
+            Self::LicenseText => format!(r#"The MIT License (MIT)
+Copyright (c) {FUNCTORA_CORE_YEAR} Functora
 
 Por la presente se concede permiso, libre de cargos, a cualquier persona que haya obtenido una copia de este software y archivos de documentación asociados (el "Software"), para utilizar el Software sin restricción, incluyendo sin limitación los derechos a usar, copiar, modificar, fusionar, publicar, distribuir, sublicenciar y/o vender copias del Software, y a permitir a las personas a las que se les proporcione el Software que hagan lo mismo, sujeto a las siguientes condiciones:
 
@@ -432,7 +434,8 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
             Self::LanguageName(Language::Spa) => "Español".into(),
             Self::LanguageName(Language::Rus) => "Русский".into(),
             Self::LanguageName(_) => "Unknown".into(),
-            Self::LicenseText => format!(r"Copyright (c) {FUNCTORA_CORE_YEAR} Functora
+            Self::LicenseText => format!(r"The MIT License (MIT)
+Copyright (c) {FUNCTORA_CORE_YEAR} Functora
 
 Настоящим предоставляется бесплатное разрешение любому лицу, получившему копию данного программного обеспечения и сопутствующих файлов документации (далее - «Программное обеспечение»), использовать Программное обеспечение без ограничений, включая неограниченное право использовать, копировать, изменять, объединять, публиковать, распространять, сублицензировать и/или продавать копии Программного обеспечения, а также разрешать лицам, которым предоставлено Программное обеспечение, делать то же самое, при соблюдении следующих условий:
 

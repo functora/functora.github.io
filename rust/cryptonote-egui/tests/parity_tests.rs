@@ -225,7 +225,11 @@ fn license_and_privacy_use_full_texts() {
 fn privacy_renders_subheadings_as_markdown() {
     assert!(
         PRIVACY_SRC.contains("markdown_view"),
-        "privacy screen must render PrivacyText via markdown_view so sub-headings show as bold"
+        "privacy screen must render PrivacyText via markdown_view so sub-headings show as headings"
+    );
+    assert!(
+        LICENSE_SRC.contains("markdown_view"),
+        "license screen must render LicenseText via markdown_view like the privacy screen"
     );
 }
 

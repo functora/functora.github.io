@@ -65,6 +65,18 @@ fn privacy_subheadings_render_as_headings() {
 }
 
 #[test]
+fn license_text_starts_with_mit_title() {
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        let text = Msg::LicenseText.render(lang);
+        assert!(
+            text.starts_with("The MIT License (MIT)"),
+            "license must open with the MIT title for {lang:?}, got: {}",
+            text.chars().take(60).collect::<String>(),
+        );
+    }
+}
+
+#[test]
 fn widget_chrome_renders_all_languages() {
     let variants = [
         Msg::Cancel,

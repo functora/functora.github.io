@@ -408,7 +408,7 @@ where
                 let mut footer_opt = footer;
                 let _ = scroll.show(central_ui, |scroll_ui| {
                     scroll_ui.add_space(spacing.page_padding);
-                    let _ = scroll_ui.horizontal(|h_ui| {
+                    let _ = scroll_ui.horizontal_top(|h_ui| {
                         h_ui.add_space(margin);
                         h_ui.add_space(spacing.page_padding);
                         let _ = h_ui.vertical(|v_ui| {

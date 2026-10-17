@@ -5,7 +5,7 @@ use crate::progress::{Stage, claim_job};
 use egui::ScrollArea;
 use functora_egui::files::{Preview, format_size};
 use functora_egui::i18n::I18N;
-use functora_egui::{Alert, Button, ButtonVariant, Progress};
+use functora_egui::{Alert, Button, ButtonVariant, Flex, Progress};
 
 impl CryptonoteApp {
     pub(crate) fn screen_file(&mut self, ui: &mut egui::Ui) {
@@ -53,26 +53,27 @@ impl CryptonoteApp {
                 }
             }
             let () = ui.add_space(12.0);
-            self.dock_back(ui);
-            let () = ui.add_space(8.0);
-            if ui
-                .add(
+            _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+                self.dock_back_flex(f);
+                if f.add(
                     Button::new(Msg::Download.render(lang))
                         .icon(functora_egui::LucideIcon::Download)
                         .variant(ButtonVariant::Default),
                 )
+                .inner
                 .clicked()
-                && claim_job(&mut self.temporary.progress, Stage::Download).is_some()
-            {
-                let data = att.data.to_vec();
-                let name = att.name.clone();
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::download::download(data, &name)
-                        .await
-                        .map_err(AppError::from)
-                });
-                self.download_rx = Some(rx);
-            }
+                    && claim_job(&mut self.temporary.progress, Stage::Download).is_some()
+                {
+                    let data = att.data.to_vec();
+                    let name = att.name.clone();
+                    let rx = functora_egui::spawn_async(async move {
+                        functora_egui::download::download(data, &name)
+                            .await
+                            .map_err(AppError::from)
+                    });
+                    self.download_rx = Some(rx);
+                }
+            });
             if let Some(job) = self.temporary.progress.clone() {
                 let () = ui.add_space(8.0);
                 _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));

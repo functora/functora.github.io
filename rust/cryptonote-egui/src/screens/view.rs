@@ -119,28 +119,9 @@ impl CryptonoteApp {
                 let () = ui.add_space(4.0);
             }
             let () = ui.add_space(8.0);
-            if ui
-                .add(
-                    Button::new(Msg::DownloadAll.render(lang))
-                        .icon(functora_egui::LucideIcon::Download)
-                        .variant(ButtonVariant::Outline),
-                )
-                .clicked()
-            {
-                let files = self.temporary.attachments.clone();
-                if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
-                    let progress = self.track_progress();
-                    let rx = functora_egui::spawn_async(async move {
-                        let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip).await?;
-                        functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
-                            .await
-                            .map_err(AppError::from)
-                    });
-                    self.download_rx = Some(rx);
-                }
-            }
         }
         let () = ui.add_space(12.0);
+        let has_attachments = !self.temporary.attachments.is_empty();
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             self.dock_back_flex(f);
             if f.add(
@@ -179,6 +160,27 @@ impl CryptonoteApp {
                         build_external(&share_note, &password, cipher, &attachments, progress).await
                     });
                     self.generate_rx = Some(rx);
+                }
+            }
+            if has_attachments
+                && f.add(
+                    Button::new(Msg::DownloadAll.render(lang))
+                        .icon(functora_egui::LucideIcon::Download)
+                        .variant(ButtonVariant::Outline),
+                )
+                .inner
+                .clicked()
+            {
+                let files = self.temporary.attachments.clone();
+                if claim_job(&mut self.temporary.progress, Stage::Zip).is_some() {
+                    let progress = self.track_progress();
+                    let rx = functora_egui::spawn_async(async move {
+                        let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip).await?;
+                        functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
+                            .await
+                            .map_err(AppError::from)
+                    });
+                    self.download_rx = Some(rx);
                 }
             }
             if f.add(

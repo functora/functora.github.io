@@ -1,5 +1,91 @@
 use crate::camera::FrameData;
 use crate::error::Error;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static PASTE_LISTENER_INSTALLED: AtomicBool = AtomicBool::new(false);
+
+pub fn install_paste_image_listener() {
+    use wasm_bindgen::JsCast as _;
+    if PASTE_LISTENER_INSTALLED.swap(true, Ordering::Relaxed) {
+        return;
+    }
+    let Some(document) = web_sys::window().and_then(|w| w.document()) else {
+        PASTE_LISTENER_INSTALLED.store(false, Ordering::Relaxed);
+        return;
+    };
+    let closure = wasm_bindgen::closure::Closure::wrap(Box::new(|event: web_sys::ClipboardEvent| {
+        handle_paste_event(event);
+    }) as Box<dyn FnMut(_)>);
+    if let Err(e) =
+        document.add_event_listener_with_callback("paste", closure.as_ref().unchecked_ref())
+    {
+        PASTE_LISTENER_INSTALLED.store(false, Ordering::Relaxed);
+        tracing::warn!("paste listener install failed: {e:?}");
+        return;
+    }
+    closure.forget();
+}
+
+fn handle_paste_event(event: web_sys::ClipboardEvent) {
+    let Some(data) = event.clipboard_data() else {
+        return;
+    };
+    if data.get_data("text").is_ok_and(|text| !text.is_empty()) {
+        return;
+    }
+    let items = data.items();
+    for index in 0..items.length() {
+        let Some(item) = items.get(index) else {
+            continue;
+        };
+        if item.kind() != "file" {
+            continue;
+        }
+        let mime = item.type_();
+        let Some(ext) = image_ext_for_mime(&mime) else {
+            continue;
+        };
+        let Ok(Some(file)) = item.get_as_file() else {
+            continue;
+        };
+        let promise = file.array_buffer();
+        wasm_bindgen_futures::spawn_local(async move {
+            let buffer = match wasm_bindgen_futures::JsFuture::from(promise).await {
+                Ok(buffer) => buffer,
+                Err(e) => {
+                    tracing::warn!("paste image read failed: {e:?}");
+                    return;
+                }
+            };
+            let bytes = js_sys::Uint8Array::new(&buffer).to_vec();
+            if bytes.is_empty() {
+                return;
+            }
+            crate::paste_image::store(crate::paste_image::PasteImage {
+                name: format!(
+                    "pasted-{}.{}",
+                    crate::utils::f64_to_u64_clamped(js_sys::Date::now()),
+                    ext
+                ),
+                data: bytes,
+            });
+        });
+        return;
+    }
+}
+
+fn image_ext_for_mime(mime: &str) -> Option<&'static str> {
+    match mime {
+        "image/png" => Some("png"),
+        "image/jpeg" => Some("jpg"),
+        "image/gif" => Some("gif"),
+        "image/webp" => Some("webp"),
+        "image/bmp" => Some("bmp"),
+        "image/avif" => Some("avif"),
+        "image/svg+xml" => Some("svg"),
+        _ => None,
+    }
+}
 
 pub async fn clipboard_read() -> Result<String, Error> {
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;

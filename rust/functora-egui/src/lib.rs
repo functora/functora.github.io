@@ -39,6 +39,7 @@ pub mod download;
 pub mod error;
 #[cfg(feature = "files")]
 pub mod files;
+pub mod paste_image;
 
 #[cfg(feature = "files")]
 pub use files::BlobMemo;

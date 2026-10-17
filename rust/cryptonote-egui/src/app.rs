@@ -37,11 +37,13 @@ pub struct CryptonoteApp {
     pub pick_rx: Option<std::sync::mpsc::Receiver<PickResult>>,
     pub(crate) pick_cancel: Option<functora_egui::CancelToken>,
     pub pick_overlay_open: bool,
+    pub paste_image_rx:
+        Option<std::sync::mpsc::Receiver<Result<Option<functora_egui::paste_image::PasteImage>, AppError>>>,
     pub(crate) generate_rx: Option<std::sync::mpsc::Receiver<Result<External, AppError>>>,
     pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<DecryptResult>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
-    preview_rx: Vec<
+    pub preview_rx: Vec<
         std::sync::mpsc::Receiver<(
             crate::screens::attachment_thumb::PreviewCacheKey,
             functora_egui::files::Preview,
@@ -69,6 +71,7 @@ impl Default for CryptonoteApp {
             pick_rx: None,
             pick_cancel: None,
             pick_overlay_open: false,
+            paste_image_rx: None,
             generate_rx: None,
             decrypt_rx: None,
             archive_rx: None,
@@ -97,6 +100,7 @@ impl CryptonoteApp {
         this.sidebar_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         #[cfg(target_arch = "wasm32")]
         {
+            functora_egui::platform::web::install_paste_image_listener();
             let router = AppRouter::new(&Screen::default());
             let current = *router.current();
             this.router = router;
@@ -250,6 +254,7 @@ impl CryptonoteApp {
         self.share_rx = None;
         self.download_rx = None;
         self.pick_rx = None;
+        self.paste_image_rx = None;
         self.generate_rx = None;
         self.decrypt_rx = None;
         self.archive_rx = None;
@@ -261,6 +266,41 @@ impl CryptonoteApp {
         }
         self.pick_overlay_open = false;
         self.progress_slot = None;
+    }
+
+    pub fn handle_paste_image(&mut self, ctx: &egui::Context) {
+        if let Some(image) = functora_egui::paste_image::take() {
+            let time = ctx.input(|i| i.time);
+            self.attach_pasted_image(image, time);
+        }
+        #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+        {
+            use crate::state::ActionMode;
+            if self.paste_image_rx.is_none()
+                && self.temporary.screen == Screen::Home
+                && self.temporary.action == ActionMode::Create
+                && self.temporary.progress.is_none()
+                && functora_egui::paste_image::is_paste_image_intent(&ctx.input(|i| i.events.clone()))
+            {
+                self.paste_image_rx = Some(functora_egui::spawn_async(async move {
+                    functora_egui::clipboard::read_image().await.map_err(AppError::from)
+                }));
+            }
+        }
+    }
+
+    fn attach_pasted_image(&mut self, image: functora_egui::paste_image::PasteImage, time: f64) {
+        let attachment = functora_egui::files::Attachment {
+            name: image.name,
+            data: image.data.into(),
+        };
+        crate::hooks::add_attachment(&mut self.temporary.attachments, attachment);
+        self.toast.add(
+            BaseMsg::FilesAttached(1).render(self.lang()),
+            ToastVariant::Success,
+            time,
+        );
+        self.generate_previews();
     }
 
     pub fn poll_receivers(&mut self, ctx: &egui::Context) {
@@ -363,6 +403,20 @@ impl CryptonoteApp {
                     self.pick_cancel = None;
                     self.pick_overlay_open = false;
                 }
+            }
+        }
+        if let Some(rx) = self.paste_image_rx.take() {
+            match rx.try_recv() {
+                Ok(Ok(Some(image))) => self.attach_pasted_image(image, time),
+                Ok(Ok(None)) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+                Ok(Err(e)) => {
+                    self.toast.add(
+                        Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                        ToastVariant::Error,
+                        time,
+                    );
+                }
+                Err(std::sync::mpsc::TryRecvError::Empty) => self.paste_image_rx = Some(rx),
             }
         }
         if let Some(rx) = self.generate_rx.take() {
@@ -568,6 +622,7 @@ impl eframe::App for CryptonoteApp {
         self.apply_theme(&ctx);
         self.poll_receivers(&ctx);
         self.handle_deep_link(&ctx);
+        self.handle_paste_image(&ctx);
         self.router.ui(ui);
         #[cfg(target_os = "android")]
         functora_egui::android::poll_ime(&ctx);

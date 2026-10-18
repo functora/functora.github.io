@@ -14,21 +14,37 @@ pub async fn write(text: String) -> Result<(), Error> {
 ))]
 pub async fn read_image() -> Result<Option<crate::paste_image::PasteImage>, Error> {
     std::future::ready(()).await;
-    let mut clipboard =
-        arboard::Clipboard::new().map_err(|e| Error::JS(format!("Clipboard init: {e}")))?;
-    if clipboard.get_text().is_ok_and(|text| !text.is_empty()) {
-        return Ok(None);
+    match arboard::Clipboard::new() {
+        Ok(mut clipboard) => read_image_from(&mut clipboard),
+        Err(e) => {
+            tracing::warn!("Clipboard unavailable for image paste: {e}");
+            Ok(None)
+        }
     }
-    let image = match clipboard.get_image() {
-        Ok(image) => image,
-        Err(arboard::Error::ContentNotAvailable) => return Ok(None),
-        Err(e) => return Err(Error::JS(format!("Clipboard image read: {e}"))),
-    };
-    let data = rgba_to_png(image.width, image.height, image.bytes.as_ref())?;
-    Ok(Some(crate::paste_image::PasteImage {
-        name: format!("pasted-{}.png", unix_ms()),
-        data,
-    }))
+}
+
+#[cfg(all(
+    not(any(target_arch = "wasm32", target_os = "android")),
+    feature = "images"
+))]
+fn read_image_from(
+    clipboard: &mut arboard::Clipboard,
+) -> Result<Option<crate::paste_image::PasteImage>, Error> {
+    if clipboard.get_text().is_ok_and(|text| !text.is_empty()) {
+        Ok(None)
+    } else {
+        match clipboard.get_image() {
+            Ok(image) => {
+                let data = rgba_to_png(image.width, image.height, image.bytes.as_ref())?;
+                Ok(Some(crate::paste_image::PasteImage {
+                    name: format!("pasted-{}.png", unix_ms()),
+                    data,
+                }))
+            }
+            Err(arboard::Error::ContentNotAvailable) => Ok(None),
+            Err(e) => Err(Error::JS(format!("Clipboard image read: {e}"))),
+        }
+    }
 }
 
 #[cfg(all(

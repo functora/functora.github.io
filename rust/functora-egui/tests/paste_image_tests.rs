@@ -1,7 +1,11 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use egui::{Event, Key, Modifiers};
-#[cfg(all(feature = "clipboard", feature = "images"))]
+#[cfg(all(
+    feature = "clipboard",
+    feature = "images",
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 use functora_egui::clipboard::rgba_to_png;
 use functora_egui::paste_image::{PasteImage, is_paste_image_intent, store, take};
 
@@ -74,7 +78,11 @@ fn slot_roundtrip() {
     assert_eq!(take(), None);
 }
 
-#[cfg(all(feature = "clipboard", feature = "images"))]
+#[cfg(all(
+    feature = "clipboard",
+    feature = "images",
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 #[test]
 fn rgba_to_png_encodes_decodable_png() {
     let rgba = [
@@ -86,9 +94,29 @@ fn rgba_to_png_encodes_decodable_png() {
     assert_eq!((decoded.width(), decoded.height()), (2, 2));
 }
 
-#[cfg(all(feature = "clipboard", feature = "images"))]
+#[cfg(all(
+    feature = "clipboard",
+    feature = "images",
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
 #[test]
 fn rgba_to_png_rejects_mismatched_buffer() {
     let err = rgba_to_png(2, 2, &[0u8; 8]).expect_err("short buffer must fail");
     assert!(!err.to_string().is_empty());
+}
+
+#[cfg(all(
+    feature = "clipboard",
+    feature = "images",
+    not(any(target_arch = "wasm32", target_os = "android"))
+))]
+#[test]
+fn read_image_treats_unavailable_clipboard_as_no_image() {
+    let result = pollster::block_on(functora_egui::clipboard::read_image());
+    let Ok(image) = result else {
+        panic!("clipboard unavailability must not surface as an error");
+    };
+    if let Some(pasted) = image {
+        assert_eq!(&pasted.data[..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
+    }
 }

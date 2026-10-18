@@ -96,6 +96,7 @@ version = "0.3"
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android")))'.dependencies.arboard]
 version = "3.4"
 optional = true
+features = ["wayland-data-control"]
 
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android")))'.dependencies.rfd]
 version = "0.15"

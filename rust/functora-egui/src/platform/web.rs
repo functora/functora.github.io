@@ -14,7 +14,7 @@ pub fn install_paste_image_listener() {
         return;
     };
     let closure = wasm_bindgen::closure::Closure::wrap(Box::new(|event: web_sys::ClipboardEvent| {
-        handle_paste_event(event);
+        handle_paste_event(&event);
     }) as Box<dyn FnMut(_)>);
     if let Err(e) =
         document.add_event_listener_with_callback("paste", closure.as_ref().unchecked_ref())
@@ -26,7 +26,7 @@ pub fn install_paste_image_listener() {
     closure.forget();
 }
 
-fn handle_paste_event(event: web_sys::ClipboardEvent) {
+fn handle_paste_event(event: &web_sys::ClipboardEvent) {
     let Some(data) = event.clipboard_data() else {
         return;
     };

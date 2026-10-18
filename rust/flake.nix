@@ -36,6 +36,23 @@
             ]
             ++ mobile-targets;
         };
+        wasm-bindgen-cli-0_2_121 = with pkgs;
+          rustPlatform.buildRustPackage rec {
+            pname = "wasm-bindgen-cli";
+            version = "0.2.121";
+            src = pkgs.fetchCrate {
+              pname = "wasm-bindgen-cli";
+              version = "0.2.121";
+              sha256 = "sha256-ZOMgFNOcGkO66Jz/Z83eoIu+DIzo3Z/vq6Z5g6BDY/w=";
+            };
+            cargoLock.lockFile = "${src}/Cargo.lock";
+            nativeBuildInputs = [pkg-config];
+            buildInputs =
+              [openssl]
+              ++ lib.optionals stdenv.hostPlatform.isDarwin [curl];
+            nativeCheckInputs = [nodejs_latest];
+            doCheck = false;
+          };
         wasm-bindgen-cli-0_2_127 = with pkgs;
           rustPlatform.buildRustPackage rec {
             pname = "wasm-bindgen-cli";
@@ -111,7 +128,7 @@
               --suffix PATH : ${
               pkgs.lib.makeBinPath [
                 pkgs.esbuild
-                pkgs.wasm-bindgen-cli_0_2_118
+                wasm-bindgen-cli-0_2_121
               ]
             }
           '';
@@ -119,7 +136,7 @@
         mkAab = app: let
           mkCmd = target: ''
             android-icons
-            RES="./target/dx/${app}/release/android/app/app/src/main/res"
+            RES="../target/dx/${app}/release/android/app/app/src/main/res"
             rm -f "$RES"/mipmap-*/ic_launcher.webp \
               "$RES"/mipmap-*/ic_launcher.png \
               "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
@@ -127,21 +144,21 @@
               "$RES"/drawable/ic_launcher_background.png \
               "$RES"/drawable-v24/ic_launcher_foreground.xml \
               "$RES"/drawable-v24/ic_launcher_foreground.png
-            rm -f ./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
+            rm -f ../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
             dx bundle --release --android --debug-symbols=false --target "${target}"
             VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
             VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
-            GRADLE="./target/dx/${app}/release/android/app/app/build.gradle.kts"
+            GRADLE="../target/dx/${app}/release/android/app/app/build.gradle.kts"
             sed -i "s/versionCode = 1/versionCode = $VC/" "$GRADLE"
-            KOTLIN="./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt"
+            KOTLIN="../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt"
             if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt ]; then
               cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt "$KOTLIN"
             fi
             if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt ]; then
               cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt \
-                ./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
+                ../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
             fi
-            CHROME="./target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/RustWebChromeClient.kt"
+            CHROME="../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/RustWebChromeClient.kt"
             sed -i 's|val intent = fileChooserParams.createIntent()|val intent = fileChooserParams.createIntent().apply { action = Intent.ACTION_OPEN_DOCUMENT }|' "$CHROME"
             rm -f "$RES"/mipmap-*/ic_launcher.webp \
               "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
@@ -152,15 +169,15 @@
             cp assets/favicon/mipmap-xhdpi.png "$RES/mipmap-xhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
             cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
-            MANIFEST="./target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
+            MANIFEST="../target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
             sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/${app}/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
             sed -i 's| android:launchMode="[^"]*"||g' "$MANIFEST"
             sed -i 's|android:name="dev.dioxus.main.MainActivity"|android:name="dev.dioxus.main.MainActivity" android:launchMode="singleInstance"|' "$MANIFEST"
             sed -i 's|</activity>|</activity>\n    <activity android:name="dev.dioxus.main.ProxyActivity" android:exported="true" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="application/octet-stream" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="*/*" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.SEND" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:mimeType="application/octet-stream" />\n      </intent-filter>\n    </activity>|' "$MANIFEST"
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
             export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
-            (cd "./target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
-            OUT="./target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
+            (cd "../target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
+            OUT="../target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
             mv "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
             echo "Aab ${app} release success for ${target}!"
@@ -213,8 +230,8 @@
                   mkdir -p "$REL"
                 fi
                 dx bundle --release --web --debug-symbols=false
-                cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
-                cp -R ./target/dx/${app}/release/web/public/* "$REL"
+                cp ../functora-dioxus/assets/sw.js ../target/dx/${app}/release/web/public/sw.js
+                cp -R ../target/dx/${app}/release/web/public/* "$REL"
                 echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
                 echo "$REL web release success!"
               )
@@ -228,14 +245,14 @@
                   cd "${app}"
                   VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                   dx bundle --release --web --debug-symbols=false
-                    cp ../functora-dioxus/assets/sw.js ./target/dx/${app}/release/web/public/sw.js
+                    cp ../functora-dioxus/assets/sw.js ../target/dx/${app}/release/web/public/sw.js
                     fuser -k -TERM 8000/tcp 2>/dev/null || true
                     sleep 0.5
                     exec python3 <<PYEOF
               import http.server, os
               PORT = 8000
               BASE = "/apps/${app}/$VSN"
-              ROOT = os.path.abspath("./target/dx/${app}/release/web/public")
+              ROOT = os.path.abspath("../target/dx/${app}/release/web/public")
 
               class Handler(http.server.SimpleHTTPRequestHandler):
                   def __init__(self, *a, **k):
@@ -274,7 +291,7 @@
                   --target web \
                   --no-typescript \
                   --out-dir "$REL/pkg" \
-                  "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                  "../target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
                 ${pkgs.binaryen}/bin/wasm-opt -O2 --strip-debug \
                   "$REL/pkg/''${LIBNAME}_bg.wasm" -o "$REL/pkg/''${LIBNAME}_bg.opt.wasm"
                 mv "$REL/pkg/''${LIBNAME}_bg.opt.wasm" "$REL/pkg/''${LIBNAME}_bg.wasm"
@@ -302,7 +319,7 @@
                       --target web \
                       --no-typescript \
                       --out-dir /tmp/${app}-web/pkg \
-                      "./target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                      "../target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
                     cp assets/index.html /tmp/${app}-web/index.html
                     cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
                     cp assets/egui.js /tmp/${app}-web/egui.js
@@ -333,7 +350,7 @@
               (
                 cd "${app}"
                 VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                OUT="target/desktop-release"
+                OUT="../target/desktop-release"
                 IMG="$OUT/${app}-v$VSN-x86_64.AppImage"
                 if [ -f "$IMG" ]
                 then
@@ -349,7 +366,7 @@
                 appstreamcli validate --no-net desktop/metainfo/*.metainfo.xml
                 rm -rf "$OUT/AppDir"
                 mkdir -p "$OUT/AppDir/usr/bin" "$OUT/AppDir/usr/share/metainfo"
-                cp "target/release/${app}" "$OUT/AppDir/usr/bin/${app}"
+                cp "../target/release/${app}" "$OUT/AppDir/usr/bin/${app}"
                 cp "$DESKTOP" "$OUT/AppDir/$APPID.desktop"
                 cp "${icons}/android-chrome-512x512.png" "$OUT/AppDir/$APPID.png"
                 cp "$OUT/AppDir/$APPID.png" "$OUT/AppDir/.DirIcon"
@@ -497,7 +514,7 @@
           buildCmd = target: "${rustToolchain}/bin/cargo build --release --target \"${target}\"";
           copyCmd = target: ''
             DST="android/app/src/main/jniLibs/${abis.${target}}"
-            SRC="target/${target}/release/lib${libName}.so"
+            SRC="../target/${target}/release/lib${libName}.so"
             mkdir -p "$DST"
             if [ ! -f "$DST/lib${libName}.so" ] || ! cmp -s "$SRC" "$DST/lib${libName}.so"; then
               cp "$SRC" "$DST/lib${libName}.so"
@@ -715,7 +732,7 @@
               strace
               # web
               binaryen
-              wasm-bindgen-cli-0_2_127
+              wasm-bindgen-cli-0_2_121
               lessc
               clean-css-cli
               # linux
@@ -764,7 +781,7 @@
               # apps
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
-              (mkApk "cryptonote" "./cryptonote/target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
+              (mkApk "cryptonote" "./target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
               (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (mkFunctoraEguiDesktop "cryptonote-egui" "../cryptonote/assets/favicon")

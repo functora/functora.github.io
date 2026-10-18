@@ -40,7 +40,6 @@ impl ShowcaseApp {
         this.apply_theme(&cc.egui_ctx);
         let initial = this.router.current().component();
         this.selected = initial;
-        this.prev_selected = initial;
         this
     }
 
@@ -50,7 +49,6 @@ impl ShowcaseApp {
 
     fn reset_to_home(&mut self, ctx: &egui::Context) {
         let prev_persistent = self.persistent.clone();
-        let previous = self.selected;
         *self = Self::default();
         self.persistent = PersistentState::with_system_defaults(ctx, ());
         if self.persistent != prev_persistent {
@@ -59,7 +57,6 @@ impl ShowcaseApp {
                 .persist("functora_egui_demo_persistent", &self.persistent);
         }
         self.sidebar_collapsed = ctx.on_mobile();
-        self.prev_selected = previous;
         self.router.reset(AppRoute::default());
         self.selected = None;
         self.apply_theme(ctx);
@@ -334,10 +331,6 @@ impl eframe::App for ShowcaseApp {
         self.sync_from_router();
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
-        let should_scroll_top = self.selected != self.prev_selected;
-        if should_scroll_top {
-            self.prev_selected = self.selected;
-        }
         let mut persistent = std::mem::take(&mut self.persistent);
         let prev_persistent = persistent.clone();
         let mut collapsed_val = self.sidebar_collapsed;
@@ -404,7 +397,6 @@ impl eframe::App for ShowcaseApp {
                 .flat_map(|(_, _, items)| items.iter().map(|d| d.name)),
         )
         .breadcrumb(&route, &history)
-        .scroll_top(should_scroll_top)
         .footer({
             let lang_ref = &lang_cell;
             move |footer_ui| {

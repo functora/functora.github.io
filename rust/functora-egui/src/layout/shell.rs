@@ -266,6 +266,12 @@ where
             system_back,
         } = self;
         let ctx = ui.ctx().clone();
+        let route_id = egui::Id::new("shell_prev_route");
+        let prev_route = ctx.data(|d| d.get_temp::<R>(route_id));
+        let route_changed = breadcrumb.is_some_and(|(route, _)| prev_route.as_ref() != Some(route));
+        if route_changed && let Some((route, _)) = breadcrumb {
+            let _ = ctx.data_mut(|d| d.insert_temp(route_id, route.clone()));
+        }
         let mut collapsed_val = sync_sidebar_collapsed(&ctx, *collapsed);
         let mut breadcrumb_action: Option<NavAction<R>> = None;
         if system_back {
@@ -402,7 +408,7 @@ where
                 let margin = ((available - content_width) * 0.5).max(0.0);
                 let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
                 let mut scroll = egui::ScrollArea::vertical().auto_shrink([false; 2]);
-                if scroll_top {
+                if scroll_top || route_changed {
                     scroll = scroll.vertical_scroll_offset(0.0);
                 }
                 let mut footer_opt = footer;

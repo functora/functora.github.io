@@ -49,6 +49,7 @@ fn main() {
         path_prefix: &android_cfg.path_prefix,
         extra_intent_filters: &android_cfg.extra_intent_filters,
         camera: android_cfg.camera,
+        internet: android_cfg.internet,
     }
     .render()
     .expect("askama manifest");

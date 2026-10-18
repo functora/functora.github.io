@@ -17,6 +17,7 @@ pub struct AndroidConfig {
     pub extra_intent_filters: String,
     pub app_name: String,
     pub camera: bool,
+    pub internet: bool,
 }
 
 fn derive_namespace(manifest_path: &str) -> String {
@@ -124,6 +125,7 @@ pub fn load_android_config(manifest_path: &str) -> AndroidConfig {
         .and_then(pkg_name)
         .unwrap_or_else(|| "app".to_owned());
     let camera = metadata_bool(manifest_path, "functora-egui-android", "camera");
+    let internet = metadata_bool(manifest_path, "functora-egui-android", "internet");
     AndroidConfig {
         namespace: namespace.clone(),
         application_id: namespace,
@@ -137,5 +139,6 @@ pub fn load_android_config(manifest_path: &str) -> AndroidConfig {
         extra_intent_filters,
         app_name,
         camera,
+        internet,
     }
 }

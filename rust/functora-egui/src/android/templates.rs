@@ -29,6 +29,7 @@ pub struct ManifestXml<'a> {
     pub path_prefix: &'a str,
     pub extra_intent_filters: &'a str,
     pub camera: bool,
+    pub internet: bool,
 }
 
 #[derive(Template)]

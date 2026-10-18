@@ -17,16 +17,20 @@ const EXTRA_FILTERS: &str = r#"<intent-filter>
 </intent-filter>"#;
 
 fn config(extra_filters: Option<&str>) -> AndroidConfig {
+    let metadata = extra_filters.map_or_else(String::new, |extra| {
+        format!("extra_intent_filters = '''\n{extra}\n'''\n")
+    });
+    config_metadata(&metadata)
+}
+
+fn config_metadata(metadata: &str) -> AndroidConfig {
     let tmp = tempfile::NamedTempFile::new().unwrap();
     let path = tmp.path().to_str().unwrap();
-    let metadata = extra_filters.map_or_else(String::new, |extra| {
-        format!(
-            "\n[package.metadata.functora-egui-android]\nextra_intent_filters = '''\n{extra}\n'''\n"
-        )
-    });
     std::fs::write(
         path,
-        format!("[package]\nname = \"deep-link-app\"\nversion = \"1.0.0\"\n{metadata}"),
+        format!(
+            "[package]\nname = \"deep-link-app\"\nversion = \"1.0.0\"\n[package.metadata.functora-egui-android]\n{metadata}"
+        ),
     )
     .unwrap();
     load_android_config(path)
@@ -41,6 +45,7 @@ fn render(cfg: &AndroidConfig) -> String {
         path_prefix: &cfg.path_prefix,
         extra_intent_filters: &cfg.extra_intent_filters,
         camera: cfg.camera,
+        internet: cfg.internet,
     }
     .render()
     .unwrap()
@@ -100,4 +105,94 @@ fn manifest_template_keeps_extra_slot_raw() {
 fn android_run_schedules_repaint_on_deep_link_update() {
     assert!(RUN_SRC.contains("set_schedule_update"));
     assert!(RUN_SRC.contains("wake_via_repaint"));
+}
+
+#[test]
+fn manifest_template_declares_tools_and_strips_internet() {
+    assert!(MANIFEST_TEMPLATE.contains(r#"xmlns:tools="http://schemas.android.com/tools""#));
+    assert!(MANIFEST_TEMPLATE.contains(
+        r#"<uses-permission android:name="android.permission.INTERNET" tools:node="remove" />"#
+    ));
+}
+
+#[test]
+fn rendered_manifest_strips_internet_permission() {
+    for camera in [false, true] {
+        let mut cfg = config(None);
+        cfg.camera = camera;
+        let manifest = render(&cfg);
+        let internet: Vec<&str> = manifest
+            .lines()
+            .filter(|line| line.contains("android.permission.INTERNET"))
+            .collect();
+        assert_eq!(internet.len(), 1, "camera={camera}: {manifest}");
+        assert!(
+            internet[0].contains(r#"tools:node="remove""#),
+            "camera={camera}: bare INTERNET permission: {}",
+            internet[0]
+        );
+    }
+}
+
+#[test]
+fn rendered_manifest_permissions_are_exactly_expected() {
+    let mut cfg = config(None);
+    cfg.camera = true;
+    let manifest = render(&cfg);
+    let permissions: Vec<&str> = manifest
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("<uses-permission"))
+        .collect();
+    assert_eq!(permissions.len(), 2, "{manifest}");
+    assert!(
+        permissions
+            .iter()
+            .any(|perm| perm.contains("android.permission.INTERNET")
+                && perm.contains(r#"tools:node="remove""#))
+    );
+    assert!(
+        permissions
+            .iter()
+            .any(|perm| perm.contains(r#"android.permission.CAMERA""#)
+                && !perm.contains("tools:node"))
+    );
+}
+
+#[test]
+fn default_config_is_offline() {
+    let cfg = config(None);
+    assert!(!cfg.internet);
+    let manifest = render(&cfg);
+    assert!(manifest.contains(
+        r#"<uses-permission android:name="android.permission.INTERNET" tools:node="remove" />"#
+    ));
+    assert!(!manifest.contains(r#"android.permission.INTERNET" />"#));
+}
+
+#[test]
+fn internet_metadata_grants_internet() {
+    let mut cfg = config_metadata("internet = true\n");
+    assert!(cfg.internet);
+    cfg.camera = true;
+    let manifest = render(&cfg);
+    assert!(
+        manifest.contains(r#"<uses-permission android:name="android.permission.INTERNET" />"#),
+        "{manifest}"
+    );
+    assert!(!manifest.contains(r#"tools:node=""#), "{manifest}");
+    let permissions: Vec<&str> = manifest
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("<uses-permission"))
+        .collect();
+    assert_eq!(permissions.len(), 2, "{manifest}");
+    assert!(permissions.iter().any(
+        |perm| perm.contains(r#"android.permission.INTERNET""#) && !perm.contains("tools:node")
+    ));
+    assert!(
+        permissions
+            .iter()
+            .any(|perm| perm.contains(r#"android.permission.CAMERA""#))
+    );
 }

@@ -27,6 +27,9 @@ serde = ["functora-egui-winit/serde"]
 wayland = ["functora-egui-winit/wayland"]
 x11 = ["functora-egui-winit/x11"]
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

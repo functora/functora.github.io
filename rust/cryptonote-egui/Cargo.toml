@@ -86,6 +86,9 @@ egui-winit = { path = "../egui-winit" }
 [dev-dependencies]
 zip = { version = "2", default-features = false, features = ["deflate"] }
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

@@ -426,12 +426,8 @@ fn unification_check() -> Result<(), TestError> {
         directory.path().join("Cargo.lock"),
     )
     .map(|_| ())?;
-    let target = std::env::var("CARGO_TARGET_DIR").unwrap_or_else(|_| {
-        root.join("functora-egui")
-            .join("target")
-            .to_string_lossy()
-            .into_owned()
-    });
+    let target = std::env::var("CARGO_TARGET_DIR")
+        .unwrap_or_else(|_| root.join("target").to_string_lossy().into_owned());
     let manifest = directory
         .path()
         .join("Cargo.toml")

@@ -11,6 +11,9 @@ description = "Macro-free currying on stable Rust."
 
 [dependencies]
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

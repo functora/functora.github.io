@@ -18,6 +18,9 @@ tokio = { version = "1", features = ["rt", "macros"] }
 [features]
 futures = ["dep:futures"]
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

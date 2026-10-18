@@ -76,6 +76,9 @@ dioxus-signals = "=0.8.0-alpha.1"
 dioxus-document = "=0.8.0-alpha.1"
 generational-box = "=0.8.0-alpha.1"
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

@@ -74,6 +74,9 @@ isolang = { version = "2.3", default-features = false, features = [
 ] }
 thiserror = { version = "2.0.18", features = ["std"] }
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

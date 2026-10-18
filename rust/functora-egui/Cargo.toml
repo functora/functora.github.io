@@ -201,6 +201,9 @@ markdown = [
 tempfile = "3.19.0"
 askama = "0.12"
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

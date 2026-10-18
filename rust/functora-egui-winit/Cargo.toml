@@ -343,6 +343,9 @@ zero_sized_map_values = "warn"
 level = "warn"
 priority = -1
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 trivial_casts = "allow"
 trivial_numeric_casts = "warn"

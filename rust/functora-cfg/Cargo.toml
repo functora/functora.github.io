@@ -24,6 +24,9 @@ serial_test = "3.2.0"
 temp-env = "0.3.6"
 tempfile = "3.23.0"
 
+[profile.dev.package."*"]
+debug = "line-tables-only"
+
 [lints.rust]
 unused_results = "warn"
 [lints.clippy]

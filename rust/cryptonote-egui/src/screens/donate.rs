@@ -10,6 +10,12 @@ impl CryptonoteApp {
     pub(crate) fn screen_donate(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let toast_time = ui.ctx().input(|i| i.time);
+        _ = ui.label(
+            egui::RichText::new(BaseMsg::DonateGreeting.render(lang))
+                .size(16.0)
+                .weak(),
+        );
+        let () = ui.add_space(4.0);
         let intro = BaseMsg::DonateIntro.render(lang);
         let parts = intro.split("Functora").collect::<Vec<_>>();
         let last = parts.len().saturating_sub(1);
@@ -18,16 +24,13 @@ impl CryptonoteApp {
             _ = parts
                 .into_iter()
                 .enumerate()
-                .fold(
-                    functora_egui::Hypertext::new().text(format!("{} ", BaseMsg::DonateGreeting.render(lang))),
-                    |acc, (idx, part)| {
-                        if idx == last {
-                            acc.text(part)
-                        } else {
-                            acc.text(part).link("Functora", APP_ATTRS.author_url())
-                        }
-                    },
-                )
+                .fold(functora_egui::Hypertext::new(), |acc, (idx, part)| {
+                    if idx == last {
+                        acc.text(part)
+                    } else {
+                        acc.text(part).link("Functora", APP_ATTRS.author_url())
+                    }
+                })
                 .size(13.0)
                 .show(inner);
         });

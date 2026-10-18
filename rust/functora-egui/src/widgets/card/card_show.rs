@@ -5,7 +5,6 @@ impl super::widget::Card {
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
-        let ring_color = crate::utils::with_alpha(theme.foreground, 26);
         let cr = theme.radius + 2.0; // rounded-xl = radius + 2
 
         let frame = egui::Frame::NONE
@@ -19,7 +18,7 @@ impl super::widget::Card {
             .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
                 cr,
             )))
-            .stroke(egui::Stroke::new(1.0, ring_color));
+            .stroke(egui::Stroke::new(1.0, theme.border));
 
         let heading = self.heading;
         frame

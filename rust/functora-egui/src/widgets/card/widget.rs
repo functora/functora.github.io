@@ -1,6 +1,6 @@
 //! Card builder struct — a bordered container styled after shadcn/ui Card.
 
-/// A card container: `ring-foreground/10 bg-card rounded-xl py-4 ring-1`.
+/// A card container: `border bg-card rounded-xl py-4`.
 ///
 /// Not a `Widget` — uses `show(ui, closure)` pattern like `egui::Frame`.
 #[must_use]

@@ -96,14 +96,7 @@ impl CryptonoteApp {
                     Preview::Text(t) => {
                         _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());
                     }
-                    Preview::Image(_) => {
-                        let uri = crate::screens::attachment_thumb::attachment_uri(&att.name);
-                        _ = ui.add(
-                            egui::Image::from_bytes(uri, att.data.to_vec())
-                                .maintain_aspect_ratio(true)
-                                .max_width(200.0),
-                        );
-                    }
+                    Preview::Image(_) => {}
                     Preview::Markdown(t) => {
                         _ = egui::ScrollArea::vertical().max_height(200.0).show(ui, |inner| {
                             _ = functora_egui::markdown_view::show(inner, &mut self.md_cache, &t);

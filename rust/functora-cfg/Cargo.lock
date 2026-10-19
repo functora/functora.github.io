@@ -317,11 +317,11 @@ dependencies = [
 
 [[package]]
 name = "functora"
-version = "0.2.0"
+version = "0.2.1"
 
 [[package]]
 name = "functora-cfg"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "clap",
  "config",

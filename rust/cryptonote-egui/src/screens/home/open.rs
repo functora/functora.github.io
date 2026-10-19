@@ -57,16 +57,24 @@ impl CryptonoteApp {
             {
                 let cancel = functora_egui::new_cancel_token();
                 self.pick_cancel = Some(cancel.clone());
-                let progress = self.track_progress();
+                let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
+                self.progress_slot = Some(std::sync::Arc::clone(&slot));
+                let load_progress = {
+                    let load_slot = std::sync::Arc::clone(&slot);
+                    move |job| {
+                        *load_slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
+                    }
+                };
                 let rx = functora_egui::spawn_async(async move {
-                    let files = functora_egui::files::pick_files_with_cancel(false, None, Some(&cancel)).await?;
+                    let files =
+                        functora_egui::files::pick_files_with_shared_progress(false, Some(slot), Some(&cancel)).await?;
                     let bytes = files
                         .into_iter()
                         .next()
                         .ok_or(AppError::NoFileSelected)
                         .map(|(_, data)| data)?;
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-                    crate::hooks::load_archive_async(source, progress).await
+                    crate::hooks::load_archive_async(source, load_progress).await
                 });
                 self.archive_rx = Some(rx);
             }

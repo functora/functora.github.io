@@ -165,10 +165,16 @@ pub fn preview_cached(name: &str, data: &[u8]) -> Preview {
         })
 }
 
+/// Cheap instance identity of a byte buffer (pointer + length), used as the
+/// preview memo key. Deliberately not a content hash: hashing multi-megabyte
+/// buffers on every lookup freezes the UI thread. Keys are stable while the
+/// buffer allocation lives; a fresh allocation always misses, which only
+/// recomputes the (bounded) preview.
 #[must_use]
 pub fn preview_key(data: &[u8]) -> u64 {
     let mut hasher = DefaultHasher::new();
-    data.hash(&mut hasher);
+    data.as_ptr().hash(&mut hasher);
+    data.len().hash(&mut hasher);
     hasher.finish()
 }
 

@@ -1,6 +1,6 @@
 use functora_core::files::{
     Attachment, Preview, format_size, is_text, mime_for, preview, preview_blob_url, preview_cached,
-    preview_initial,
+    preview_initial, preview_key,
 };
 
 #[test]
@@ -102,6 +102,30 @@ fn preview_cached_distinguishes_attachments() {
     assert_ne!(first, second);
     assert_eq!(preview_cached("b.mp4", b"first-video"), first);
     assert_ne!(preview_cached("a.png", b"first-video"), first);
+}
+
+#[test]
+fn preview_key_is_instance_identity_not_content() {
+    let first = vec![1u8, 2, 3];
+    let second = vec![1u8, 2, 3];
+    assert_eq!(preview_key(&first), preview_key(&first));
+    assert_ne!(preview_key(&first), preview_key(&second));
+}
+
+#[test]
+fn preview_key_large_buffers_stay_stable_and_download() {
+    let big_a = vec![7u8; 6 * 1024 * 1024];
+    let big_b = big_a.clone();
+    assert_eq!(preview_key(&big_a), preview_key(&big_a));
+    assert_ne!(preview_key(&big_a), preview_key(&big_b));
+    assert!(matches!(
+        preview_cached("big.bin", &big_a),
+        Preview::Download
+    ));
+    assert!(matches!(
+        preview_cached("big.bin", &big_a),
+        Preview::Download
+    ));
 }
 
 #[test]

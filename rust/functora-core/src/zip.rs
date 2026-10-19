@@ -2,6 +2,7 @@ use crate::Error;
 use crate::progress::{Job, yield_to_paint};
 use crate::worker::Reporter;
 use std::io::{Cursor, Read, Write};
+use std::sync::Arc;
 use zip::CompressionMethod;
 
 const ZIP_CHUNK: usize = 2 * 1024 * 1024;
@@ -14,7 +15,7 @@ fn opts() -> zip::write::FileOptions<'static, ()> {
 
 pub(crate) async fn zip_entries<S>(
     zip: &mut zip::ZipWriter<Cursor<&mut Vec<u8>>>,
-    entries: &[(String, Vec<u8>)],
+    entries: &[(String, Arc<[u8]>)],
     stage: S,
     report: &mut Reporter<S>,
     done: &mut u64,
@@ -35,14 +36,14 @@ where
                 total,
                 name: Some(display.to_string()),
             });
+            yield_to_paint().await;
         }
-        yield_to_paint().await;
     }
     Ok(())
 }
 
 pub async fn create_zip_report<S>(
-    entries: Vec<(String, Vec<u8>)>,
+    entries: Vec<(String, Arc<[u8]>)>,
     stage: S,
     report: &mut Reporter<S>,
 ) -> Result<Vec<u8>, Error>
@@ -76,28 +77,36 @@ where
         .sum::<u64>();
     let mut entries = Vec::new();
     let mut done = 0u64;
+    let mut chunk = vec![0u8; ZIP_CHUNK];
     for i in 0..archive.len() {
-        let (name, size, data) = {
+        let (name, data) = {
             let mut file = archive.by_index(i)?;
             let name = file.name().to_string();
-            let size = file.size();
-            let mut data =
-                Vec::with_capacity(usize::try_from(size).map_err(|e| Error::Convert {
-                    context: "zip entry size exceeds usize range",
-                    source: e,
-                })?);
-            let _ = file.read_to_end(&mut data)?;
-            (name, size, data)
+            let capacity = usize::try_from(file.size()).map_err(|e| Error::Convert {
+                context: "zip entry size exceeds usize range",
+                source: e,
+            })?;
+            let mut data = Vec::with_capacity(capacity);
+            loop {
+                let read = file.read(&mut chunk)?;
+                if read == 0 {
+                    break;
+                }
+                data.extend_from_slice(&chunk[..read]);
+                done += read as u64;
+                report(Job {
+                    stage,
+                    done,
+                    total,
+                    name: Some(name.clone()),
+                });
+                #[cfg(target_arch = "wasm32")]
+                yield_to_paint().await;
+            }
+            (name, data)
         };
-        done += size;
-        entries.push((name.clone(), data));
-        report(Job {
-            stage,
-            done,
-            total,
-            name: Some(name),
-        });
         yield_to_paint().await;
+        entries.push((name, data));
     }
     Ok(entries)
 }

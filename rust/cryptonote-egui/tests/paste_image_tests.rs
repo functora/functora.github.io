@@ -21,7 +21,7 @@ fn drain_slot(app: &mut CryptonoteApp) {
 }
 
 #[test]
-fn slot_image_attaches_and_spawns_preview() {
+fn slot_image_attaches() {
     let _guard = slot_guard();
     let mut app = CryptonoteApp::default();
     let toasts_before = app.toast.next_id();
@@ -34,7 +34,6 @@ fn slot_image_attaches_and_spawns_preview() {
     assert_eq!(app.temporary.attachments[0].name, "pasted-7.png");
     assert_eq!(app.temporary.attachments[0].data.as_ref(), PIXEL_PNG);
     assert_eq!(app.toast.next_id(), toasts_before + 1);
-    assert!(!app.preview_rx.is_empty(), "preview generation must spawn");
 }
 
 #[test]

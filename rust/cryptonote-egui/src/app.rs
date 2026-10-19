@@ -43,13 +43,7 @@ pub struct CryptonoteApp {
     pub(crate) decrypt_rx: Option<std::sync::mpsc::Receiver<DecryptResult>>,
     pub(crate) archive_rx: Option<std::sync::mpsc::Receiver<Result<crate::state::OpenedArchive, AppError>>>,
     pub(crate) pwa_rx: Option<std::sync::mpsc::Receiver<Result<functora_egui::messages::Msg, AppError>>>,
-    pub preview_rx: Vec<
-        std::sync::mpsc::Receiver<(
-            crate::screens::attachment_thumb::PreviewCacheKey,
-            functora_egui::files::Preview,
-        )>,
-    >,
-    progress_slot: Option<SharedProgress>,
+    pub(crate) progress_slot: Option<SharedProgress>,
     pub(crate) qr_state: functora_egui::QrScannerState,
     pub(crate) qr_error_notified: Option<String>,
     pub(crate) md_cache: functora_egui::CommonMarkCache,
@@ -76,7 +70,6 @@ impl Default for CryptonoteApp {
             decrypt_rx: None,
             archive_rx: None,
             pwa_rx: None,
-            preview_rx: Vec::new(),
             progress_slot: None,
             qr_state: functora_egui::QrScannerState::new(),
             qr_error_notified: None,
@@ -191,46 +184,6 @@ impl CryptonoteApp {
             || matches!(error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
     }
 
-    fn generate_previews(&mut self) {
-        use crate::screens::attachment_thumb::preview_cache_key;
-        let new_attachments: Vec<_> = self
-            .temporary
-            .attachments
-            .iter()
-            .filter(|att| {
-                !self
-                    .temporary
-                    .preview_cache
-                    .contains_key(&preview_cache_key(&att.name, &att.data))
-            })
-            .cloned()
-            .collect();
-        for att in new_attachments {
-            let key = preview_cache_key(&att.name, &att.data);
-            let name = att.name.clone();
-            let data = att.data.clone();
-            let rx = functora_egui::spawn_async(async move {
-                let preview = functora_egui::files::preview_cached(&name, &data);
-                (key, preview)
-            });
-            self.preview_rx.push(rx);
-        }
-    }
-
-    fn poll_previews(&mut self) {
-        let mut remaining = Vec::with_capacity(self.preview_rx.len());
-        for rx in self.preview_rx.drain(..) {
-            match rx.try_recv() {
-                Ok((key, preview)) => {
-                    let _ = self.temporary.preview_cache.insert(key, preview);
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => remaining.push(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
-            }
-        }
-        self.preview_rx = remaining;
-    }
-
     pub(crate) fn track_progress(&mut self) -> impl FnMut(Option<Job<Stage>>) + Send + 'static {
         let slot: SharedProgress = std::sync::Arc::new(std::sync::Mutex::new(None));
         self.progress_slot = Some(std::sync::Arc::clone(&slot));
@@ -259,7 +212,6 @@ impl CryptonoteApp {
         self.decrypt_rx = None;
         self.archive_rx = None;
         self.pwa_rx = None;
-        self.preview_rx.clear();
         clear_progress(&mut self.temporary.progress);
         if let Some(token) = self.pick_cancel.take() {
             functora_egui::files::cancel(&token);
@@ -300,11 +252,9 @@ impl CryptonoteApp {
             ToastVariant::Success,
             time,
         );
-        self.generate_previews();
     }
 
     pub fn poll_receivers(&mut self, ctx: &egui::Context) {
-        self.poll_previews();
         self.sync_progress();
         let lang = self.lang();
         let time = ctx.input(|i| i.time);
@@ -381,7 +331,6 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
                     self.pick_overlay_open = false;
-                    self.generate_previews();
                 }
                 Ok(Err(e)) => {
                     if Self::is_cancelled(&e) {
@@ -453,7 +402,6 @@ impl CryptonoteApp {
                     self.temporary.external = External::Nothing;
                     clear_progress(&mut self.temporary.progress);
                     self.progress_slot = None;
-                    self.generate_previews();
                     self.navigate(Screen::View);
                 }
                 Ok(Err(e)) => {
@@ -486,7 +434,6 @@ impl CryptonoteApp {
                     clear_progress(&mut self.temporary.progress);
                     self.pick_cancel = None;
                     self.progress_slot = None;
-                    self.generate_previews();
                     self.navigate(opened.screen);
                 }
                 Ok(Err(e)) => {
@@ -539,7 +486,6 @@ impl CryptonoteApp {
             || self.decrypt_rx.is_some()
             || self.archive_rx.is_some()
             || self.pwa_rx.is_some()
-            || !self.preview_rx.is_empty()
         {
             ctx.request_repaint();
         } else {

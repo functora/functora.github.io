@@ -9,7 +9,7 @@ use functora_core::crypto::CipherType;
 use zeroize::Zeroizing;
 
 pub async fn package_async<S, P>(
-    entries: Vec<(String, Vec<u8>)>,
+    entries: Vec<(String, std::sync::Arc<[u8]>)>,
     password: &str,
     cipher: Option<CipherType>,
     prefix: &'static [u8],

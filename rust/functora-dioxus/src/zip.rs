@@ -13,7 +13,7 @@ where
 {
     let file_entries = files
         .iter()
-        .map(|f| (f.name.clone(), f.data.to_vec()))
+        .map(|f| (f.name.clone(), std::sync::Arc::clone(&f.data)))
         .collect::<Vec<_>>();
     run(file_entries, progress, move |entries, mut report| async move {
         create_zip_report(entries, stage, &mut report).await

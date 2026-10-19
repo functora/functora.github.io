@@ -2,8 +2,8 @@
 //! Image preview/thumbnail support for attachments: still images get a
 //! clickable thumbnail in attachment lists, other files keep label rows.
 
-use cryptonote_egui::screens::attachment_thumb::{attachment_uri, preview_cache_key, show_attachment_thumb};
-use functora_egui::files::{Preview, preview_cached};
+use cryptonote_egui::screens::attachment_thumb::{attachment_uri, show_attachment_thumb};
+use functora_egui::files::{Attachment, Preview, preview_cached};
 
 /// Minimal valid 1x1 PNG, reused as stand-in bytes for still images.
 const PIXEL_PNG: &[u8] = &[
@@ -11,6 +11,13 @@ const PIXEL_PNG: &[u8] = &[
     137, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, 180, 0, 0, 0, 0, 73, 69, 78, 68,
     174, 66, 96, 130,
 ];
+
+fn attachment(name: &str, data: &[u8]) -> Attachment {
+    Attachment {
+        name: name.to_string(),
+        data: data.to_vec().into(),
+    }
+}
 
 struct UiDriver {
     ctx: egui::Context,
@@ -68,34 +75,20 @@ fn non_images_have_no_image_preview() {
 }
 
 #[test]
-fn preview_cache_key_covers_content() {
-    assert_eq!(
-        preview_cache_key("a.png", PIXEL_PNG),
-        preview_cache_key("a.png", PIXEL_PNG)
-    );
-    assert_ne!(
-        preview_cache_key("a.png", PIXEL_PNG),
-        preview_cache_key("a.png", b"other bytes")
-    );
-    assert_ne!(
-        preview_cache_key("a.png", PIXEL_PNG),
-        preview_cache_key("b.png", PIXEL_PNG)
-    );
-}
-
-#[test]
 fn attachment_uri_keeps_bytes_scheme_and_extension() {
     assert_eq!(attachment_uri("photo.png"), "bytes://photo.png");
 }
 
 #[test]
 fn thumb_renders_for_images_only() {
+    let png = attachment("photo.png", PIXEL_PNG);
+    let txt = attachment("note.txt", b"hello");
     let mut driver = UiDriver::new();
     let seen_png = std::cell::Cell::new(false);
     let seen_txt = std::cell::Cell::new(false);
     let mut body = |ui: &mut egui::Ui| {
-        seen_png.set(show_attachment_thumb(ui, "photo.png", PIXEL_PNG).is_some());
-        seen_txt.set(show_attachment_thumb(ui, "note.txt", b"hello").is_some());
+        seen_png.set(show_attachment_thumb(ui, &png).is_some());
+        seen_txt.set(show_attachment_thumb(ui, &txt).is_some());
     };
     driver.run(vec![], &mut body);
     driver.run(vec![], &mut body);
@@ -105,11 +98,12 @@ fn thumb_renders_for_images_only() {
 
 #[test]
 fn thumb_click_reports_clicked() {
+    let png = attachment("photo.png", PIXEL_PNG);
     let mut driver = UiDriver::new();
     let center = std::cell::Cell::new(egui::Pos2::ZERO);
     let clicked = std::cell::Cell::new(false);
     let mut body = |ui: &mut egui::Ui| {
-        if let Some(resp) = show_attachment_thumb(ui, "photo.png", PIXEL_PNG) {
+        if let Some(resp) = show_attachment_thumb(ui, &png) {
             center.set(resp.rect.center());
             clicked.set(resp.clicked());
         }

@@ -16,7 +16,7 @@ where
 {
     let file_entries = files
         .iter()
-        .map(|f| (f.name.clone(), f.data.to_vec()))
+        .map(|f| (f.name.clone(), std::sync::Arc::clone(&f.data)))
         .collect::<Vec<_>>();
     worker::run(
         file_entries,

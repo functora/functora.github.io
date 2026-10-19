@@ -1,7 +1,6 @@
 use crate::crypto::{CipherType, ExternalArchive};
 use crate::encoding::NoteData;
 use crate::progress::{Job, Stage};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct AttachmentIdx(pub usize);
@@ -98,7 +97,6 @@ pub struct TemporaryState {
     pub external: External,
     pub progress: Option<Job<Stage>>,
     pub attachment: Option<AttachmentIdx>,
-    pub preview_cache: HashMap<crate::screens::attachment_thumb::PreviewCacheKey, functora_egui::files::Preview>,
 }
 
 impl Default for TemporaryState {
@@ -114,7 +112,6 @@ impl Default for TemporaryState {
             external: External::Nothing,
             progress: None,
             attachment: None,
-            preview_cache: HashMap::new(),
         }
     }
 }

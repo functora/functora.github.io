@@ -6,6 +6,7 @@ use crate::zip::zip_entries;
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
+use std::sync::Arc;
 use zip::CompressionMethod;
 
 pub const METADATA_ENTRY: &str = "metadata.json";
@@ -86,7 +87,7 @@ fn write_package_entries(
 }
 
 pub async fn package_report<S>(
-    entries: Vec<(String, Vec<u8>)>,
+    entries: Vec<(String, Arc<[u8]>)>,
     password: &str,
     cipher: Option<CipherType>,
     prefix: &'static [u8],

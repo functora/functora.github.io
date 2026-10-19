@@ -13,6 +13,7 @@ use functora_egui::{Label, Progress, TabsValue};
 impl CryptonoteApp {
     pub(crate) fn screen_home(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
+        self.show_pick_overlay(ui.ctx(), lang);
         let () = ui.add_space(4.0);
         _ = Label::new(Msg::ActionLabel.render(lang)).show(ui);
         let () = ui.add_space(4.0);
@@ -47,7 +48,7 @@ impl CryptonoteApp {
     }
 
     pub(crate) fn show_pick_overlay(&mut self, ctx: &egui::Context, lang: Language) {
-        if self.pick_rx.is_none() {
+        if self.pick_rx.is_none() && self.archive_rx.is_none() {
             return;
         }
         if let Some(cancel) = self.pick_cancel.clone() {

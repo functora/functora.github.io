@@ -40,9 +40,7 @@ impl CryptonoteApp {
                 let name = att.name.clone();
                 _ = Flex::row().gap(8.0).show(ui, |f| {
                     let thumb_clicked = f
-                        .ui(|inner| {
-                            crate::screens::attachment_thumb::show_attachment_thumb(inner, &att.name, &att.data)
-                        })
+                        .ui(|inner| crate::screens::attachment_thumb::show_attachment_thumb(inner, att))
                         .inner
                         .as_ref()
                         .is_some_and(egui::Response::clicked);
@@ -84,14 +82,7 @@ impl CryptonoteApp {
                     }
                 });
                 let () = ui.add_space(4.0);
-                let preview = {
-                    let key = crate::screens::attachment_thumb::preview_cache_key(&att.name, &att.data);
-                    self.temporary
-                        .preview_cache
-                        .get(&key)
-                        .cloned()
-                        .unwrap_or_else(|| functora_egui::files::preview_cached(&att.name, &att.data))
-                };
+                let preview = functora_egui::files::preview_cached(&att.name, &att.data);
                 match preview {
                     Preview::Text(t) => {
                         _ = ui.label(egui::RichText::new(t.chars().take(300).collect::<String>()).small());

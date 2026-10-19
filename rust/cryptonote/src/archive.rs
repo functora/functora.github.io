@@ -14,12 +14,12 @@ fn stages() -> PackageStages<Stage> {
     PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt)
 }
 
-fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, Vec<u8>)> {
-    let mut entries = vec![("note.txt".to_string(), note.as_bytes().to_vec())];
+fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, std::sync::Arc<[u8]>)> {
+    let mut entries = vec![("note.txt".to_string(), std::sync::Arc::from(note.as_bytes().to_vec()))];
     entries.extend(
         attachments
             .iter()
-            .map(|a| (format!("attachments/{}", a.name), a.data.to_vec())),
+            .map(|a| (format!("attachments/{}", a.name), std::sync::Arc::clone(&a.data))),
     );
     entries
 }

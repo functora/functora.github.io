@@ -15,7 +15,6 @@ impl CryptonoteApp {
     pub(crate) fn home_create(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let toast_time = ui.ctx().input(|i| i.time);
-        self.show_pick_overlay(ui.ctx(), lang);
         _ = Label::new(Msg::Mode.render(lang)).show(ui);
         let () = ui.add_space(4.0);
         let options = [
@@ -86,8 +85,10 @@ impl CryptonoteApp {
                 let cancel = functora_egui::new_cancel_token();
                 self.pick_cancel = Some(cancel.clone());
                 self.pick_overlay_open = true;
+                let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
+                self.progress_slot = Some(std::sync::Arc::clone(&slot));
                 let rx = functora_egui::spawn_async(async move {
-                    functora_egui::files::pick_files_with_cancel(true, None, Some(&cancel))
+                    functora_egui::files::pick_files_with_shared_progress(true, Some(slot), Some(&cancel))
                         .await
                         .map_err(AppError::from)
                 });

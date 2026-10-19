@@ -38,6 +38,14 @@ fn progress() -> Signal<Option<functora_dioxus::progress::Job<Stage>>> {
     Signal::new_in_scope(None, ScopeId(0))
 }
 
+fn arc_entries(entries: &[(String, Vec<u8>)]) -> Vec<(String, std::sync::Arc<[u8]>)> {
+    entries
+        .iter()
+        .cloned()
+        .map(|(name, data)| (name, data.into()))
+        .collect()
+}
+
 fn block_on<R>(fut: impl std::future::Future<Output = R>) -> R {
     tokio::runtime::Builder::new_current_thread()
         .build()
@@ -131,7 +139,7 @@ fn package_roundtrip_encrypted() {
             ];
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(
-                entries.clone(),
+                arc_entries(&entries),
                 "pw",
                 Some(CipherType::Aes256Gcm),
                 AAD_PREFIX,
@@ -157,7 +165,7 @@ fn package_roundtrip_plain() {
         block_on(async {
             let entries = vec![("note.txt".to_string(), b"plain note".to_vec())];
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
-            let pkg = package_async(entries.clone(), "", None, AAD_PREFIX, stages, progress())
+            let pkg = package_async(arc_entries(&entries), "", None, AAD_PREFIX, stages, progress())
                 .await
                 .unwrap_or_else(|e| panic!("package: {e:?}"));
             let inner = extract_package_async(ArchiveSource::Bytes(pkg), "", AAD_PREFIX, stages, progress())
@@ -177,7 +185,7 @@ fn package_metadata_read() {
         block_on(async {
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(
-                vec![("note.txt".to_string(), b"x".to_vec())],
+                arc_entries(&[("note.txt".to_string(), b"x".to_vec())]),
                 "pw",
                 Some(CipherType::ChaCha20Poly1305),
                 AAD_PREFIX,
@@ -191,7 +199,7 @@ fn package_metadata_read() {
             assert!(!meta.nonce.is_empty());
             assert!(!meta.salt.is_empty());
             let plain = package_async(
-                vec![("note.txt".to_string(), b"x".to_vec())],
+                arc_entries(&[("note.txt".to_string(), b"x".to_vec())]),
                 "",
                 None,
                 AAD_PREFIX,
@@ -220,7 +228,7 @@ fn package_wrong_password_fails() {
         block_on(async {
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(
-                vec![("note.txt".to_string(), b"x".to_vec())],
+                arc_entries(&[("note.txt".to_string(), b"x".to_vec())]),
                 "correct",
                 Some(CipherType::Aes256Gcm),
                 AAD_PREFIX,
@@ -241,7 +249,7 @@ fn package_wrong_prefix_fails() {
         block_on(async {
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(
-                vec![("note.txt".to_string(), b"x".to_vec())],
+                arc_entries(&[("note.txt".to_string(), b"x".to_vec())]),
                 "pw",
                 Some(CipherType::Aes256Gcm),
                 AAD_PREFIX,
@@ -262,7 +270,7 @@ fn package_path_roundtrip() {
         block_on(async {
             let stages = PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt);
             let pkg = package_async(
-                vec![("note.txt".to_string(), b"path note".to_vec())],
+                arc_entries(&[("note.txt".to_string(), b"path note".to_vec())]),
                 "pw",
                 Some(CipherType::Aes256Gcm),
                 AAD_PREFIX,

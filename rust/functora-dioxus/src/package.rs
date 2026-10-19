@@ -8,7 +8,7 @@ use dioxus::prelude::Writable;
 use zeroize::Zeroizing;
 
 pub async fn package_async<P, S>(
-    entries: Vec<(String, Vec<u8>)>,
+    entries: Vec<(String, std::sync::Arc<[u8]>)>,
     password: &str,
     cipher: Option<CipherType>,
     prefix: &'static [u8],

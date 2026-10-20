@@ -76,6 +76,15 @@ impl BlockingOverlay {
                                     .size(16.0)
                                     .strong(),
                             );
+                            if let Some(j) = job {
+                                row.add_space(6.0);
+                                let _ = row.label(
+                                    egui::RichText::new(format!("{}%", j.percent()))
+                                        .color(theme.foreground)
+                                        .size(16.0)
+                                        .strong(),
+                                );
+                            }
                         });
                         if let Some(desc) = &self.description {
                             inner.add_space(8.0);
@@ -89,31 +98,6 @@ impl BlockingOverlay {
                             inner.add_space(12.0);
                             let pct = f32::from(j.percent()) / 100.0;
                             let _ = inner.add(crate::Progress::new(pct));
-                            inner.add_space(6.0);
-                            let stage = Msg::Stage(j.stage).render(lang);
-                            let sizes = format!(
-                                "{} / {}",
-                                functora_core::files::format_size(j.done),
-                                functora_core::files::format_size(j.total)
-                            );
-                            let label = match j.name.as_deref() {
-                                Some(name) if !name.is_empty() => {
-                                    format!("{stage} {}% ({name}: {sizes})", j.percent())
-                                }
-                                _ => format!("{stage} {}% ({sizes})", j.percent()),
-                            };
-                            let _ = inner.label(
-                                egui::RichText::new(label)
-                                    .color(theme.muted_foreground)
-                                    .size(12.0),
-                            );
-                        } else {
-                            inner.add_space(12.0);
-                            let _ = inner.label(
-                                egui::RichText::new(Msg::Preparing.render(lang))
-                                    .color(theme.muted_foreground)
-                                    .size(12.0),
-                            );
                         }
                         inner.add_space(16.0);
                         let is_cancelling = cancel.load(Ordering::Relaxed);

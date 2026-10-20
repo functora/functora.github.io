@@ -228,7 +228,7 @@ fn combobox_shows_placeholder_without_selection() {
 }
 
 #[test]
-fn blocking_overlay_shows_stage_legend_and_percent() {
+fn blocking_overlay_shows_percent_and_no_byte_details() {
     use functora_egui::i18n::Language;
     use functora_egui::progress::{Job, Stage};
     use std::sync::Arc;
@@ -255,17 +255,23 @@ fn blocking_overlay_shows_stage_legend_and_percent() {
     let out = app.step(&mut body);
     let texts = Harness::texts(&out);
     assert!(
-        texts.iter().any(|t| t.contains("Attaching files... 26%")),
-        "overlay legend must show stage text and percent, got: {texts:?}"
+        texts.iter().any(|t| t.contains("Picking files...")),
+        "overlay must show the operation name, got: {texts:?}"
     );
     assert!(
-        texts.iter().any(|t| t.contains("26 B / 100 B")),
-        "overlay legend must show formatted sizes, got: {texts:?}"
+        texts.iter().any(|t| t.contains("26%")),
+        "overlay must show the percentage, got: {texts:?}"
+    );
+    assert!(
+        !texts
+            .iter()
+            .any(|t| t.contains(" B / ") || t.contains(" KB")),
+        "overlay must not show byte details, got: {texts:?}"
     );
 }
 
 #[test]
-fn blocking_overlay_includes_entry_name_in_legend() {
+fn blocking_overlay_hides_entry_name_details() {
     use functora_egui::i18n::Language;
     use functora_egui::progress::{Job, Stage};
     use std::sync::Arc;
@@ -292,7 +298,11 @@ fn blocking_overlay_includes_entry_name_in_legend() {
     let out = app.step(&mut body);
     let texts = Harness::texts(&out);
     assert!(
-        texts.iter().any(|t| t.contains("photo.png: 26 B / 100 B")),
-        "overlay legend must name the active entry, got: {texts:?}"
+        texts.iter().any(|t| t.contains("26%")),
+        "overlay must show the percentage, got: {texts:?}"
+    );
+    assert!(
+        !texts.iter().any(|t| t.contains("photo.png")),
+        "overlay must not show entry name details, got: {texts:?}"
     );
 }

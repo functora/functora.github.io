@@ -1,7 +1,7 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Global progress UI: every long operation renders one blocking overlay (the
-//! file-picker-style modal) with a localized stage legend and percent, e.g.
-//! "Decrypting... 26% (26 B / 100 B)".
+//! file-picker-style modal) with the operation name, a progress bar and the
+//! percentage, without byte or entry-name details.
 
 use cryptonote_egui::app::CryptonoteApp;
 use cryptonote_egui::progress::{Job, Stage};
@@ -61,26 +61,34 @@ fn decrypt_job(name: Option<&str>) -> Job<Stage> {
 }
 
 #[test]
-fn overlay_shows_stage_legend_and_percent() {
+fn overlay_shows_operation_name_and_percent() {
     let mut app = app_with_open_overlay(decrypt_job(None));
     let rendered = run_app(&mut app);
     assert!(
-        rendered.contains("Decrypting... 26%"),
-        "overlay must show stage text and percent, got:\n{rendered}"
+        rendered.contains("Decrypting..."),
+        "overlay must show the operation name, got:\n{rendered}"
     );
     assert!(
-        rendered.contains("26 B / 100 B"),
-        "overlay must show formatted sizes, got:\n{rendered}"
+        rendered.contains("26%"),
+        "overlay must show the percentage, got:\n{rendered}"
+    );
+    assert!(
+        !rendered.contains("26 B / 100 B"),
+        "overlay must not show byte details, got:\n{rendered}"
     );
 }
 
 #[test]
-fn overlay_includes_entry_name() {
+fn overlay_hides_entry_name_details() {
     let mut app = app_with_open_overlay(decrypt_job(Some("photo.png")));
     let rendered = run_app(&mut app);
     assert!(
-        rendered.contains("photo.png: 26 B / 100 B"),
-        "overlay must name the active entry, got:\n{rendered}"
+        !rendered.contains("photo.png"),
+        "overlay must not show entry name details, got:\n{rendered}"
+    );
+    assert!(
+        rendered.contains("26%"),
+        "overlay must show the percentage, got:\n{rendered}"
     );
 }
 
@@ -106,16 +114,20 @@ fn no_progress_renders_no_legend() {
 }
 
 #[test]
-fn stage_legend_follows_language() {
+fn operation_name_follows_language() {
     let mut app = app_with_open_overlay(decrypt_job(None));
     app.set_language(Language::Rus);
     let rendered = run_app(&mut app);
     assert!(
-        rendered.contains("Расшифровка... 26%"),
-        "legend must follow the selected language, got:\n{rendered}"
+        rendered.contains("Расшифровка..."),
+        "operation name must follow the selected language, got:\n{rendered}"
     );
     assert!(
-        !rendered.contains("Decrypting... 26%"),
-        "stale English legend must not leak, got:\n{rendered}"
+        rendered.contains("26%"),
+        "percentage must render regardless of language, got:\n{rendered}"
+    );
+    assert!(
+        !rendered.contains("Decrypting..."),
+        "stale English operation name must not leak, got:\n{rendered}"
     );
 }

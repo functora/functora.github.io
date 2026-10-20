@@ -15,6 +15,7 @@ pub async fn package_async<S, P>(
     prefix: &'static [u8],
     stages: PackageStages<S>,
     progress: P,
+    token: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -24,7 +25,8 @@ where
     worker::run(
         (entries, password_owned, cipher),
         progress,
-        move |(entries_owned, password_clone, cipher_sel), mut report| async move {
+        Some(token),
+        move |(entries_owned, password_clone, cipher_sel), mut report, cancel| async move {
             package_report(
                 entries_owned,
                 password_clone.as_str(),
@@ -32,6 +34,7 @@ where
                 prefix,
                 stages,
                 &mut report,
+                cancel.as_ref(),
             )
             .await
         },
@@ -45,6 +48,7 @@ pub async fn extract_package_async<S, P>(
     prefix: &'static [u8],
     stages: PackageStages<S>,
     progress: P,
+    token: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -54,13 +58,15 @@ where
     worker::run(
         source,
         progress,
-        move |source_owned, mut report| async move {
+        Some(token),
+        move |source_owned, mut report, cancel| async move {
             extract_package_report(
                 source_owned,
                 password_owned.as_str(),
                 prefix,
                 stages,
                 &mut report,
+                cancel.as_ref(),
             )
             .await
         },

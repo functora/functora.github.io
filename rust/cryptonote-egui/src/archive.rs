@@ -2,6 +2,7 @@ use crate::crypto::{AAD_PREFIX, CipherType};
 use crate::error::AppError;
 use crate::progress::{Job, Stage};
 use functora_egui::worker::Reporter;
+use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use tap::prelude::*;
 
@@ -30,6 +31,7 @@ pub(crate) async fn create_archive_package(
     attachments: &[Attachment],
     password: &str,
     cipher: Option<CipherType>,
+    cancel: Arc<AtomicBool>,
     report: &mut Reporter<Stage>,
 ) -> Result<Vec<u8>, AppError> {
     functora_core::package::package_report(
@@ -39,6 +41,7 @@ pub(crate) async fn create_archive_package(
         AAD_PREFIX,
         stages(),
         report,
+        Some(&cancel),
     )
     .await?
     .pipe(Ok)
@@ -49,6 +52,7 @@ pub async fn create_archive_package_async(
     attachments: &[Attachment],
     password: &str,
     cipher: Option<CipherType>,
+    cancel: Arc<AtomicBool>,
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<Vec<u8>, AppError> {
     functora_egui::package::package_async(
@@ -58,6 +62,7 @@ pub async fn create_archive_package_async(
         AAD_PREFIX,
         stages(),
         progress,
+        cancel,
     )
     .await?
     .pipe(Ok)
@@ -70,14 +75,16 @@ pub fn read_archive_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, 
 pub async fn extract_archive_package_async(
     source: ArchiveSource,
     password: &str,
+    cancel: Arc<AtomicBool>,
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<(String, Vec<Attachment>), AppError> {
-    extract_archive_package_async_with_progress(source, password, progress).await
+    extract_archive_package_async_with_progress(source, password, cancel, progress).await
 }
 
 pub async fn extract_archive_package_async_with_progress<F>(
     source: ArchiveSource,
     password: &str,
+    cancel: Arc<AtomicBool>,
     progress: F,
 ) -> Result<(String, Vec<Attachment>), AppError>
 where
@@ -86,10 +93,17 @@ where
     let progress_box: Box<dyn FnMut(Option<Job<Stage>>) + Send> = Box::new(progress);
     let progress_arc = Arc::new(Mutex::new(progress_box));
     let progress_clone = Arc::clone(&progress_arc);
-    let inner = functora_egui::package::extract_package_async(source, password, AAD_PREFIX, stages(), move |job| {
-        let mut guard = progress_arc.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        guard(job);
-    })
+    let inner = functora_egui::package::extract_package_async(
+        source,
+        password,
+        AAD_PREFIX,
+        stages(),
+        move |job| {
+            let mut guard = progress_arc.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            guard(job);
+        },
+        Arc::clone(&cancel),
+    )
     .await?;
     let mut note = String::new();
     let mut files = Vec::new();
@@ -100,6 +114,7 @@ where
             guard(job);
         },
         Stage::Unzip,
+        cancel,
     )
     .await?
     {

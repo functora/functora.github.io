@@ -12,7 +12,10 @@ fn dropping_run_with_pending_worker_returns_immediately() {
     let mut fut = Box::pin(run(
         (),
         |_| {},
-        |(), _report: Reporter<()>| async { std::future::pending::<Result<(), Error>>().await },
+        None,
+        |(), _report: Reporter<()>, _cancel| async {
+            std::future::pending::<Result<(), Error>>().await
+        },
     ));
     assert!(matches!(fut.as_mut().poll(&mut cx), Poll::Pending));
     let start = Instant::now();
@@ -27,7 +30,8 @@ fn run_reports_worker_result() {
     let mut fut = Box::pin(run(
         (),
         |_| {},
-        |(), _report: Reporter<()>| async { Ok::<u8, Error>(7) },
+        None,
+        |(), _report: Reporter<()>, _cancel| async { Ok::<u8, Error>(7) },
     ));
     let result = loop {
         match fut.as_mut().poll(&mut cx) {

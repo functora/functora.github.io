@@ -2,7 +2,7 @@ use crate::Error;
 use crate::crypto::{ChunkKind, CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts};
 use crate::progress::{Job, yield_to_paint};
 use crate::worker::Reporter;
-use crate::zip::zip_entries;
+use crate::zip::{CancelToken, check_cancel, zip_entries};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
@@ -93,6 +93,7 @@ pub async fn package_report<S>(
     prefix: &'static [u8],
     stages: PackageStages<S>,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -102,14 +103,18 @@ where
     {
         let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut inner));
         let mut done = 0u64;
-        zip_entries(&mut zip, &entries, stages.zip, report, &mut done, total).await?;
+        zip_entries(
+            &mut zip, &entries, stages.zip, report, &mut done, total, cancel,
+        )
+        .await?;
         let _ = zip.finish()?;
     }
     match cipher {
         Some(cipher_sel) => {
-            package_with_encryption(&inner, password, cipher_sel, prefix, stages, report).await
+            package_with_encryption(&inner, password, cipher_sel, prefix, stages, report, cancel)
+                .await
         }
-        None => package_plain(&inner, stages, report).await,
+        None => package_plain(&inner, stages, report, cancel).await,
     }
 }
 
@@ -120,6 +125,7 @@ async fn package_with_encryption<S>(
     prefix: &'static [u8],
     stages: PackageStages<S>,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -138,6 +144,7 @@ where
         let mut offset = 0usize;
         let mut position = 0u32;
         while offset < inner.len() {
+            check_cancel(cancel)?;
             let end = (offset + STREAM_CHUNK).min(inner.len());
             let kind = if end == inner.len() {
                 ChunkKind::Last
@@ -165,6 +172,7 @@ async fn package_plain<S>(
     inner: &[u8],
     stages: PackageStages<S>,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -181,6 +189,7 @@ where
         write_package_entries(&mut zip, &meta)?;
         let mut done = 0u64;
         for chunk in inner.chunks(2 * 1024 * 1024) {
+            check_cancel(cancel)?;
             zip.write_all(chunk)?;
             done += chunk.len() as u64;
             report(Job {
@@ -223,30 +232,36 @@ fn read_package(source: &ArchiveSource) -> Result<(ArchiveMetadata, Vec<u8>), Er
     Ok((meta, payload))
 }
 
-async fn unseal_report<S>(
-    meta: &ArchiveMetadata,
-    payload: Vec<u8>,
-    password: &str,
+struct UnsealParams<'a> {
+    meta: &'a ArchiveMetadata,
+    password: &'a str,
     cipher: CipherType,
     prefix: &'static [u8],
+}
+
+async fn unseal_report<S>(
+    params: UnsealParams<'_>,
+    payload: Vec<u8>,
     stages: PackageStages<S>,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
 {
     let parts = StreamParts::recover(
-        password,
-        cipher,
-        &meta.salt,
-        &meta.nonce,
-        &aad(prefix, cipher, meta.kdf),
+        params.password,
+        params.cipher,
+        &params.meta.salt,
+        &params.meta.nonce,
+        &aad(params.prefix, params.cipher, params.meta.kdf),
     )?;
     let total = payload.len();
     let mut out = Vec::with_capacity(payload.len());
     let mut offset = 0usize;
     let mut position = 0u32;
     while offset < total {
+        check_cancel(cancel)?;
         let end = (offset + STREAM_CHUNK + STREAM_TAG).min(total);
         let kind = if end == total {
             ChunkKind::Last
@@ -274,6 +289,7 @@ pub async fn extract_package_report<S>(
     prefix: &'static [u8],
     stages: PackageStages<S>,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -281,7 +297,19 @@ where
     let (meta, payload) = read_package(&source)?;
     match meta.cipher {
         Some(cipher) => {
-            unseal_report(&meta, payload, password, cipher, prefix, stages, report).await
+            unseal_report(
+                UnsealParams {
+                    meta: &meta,
+                    password,
+                    cipher,
+                    prefix,
+                },
+                payload,
+                stages,
+                report,
+                cancel,
+            )
+            .await
         }
         None => Ok(payload),
     }

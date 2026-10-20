@@ -9,6 +9,8 @@ use crate::state::{External, ExternalNote, OpenedArchive, TemporaryState};
 use crate::storage::APP_ATTRS;
 use functora_egui::Routable;
 use functora_tagged::InfallibleInto;
+use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use zeroize::Zeroizing;
 
 #[must_use]
@@ -30,6 +32,7 @@ pub fn remove_attachment(state: &mut TemporaryState, index: crate::state::Attach
 
 pub async fn load_archive_async(
     source: ArchiveSource,
+    cancel: Arc<AtomicBool>,
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<OpenedArchive, AppError> {
     use crate::state::OpenedArchive;
@@ -46,7 +49,7 @@ pub async fn load_archive_async(
             attachments: Vec::new(),
         })
     } else {
-        let (text, files) = crate::archive::extract_archive_package_async(source, "", progress).await?;
+        let (text, files) = crate::archive::extract_archive_package_async(source, "", cancel, progress).await?;
         Ok(OpenedArchive {
             screen: Screen::View,
             external: External::Nothing,
@@ -60,6 +63,7 @@ async fn build_note(
     note: &str,
     password: &str,
     cipher: Option<CipherType>,
+    cancel: Arc<AtomicBool>,
     report: &mut crate::worker::Reporter,
 ) -> Result<External, AppError> {
     report(Job {
@@ -81,7 +85,7 @@ async fn build_note(
         })),
         Err(e) => {
             tracing::warn!("QR code generation failed: {e}");
-            crate::archive::create_archive_package(note, &[], password, cipher, report)
+            crate::archive::create_archive_package(note, &[], password, cipher, cancel, report)
                 .await
                 .map(|p| External::Archive(crate::crypto::ExternalArchive::new(p).infallible()))
         }
@@ -93,6 +97,7 @@ pub async fn build_external(
     password: &str,
     cipher: Option<CipherType>,
     atts: &[Attachment],
+    cancel: Arc<AtomicBool>,
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<External, AppError> {
     crate::worker::run(
@@ -103,15 +108,18 @@ pub async fn build_external(
             atts.to_vec(),
         ),
         progress,
-        |(note_owned, password_owned, cipher_owned, atts_owned), mut report| async move {
+        Some(Arc::clone(&cancel)),
+        |(note_owned, password_owned, cipher_owned, atts_owned), mut report, maybe_cancel| async move {
+            let inner_cancel = maybe_cancel.unwrap_or_else(|| Arc::new(AtomicBool::new(false)));
             if atts_owned.is_empty() {
-                build_note(&note_owned, &password_owned, cipher_owned, &mut report).await
+                build_note(&note_owned, &password_owned, cipher_owned, inner_cancel, &mut report).await
             } else {
                 crate::archive::create_archive_package(
                     &note_owned,
                     &atts_owned,
                     &password_owned,
                     cipher_owned,
+                    inner_cancel,
                     &mut report,
                 )
                 .await

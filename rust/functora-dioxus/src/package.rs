@@ -23,7 +23,8 @@ where
     run(
         (entries, password_owned, cipher),
         progress,
-        move |(entries_owned, password_clone, cipher_sel), mut report| async move {
+        None,
+        move |(entries_owned, password_clone, cipher_sel), mut report, cancel| async move {
             package_report(
                 entries_owned,
                 password_clone.as_str(),
@@ -31,6 +32,7 @@ where
                 prefix,
                 stages,
                 &mut report,
+                cancel.as_ref(),
             )
             .await
         },
@@ -50,8 +52,21 @@ where
     S: Copy + Send + Sync + 'static,
 {
     let password_owned = Zeroizing::new(password.to_string());
-    run(source, progress, move |source_owned, mut report| async move {
-        extract_package_report(source_owned, password_owned.as_str(), prefix, stages, &mut report).await
-    })
+    run(
+        source,
+        progress,
+        None,
+        move |source_owned, mut report, cancel| async move {
+            extract_package_report(
+                source_owned,
+                password_owned.as_str(),
+                prefix,
+                stages,
+                &mut report,
+                cancel.as_ref(),
+            )
+            .await
+        },
+    )
     .await
 }

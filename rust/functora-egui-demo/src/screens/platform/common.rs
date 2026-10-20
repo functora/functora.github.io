@@ -148,13 +148,18 @@ impl crate::state::ShowcaseApp {
             &attachments,
             |_| {},
             functora_egui::progress::Stage::Zip,
+            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         )
         .await
         .map_err(|e| e.to_string())?;
-        let unzipped =
-            functora_egui::zip::unzip_async(zipped, |_| {}, functora_egui::progress::Stage::Unzip)
-                .await
-                .map_err(|e| e.to_string())?;
+        let unzipped = functora_egui::zip::unzip_async(
+            zipped,
+            |_| {},
+            functora_egui::progress::Stage::Unzip,
+            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        )
+        .await
+        .map_err(|e| e.to_string())?;
         Self::verify_zip_roundtrip(&files, &unzipped)
     }
 

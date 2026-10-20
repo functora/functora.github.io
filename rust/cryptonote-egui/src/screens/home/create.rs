@@ -64,10 +64,9 @@ impl CryptonoteApp {
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
-                    if claim_job(&mut self.temporary.progress, Stage::Encrypt).is_some() {
-                        let progress = self.track_progress();
+                    if let Some((cancel, progress)) = self.begin_op(Stage::Encrypt) {
                         let rx = functora_egui::spawn_async(async move {
-                            crate::hooks::build_external(&note, &password, cipher, &attachments, progress).await
+                            crate::hooks::build_external(&note, &password, cipher, &attachments, cancel, progress).await
                         });
                         self.generate_rx = Some(rx);
                     }
@@ -83,8 +82,8 @@ impl CryptonoteApp {
                 && claim_job(&mut self.temporary.progress, Stage::Attach).is_some()
             {
                 let cancel = functora_egui::new_cancel_token();
-                self.pick_cancel = Some(cancel.clone());
-                self.pick_overlay_open = true;
+                self.progress_cancel = Some(cancel.clone());
+                self.progress_overlay_open = true;
                 let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
                 self.progress_slot = Some(std::sync::Arc::clone(&slot));
                 let rx = functora_egui::spawn_async(async move {

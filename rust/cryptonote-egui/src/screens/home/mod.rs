@@ -6,14 +6,12 @@ mod scan;
 use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::state::ActionMode;
-use functora_egui::i18n::{I18N, Language};
-use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Label, Progress, TabsValue};
+use functora_egui::i18n::I18N;
+use functora_egui::{Label, TabsValue};
 
 impl CryptonoteApp {
     pub(crate) fn screen_home(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
-        self.show_pick_overlay(ui.ctx(), lang);
         let () = ui.add_space(4.0);
         _ = Label::new(Msg::ActionLabel.render(lang)).show(ui);
         let () = ui.add_space(4.0);
@@ -34,33 +32,5 @@ impl CryptonoteApp {
                 }
             });
         let () = ui.add_space(12.0);
-        if let Some(job) = self.temporary.progress.clone() {
-            _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-            let () = ui.add_space(4.0);
-            _ = Label::new(format!(
-                "{} {} / {}",
-                BaseMsg::Stage(job.stage).render(lang),
-                job.done,
-                job.total
-            ))
-            .show(ui);
-        }
-    }
-
-    pub(crate) fn show_pick_overlay(&mut self, ctx: &egui::Context, lang: Language) {
-        if self.pick_rx.is_none() && self.archive_rx.is_none() {
-            return;
-        }
-        if let Some(cancel) = self.pick_cancel.clone() {
-            let mut open = self.pick_overlay_open;
-            functora_egui::BlockingOverlay::new(BaseMsg::PickingFiles.render(lang)).show(
-                ctx,
-                &mut open,
-                self.temporary.progress.as_ref(),
-                &cancel,
-                lang,
-            );
-            self.pick_overlay_open = open;
-        }
     }
 }

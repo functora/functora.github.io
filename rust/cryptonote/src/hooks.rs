@@ -189,7 +189,8 @@ where
             atts.to_vec(),
         ),
         progress,
-        |(note_owned, password_owned, cipher_owned, atts_owned), mut report| async move {
+        None,
+        |(note_owned, password_owned, cipher_owned, atts_owned), mut report, _cancel| async move {
             if atts_owned.is_empty() {
                 build_note(&note_owned, &password_owned, cipher_owned, &mut report).await
             } else {

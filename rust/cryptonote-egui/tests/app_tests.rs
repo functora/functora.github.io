@@ -16,7 +16,7 @@ fn ctx() -> egui::Context {
 fn send_pick(app: &mut CryptonoteApp, result: Result<Vec<(String, Vec<u8>)>, AppError>) {
     let (tx, rx) = std::sync::mpsc::channel();
     app.pick_rx = Some(rx);
-    app.pick_overlay_open = true;
+    app.progress_overlay_open = true;
     assert!(tx.send(result).is_ok());
     app.poll_receivers(&ctx());
 }
@@ -34,7 +34,7 @@ fn pick_completion_adds_attachments_and_toasts() {
     );
     assert_eq!(app.temporary.attachments.len(), 2);
     assert!(app.pick_rx.is_none(), "slot must clear");
-    assert!(!app.pick_overlay_open, "overlay must close");
+    assert!(!app.progress_overlay_open, "overlay must close");
     assert!(app.temporary.progress.is_none());
     assert_eq!(
         app.toast.next_id(),
@@ -59,7 +59,7 @@ fn pick_cancel_toasts_silently() {
     let toasts_before = app.toast.next_id();
     send_pick(&mut app, Err(AppError::Cancelled));
     assert!(app.pick_rx.is_none());
-    assert!(!app.pick_overlay_open);
+    assert!(!app.progress_overlay_open);
     assert_eq!(
         app.toast.next_id(),
         toasts_before + 1,
@@ -73,7 +73,7 @@ fn pick_error_toasts() {
     let toasts_before = app.toast.next_id();
     send_pick(&mut app, Err(AppError::NoFileSelected));
     assert!(app.pick_rx.is_none());
-    assert!(!app.pick_overlay_open);
+    assert!(!app.progress_overlay_open);
     assert_eq!(
         app.toast.next_id(),
         toasts_before + 1,

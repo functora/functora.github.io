@@ -226,3 +226,73 @@ fn combobox_shows_placeholder_without_selection() {
         "placeholder must render without a selection"
     );
 }
+
+#[test]
+fn blocking_overlay_shows_stage_legend_and_percent() {
+    use functora_egui::i18n::Language;
+    use functora_egui::progress::{Job, Stage};
+    use std::sync::Arc;
+    use std::sync::atomic::AtomicBool;
+    let mut open = true;
+    let cancel = Arc::new(AtomicBool::new(false));
+    let job = Job {
+        stage: Stage::Attach,
+        done: 26,
+        total: 100,
+        name: None,
+    };
+    let mut app = Harness::new();
+    let mut body = |ui: &mut egui::Ui| {
+        functora_egui::BlockingOverlay::new("Picking files...").show(
+            ui.ctx(),
+            &mut open,
+            Some(&job),
+            &cancel,
+            Language::Eng,
+        );
+    };
+    let _ = app.step(&mut body);
+    let out = app.step(&mut body);
+    let texts = Harness::texts(&out);
+    assert!(
+        texts.iter().any(|t| t.contains("Attaching files... 26%")),
+        "overlay legend must show stage text and percent, got: {texts:?}"
+    );
+    assert!(
+        texts.iter().any(|t| t.contains("26 B / 100 B")),
+        "overlay legend must show formatted sizes, got: {texts:?}"
+    );
+}
+
+#[test]
+fn blocking_overlay_includes_entry_name_in_legend() {
+    use functora_egui::i18n::Language;
+    use functora_egui::progress::{Job, Stage};
+    use std::sync::Arc;
+    use std::sync::atomic::AtomicBool;
+    let mut open = true;
+    let cancel = Arc::new(AtomicBool::new(false));
+    let job = Job {
+        stage: Stage::Attach,
+        done: 26,
+        total: 100,
+        name: Some("photo.png".to_owned()),
+    };
+    let mut app = Harness::new();
+    let mut body = |ui: &mut egui::Ui| {
+        functora_egui::BlockingOverlay::new("Picking files...").show(
+            ui.ctx(),
+            &mut open,
+            Some(&job),
+            &cancel,
+            Language::Eng,
+        );
+    };
+    let _ = app.step(&mut body);
+    let out = app.step(&mut body);
+    let texts = Harness::texts(&out);
+    assert!(
+        texts.iter().any(|t| t.contains("photo.png: 26 B / 100 B")),
+        "overlay legend must name the active entry, got: {texts:?}"
+    );
+}

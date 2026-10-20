@@ -47,6 +47,7 @@ pub(crate) async fn create_archive_package(
         AAD_PREFIX,
         stages(),
         report,
+        None,
     )
     .await?
     .pipe(Ok)

@@ -68,7 +68,8 @@ pub fn Open(note: Option<String>) -> Element {
                         match crate::worker::run(
                             (enc, pwd.clone()),
                             tst.progress(),
-                            |(enc_in, pwd_in), mut report| async move {
+                            None,
+                            |(enc_in, pwd_in), mut report, _cancel| async move {
                                 report(Job {
                                     stage: Stage::Decrypt,
                                     done: 0,

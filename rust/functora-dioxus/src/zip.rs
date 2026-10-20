@@ -15,9 +15,14 @@ where
         .iter()
         .map(|f| (f.name.clone(), std::sync::Arc::clone(&f.data)))
         .collect::<Vec<_>>();
-    run(file_entries, progress, move |entries, mut report| async move {
-        create_zip_report(entries, stage, &mut report).await
-    })
+    run(
+        file_entries,
+        progress,
+        None,
+        move |entries, mut report, cancel| async move {
+            create_zip_report(entries, stage, &mut report, cancel.as_ref()).await
+        },
+    )
     .await
 }
 
@@ -26,8 +31,8 @@ where
     P: Writable<Target = Option<Job<S>>> + 'static,
     S: Copy + Send + Sync + 'static,
 {
-    run(inner, progress, move |bytes, mut report| async move {
-        unzip_report(bytes, stage, &mut report).await
+    run(inner, progress, None, move |bytes, mut report, cancel| async move {
+        unzip_report(bytes, stage, &mut report, cancel.as_ref()).await
     })
     .await
 }

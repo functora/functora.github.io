@@ -3,9 +3,19 @@ use crate::progress::{Job, yield_to_paint};
 use crate::worker::Reporter;
 use std::io::{Cursor, Read, Write};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use zip::CompressionMethod;
 
 const ZIP_CHUNK: usize = 2 * 1024 * 1024;
+
+pub type CancelToken = Arc<AtomicBool>;
+
+pub(crate) fn check_cancel(cancel: Option<&CancelToken>) -> Result<(), Error> {
+    if cancel.is_some_and(|c| c.load(Ordering::Relaxed)) {
+        return Err(Error::Cancelled);
+    }
+    Ok(())
+}
 
 fn opts() -> zip::write::FileOptions<'static, ()> {
     zip::write::FileOptions::default()
@@ -20,6 +30,7 @@ pub(crate) async fn zip_entries<S>(
     report: &mut Reporter<S>,
     done: &mut u64,
     total: u64,
+    cancel: Option<&CancelToken>,
 ) -> Result<(), Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -28,6 +39,7 @@ where
         zip.start_file(name, opts())?;
         let display = name.strip_prefix("attachments/").unwrap_or(name);
         for chunk in data.chunks(ZIP_CHUNK) {
+            check_cancel(cancel)?;
             zip.write_all(chunk)?;
             *done += chunk.len() as u64;
             report(Job {
@@ -46,6 +58,7 @@ pub async fn create_zip_report<S>(
     entries: Vec<(String, Arc<[u8]>)>,
     stage: S,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -55,7 +68,7 @@ where
     let mut done = 0u64;
     {
         let mut zip = zip::ZipWriter::new(Cursor::new(&mut buf));
-        zip_entries(&mut zip, &entries, stage, report, &mut done, total).await?;
+        zip_entries(&mut zip, &entries, stage, report, &mut done, total, cancel).await?;
         let _ = zip.finish()?;
     }
     Ok(buf)
@@ -65,6 +78,7 @@ pub async fn unzip_report<S>(
     inner: Vec<u8>,
     stage: S,
     report: &mut Reporter<S>,
+    cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -88,6 +102,7 @@ where
             })?;
             let mut data = Vec::with_capacity(capacity);
             loop {
+                check_cancel(cancel)?;
                 let read = file.read(&mut chunk)?;
                 if read == 0 {
                     break;

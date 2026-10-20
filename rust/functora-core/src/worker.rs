@@ -4,12 +4,14 @@ use crate::error::WorkerStopped;
 use crate::progress::Job;
 
 use std::future::Future;
+use std::sync::Arc;
 #[cfg(not(target_arch = "wasm32"))]
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
+#[cfg(not(target_arch = "wasm32"))]
+use std::sync::atomic::Ordering;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::mpsc::{self, Receiver, Sender, TryRecvError};
-#[cfg(not(target_arch = "wasm32"))]
-use std::sync::{Arc, Mutex};
 #[cfg(not(target_arch = "wasm32"))]
 use std::task::{Context, Poll, Wake, Waker};
 
@@ -57,14 +59,19 @@ impl Drop for WorkerGuard {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn run<J, O, E, S, F, M, P>(arg: J, progress: P, make: M) -> Result<O, E>
+pub async fn run<J, O, E, S, F, M, P>(
+    arg: J,
+    progress: P,
+    cancel: Option<Arc<AtomicBool>>,
+    make: M,
+) -> Result<O, E>
 where
     J: Send + 'static,
     O: Send + 'static,
     S: Send + 'static,
     E: From<Error> + Send + 'static,
     F: Future<Output = Result<O, E>> + Send + 'static,
-    M: FnOnce(J, Reporter<S>) -> F + Send + 'static,
+    M: FnOnce(J, Reporter<S>, Option<Arc<AtomicBool>>) -> F + Send + 'static,
     P: FnMut(Option<Job<S>>),
 {
     let (tx, rx) = mpsc::channel();
@@ -79,7 +86,14 @@ where
             _ = send.send(WorkerMsg::Job(job));
             wake_once(&report_wake);
         });
-        move || drive(make(arg, report), &tx, &wake_slot_thread, &shutdown_thread)
+        move || {
+            drive(
+                make(arg, report, cancel),
+                &tx,
+                &wake_slot_thread,
+                &shutdown_thread,
+            )
+        }
     });
     let guard = WorkerGuard { handle, shutdown };
     let result = pump(rx, progress, wake_slot).await;
@@ -157,16 +171,21 @@ where
 }
 
 #[cfg(target_arch = "wasm32")]
-pub async fn run<J, O, E, S, F, M, P>(arg: J, mut progress: P, make: M) -> Result<O, E>
+pub async fn run<J, O, E, S, F, M, P>(
+    arg: J,
+    mut progress: P,
+    cancel: Option<Arc<AtomicBool>>,
+    make: M,
+) -> Result<O, E>
 where
     J: 'static,
     O: 'static,
     S: 'static,
     E: From<Error> + 'static,
     F: Future<Output = Result<O, E>> + 'static,
-    M: FnOnce(J, Reporter<S>) -> F + 'static,
+    M: FnOnce(J, Reporter<S>, Option<Arc<AtomicBool>>) -> F + 'static,
     P: FnMut(Option<Job<S>>) + 'static,
 {
     let reporter: Reporter<S> = Box::new(move |job| progress(Some(job)));
-    make(arg, reporter).await
+    make(arg, reporter, cancel).await
 }

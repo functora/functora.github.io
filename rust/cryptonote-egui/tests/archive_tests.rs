@@ -56,10 +56,23 @@ fn decrypt_encrypted_archive_without_note_preserves_attachments() {
 
     let package = run_async(async move {
         let files = attachments();
-        create_archive_package_async("", &files, "pw", Some(CipherType::Aes256Gcm), |_| {}).await
+        create_archive_package_async(
+            "",
+            &files,
+            "pw",
+            Some(CipherType::Aes256Gcm),
+            Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            |_| {},
+        )
+        .await
     })
     .expect("package created");
-    let opened = run_async(load_archive_async(ArchiveSource::Bytes(package), |_| {})).expect("archive opened");
+    let opened = run_async(load_archive_async(
+        ArchiveSource::Bytes(package),
+        Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        |_| {},
+    ))
+    .expect("archive opened");
     assert_eq!(opened.screen, Screen::Open);
     let mut app = CryptonoteApp::default();
     app.temporary.external = opened.external;
@@ -83,12 +96,21 @@ fn decrypt_encrypted_archive_without_note_preserves_attachments() {
 fn encrypted_archive_without_note_roundtrip() {
     let package = run_async(async move {
         let attached = attachments();
-        create_archive_package_async("", &attached, "pw", Some(CipherType::Aes256Gcm), |_| {}).await
+        create_archive_package_async(
+            "",
+            &attached,
+            "pw",
+            Some(CipherType::Aes256Gcm),
+            Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            |_| {},
+        )
+        .await
     })
     .expect("package created");
     let (text, files) = run_async(extract_archive_package_async(
         ArchiveSource::Bytes(package),
         "pw",
+        Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
     .expect("archive extracted");
@@ -103,10 +125,23 @@ fn plain_archive_without_note_opens_view_with_files() {
 
     let package = run_async(async move {
         let attached = attachments();
-        create_archive_package_async("", &attached, "", None, |_| {}).await
+        create_archive_package_async(
+            "",
+            &attached,
+            "",
+            None,
+            Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            |_| {},
+        )
+        .await
     })
     .expect("package created");
-    let opened = run_async(load_archive_async(ArchiveSource::Bytes(package), |_| {})).expect("archive opened");
+    let opened = run_async(load_archive_async(
+        ArchiveSource::Bytes(package),
+        Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        |_| {},
+    ))
+    .expect("archive opened");
     assert_eq!(opened.screen, Screen::View);
     assert_eq!(opened.note, "");
     assert_files(&opened.attachments);
@@ -245,8 +280,13 @@ fn missing_note_entry_defaults_to_empty_text() {
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
-        let (text, files) = run_async(extract_archive_package_async(ArchiveSource::Bytes(package), "", |_| {}))
-            .expect("archive extracted");
+        let (text, files) = run_async(extract_archive_package_async(
+            ArchiveSource::Bytes(package),
+            "",
+            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+            |_| {},
+        ))
+        .expect("archive extracted");
         assert_eq!(text, "");
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].name, "a.txt");

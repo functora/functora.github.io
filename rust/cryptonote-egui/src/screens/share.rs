@@ -1,13 +1,13 @@
 use crate::app::CryptonoteApp;
 use crate::error::AppError;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job};
+use crate::progress::Stage;
 use crate::route::Screen;
 use crate::state::ActionMode;
 use crate::state::External;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Alert, Button, ButtonVariant, Flex, Progress, TextareaPasteClear};
+use functora_egui::{Alert, Button, ButtonVariant, Flex, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_share(&mut self, ui: &mut egui::Ui) {
@@ -79,7 +79,7 @@ impl CryptonoteApp {
                     .clicked()
                 {
                     let bytes = self.temporary.external.archive_bytes();
-                    if !bytes.is_empty() && claim_job(&mut self.temporary.progress, Stage::Download).is_some() {
+                    if !bytes.is_empty() && self.begin_op(Stage::Download).is_some() {
                         let rx = functora_egui::spawn_async(async move {
                             functora_egui::download::download(bytes, "archive.cryptonote")
                                 .await
@@ -110,10 +110,6 @@ impl CryptonoteApp {
                     self.navigate(Screen::Home);
                 }
             });
-            if let Some(job) = self.temporary.progress.clone() {
-                let () = ui.add_space(8.0);
-                _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-            }
         }
     }
 }

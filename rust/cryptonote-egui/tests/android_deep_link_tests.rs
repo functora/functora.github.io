@@ -151,12 +151,24 @@ fn load_archive_opens_plain_package_from_stored_path() {
     let _guard = lock_state();
     drop(take_archive());
     let path = std::env::temp_dir().join(format!("cryptonote-egui-plain-{}.cryptonote", std::process::id()));
-    let package =
-        run_async(create_archive_package_async("deep link note", &[], "", None, |_| {})).expect("package created");
+    let package = run_async(create_archive_package_async(
+        "deep link note",
+        &[],
+        "",
+        None,
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        |_| {},
+    ))
+    .expect("package created");
     std::fs::write(&path, package).expect("write package");
     store_archive(ArchiveSource::Path(path.clone()));
     let source = take_archive().expect("archive present");
-    let opened = run_async(load_archive_async(source, |_| {})).expect("archive loaded");
+    let opened = run_async(load_archive_async(
+        source,
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        |_| {},
+    ))
+    .expect("archive loaded");
     assert!(matches!(opened.screen, Screen::View));
     assert_eq!(opened.note, "deep link note");
     assert!(opened.attachments.is_empty());
@@ -175,6 +187,7 @@ fn load_archive_routes_encrypted_package_to_open_screen() {
         &[],
         "pw",
         Some(CipherType::Aes256Gcm),
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
     .expect("package created");
@@ -182,7 +195,12 @@ fn load_archive_routes_encrypted_package_to_open_screen() {
     let source = ArchiveSource::Path(path.clone());
     let meta = read_archive_metadata(&source).expect("metadata");
     assert!(meta.cipher.is_some());
-    let opened = run_async(load_archive_async(source, |_| {})).expect("archive loaded");
+    let opened = run_async(load_archive_async(
+        source,
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        |_| {},
+    ))
+    .expect("archive loaded");
     assert!(matches!(opened.screen, Screen::Open));
     assert!(matches!(opened.external, External::Archive(_)));
     drop(std::fs::remove_file(path));

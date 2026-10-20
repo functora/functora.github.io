@@ -9,6 +9,7 @@ pub async fn create_zip_async<S, P>(
     files: &[Attachment],
     progress: P,
     stage: S,
+    token: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<Vec<u8>, Error>
 where
     S: Copy + Send + Sync + 'static,
@@ -21,8 +22,9 @@ where
     worker::run(
         file_entries,
         progress,
-        move |entries, mut report| async move {
-            create_zip_report(entries, stage, &mut report).await
+        Some(token),
+        move |entries, mut report, cancel| async move {
+            create_zip_report(entries, stage, &mut report, cancel.as_ref()).await
         },
     )
     .await
@@ -32,13 +34,19 @@ pub async fn unzip_async<S, P>(
     inner: Vec<u8>,
     progress: P,
     stage: S,
+    token: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error>
 where
     S: Copy + Send + Sync + 'static,
     P: FnMut(Option<Job<S>>) + Send + 'static,
 {
-    worker::run(inner, progress, move |bytes, mut report| async move {
-        unzip_report(bytes, stage, &mut report).await
-    })
+    worker::run(
+        inner,
+        progress,
+        Some(token),
+        move |bytes, mut report, cancel| async move {
+            unzip_report(bytes, stage, &mut report, cancel.as_ref()).await
+        },
+    )
     .await
 }

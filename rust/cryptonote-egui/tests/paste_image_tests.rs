@@ -66,6 +66,7 @@ fn empty_slot_is_noop() {
 
 #[test]
 fn probe_not_spawned_off_create_tab() {
+    let _guard = slot_guard();
     let mut app = CryptonoteApp::default();
     app.temporary.action = ActionMode::Open;
     let ctx = egui::Context::default();
@@ -87,6 +88,7 @@ fn probe_not_spawned_off_create_tab() {
 
 #[test]
 fn probe_not_spawned_without_intent() {
+    let _guard = slot_guard();
     let mut app = CryptonoteApp::default();
     let ctx = egui::Context::default();
     app.handle_paste_image(&ctx);

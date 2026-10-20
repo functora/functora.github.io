@@ -25,7 +25,8 @@ fn worker_run_returns_value_and_reports_progress() {
                 .unwrap_or_else(std::sync::PoisonError::into_inner)
                 .push(job);
         },
-        |arg, mut report| async move {
+        None,
+        |arg, mut report, _cancel| async move {
             report(Job {
                 stage: "half".to_string(),
                 done: 1,
@@ -53,7 +54,8 @@ fn worker_run_propagates_errors() {
     let out: Result<u32, Error> = run(functora_egui::worker::run(
         (),
         |_: Option<Job<String>>| {},
-        |(), _| async move { Err::<u32, Error>(Error::Cancelled) },
+        None,
+        |(), _, _| async move { Err::<u32, Error>(Error::Cancelled) },
     ));
     assert!(matches!(out, Err(Error::Cancelled)));
 }

@@ -14,7 +14,8 @@ where
     worker::run(
         (data, name),
         progress,
-        move |(bytes, file_name), mut report| async move {
+        None,
+        move |(bytes, file_name), mut report, _cancel| async move {
             save_to_downloads(bytes.as_ref(), file_name.clone(), move |done, total| {
                 report(Job {
                     stage: stage.clone(),

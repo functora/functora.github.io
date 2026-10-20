@@ -261,19 +261,19 @@ fn document_screens_have_no_nested_scroll() {
 #[test]
 fn pick_flow_reports_progress_and_completion() {
     assert!(
-        HOME_SRC.contains("BlockingOverlay"),
+        APP_SRC.contains("BlockingOverlay"),
         "attach flow must show a blocking overlay like the demo"
     );
     assert!(
-        HOME_SRC.contains("PickingFiles"),
-        "overlay title must render from the catalog"
+        APP_SRC.contains("BaseMsg::Stage"),
+        "overlay title must render the localized stage from the catalog"
     );
     assert!(
         APP_SRC.contains("FilesAttached"),
         "pick completion must toast the attached count"
     );
     assert!(
-        APP_SRC.contains("pick_overlay_open = false"),
+        APP_SRC.contains("progress_overlay_open = open"),
         "terminal pick states must close the overlay"
     );
 }

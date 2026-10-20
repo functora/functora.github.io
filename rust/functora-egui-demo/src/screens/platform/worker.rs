@@ -18,7 +18,8 @@ impl crate::state::ShowcaseApp {
                     functora_egui::worker::run(
                         42u32,
                         |_| {},
-                        |val, mut reporter| async move {
+                        None,
+                        |val, mut reporter, _cancel| async move {
                             reporter(functora_egui::progress::Job {
                                 stage: functora_egui::progress::Stage::Download,
                                 done: 1,
@@ -39,7 +40,7 @@ impl crate::state::ShowcaseApp {
 
         snippet(
             ui,
-            "// Worker: run async work on thread (desktop) or inline (wasm) with progress\nuse functora_egui::worker::run;\nuse functora_egui::progress::{Job, Stage};\n\nlet input = 42u32;\n\nlet result = run(\n    input,\n    |_job| { /* setup */ },\n    |val, mut reporter| async move {\n        // Report progress\n        reporter(Job {\n            stage: Stage::Download,\n            done: 1,\n            total: 1,\n            name: Some(\"task\".to_owned()),\n        });\n        \n        // Do async work\n        let output = format!(\"Worker done: {val}\");\n        Ok(output)\n    },\n).await?;\n\n// result: String",
+            "// Worker: run async work on thread (desktop) or inline (wasm) with progress\nuse functora_egui::worker::run;\nuse functora_egui::progress::{Job, Stage};\n\nlet input = 42u32;\n\nlet result = run(\n    input,\n    |_job| { /* setup */ },\n    None,\n    |val, mut reporter, _cancel| async move {\n        // Report progress\n        reporter(Job {\n            stage: Stage::Download,\n            done: 1,\n            total: 1,\n            name: Some(\"task\".to_owned()),\n        });\n        \n        // Do async work\n        let output = format!(\"Worker done: {val}\");\n        Ok(output)\n    },\n).await?;\n\n// result: String",
         );
     }
 }

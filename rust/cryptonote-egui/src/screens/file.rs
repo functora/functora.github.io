@@ -1,11 +1,11 @@
 use crate::app::CryptonoteApp;
 use crate::error::AppError;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job};
+use crate::progress::Stage;
 use egui::ScrollArea;
 use functora_egui::files::{Preview, format_size};
 use functora_egui::i18n::I18N;
-use functora_egui::{Alert, Button, ButtonVariant, Flex, Progress};
+use functora_egui::{Alert, Button, ButtonVariant, Flex};
 
 impl CryptonoteApp {
     pub(crate) fn screen_file(&mut self, ui: &mut egui::Ui) {
@@ -55,7 +55,7 @@ impl CryptonoteApp {
                 )
                 .inner
                 .clicked()
-                    && claim_job(&mut self.temporary.progress, Stage::Download).is_some()
+                    && self.begin_op(Stage::Download).is_some()
                 {
                     let data = att.data.to_vec();
                     let name = att.name.clone();
@@ -67,10 +67,6 @@ impl CryptonoteApp {
                     self.download_rx = Some(rx);
                 }
             });
-            if let Some(job) = self.temporary.progress.clone() {
-                let () = ui.add_space(8.0);
-                _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-            }
         } else {
             _ = Alert::new()
                 .title(Msg::FileNotFound.render(lang))

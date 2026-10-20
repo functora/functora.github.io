@@ -4,7 +4,7 @@ use crate::hooks::handle_open_url;
 use crate::messages::Msg;
 use crate::progress::{Stage, claim_job};
 use functora_egui::i18n::I18N;
-use functora_egui::{Button, ButtonVariant, Flex, Label, Progress, TextareaPasteClear, ToastVariant};
+use functora_egui::{Button, ButtonVariant, Flex, Label, TextareaPasteClear, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn home_open(&mut self, ui: &mut egui::Ui) {
@@ -56,7 +56,8 @@ impl CryptonoteApp {
                 && claim_job(&mut self.temporary.progress, Stage::Attach).is_some()
             {
                 let cancel = functora_egui::new_cancel_token();
-                self.pick_cancel = Some(cancel.clone());
+                self.progress_cancel = Some(cancel.clone());
+                self.progress_overlay_open = true;
                 let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
                 self.progress_slot = Some(std::sync::Arc::clone(&slot));
                 let load_progress = {
@@ -65,6 +66,7 @@ impl CryptonoteApp {
                         *load_slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
                     }
                 };
+                let load_cancel = cancel.clone();
                 let rx = functora_egui::spawn_async(async move {
                     let files =
                         functora_egui::files::pick_files_with_shared_progress(false, Some(slot), Some(&cancel)).await?;
@@ -74,14 +76,10 @@ impl CryptonoteApp {
                         .ok_or(AppError::NoFileSelected)
                         .map(|(_, data)| data)?;
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-                    crate::hooks::load_archive_async(source, load_progress).await
+                    crate::hooks::load_archive_async(source, load_cancel, load_progress).await
                 });
                 self.archive_rx = Some(rx);
             }
         });
-        if let Some(job) = self.temporary.progress.clone() {
-            let () = ui.add_space(8.0);
-            _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-        }
     }
 }

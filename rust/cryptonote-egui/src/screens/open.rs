@@ -2,11 +2,11 @@ use crate::app::CryptonoteApp;
 use crate::encoding::NoteData;
 use crate::error::AppError;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job, clear_progress};
+use crate::progress::Stage;
 use crate::state::External;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex, InputPasteClear, Label, Progress, ToastVariant};
+use functora_egui::{Button, ButtonVariant, Flex, InputPasteClear, Label, ToastVariant};
 
 impl CryptonoteApp {
     pub(crate) fn screen_open(&mut self, ui: &mut egui::Ui) {
@@ -45,10 +45,6 @@ impl CryptonoteApp {
                     self.decrypt_current(toast_time);
                 }
             });
-            if let Some(job) = self.temporary.progress.clone() {
-                let () = ui.add_space(8.0);
-                _ = ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-            }
         } else {
             self.screen_view(ui);
         }
@@ -64,9 +60,9 @@ impl CryptonoteApp {
             );
             return;
         }
-        if claim_job(&mut self.temporary.progress, Stage::Decrypt).is_none() {
+        let Some((cancel, progress)) = self.begin_op(Stage::Decrypt) else {
             return;
-        }
+        };
         let external = self.temporary.external.clone();
         let password = self.temporary.password.clone();
         match external {
@@ -86,16 +82,16 @@ impl CryptonoteApp {
                 }
             }
             External::Archive(archive) => {
-                let progress = self.track_progress();
                 let rx = functora_egui::spawn_async(async move {
                     let bytes = archive.untag();
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
-                    crate::archive::extract_archive_package_async_with_progress(source, &password, progress).await
+                    crate::archive::extract_archive_package_async_with_progress(source, &password, cancel, progress)
+                        .await
                 });
                 self.decrypt_rx = Some(rx);
             }
             External::Nothing => {
-                clear_progress(&mut self.temporary.progress);
+                self.end_op();
             }
         }
     }

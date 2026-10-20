@@ -3,9 +3,7 @@ use std::str::FromStr;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
-use functora_egui::{
-    Button, ButtonVariant, ComponentSize, Progress, ResponsiveExt, ShadcnThemeExt, Shell, ToastState, ToastVariant,
-};
+use functora_egui::{Button, ButtonVariant, ResponsiveExt, Shell, ToastState, ToastVariant};
 
 use crate::error::AppError;
 use crate::hooks::handle_open_url;
@@ -22,6 +20,7 @@ pub(crate) const BYTES_URI_PREFIX: &str = "bytes://";
 type PickResult = Result<Vec<(String, Vec<u8>)>, AppError>;
 type DecryptResult = Result<(String, Vec<crate::archive::Attachment>), AppError>;
 type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
+type TrackFn = Box<dyn FnMut(Option<Job<Stage>>) + Send + 'static>;
 
 pub struct CryptonoteApp {
     pub(crate) router: AppRouter<Screen>,
@@ -35,8 +34,8 @@ pub struct CryptonoteApp {
     pub(crate) share_rx: Option<std::sync::mpsc::Receiver<Result<(), AppError>>>,
     pub(crate) download_rx: Option<std::sync::mpsc::Receiver<Result<String, AppError>>>,
     pub pick_rx: Option<std::sync::mpsc::Receiver<PickResult>>,
-    pub(crate) pick_cancel: Option<functora_egui::CancelToken>,
-    pub pick_overlay_open: bool,
+    pub(crate) progress_cancel: Option<functora_egui::CancelToken>,
+    pub progress_overlay_open: bool,
     pub paste_image_rx:
         Option<std::sync::mpsc::Receiver<Result<Option<functora_egui::paste_image::PasteImage>, AppError>>>,
     pub(crate) generate_rx: Option<std::sync::mpsc::Receiver<Result<External, AppError>>>,
@@ -63,8 +62,8 @@ impl Default for CryptonoteApp {
             share_rx: None,
             download_rx: None,
             pick_rx: None,
-            pick_cancel: None,
-            pick_overlay_open: false,
+            progress_cancel: None,
+            progress_overlay_open: false,
             paste_image_rx: None,
             generate_rx: None,
             decrypt_rx: None,
@@ -184,12 +183,38 @@ impl CryptonoteApp {
             || matches!(error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
     }
 
-    pub(crate) fn track_progress(&mut self) -> impl FnMut(Option<Job<Stage>>) + Send + 'static {
+    pub(crate) fn begin_op(&mut self, stage: Stage) -> Option<(functora_egui::CancelToken, TrackFn)> {
+        let guard = claim_job(&mut self.temporary.progress, stage)?;
+        std::mem::forget(guard);
+        let token = functora_egui::new_cancel_token();
+        self.progress_cancel = Some(token.clone());
+        self.progress_overlay_open = true;
+        Some((token, self.track_progress()))
+    }
+
+    pub(crate) fn end_op(&mut self) {
+        clear_progress(&mut self.temporary.progress);
+        self.progress_cancel = None;
+        self.progress_overlay_open = false;
+        self.progress_slot = None;
+    }
+
+    /// Opens the blocking progress overlay for the given stage without
+    /// starting any work. Test support only, so UI tests can render the
+    /// overlay deterministically without constructing a valid archive.
+    #[doc(hidden)]
+    pub fn open_progress_overlay_for_tests(&mut self, stage: Stage) {
+        if self.begin_op(stage).is_none() {
+            self.end_op();
+        }
+    }
+
+    pub(crate) fn track_progress(&mut self) -> TrackFn {
         let slot: SharedProgress = std::sync::Arc::new(std::sync::Mutex::new(None));
         self.progress_slot = Some(std::sync::Arc::clone(&slot));
-        move |job| {
+        Box::new(move |job| {
             *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
-        }
+        })
     }
 
     fn sync_progress(&mut self) {
@@ -212,12 +237,10 @@ impl CryptonoteApp {
         self.decrypt_rx = None;
         self.archive_rx = None;
         self.pwa_rx = None;
-        clear_progress(&mut self.temporary.progress);
-        if let Some(token) = self.pick_cancel.take() {
+        if let Some(token) = self.progress_cancel.take() {
             functora_egui::files::cancel(&token);
         }
-        self.pick_overlay_open = false;
-        self.progress_slot = None;
+        self.end_op();
     }
 
     pub fn handle_paste_image(&mut self, ctx: &egui::Context) {
@@ -298,7 +321,7 @@ impl CryptonoteApp {
                 Ok(Ok(name)) => {
                     self.toast
                         .add(Msg::Downloaded(name).render(lang), ToastVariant::Success, time);
-                    clear_progress(&mut self.temporary.progress);
+                    self.end_op();
                 }
                 Ok(Err(e)) => {
                     if !Self::is_cancelled(&e) {
@@ -308,10 +331,10 @@ impl CryptonoteApp {
                             time,
                         );
                     }
-                    clear_progress(&mut self.temporary.progress);
+                    self.end_op();
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.download_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => clear_progress(&mut self.temporary.progress),
+                Err(std::sync::mpsc::TryRecvError::Disconnected) => self.end_op(),
             }
         }
         if let Some(rx) = self.pick_rx.take() {
@@ -328,9 +351,7 @@ impl CryptonoteApp {
                     let added = self.temporary.attachments.len() - before;
                     self.toast
                         .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
-                    clear_progress(&mut self.temporary.progress);
-                    self.pick_cancel = None;
-                    self.pick_overlay_open = false;
+                    self.end_op();
                 }
                 Ok(Err(e)) => {
                     if Self::is_cancelled(&e) {
@@ -342,15 +363,11 @@ impl CryptonoteApp {
                             time,
                         );
                     }
-                    clear_progress(&mut self.temporary.progress);
-                    self.pick_cancel = None;
-                    self.pick_overlay_open = false;
+                    self.end_op();
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.pick_rx = Some(rx),
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    clear_progress(&mut self.temporary.progress);
-                    self.pick_cancel = None;
-                    self.pick_overlay_open = false;
+                    self.end_op();
                 }
             }
         }
@@ -372,8 +389,7 @@ impl CryptonoteApp {
             match rx.try_recv() {
                 Ok(Ok(external)) => {
                     self.temporary.external = external;
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                     self.navigate(Screen::Share);
                 }
                 Ok(Err(e)) => {
@@ -384,13 +400,11 @@ impl CryptonoteApp {
                             time,
                         );
                     }
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.generate_rx = Some(rx),
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                 }
             }
         }
@@ -400,8 +414,7 @@ impl CryptonoteApp {
                     self.temporary.note = text;
                     self.temporary.attachments = files;
                     self.temporary.external = External::Nothing;
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                     self.navigate(Screen::View);
                 }
                 Ok(Err(e)) => {
@@ -412,13 +425,11 @@ impl CryptonoteApp {
                             time,
                         );
                     }
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.decrypt_rx = Some(rx),
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                 }
             }
         }
@@ -431,9 +442,7 @@ impl CryptonoteApp {
                     if opened.screen == Screen::Open {
                         self.temporary.password.clear();
                     }
-                    clear_progress(&mut self.temporary.progress);
-                    self.pick_cancel = None;
-                    self.progress_slot = None;
+                    self.end_op();
                     self.navigate(opened.screen);
                 }
                 Ok(Err(e)) => {
@@ -444,14 +453,11 @@ impl CryptonoteApp {
                             time,
                         );
                     }
-                    clear_progress(&mut self.temporary.progress);
-                    self.pick_cancel = None;
-                    self.progress_slot = None;
+                    self.end_op();
                 }
                 Err(std::sync::mpsc::TryRecvError::Empty) => self.archive_rx = Some(rx),
                 Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    clear_progress(&mut self.temporary.progress);
-                    self.progress_slot = None;
+                    self.end_op();
                 }
             }
         }
@@ -517,12 +523,13 @@ impl CryptonoteApp {
             }
         }
         if crate::deep_link::has_pending_archive()
-            && claim_job(&mut self.temporary.progress, Stage::Preview).is_some()
             && let Some(source) = crate::deep_link::take_archive()
+            && let Some((cancel, progress)) = self.begin_op(Stage::Preview)
         {
-            let progress = self.track_progress();
             let rx =
-                functora_egui::spawn_async(async move { crate::hooks::load_archive_async(source, progress).await });
+                functora_egui::spawn_async(
+                    async move { crate::hooks::load_archive_async(source, cancel, progress).await },
+                );
             self.archive_rx = Some(rx);
         }
     }
@@ -560,6 +567,32 @@ impl CryptonoteApp {
             Some(Screen::Home | Screen::Open | Screen::View | Screen::Share | Screen::File) | None => {}
         }
     }
+
+    /// Unified long-operation overlay. Every cancellable op (pick, archive
+    /// load, encrypt, decrypt, zip, download) renders the same modal
+    /// `BlockingOverlay` the file picker uses, so long operations share one
+    /// consistent, blocking, stage-labelled UI instead of a mix of inline bars
+    /// and a bottom card.
+    pub(crate) fn show_progress_overlay(&mut self, ctx: &egui::Context) {
+        if !self.progress_overlay_open {
+            return;
+        }
+        if let Some(cancel) = self.progress_cancel.clone() {
+            let mut open = self.progress_overlay_open;
+            let title = self.temporary.progress.as_ref().map_or_else(
+                || BaseMsg::Preparing.render(self.lang()),
+                |job| BaseMsg::Stage(job.stage).render(self.lang()),
+            );
+            functora_egui::BlockingOverlay::new(title).show(
+                ctx,
+                &mut open,
+                self.temporary.progress.as_ref(),
+                &cancel,
+                self.lang(),
+            );
+            self.progress_overlay_open = open;
+        }
+    }
 }
 
 impl eframe::App for CryptonoteApp {
@@ -569,6 +602,7 @@ impl eframe::App for CryptonoteApp {
         self.poll_receivers(&ctx);
         self.handle_deep_link(&ctx);
         self.handle_paste_image(&ctx);
+        self.show_progress_overlay(&ctx);
         self.router.ui(ui);
         #[cfg(target_os = "android")]
         functora_egui::android::poll_ime(&ctx);
@@ -587,7 +621,6 @@ impl eframe::App for CryptonoteApp {
         let pending_reset = std::cell::Cell::new(false);
         let selected_snapshot = self.temporary.screen;
         let lang_cell = std::cell::Cell::new(persistent.language);
-        let theme_bg = ShadcnThemeExt::shadcn_theme(&ctx);
         let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
             (Screen::Home, functora_egui::LucideIcon::House),
             (Screen::About, functora_egui::LucideIcon::Info),
@@ -688,28 +721,5 @@ impl eframe::App for CryptonoteApp {
             }
         }
         self.toast.show(&ctx);
-        let lang = self.lang();
-        if let Some(job) = self.temporary.progress.clone() {
-            _ = egui::Panel::bottom("progress_bottom")
-                .frame(egui::Frame::NONE.fill(theme_bg.card))
-                .show_separator_line(true)
-                .show(ui, |bottom_ui| {
-                    bottom_ui.add_space(4.0);
-                    let _ = bottom_ui.add(Progress::new(f32::from(job.percent()) / 100.0));
-                    let _ = bottom_ui.label(format!(
-                        "{} {} / {}",
-                        BaseMsg::Stage(job.stage).render(lang),
-                        job.done,
-                        job.total
-                    ));
-                    if bottom_ui
-                        .add(Button::new(BaseMsg::Cancel.render(lang)).size(ComponentSize::Sm))
-                        .clicked()
-                    {
-                        self.cancel_all();
-                    }
-                    bottom_ui.add_space(4.0);
-                });
-        }
     }
 }

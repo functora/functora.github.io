@@ -90,21 +90,17 @@ impl BlockingOverlay {
                             let pct = f32::from(j.percent()) / 100.0;
                             let _ = inner.add(crate::Progress::new(pct));
                             inner.add_space(6.0);
-                            let name = j.name.as_deref().unwrap_or("");
-                            let label = if name.is_empty() {
-                                format!(
-                                    "{} / {} ({}%)",
-                                    functora_core::files::format_size(j.done),
-                                    functora_core::files::format_size(j.total),
-                                    j.percent()
-                                )
-                            } else {
-                                format!(
-                                    "{name}: {} / {} ({}%)",
-                                    functora_core::files::format_size(j.done),
-                                    functora_core::files::format_size(j.total),
-                                    j.percent()
-                                )
+                            let stage = Msg::Stage(j.stage).render(lang);
+                            let sizes = format!(
+                                "{} / {}",
+                                functora_core::files::format_size(j.done),
+                                functora_core::files::format_size(j.total)
+                            );
+                            let label = match j.name.as_deref() {
+                                Some(name) if !name.is_empty() => {
+                                    format!("{stage} {}% ({name}: {sizes})", j.percent())
+                                }
+                                _ => format!("{stage} {}% ({sizes})", j.percent()),
                             };
                             let _ = inner.label(
                                 egui::RichText::new(label)

@@ -4,8 +4,7 @@ use functora_egui::{SelectLabeled, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_select(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Dropdown selection from a list.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Dropdown selection from a list.");
         let entries = Fruit::ALL.map(|(value, label)| (value, label.to_owned()));
         _ = SelectLabeled::new(&mut self.select_val, &entries)
             .placeholder("Pick a fruit...")

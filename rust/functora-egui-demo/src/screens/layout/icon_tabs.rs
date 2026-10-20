@@ -1,11 +1,10 @@
 use crate::catalog::ProfileTab;
 use functora_egui::snippet;
-use functora_egui::{IconTabsValue, LucideIcon, TabEntry, Typography};
+use functora_egui::{IconTabsValue, LucideIcon, TabEntry};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_icon_tabs(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Icon-based tabs with tooltips.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Icon-based tabs with tooltips.");
         let entries = [
             (
                 ProfileTab::Home,

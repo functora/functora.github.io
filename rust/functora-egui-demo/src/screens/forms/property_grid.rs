@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{NumberInput, PropertyGrid, PropertyRow, Typography};
+use functora_egui::{NumberInput, PropertyGrid, PropertyRow};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_property_grid(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A label/value grid for inspectors and settings.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A label/value grid for inspectors and settings.");
         _ = PropertyGrid::new()
             .label_width(96.0)
             .row_gap(4.0)

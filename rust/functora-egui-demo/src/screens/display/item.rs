@@ -1,12 +1,10 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, Item, Label, LucideIcon, Typography};
+use functora_egui::{Button, ButtonVariant, Item, Label, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_item(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Clickable rows for lists and menus.").show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small("Default variant").show(ui);
-        ui.add_space(4.0);
+        crate::screens::intro(ui, "Clickable rows for lists and menus.");
+        crate::screens::section(ui, "Default variant");
         for (title, desc) in [
             ("Notifications", "Check your activity and updates"),
             ("Appearance", "Choose a theme for the app"),
@@ -29,8 +27,7 @@ impl crate::state::ShowcaseApp {
             }
         }
         ui.add_space(12.0);
-        _ = Typography::small("Outline variant with icons").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Outline variant with icons");
         if Item::new()
             .variant(functora_egui::ItemVariant::Outline)
             .show(ui, |ui19| {

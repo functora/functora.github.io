@@ -7,8 +7,7 @@ impl crate::state::ShowcaseApp {
             .show(ui);
         ui.add_space(12.0);
 
-        _ = Typography::small("Default empty string").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Default empty string");
         let resp = InputPasteClear::new(&mut self.input_paste_clear_text)
             .placeholder("Paste something...")
             .show(ui);
@@ -31,8 +30,7 @@ impl crate::state::ShowcaseApp {
         }
 
         ui.add_space(12.0);
-        _ = Typography::small("Custom default value").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Custom default value");
         let resp2 = InputPasteClear::new(&mut self.input_paste_clear_custom_default)
             .placeholder("Custom default is \"default value\"")
             .default_value("default value")
@@ -62,8 +60,7 @@ impl crate::state::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Password + custom icons").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Password + custom icons");
         let _ = InputPasteClear::new(&mut self.input_paste_clear_password_custom)
             .placeholder("secret with custom icons")
             .password()
@@ -78,8 +75,7 @@ impl crate::state::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Custom icons").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Custom icons");
         let _ = InputPasteClear::new(&mut self.input_paste_clear_custom_icons)
             .placeholder("Custom icons: Clipboard / Trash")
             .paste_icon(LucideIcon::Clipboard)
@@ -122,8 +118,7 @@ impl crate::state::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Copy with custom icon").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Copy with custom icon");
         let _ = InputPasteClear::new(&mut self.input_paste_clear_copy_custom)
             .placeholder("Custom copy icon: CopyPlus")
             .copy_icon(LucideIcon::CopyPlus)

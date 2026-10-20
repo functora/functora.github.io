@@ -72,8 +72,7 @@ impl crate::state::ShowcaseApp {
         ui.add_space(12.0);
         let _ = Separator::horizontal().show(ui);
         ui.add_space(8.0);
-        _ = Typography::small("Persistent wrapper (auto-load via `Persistent::new`)").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Persistent wrapper (auto-load via `Persistent::new`)");
         _ = ui
             .add(Input::new(&mut self.platform.storage_persistent_text).placeholder("persistent"));
         ui.add_space(4.0);

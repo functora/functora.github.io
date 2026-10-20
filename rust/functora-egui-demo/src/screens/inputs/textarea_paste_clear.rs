@@ -9,8 +9,7 @@ impl crate::state::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
 
-        _ = Typography::small("Default empty string").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Default empty string");
         let resp = TextareaPasteClear::new(&mut self.textarea_paste_clear_text)
             .placeholder("Paste a long text...")
             .show(ui);
@@ -35,8 +34,7 @@ impl crate::state::ShowcaseApp {
         }
 
         ui.add_space(12.0);
-        _ = Typography::small("Custom icons + min_height").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Custom icons + min_height");
         let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_custom)
             .placeholder("Custom icons: Clipboard / Trash2")
             .paste_icon(LucideIcon::Clipboard)
@@ -80,8 +78,7 @@ impl crate::state::ShowcaseApp {
         .show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Copy with custom icon").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Copy with custom icon");
         let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_copy_custom)
             .placeholder("Custom copy icon: CopyPlus")
             .copy_icon(LucideIcon::CopyPlus)

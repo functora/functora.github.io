@@ -15,6 +15,8 @@
 
 #[cfg(any(feature = "android", feature = "build"))]
 pub mod android;
+#[cfg(feature = "build")]
+pub mod build;
 #[cfg(feature = "platform")]
 pub mod camera;
 #[cfg(any(feature = "desktop", feature = "build"))]
@@ -79,6 +81,7 @@ pub mod layout;
 pub mod nav;
 pub mod paint;
 pub mod platform;
+pub mod poll;
 pub mod progress;
 pub mod pwa;
 pub use pwa::{InstallHint, PwaInstallOutcome, install_hint, trigger_pwa_install};
@@ -155,6 +158,7 @@ pub use layout::shell::initial_sidebar_collapsed;
 pub use layout::shell::sidebar_effective_width;
 pub use platform::android_back::BackOutcome;
 pub use platform::android_back::{handle_system_back, is_back_pressed};
+pub use poll::{PollOutcome, poll_channel};
 pub use widgets::navbar::widget::Navbar;
 
 pub use egui_flex::FlexAlign;

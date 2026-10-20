@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Alert, AlertVariant, Typography};
+use functora_egui::{Alert, AlertVariant};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_alert(ui: &mut egui::Ui) {
-        _ = Typography::muted("A status message container with variants.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A status message container with variants.");
         _ = Alert::new()
             .title("Heads up!")
             .variant(AlertVariant::Default)

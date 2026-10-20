@@ -142,8 +142,7 @@ impl crate::state::ShowcaseApp {
         ui.add_space(12.0);
         let _ = Separator::horizontal().show(ui);
         ui.add_space(8.0);
-        _ = Typography::small("Blob memo cache demo").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Blob memo cache demo");
         if ui.add(Button::new("Create revokable blob (txt)")).clicked() {
             let preview = functora_egui::files::preview_blob("hello.txt", b"hello blob");
             self.toast.add(

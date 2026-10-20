@@ -3,8 +3,7 @@ use functora_egui::{Pagination, ResponsiveExt, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_pagination(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Page navigation with visible range window.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Page navigation with visible range window.");
         let max_vis = if ui.on_mobile() { 5 } else { 7 };
         _ = Pagination::new(20)
             .max_visible(max_vis)

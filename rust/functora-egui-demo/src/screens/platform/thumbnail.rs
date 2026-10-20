@@ -34,8 +34,7 @@ impl crate::state::ShowcaseApp {
         });
         ui.add_space(8.0);
         if let Some((uri, jpeg)) = self.platform.thumbnail_image.clone() {
-            _ = Typography::small(format!("Thumbnail: {} bytes", jpeg.len())).show(ui);
-            ui.add_space(4.0);
+            crate::screens::section(ui, format!("Thumbnail: {} bytes", jpeg.len()));
             _ = ui.add(
                 egui::Image::from_bytes(uri, jpeg)
                     .maintain_aspect_ratio(true)

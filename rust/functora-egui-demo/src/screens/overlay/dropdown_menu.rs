@@ -1,11 +1,10 @@
 use super::common::ProfileAction;
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, DropdownMenu, LucideIcon, Typography};
+use functora_egui::{Button, ButtonVariant, DropdownMenu, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_dropdown_menu(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A menu of actions anchored to a trigger.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A menu of actions anchored to a trigger.");
         let response = Button::new("Open Menu")
             .icon(LucideIcon::ChevronDown)
             .variant(ButtonVariant::Outline)

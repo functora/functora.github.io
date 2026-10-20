@@ -3,8 +3,7 @@ use functora_egui::{Carousel, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_carousel(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A slider with prev/next navigation and dots.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A slider with prev/next navigation and dots.");
         let slides = [
             ("Slide 1", egui::Color32::from_rgb(25, 113, 194)),
             ("Slide 2", egui::Color32::from_rgb(18, 184, 134)),

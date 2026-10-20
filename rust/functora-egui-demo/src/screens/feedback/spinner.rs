@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Button, Flex, LucideIcon, Spinner, Typography};
+use functora_egui::{Button, Flex, LucideIcon, Spinner};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_spinner(ui: &mut egui::Ui) {
-        _ = Typography::muted("An animated loading indicator with sizes.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "An animated loading indicator with sizes.");
         _ = Flex::row().gap(16.0).align_center().show(ui, |f| {
             _ = f.ui(|ui59| {
                 _ = Spinner::new().size(16.0).show(ui59);
@@ -20,8 +19,7 @@ impl crate::state::ShowcaseApp {
             });
         });
         ui.add_space(12.0);
-        _ = Typography::small("Inside a button").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Inside a button");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(
                 Button::new("Loading")

@@ -19,17 +19,15 @@ enum PendingNav {
     Component(ComponentId),
 }
 
+const PERSISTENT_KEY: &str = "functora_egui_demo_persistent";
+
 impl ShowcaseApp {
     #[must_use]
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
         functora_egui::setup_fonts(&cc.egui_ctx);
         functora_egui::setup_image_loaders(&cc.egui_ctx);
-        let persistent = PersistentState::load_or_default(
-            &cc.egui_ctx,
-            APP_SCOPE,
-            "functora_egui_demo_persistent",
-            (),
-        );
+        let persistent =
+            PersistentState::load_or_default(&cc.egui_ctx, APP_SCOPE, PERSISTENT_KEY, ());
         functora_egui::theme_extra::set_theme(&cc.egui_ctx, persistent.theme);
         let initial_collapsed = functora_egui::initial_sidebar_collapsed(&cc.egui_ctx);
         let mut this = Self {
@@ -54,7 +52,7 @@ impl ShowcaseApp {
         if self.persistent != prev_persistent {
             self.platform
                 .storage
-                .persist("functora_egui_demo_persistent", &self.persistent);
+                .persist(PERSISTENT_KEY, &self.persistent);
         }
         self.sidebar_collapsed = ctx.on_mobile();
         self.router.reset(AppRoute::default());
@@ -420,7 +418,7 @@ impl eframe::App for ShowcaseApp {
         if prev_persistent != self.persistent {
             self.platform
                 .storage
-                .persist("functora_egui_demo_persistent", &self.persistent);
+                .persist(PERSISTENT_KEY, &self.persistent);
         }
         if needs_reset.get() {
             self.reset_to_home(&ctx);

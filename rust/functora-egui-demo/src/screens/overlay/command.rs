@@ -3,8 +3,7 @@ use functora_egui::{Button, ButtonVariant, LucideIcon, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_command(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A searchable command palette over everything.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A searchable command palette over everything.");
         if Button::new("Open Command Palette")
             .icon(LucideIcon::Command)
             .variant(ButtonVariant::Outline)

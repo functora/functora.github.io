@@ -1,13 +1,11 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, ComponentSize, InputGroup, LucideIcon, Typography};
+use functora_egui::{Button, ButtonVariant, ComponentSize, InputGroup, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_input_group(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Input with prefix text and suffix addons.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Input with prefix text and suffix addons.");
 
-        _ = Typography::small("With prefix").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "With prefix");
         _ = InputGroup::show(
             ui,
             &mut self.input_group_url,
@@ -17,8 +15,7 @@ impl crate::state::ShowcaseApp {
         );
 
         ui.add_space(12.0);
-        _ = Typography::small("With prefix and suffix button").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "With prefix and suffix button");
         _ = InputGroup::show(
             ui,
             &mut self.input_group_search,

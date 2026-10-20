@@ -1,15 +1,11 @@
 use functora_egui::snippet;
-use functora_egui::{
-    Button, ButtonGroup, ButtonVariant, ComponentSize, Flex, LucideIcon, Typography,
-};
+use functora_egui::{Button, ButtonGroup, ButtonVariant, ComponentSize, Flex, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_button(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Clickable buttons with variant styles and sizes.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Clickable buttons with variant styles and sizes.");
 
-        _ = Typography::small("Variants").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Variants");
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             _ = f.add(Button::new("Default"));
             _ = f.add(Button::new("Destructive").variant(ButtonVariant::Destructive));
@@ -20,8 +16,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Sizes").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Sizes");
         _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
             _ = f.add(Button::new("XS").size(ComponentSize::Xs));
             _ = f.add(Button::new("Small").size(ComponentSize::Sm));
@@ -30,8 +25,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Icon only").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Icon only");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(Button::icon_only(LucideIcon::Plus));
             _ = f.add(Button::icon_only(LucideIcon::Settings).variant(ButtonVariant::Outline));
@@ -50,8 +44,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Icon + text").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Icon + text");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(Button::new("Download").icon(LucideIcon::Download));
             _ = f.add(
@@ -73,8 +66,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Shortcut text").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Shortcut text");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(
                 Button::new("Save")
@@ -89,8 +81,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Selected (toggle)").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Selected (toggle)");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             if f.add(
                 Button::new("Toggle Me")
@@ -105,8 +96,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Disabled").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Disabled");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(Button::new("Disabled").enabled(false));
             _ = f.add(
@@ -117,8 +107,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Button group").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Button group");
         _ = ButtonGroup::show(ui, |ui46| {
             _ = Button::new("Left")
                 .variant(ButtonVariant::Outline)

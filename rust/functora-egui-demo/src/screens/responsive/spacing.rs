@@ -3,8 +3,10 @@ use functora_egui::{Card, Flex, ResponsiveExt, Typography, TypographyVariant};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_spacing(ui: &mut egui::Ui) {
-        _ = Typography::muted("Adaptive spacing scales touch targets and gaps on mobile.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(
+            ui,
+            "Adaptive spacing scales touch targets and gaps on mobile.",
+        );
         let spacing = ui.responsive_spacing();
         _ = Card::new().show(ui, |ui75| {
             _ = Flex::column().gap(8.0).align_start().show(ui75, |f| {

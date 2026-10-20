@@ -1,5 +1,6 @@
 //! Maps button variant + size + interaction state to concrete style values.
 
+use crate::utils::with_alpha;
 /// Resolves concrete button style from variant, size, and interaction state.
 #[must_use]
 pub fn resolve_button_style(
@@ -90,8 +91,4 @@ pub fn resolve_button_style(
         font_size,
         underline,
     }
-}
-
-fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    crate::utils::with_alpha(c, a)
 }

@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{AreaChart, AreaSeries, Typography};
+use functora_egui::{AreaChart, AreaSeries};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_area_chart(ui: &mut egui::Ui) {
-        _ = Typography::muted("A stacked area chart with smooth curves.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A stacked area chart with smooth curves.");
         let theme = functora_egui::ShadcnThemeExt::shadcn_theme(ui.ctx());
         _ = AreaChart::new(vec![
             "Jan".to_owned(),

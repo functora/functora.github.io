@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{FieldDescription, Input, Label, Typography};
+use functora_egui::{FieldDescription, Input, Label};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_field_description(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Supporting helper text under a field.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Supporting helper text under a field.");
         _ = Label::new("Password").show(ui);
         ui.add_space(8.0);
         _ = Input::new(&mut self.field_description_password)

@@ -1,4 +1,6 @@
-use crate::config::shared::{capitalize_words, derive_pkg_js, metadata_str, parse_toml};
+use crate::config::shared::{
+    capitalize_words, derive_pkg_js_in, metadata_str_in, package_str, parse_toml, pkg_name,
+};
 use crate::theme::shadcn_theme_dark::dark;
 
 #[derive(Debug, Clone)]
@@ -15,49 +17,42 @@ fn default_theme_color() -> String {
     format!("#{:02x}{:02x}{:02x}", bg.r(), bg.g(), bg.b())
 }
 
+fn derive_title_in(value: &toml::Value) -> String {
+    metadata_str_in(value, "functora-egui-web", "title").unwrap_or_else(|| {
+        pkg_name(value).map_or_else(|| "App".to_owned(), |name| capitalize_words(&name))
+    })
+}
+
+fn derive_theme_color_in(value: &toml::Value) -> String {
+    metadata_str_in(value, "functora-egui-web", "theme_color").unwrap_or_else(default_theme_color)
+}
+
 #[must_use]
 pub fn derive_title(manifest_path: &str) -> String {
-    metadata_str(manifest_path, "functora-egui-web", "title").unwrap_or_else(|| {
-        parse_toml(manifest_path)
-            .as_ref()
-            .and_then(crate::config::shared::pkg_name)
-            .map_or_else(|| "App".to_owned(), |name| capitalize_words(&name))
-    })
+    let value =
+        parse_toml(manifest_path).unwrap_or_else(|| toml::Value::Table(toml::map::Map::new()));
+    derive_title_in(&value)
 }
 
 #[must_use]
 pub fn derive_theme_color(manifest_path: &str) -> String {
-    metadata_str(manifest_path, "functora-egui-web", "theme_color")
-        .unwrap_or_else(default_theme_color)
+    let value =
+        parse_toml(manifest_path).unwrap_or_else(|| toml::Value::Table(toml::map::Map::new()));
+    derive_theme_color_in(&value)
 }
 
 #[must_use]
 pub fn load_config(manifest_path: &str) -> WebConfig {
-    let content = std::fs::read_to_string(manifest_path).unwrap_or_default();
-    let value: toml::Value = content
-        .parse()
-        .unwrap_or_else(|_| toml::Value::Table(toml::map::Map::new()));
-    let package = value.get("package");
-    let vsn = package
-        .and_then(|pkg| pkg.get("version"))
-        .and_then(|v| v.as_str())
-        .unwrap_or("0.0.0")
-        .to_owned();
-    let pkg_name = package
-        .and_then(|pkg| pkg.get("name"))
-        .and_then(|n| n.as_str())
-        .unwrap_or("app");
-    let short_name = package
-        .and_then(|pkg| pkg.get("metadata"))
-        .and_then(|meta| meta.get("functora-egui-web"))
-        .and_then(|web| web.get("short_name"))
-        .and_then(|n| n.as_str())
-        .map_or_else(|| pkg_name.to_owned(), ToOwned::to_owned);
+    let value =
+        parse_toml(manifest_path).unwrap_or_else(|| toml::Value::Table(toml::map::Map::new()));
+    let pkg_name = pkg_name(&value).unwrap_or_else(|| "app".to_owned());
+    let short_name = metadata_str_in(&value, "functora-egui-web", "short_name")
+        .unwrap_or_else(|| pkg_name.clone());
     WebConfig {
-        title: derive_title(manifest_path),
+        title: derive_title_in(&value),
         short_name,
-        theme_color: derive_theme_color(manifest_path),
-        pkg_js: derive_pkg_js(manifest_path),
-        vsn,
+        theme_color: derive_theme_color_in(&value),
+        pkg_js: derive_pkg_js_in(&value),
+        vsn: package_str(&value, "version").unwrap_or("0.0.0").to_owned(),
     }
 }

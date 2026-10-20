@@ -6,6 +6,5 @@ pub mod file;
 pub mod home;
 pub mod license;
 pub mod open;
-pub mod privacy;
 pub mod share;
 pub mod view;

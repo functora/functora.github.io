@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{FieldSet, Input, Label, Typography};
+use functora_egui::{FieldSet, Input, Label};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_field_set(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A bordered fieldset container for grouped controls.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A bordered fieldset container for grouped controls.");
         _ = FieldSet::show(ui, "Shipping address", |ui31| {
             _ = Label::new("Full name").show(ui31);
             ui31.add_space(8.0);

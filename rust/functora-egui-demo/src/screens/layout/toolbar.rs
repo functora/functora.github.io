@@ -1,13 +1,11 @@
 use functora_egui::snippet;
 use functora_egui::{
     Badge, BadgeVariant, Button, ButtonGroup, ButtonVariant, ComponentSize, LucideIcon, Toolbar,
-    Typography,
 };
 
 impl crate::state::ShowcaseApp {
     pub fn demo_toolbar(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Compact command container for editor and app controls.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Compact command container for editor and app controls.");
 
         _ = Toolbar::new().show(ui, |ui64| {
             _ = ButtonGroup::show(ui64, |ui65| {
@@ -42,8 +40,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Dense toolbar").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Dense toolbar");
         _ = Toolbar::new().dense().wrap(false).show(ui, |ui67| {
             _ = Button::icon_only(LucideIcon::ZoomOut)
                 .variant(ButtonVariant::Ghost)

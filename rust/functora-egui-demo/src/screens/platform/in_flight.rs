@@ -3,8 +3,10 @@ use functora_egui::{Button, Flex, ToastVariant, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_in_flight(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("InFlight guard: prevents concurrent async actions (share/pick), auto-releases on drop.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(
+            ui,
+            "InFlight guard: prevents concurrent async actions (share/pick), auto-releases on drop.",
+        );
         _ = Typography::small(format!(
             "In flight: {}",
             self.platform.in_flight.is_in_flight()

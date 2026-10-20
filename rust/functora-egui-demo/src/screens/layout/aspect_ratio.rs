@@ -1,10 +1,9 @@
+use functora_egui::AspectRatio;
 use functora_egui::snippet;
-use functora_egui::{AspectRatio, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_aspect_ratio(ui: &mut egui::Ui) {
-        _ = Typography::muted("Maintains a fixed width-to-height ratio.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Maintains a fixed width-to-height ratio.");
         let theme = functora_egui::ShadcnThemeExt::shadcn_theme(ui.ctx());
         ui.set_max_width(ui.available_width());
         _ = AspectRatio::new(16.0 / 9.0).show(ui, |ui50| {

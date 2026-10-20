@@ -3,8 +3,7 @@ use functora_egui::{Calendar, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_calendar(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A month grid calendar with navigation.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A month grid calendar with navigation.");
         let clicked = Calendar::new().show(
             ui,
             &mut self.calendar_year,

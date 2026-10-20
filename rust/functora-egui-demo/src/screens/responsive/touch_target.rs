@@ -26,14 +26,12 @@ impl crate::state::ShowcaseApp {
             });
         });
         ui.add_space(12.0);
-        _ = Typography::small("Default button with responsive spacing").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Default button with responsive spacing");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(Button::new("Touch me"));
         });
         ui.add_space(12.0);
-        _ = Typography::small("Slider with responsive height").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Slider with responsive height");
         _ = Slider::new(&mut self.touch_slider_val, 0.0..=100.0)
             .step(1.0)
             .width(ui.available_width().min(360.0))

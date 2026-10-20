@@ -8,16 +8,14 @@ impl crate::state::ShowcaseApp {
         )
         .show(ui);
         ui.add_space(12.0);
-        _ = Typography::small("Wrap (default)").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Wrap (default)");
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             for i in 0..8 {
                 _ = f.add(Button::new(format!("Action {i}")).variant(ButtonVariant::Outline));
             }
         });
         ui.add_space(12.0);
-        _ = Typography::small("no_wrap_on_mobile: stays on one line").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "no_wrap_on_mobile: stays on one line");
         _ = Flex::row().gap(8.0).no_wrap_on_mobile().show(ui, |f| {
             for i in 0..4 {
                 _ = f.add(Button::new(format!("Item {i}")).variant(ButtonVariant::Outline));

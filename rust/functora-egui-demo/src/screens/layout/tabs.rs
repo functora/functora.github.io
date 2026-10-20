@@ -1,11 +1,10 @@
 use crate::catalog::SettingsTab;
+use functora_egui::TabsValue;
 use functora_egui::snippet;
-use functora_egui::{TabsValue, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_tabs(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Tabbed content panels.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Tabbed content panels.");
         let entries = [
             (SettingsTab::Account, "Account".to_owned()),
             (SettingsTab::Password, "Password".to_owned()),

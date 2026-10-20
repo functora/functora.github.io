@@ -1,12 +1,10 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, Flex, LucideIcon, SheetSide, Typography};
+use functora_egui::{Button, ButtonVariant, Flex, LucideIcon, SheetSide};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_sheet(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A side panel that slides in from the edge.").show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small("On mobile the sheet opens from the bottom.").show(ui);
-        ui.add_space(4.0);
+        crate::screens::intro(ui, "A side panel that slides in from the edge.");
+        crate::screens::section(ui, "On mobile the sheet opens from the bottom.");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             if f.add(
                 Button::new("Right")

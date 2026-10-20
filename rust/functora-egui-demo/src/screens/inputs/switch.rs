@@ -3,8 +3,7 @@ use functora_egui::{Switch, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_switch(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A toggle switch for on/off states.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A toggle switch for on/off states.");
         _ = ui.add(Switch::new(&mut self.checks.switch_val).label("Airplane mode"));
         ui.add_space(4.0);
         _ = Typography::small(format!("Enabled: {}", self.checks.switch_val)).show(ui);

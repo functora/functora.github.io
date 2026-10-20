@@ -3,8 +3,7 @@ use functora_egui::{Avatar, Flex, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_avatar(ui: &mut egui::Ui) {
-        _ = Typography::muted("Initials-based avatars with adjustable sizes.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Initials-based avatars with adjustable sizes.");
         _ = Flex::row().gap(16.0).align_center().show(ui, |f| {
             _ = f.add(Avatar::new("AL").size(24.0));
             _ = f.add(Avatar::new("CM").size(32.0));

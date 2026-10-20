@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Flex, Kbd, Typography};
+use functora_egui::{Flex, Kbd};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_kbd(ui: &mut egui::Ui) {
-        _ = Typography::muted("Keyboard hint chips for shortcuts.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Keyboard hint chips for shortcuts.");
         _ = Flex::row().gap(6.0).align_center().show(ui, |f| {
             _ = f.add(Kbd::new("Ctrl"));
             _ = f.ui(|ui55| {

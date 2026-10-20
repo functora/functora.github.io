@@ -4,8 +4,7 @@ use functora_egui::{SelectValueLabeled, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_select_value(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Select bound to a non-Option enum value.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Select bound to a non-Option enum value.");
         let entries = BlendMode::ALL.map(|(value, label)| (value, label.to_owned()));
         _ = SelectValueLabeled::new(&mut self.select_blend, &entries).show(ui);
         ui.add_space(4.0);

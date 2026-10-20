@@ -3,8 +3,7 @@ use functora_egui::{Input, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_input(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Single-line text input field.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Single-line text input field.");
         _ = Input::new(&mut self.input_text)
             .placeholder("Type something...")
             .desired_width(ui.available_width())
@@ -13,8 +12,7 @@ impl crate::state::ShowcaseApp {
         _ = Typography::small(format!("Value: \"{}\"", self.input_text)).show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("Password").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Password");
         _ = Input::new(&mut self.input_password)
             .password()
             .placeholder("secret")

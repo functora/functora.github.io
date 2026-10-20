@@ -1,10 +1,9 @@
+use functora_egui::Separator;
 use functora_egui::snippet;
-use functora_egui::{Separator, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_separator(ui: &mut egui::Ui) {
-        _ = Typography::muted("Visual divider between content sections.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Visual divider between content sections.");
         _ = ui.label("Content above");
         _ = Separator::horizontal().show(ui);
         _ = ui.label("Content below");

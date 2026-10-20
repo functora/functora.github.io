@@ -4,8 +4,7 @@ use functora_egui::{ToggleGroupValue, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_toggle_group(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Exclusive toggle group: only one active at a time.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Exclusive toggle group: only one active at a time.");
         let entries = [
             (Align::Left, "Left".to_owned()),
             (Align::Center, "Center".to_owned()),

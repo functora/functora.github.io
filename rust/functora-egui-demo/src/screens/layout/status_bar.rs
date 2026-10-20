@@ -3,8 +3,7 @@ use functora_egui::{Badge, BadgeVariant, Kbd, Separator, StatusBar, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_status_bar(ui: &mut egui::Ui) {
-        _ = Typography::muted("Compact container for workspace state and metadata.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Compact container for workspace state and metadata.");
         _ = StatusBar::new().show(ui, |ui62| {
             _ = Badge::new("Saved")
                 .variant(BadgeVariant::Secondary)

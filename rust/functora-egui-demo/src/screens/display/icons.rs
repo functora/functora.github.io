@@ -3,8 +3,7 @@ use functora_egui::{Button, ButtonVariant, LucideIcon, ScrollArea, Separator, Ty
 
 impl crate::state::ShowcaseApp {
     pub fn demo_icons(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("All 1600+ Lucide icons are available with one import.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "All 1600+ Lucide icons are available with one import.");
         _ = functora_egui::Input::new(&mut self.icon_search)
             .placeholder("Search icons...")
             .desired_width(260.0)

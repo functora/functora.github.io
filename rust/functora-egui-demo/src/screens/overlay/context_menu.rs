@@ -1,11 +1,10 @@
 use super::common::ContextAction;
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, ContextMenu, LucideIcon, Typography};
+use functora_egui::{Button, ButtonVariant, ContextMenu, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_context_menu(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Right-click a target to open a context menu.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Right-click a target to open a context menu.");
         let response = Button::new("Right-click me")
             .icon(LucideIcon::MousePointerClick)
             .variant(ButtonVariant::Outline)

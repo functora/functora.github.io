@@ -3,11 +3,9 @@ use functora_egui::{Flex, NumberInput, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_number_input(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Numeric input with drag, range, prefix/suffix.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Numeric input with drag, range, prefix/suffix.");
 
-        _ = Typography::small("f64 with range and suffix").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "f64 with range and suffix");
         _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
             _ = f.add(
                 NumberInput::new(&mut self.number_f64)
@@ -22,8 +20,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("f32 with decimals and prefix").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "f32 with decimals and prefix");
         _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
             _ = f.add(
                 NumberInput::f32(&mut self.number_f32)
@@ -37,8 +34,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("i32 integer").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "i32 integer");
         _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
             _ = f.add(
                 NumberInput::i32(&mut self.number_i32)

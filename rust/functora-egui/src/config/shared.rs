@@ -22,11 +22,7 @@ pub fn parse_toml(path: &str) -> Option<toml::Value> {
 
 #[must_use]
 pub fn pkg_name(value: &toml::Value) -> Option<String> {
-    value
-        .get("package")
-        .and_then(|pkg| pkg.get("name"))
-        .and_then(|n| n.as_str())
-        .map(ToOwned::to_owned)
+    package_str(value, "name").map(ToOwned::to_owned)
 }
 
 #[must_use]
@@ -36,6 +32,51 @@ pub fn lib_name_from(value: &toml::Value) -> Option<String> {
         .and_then(|lib| lib.get("name"))
         .and_then(|n| n.as_str())
         .map(ToOwned::to_owned)
+}
+
+pub(crate) fn package_str<'a>(value: &'a toml::Value, key: &str) -> Option<&'a str> {
+    value
+        .get("package")
+        .and_then(|pkg| pkg.get(key))
+        .and_then(|v| v.as_str())
+}
+
+pub(crate) fn metadata_str_in(value: &toml::Value, table: &str, key: &str) -> Option<String> {
+    value
+        .get("package")
+        .and_then(|pkg| pkg.get("metadata"))
+        .and_then(|meta| meta.get(table))
+        .and_then(|t| t.get(key))
+        .and_then(|v| v.as_str())
+        .map(ToOwned::to_owned)
+}
+
+pub(crate) fn metadata_bool_in(value: &toml::Value, table: &str, key: &str) -> bool {
+    value
+        .get("package")
+        .and_then(|pkg| pkg.get("metadata"))
+        .and_then(|meta| meta.get(table))
+        .and_then(|t| t.get(key))
+        .and_then(toml::Value::as_bool)
+        .unwrap_or(false)
+}
+
+pub(crate) fn derive_pkg_js_in(value: &toml::Value) -> String {
+    lib_name_from(value).map_or_else(
+        || {
+            pkg_name(value).map_or_else(
+                || "app.js".to_owned(),
+                |name| format!("{}.js", name.replace('-', "_")),
+            )
+        },
+        |name| format!("{name}.js"),
+    )
+}
+
+pub(crate) fn derive_lib_name_in(value: &toml::Value) -> String {
+    lib_name_from(value)
+        .or_else(|| pkg_name(value).map(|name| name.replace('-', "_")))
+        .unwrap_or_else(|| "app".to_owned())
 }
 
 #[must_use]
@@ -48,68 +89,24 @@ pub fn app_name_from_manifest(manifest_path: &str) -> String {
 
 #[must_use]
 pub fn derive_pkg_js(manifest_path: &str) -> String {
-    parse_toml(manifest_path).map_or_else(
-        || "app.js".to_owned(),
-        |value| {
-            value
-                .get("lib")
-                .and_then(|lib| lib.get("name"))
-                .and_then(|n| n.as_str())
-                .map_or_else(
-                    || {
-                        value
-                            .get("package")
-                            .and_then(|pkg| pkg.get("name"))
-                            .and_then(|n| n.as_str())
-                            .map_or_else(
-                                || "app.js".to_owned(),
-                                |name| format!("{}.js", name.replace('-', "_")),
-                            )
-                    },
-                    |name| format!("{name}.js"),
-                )
-        },
-    )
+    parse_toml(manifest_path).map_or_else(|| "app.js".to_owned(), |value| derive_pkg_js_in(&value))
 }
 
 #[must_use]
 pub fn derive_lib_name(manifest_path: &str) -> String {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(lib_name_from)
-        .unwrap_or_else(|| {
-            parse_toml(manifest_path)
-                .as_ref()
-                .and_then(pkg_name)
-                .map_or_else(|| "app".to_owned(), |name| name.replace('-', "_"))
-        })
+    parse_toml(manifest_path).map_or_else(|| "app".to_owned(), |value| derive_lib_name_in(&value))
 }
 
+#[must_use]
 pub fn metadata_str(manifest_path: &str, table: &str, key: &str) -> Option<String> {
     parse_toml(manifest_path)
         .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get(table))
-                .and_then(|t| t.get(key))
-                .and_then(|v| v.as_str())
-        })
-        .map(ToOwned::to_owned)
+        .and_then(|value| metadata_str_in(value, table, key))
 }
 
 #[must_use]
 pub fn metadata_bool(manifest_path: &str, table: &str, key: &str) -> bool {
     parse_toml(manifest_path)
         .as_ref()
-        .and_then(|value| {
-            value
-                .get("package")
-                .and_then(|pkg| pkg.get("metadata"))
-                .and_then(|meta| meta.get(table))
-                .and_then(|t| t.get(key))
-                .and_then(toml::Value::as_bool)
-        })
-        .unwrap_or(false)
+        .is_some_and(|value| metadata_bool_in(value, table, key))
 }

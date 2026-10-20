@@ -1,5 +1,6 @@
 //! Maps switch state to concrete style values.
 
+use crate::utils::with_alpha;
 /// Resolves switch colors based on on/off state. Uses iOS-style white thumb
 /// for enabled and muted transparent look for disabled.
 #[must_use]
@@ -39,8 +40,4 @@ pub fn resolve_switch_style(
         track_border,
         thumb_color,
     }
-}
-
-fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    crate::utils::with_alpha(c, a)
 }

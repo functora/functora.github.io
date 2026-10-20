@@ -1,5 +1,6 @@
 //! Maps checkbox state to concrete style values.
 
+use crate::utils::with_alpha;
 /// Resolves checkbox colors based on checked state and interaction.
 #[must_use]
 pub fn resolve_checkbox_style(
@@ -42,8 +43,4 @@ pub fn resolve_checkbox_style(
         check_color,
         text_color: theme.foreground,
     }
-}
-
-fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    crate::utils::with_alpha(c, a)
 }

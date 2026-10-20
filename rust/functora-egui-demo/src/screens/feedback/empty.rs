@@ -3,8 +3,7 @@ use functora_egui::{Button, ButtonVariant, Card, Empty, LucideIcon, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_empty(ui: &mut egui::Ui) {
-        _ = Typography::muted("A centered empty state for lists and searches.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A centered empty state for lists and searches.");
         _ = Empty::show(ui, |ui25| {
             _ = Card::new().show(ui25, |ui26| {
                 _ = Button::icon_only(LucideIcon::Inbox)

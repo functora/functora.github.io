@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, Collapsible, ComponentSize, Typography};
+use functora_egui::{Button, ButtonVariant, Collapsible, ComponentSize};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_collapsible(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A section that can be toggled open or closed.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A section that can be toggled open or closed.");
         _ = Collapsible::new("Click to toggle").show(
             ui,
             &mut self.checks.collapsible_open,

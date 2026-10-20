@@ -166,9 +166,7 @@ impl CryptonoteApp {
         }
         if let Some(clipboard_error) = resp.clipboard_error {
             let app_error = AppError::from(clipboard_error);
-            if !matches!(&app_error, AppError::Cancelled)
-                && !matches!(&app_error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
-            {
+            if !Self::is_cancelled(&app_error) {
                 self.toast.add(
                     Msg::Error(crate::error::MsgError::from(app_error)).render(lang),
                     ToastVariant::Error,
@@ -181,6 +179,16 @@ impl CryptonoteApp {
     fn is_cancelled(error: &AppError) -> bool {
         matches!(error, AppError::Cancelled)
             || matches!(error, AppError::FunctoraEgui(inner) if *inner == functora_egui::error::Error::Cancelled)
+    }
+
+    fn toast_error(&mut self, error: AppError, lang: Language, time: f64) {
+        if !Self::is_cancelled(&error) {
+            self.toast.add(
+                Msg::Error(crate::error::MsgError::from(error)).render(lang),
+                ToastVariant::Error,
+                time,
+            );
+        }
     }
 
     pub(crate) fn begin_op(&mut self, stage: Stage) -> Option<(functora_egui::CancelToken, TrackFn)> {
@@ -282,207 +290,134 @@ impl CryptonoteApp {
         let lang = self.lang();
         let time = ctx.input(|i| i.time);
 
-        if let Some(rx) = self.clipboard_write_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(())) => self
-                    .toast
-                    .add(BaseMsg::Copied.render(lang), ToastVariant::Success, time),
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.clipboard_write_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+        match functora_egui::poll_channel(&mut self.clipboard_write_rx) {
+            None | Some(functora_egui::PollOutcome::Disconnected) => {}
+            Some(functora_egui::PollOutcome::Ready(Ok(()))) => {
+                self.toast
+                    .add(BaseMsg::Copied.render(lang), ToastVariant::Success, time)
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
+        }
+        match functora_egui::poll_channel(&mut self.share_rx) {
+            None | Some(functora_egui::PollOutcome::Disconnected) => {}
+            Some(functora_egui::PollOutcome::Ready(Ok(()))) => {
+                self.toast.add(Msg::Sent.render(lang), ToastVariant::Success, time);
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
+        }
+        match functora_egui::poll_channel(&mut self.download_rx) {
+            None => {}
+            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
+            Some(functora_egui::PollOutcome::Ready(Ok(name))) => {
+                self.toast
+                    .add(Msg::Downloaded(name).render(lang), ToastVariant::Success, time);
+                self.end_op();
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                self.toast_error(e, lang, time);
+                self.end_op();
             }
         }
-        if let Some(rx) = self.share_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(())) => self.toast.add(Msg::Sent.render(lang), ToastVariant::Success, time),
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
+        match functora_egui::poll_channel(&mut self.pick_rx) {
+            None => {}
+            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
+            Some(functora_egui::PollOutcome::Ready(Ok(files))) => {
+                let before = self.temporary.attachments.len();
+                for (name, data) in files {
+                    let att = functora_egui::files::Attachment {
+                        name,
+                        data: data.into(),
+                    };
+                    crate::hooks::add_attachment(&mut self.temporary.attachments, att);
                 }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.share_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+                let added = self.temporary.attachments.len() - before;
+                self.toast
+                    .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
+                self.end_op();
             }
-        }
-        if let Some(rx) = self.download_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(name)) => {
-                    self.toast
-                        .add(Msg::Downloaded(name).render(lang), ToastVariant::Success, time);
-                    self.end_op();
-                }
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                    self.end_op();
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.download_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => self.end_op(),
-            }
-        }
-        if let Some(rx) = self.pick_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(files)) => {
-                    let before = self.temporary.attachments.len();
-                    for (name, data) in files {
-                        let att = functora_egui::files::Attachment {
-                            name,
-                            data: data.into(),
-                        };
-                        crate::hooks::add_attachment(&mut self.temporary.attachments, att);
-                    }
-                    let added = self.temporary.attachments.len() - before;
-                    self.toast
-                        .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
-                    self.end_op();
-                }
-                Ok(Err(e)) => {
-                    if Self::is_cancelled(&e) {
-                        self.toast.add(e.render(lang), ToastVariant::Default, time);
-                    } else {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                    self.end_op();
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.pick_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    self.end_op();
-                }
-            }
-        }
-        if let Some(rx) = self.paste_image_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(Some(image))) => self.attach_pasted_image(image, time),
-                Ok(Ok(None)) | Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
-                Ok(Err(e)) => {
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                if Self::is_cancelled(&e) {
+                    self.toast.add(e.render(lang), ToastVariant::Default, time);
+                } else {
                     self.toast.add(
                         Msg::Error(crate::error::MsgError::from(e)).render(lang),
                         ToastVariant::Error,
                         time,
                     );
                 }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.paste_image_rx = Some(rx),
+                self.end_op();
             }
         }
-        if let Some(rx) = self.generate_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(external)) => {
-                    self.temporary.external = external;
-                    self.end_op();
-                    self.navigate(Screen::Share);
-                }
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                    self.end_op();
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.generate_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    self.end_op();
-                }
+        match functora_egui::poll_channel(&mut self.paste_image_rx) {
+            Some(functora_egui::PollOutcome::Ready(Ok(Some(image)))) => {
+                self.attach_pasted_image(image, time);
+            }
+            None | Some(functora_egui::PollOutcome::Disconnected | functora_egui::PollOutcome::Ready(Ok(None))) => {}
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                self.toast.add(
+                    Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                    ToastVariant::Error,
+                    time,
+                );
             }
         }
-        if let Some(rx) = self.decrypt_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok((text, files))) => {
-                    self.temporary.note = text;
-                    self.temporary.attachments = files;
-                    self.temporary.external = External::Nothing;
-                    self.end_op();
-                    self.navigate(Screen::View);
-                }
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                    self.end_op();
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.decrypt_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    self.end_op();
-                }
+        match functora_egui::poll_channel(&mut self.generate_rx) {
+            None => {}
+            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
+            Some(functora_egui::PollOutcome::Ready(Ok(external))) => {
+                self.temporary.external = external;
+                self.end_op();
+                self.navigate(Screen::Share);
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                self.toast_error(e, lang, time);
+                self.end_op();
             }
         }
-        if let Some(rx) = self.archive_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(opened)) => {
-                    self.temporary.external = opened.external;
-                    self.temporary.note = opened.note;
-                    self.temporary.attachments = opened.attachments;
-                    if opened.screen == Screen::Open {
-                        self.temporary.password.clear();
-                    }
-                    self.end_op();
-                    self.navigate(opened.screen);
-                }
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                    self.end_op();
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.archive_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                    self.end_op();
-                }
+        match functora_egui::poll_channel(&mut self.decrypt_rx) {
+            None => {}
+            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
+            Some(functora_egui::PollOutcome::Ready(Ok((text, files)))) => {
+                self.temporary.note = text;
+                self.temporary.attachments = files;
+                self.temporary.external = External::Nothing;
+                self.end_op();
+                self.navigate(Screen::View);
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                self.toast_error(e, lang, time);
+                self.end_op();
             }
         }
-        if let Some(rx) = self.pwa_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(msg)) => {
-                    let variant = if matches!(msg, BaseMsg::PwaInstallSuccess) {
-                        ToastVariant::Success
-                    } else {
-                        ToastVariant::Default
-                    };
-                    self.toast.add(Msg::Base(msg).render(lang), variant, time);
+        match functora_egui::poll_channel(&mut self.archive_rx) {
+            None => {}
+            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
+            Some(functora_egui::PollOutcome::Ready(Ok(opened))) => {
+                self.temporary.external = opened.external;
+                self.temporary.note = opened.note;
+                self.temporary.attachments = opened.attachments;
+                if opened.screen == Screen::Open {
+                    self.temporary.password.clear();
                 }
-                Ok(Err(e)) => {
-                    if !Self::is_cancelled(&e) {
-                        self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                            ToastVariant::Error,
-                            time,
-                        );
-                    }
-                }
-                Err(std::sync::mpsc::TryRecvError::Empty) => self.pwa_rx = Some(rx),
-                Err(std::sync::mpsc::TryRecvError::Disconnected) => {}
+                self.end_op();
+                self.navigate(opened.screen);
             }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
+                self.toast_error(e, lang, time);
+                self.end_op();
+            }
+        }
+        match functora_egui::poll_channel(&mut self.pwa_rx) {
+            None | Some(functora_egui::PollOutcome::Disconnected) => {}
+            Some(functora_egui::PollOutcome::Ready(Ok(msg))) => {
+                let variant = if matches!(msg, BaseMsg::PwaInstallSuccess) {
+                    ToastVariant::Success
+                } else {
+                    ToastVariant::Default
+                };
+                self.toast.add(Msg::Base(msg).render(lang), variant, time);
+            }
+            Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
         if self.clipboard_write_rx.is_some()
             || self.share_rx.is_some()

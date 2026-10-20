@@ -1,13 +1,12 @@
 use crate::catalog::BlendMode;
 use functora_egui::snippet;
 use functora_egui::{
-    Badge, Button, ButtonVariant, Flex, PropertyGrid, PropertyRow, SelectValueLabeled, Typography,
+    Badge, Button, ButtonVariant, Flex, PropertyGrid, PropertyRow, SelectValueLabeled,
 };
 
 impl crate::state::ShowcaseApp {
     pub fn demo_property_row(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A single labeled row: text, badges, or inputs.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A single labeled row: text, badges, or inputs.");
         _ = PropertyGrid::new().label_width(96.0).show(ui, |ui41| {
             _ = PropertyRow::new("Mode").show(ui41, |ui42| {
                 _ = Badge::new("Auto")

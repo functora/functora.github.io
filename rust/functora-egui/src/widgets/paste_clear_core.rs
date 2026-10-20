@@ -7,6 +7,7 @@
 use std::sync::{Arc, Mutex};
 
 use crate::icons::lucide_icon::LucideIcon;
+use crate::poll::{PollOutcome, poll_channel};
 use crate::theme::shadcn_theme::ShadcnTheme;
 use crate::utils::{f32_to_u8_clamped, with_alpha};
 
@@ -56,55 +57,47 @@ pub(crate) fn poll_paste(
     slot: &PasteSlot,
     text: &mut String,
 ) -> (bool, Option<crate::error::Error>) {
-    if let Ok(mut guard) = slot.0.lock()
-        && let Some(rx) = guard.take()
-    {
-        match rx.try_recv() {
-            Ok(Ok(incoming)) => {
-                incoming.clone_into(text);
-                return (true, None);
-            }
-            Ok(Err(error)) => return (false, Some(error)),
-            Err(std::sync::mpsc::TryRecvError::Empty) => {
-                *guard = Some(rx);
-                ui.ctx().request_repaint();
-            }
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                return (
-                    false,
-                    Some(crate::error::Error::JS(
-                        "Clipboard channel disconnected".into(),
-                    )),
-                );
-            }
+    let Ok(mut guard) = slot.0.lock() else {
+        return (false, None);
+    };
+    match poll_channel(&mut guard) {
+        None => {
+            ui.ctx().request_repaint();
+            (false, None)
         }
+        Some(PollOutcome::Disconnected) => (
+            false,
+            Some(crate::error::Error::JS(
+                "Clipboard channel disconnected".into(),
+            )),
+        ),
+        Some(PollOutcome::Ready(Ok(incoming))) => {
+            incoming.clone_into(text);
+            (true, None)
+        }
+        Some(PollOutcome::Ready(Err(error))) => (false, Some(error)),
     }
-    (false, None)
 }
 
 /// Polls a pending clipboard write.
 pub(crate) fn poll_copy(ui: &egui::Ui, slot: &CopySlot) -> (bool, Option<crate::error::Error>) {
-    if let Ok(mut guard) = slot.0.lock()
-        && let Some(rx) = guard.take()
-    {
-        match rx.try_recv() {
-            Ok(Ok(())) => return (true, None),
-            Ok(Err(error)) => return (false, Some(error)),
-            Err(std::sync::mpsc::TryRecvError::Empty) => {
-                *guard = Some(rx);
-                ui.ctx().request_repaint();
-            }
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => {
-                return (
-                    false,
-                    Some(crate::error::Error::JS(
-                        "Clipboard channel disconnected".into(),
-                    )),
-                );
-            }
+    let Ok(mut guard) = slot.0.lock() else {
+        return (false, None);
+    };
+    match poll_channel(&mut guard) {
+        None => {
+            ui.ctx().request_repaint();
+            (false, None)
         }
+        Some(PollOutcome::Disconnected) => (
+            false,
+            Some(crate::error::Error::JS(
+                "Clipboard channel disconnected".into(),
+            )),
+        ),
+        Some(PollOutcome::Ready(Ok(()))) => (true, None),
+        Some(PollOutcome::Ready(Err(error))) => (false, Some(error)),
     }
-    (false, None)
 }
 
 /// Whether a paste read is currently in flight (icon renders busy).

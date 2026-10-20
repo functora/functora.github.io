@@ -1,11 +1,10 @@
 use super::common::{EditAction, HelpAction, ViewAction};
+use functora_egui::Menubar;
 use functora_egui::snippet;
-use functora_egui::{Menubar, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_menubar(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A horizontal menu bar with dropdown menus.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A horizontal menu bar with dropdown menus.");
         let ctx = ui.ctx().clone();
         _ = Menubar::new().show(ui, |ui69| {
             _ = Menubar::item(ui69, "File");

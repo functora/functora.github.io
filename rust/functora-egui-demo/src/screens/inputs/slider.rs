@@ -3,8 +3,7 @@ use functora_egui::{Slider, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_slider(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Drag to select a numeric value within a range.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Drag to select a numeric value within a range.");
         _ = Slider::new(&mut self.slider_val, 0.0..=100.0)
             .step(1.0)
             .width(ui.available_width().min(400.0))
@@ -13,8 +12,7 @@ impl crate::state::ShowcaseApp {
         _ = Typography::small(format!("Value: {:.0}", self.slider_val)).show(ui);
 
         ui.add_space(12.0);
-        _ = Typography::small("With suffix").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "With suffix");
         _ = Slider::new(&mut self.slider_price, 0.0..=1000.0)
             .step(10.0)
             .suffix(" USD")

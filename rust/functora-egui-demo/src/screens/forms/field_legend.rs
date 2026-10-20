@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{FieldDescription, FieldLegend, Typography};
+use functora_egui::{FieldDescription, FieldLegend};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_field_legend(ui: &mut egui::Ui) {
-        _ = Typography::muted("A legend heading for a field group.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A legend heading for a field group.");
         FieldLegend::show(ui, "Payment details");
         ui.add_space(4.0);
         FieldDescription::show(ui, "All transactions are secure and encrypted.");

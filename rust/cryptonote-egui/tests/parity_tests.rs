@@ -17,10 +17,9 @@ const FILE_SRC: &str = include_str!("../src/screens/file.rs");
 const ABOUT_SRC: &str = include_str!("../src/screens/about.rs");
 const DONATE_SRC: &str = include_str!("../src/screens/donate.rs");
 const LICENSE_SRC: &str = include_str!("../src/screens/license.rs");
-const PRIVACY_SRC: &str = include_str!("../src/screens/privacy.rs");
 const ROUTE_SRC: &str = include_str!("../src/route.rs");
 
-fn ui_sources() -> [&'static str; 15] {
+fn ui_sources() -> [&'static str; 14] {
     [
         APP_SRC,
         HOME_SRC,
@@ -35,7 +34,6 @@ fn ui_sources() -> [&'static str; 15] {
         ABOUT_SRC,
         DONATE_SRC,
         LICENSE_SRC,
-        PRIVACY_SRC,
         ROUTE_SRC,
     ]
 }
@@ -228,7 +226,7 @@ fn license_and_privacy_use_full_texts() {
         "license screen must render Base::LicenseText"
     );
     assert!(
-        PRIVACY_SRC.contains("PrivacyText"),
+        LICENSE_SRC.contains("PrivacyText"),
         "privacy screen must render Base::PrivacyText"
     );
 }
@@ -236,12 +234,8 @@ fn license_and_privacy_use_full_texts() {
 #[test]
 fn privacy_renders_subheadings_as_markdown() {
     assert!(
-        PRIVACY_SRC.contains("markdown_view"),
-        "privacy screen must render PrivacyText via markdown_view so sub-headings show as headings"
-    );
-    assert!(
         LICENSE_SRC.contains("markdown_view"),
-        "license screen must render LicenseText via markdown_view like the privacy screen"
+        "license and privacy screens must render via markdown_view so sub-headings show as headings"
     );
 }
 
@@ -250,12 +244,10 @@ fn document_screens_have_no_nested_scroll() {
     // Whole-screen document text must flow in the single page scroll:
     // a nested scroll container fragments scrolling (inner box plus page
     // box) and shares persisted offsets across screens.
-    for (name, src) in [("license", LICENSE_SRC), ("privacy", PRIVACY_SRC)] {
-        assert!(
-            !src.contains("ScrollArea"),
-            "{name} screen must not nest a scroll container"
-        );
-    }
+    assert!(
+        !LICENSE_SRC.contains("ScrollArea"),
+        "license/privacy screens must not nest a scroll container"
+    );
 }
 
 #[test]

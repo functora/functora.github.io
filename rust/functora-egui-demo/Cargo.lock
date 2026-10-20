@@ -1567,7 +1567,6 @@ name = "functora-egui-demo"
 version = "0.1.0"
 dependencies = [
  "android-activity",
- "askama",
  "base64 0.22.1",
  "eframe",
  "egui",
@@ -1577,7 +1576,6 @@ dependencies = [
  "log",
  "serde",
  "serde_json",
- "toml",
  "wasm-bindgen",
 ]
 

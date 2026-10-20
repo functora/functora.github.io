@@ -1,10 +1,9 @@
+use functora_egui::Accordion;
 use functora_egui::snippet;
-use functora_egui::{Accordion, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_accordion(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Expandable sections: click to toggle.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Expandable sections: click to toggle.");
         _ = Accordion::new(vec![
             (
                 "Is it accessible?".to_owned(),
@@ -22,8 +21,7 @@ impl crate::state::ShowcaseApp {
         .multiple()
         .show(ui, &mut self.accordion_open);
         ui.add_space(12.0);
-        _ = Typography::small("Single mode (only one open at a time)").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Single mode (only one open at a time)");
         let mut single_open = vec![0];
         _ = Accordion::new(vec![
             (

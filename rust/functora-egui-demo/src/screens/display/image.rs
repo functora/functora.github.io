@@ -42,8 +42,7 @@ impl crate::state::ShowcaseApp {
         match functora_egui::image_samples() {
             Ok(samples) => self.demo_image_samples(ui, samples),
             Err(error) => {
-                _ = Typography::muted(format!("Sample images unavailable: {error:?}")).show(ui);
-                ui.add_space(12.0);
+                crate::screens::intro(ui, format!("Sample images unavailable: {error:?}"));
             }
         }
         Self::demo_image_snippet(ui);

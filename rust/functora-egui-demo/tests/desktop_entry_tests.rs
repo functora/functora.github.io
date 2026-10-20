@@ -3,6 +3,7 @@
 const MAIN_SRC: &str = include_str!("../src/main.rs");
 const BUILD_SRC: &str = include_str!("../build.rs");
 const MANIFEST: &str = include_str!("../Cargo.toml");
+const SHARED_BUILD_SRC: &str = include_str!("../../functora-egui/src/build.rs");
 
 #[test]
 fn desktop_bin_uses_shared_runner() {
@@ -27,7 +28,15 @@ fn desktop_bin_defines_no_android_entry() {
 }
 
 #[test]
-fn build_generates_desktop_packaging() {
+fn build_script_delegates_to_shared_codegen() {
+    assert!(
+        BUILD_SRC.contains("functora_egui::build::run"),
+        "build script must call the shared codegen entry point"
+    );
+}
+
+#[test]
+fn shared_codegen_generates_desktop_packaging() {
     for fragment in [
         "load_desktop_config",
         "LinuxDesktop",
@@ -37,8 +46,8 @@ fn build_generates_desktop_packaging() {
         "desktop/metainfo",
     ] {
         assert!(
-            BUILD_SRC.contains(fragment),
-            "build script must generate desktop packaging, missing {fragment}"
+            SHARED_BUILD_SRC.contains(fragment),
+            "shared codegen must produce desktop packaging, missing {fragment}"
         );
     }
 }

@@ -45,9 +45,7 @@ categories = "Development;"
 developer = "Functora"
 
 [build-dependencies]
-askama = "0.12"
 functora-egui = { path = "../functora-egui", features = ["build"] }
-toml = "0.8"
 
 [patch.crates-io]
 egui-winit = { path = "../egui-winit" }

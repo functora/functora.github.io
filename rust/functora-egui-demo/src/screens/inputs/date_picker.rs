@@ -3,8 +3,7 @@ use functora_egui::{DatePicker, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_date_picker(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Date picker with a popover calendar.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Date picker with a popover calendar.");
         _ = DatePicker::new()
             .placeholder("Pick a date")
             .show(ui, &mut self.date_picker);

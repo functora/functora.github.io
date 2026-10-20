@@ -3,8 +3,7 @@ use functora_egui::{Button, ButtonVariant, HoverCard, Label, LucideIcon, Typogra
 
 impl crate::state::ShowcaseApp {
     pub fn demo_hover_card(ui: &mut egui::Ui) {
-        _ = Typography::muted("A rich tooltip shown on hover.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A rich tooltip shown on hover.");
         let response = Button::new("Hover me")
             .icon(LucideIcon::MousePointer2)
             .variant(ButtonVariant::Outline)

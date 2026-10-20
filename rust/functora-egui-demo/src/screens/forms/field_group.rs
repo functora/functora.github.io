@@ -1,11 +1,10 @@
 use crate::catalog::{Month, Year};
 use functora_egui::snippet;
-use functora_egui::{FieldGroup, Flex, Input, Label, ResponsiveExt, SelectLabeled, Typography};
+use functora_egui::{FieldGroup, Flex, Input, Label, ResponsiveExt, SelectLabeled};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_field_group(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Groups related fields with a legend and description.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Groups related fields with a legend and description.");
         _ = FieldGroup::show(ui, |ui27| {
             _ = Label::new("Card number").show(ui27);
             ui27.add_space(8.0);

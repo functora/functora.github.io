@@ -1,14 +1,15 @@
 use crate::catalog::Swatch;
 use functora_egui::snippet;
-use functora_egui::{ColorSwatch, Flex, Typography};
+use functora_egui::{ColorSwatch, Flex};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_color_swatch(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Clickable color swatches for palettes and style controls.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(
+            ui,
+            "Clickable color swatches for palettes and style controls.",
+        );
 
-        _ = Typography::small("Palette").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Palette");
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             for (swatch, label, color) in Swatch::ALL {
                 if f.add(
@@ -26,8 +27,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Compact states").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Compact states");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(ColorSwatch::new(egui::Color32::from_rgb(25, 113, 194)).selected(true));
             _ = f.add(ColorSwatch::new(egui::Color32::from_rgba_unmultiplied(

@@ -1,10 +1,12 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, Flex, Typography};
+use functora_egui::{Button, ButtonVariant, Flex};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_toast(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Transient notifications with variants and descriptions.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(
+            ui,
+            "Transient notifications with variants and descriptions.",
+        );
         let ctx = ui.ctx().clone();
         _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
             if f.add(Button::new("Default").variant(ButtonVariant::Outline))

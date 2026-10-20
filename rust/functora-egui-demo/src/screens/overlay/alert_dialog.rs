@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, LucideIcon, Typography};
+use functora_egui::{Button, ButtonVariant, LucideIcon};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_alert_dialog(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A confirmation dialog with a destructive action.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A confirmation dialog with a destructive action.");
         if Button::new("Delete Account")
             .icon(LucideIcon::Trash)
             .variant(ButtonVariant::Destructive)

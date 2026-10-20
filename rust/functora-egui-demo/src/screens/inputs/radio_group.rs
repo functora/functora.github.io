@@ -4,8 +4,7 @@ use functora_egui::{RadioGroupLabeled, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_radio_group(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A group of radio buttons managed together.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A group of radio buttons managed together.");
         let entries = RadioOption::ALL.map(|(value, label)| (value, label.to_owned()));
         _ = RadioGroupLabeled::new(&mut self.radio_group_val, &entries).show(ui);
         ui.add_space(4.0);

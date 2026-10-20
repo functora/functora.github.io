@@ -11,14 +11,7 @@ impl CryptonoteApp {
         }
         let lang = self.lang();
         let () = ui.add_space(8.0);
-        if ui
-            .add(
-                Button::new(BaseMsg::Back.render(lang))
-                    .icon(functora_egui::LucideIcon::ArrowLeft)
-                    .variant(ButtonVariant::Outline),
-            )
-            .clicked()
-        {
+        if ui.add(Self::back_button(lang)).clicked() {
             self.go_back();
         }
     }
@@ -27,16 +20,14 @@ impl CryptonoteApp {
         if !self.router.history().can_go_back() {
             return;
         }
-        let lang = self.lang();
-        if f.add(
-            Button::new(BaseMsg::Back.render(lang))
-                .icon(functora_egui::LucideIcon::ArrowLeft)
-                .variant(ButtonVariant::Outline),
-        )
-        .inner
-        .clicked()
-        {
+        if f.add(Self::back_button(self.lang())).inner.clicked() {
             self.go_back();
         }
+    }
+
+    fn back_button(lang: functora_egui::i18n::Language) -> Button<'static> {
+        Button::new(BaseMsg::Back.render(lang))
+            .icon(functora_egui::LucideIcon::ArrowLeft)
+            .variant(ButtonVariant::Outline)
     }
 }

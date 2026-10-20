@@ -1,10 +1,12 @@
+use functora_egui::Table;
 use functora_egui::snippet;
-use functora_egui::{Table, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_table(ui: &mut egui::Ui) {
-        _ = Typography::muted("A styled table with headers, rows, and optional striping.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(
+            ui,
+            "A styled table with headers, rows, and optional striping.",
+        );
         let headers = vec!["Name".to_owned(), "Status".to_owned(), "Role".to_owned()];
         let rows = vec![
             vec![
@@ -30,8 +32,7 @@ impl crate::state::ShowcaseApp {
         ];
         _ = Table::new(headers).rows(rows).striped().show(ui);
         ui.add_space(12.0);
-        _ = Typography::small("With custom column weights").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "With custom column weights");
         _ = Table::new(vec![
             "Name".to_owned(),
             "Email".to_owned(),

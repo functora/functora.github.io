@@ -3,8 +3,7 @@ use functora_egui::{Typography, TypographyVariant};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_typography(ui: &mut egui::Ui) {
-        _ = Typography::muted("Text styles: headings, lead, muted, and small.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Text styles: headings, lead, muted, and small.");
         _ = Typography::h1("The Joke Tax Chronicles").show(ui);
         ui.add_space(4.0);
         _ = Typography::new(

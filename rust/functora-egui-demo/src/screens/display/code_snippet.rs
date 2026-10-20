@@ -1,16 +1,15 @@
-use functora_egui::Typography;
 use functora_egui::{snippet, snippet_break_long_words};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_code_snippet(ui: &mut egui::Ui) {
-        _ = Typography::muted("Themed monospace block for displaying code examples.").show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small("snippet(): normal wrapping").show(ui);
-        ui.add_space(4.0);
+        crate::screens::intro(ui, "Themed monospace block for displaying code examples.");
+        crate::screens::section(ui, "snippet(): normal wrapping");
         snippet(ui, "fn main() {\n    println!(\"Hello, world!\");\n}");
         ui.add_space(12.0);
-        _ = Typography::small("snippet_break_long_words(): breaks long unbroken strings").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(
+            ui,
+            "snippet_break_long_words(): breaks long unbroken strings",
+        );
         snippet_break_long_words(
             ui,
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",

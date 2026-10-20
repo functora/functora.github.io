@@ -3,8 +3,7 @@ use functora_egui::{Checkbox, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_checkbox(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Toggle boolean values with a checkbox.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Toggle boolean values with a checkbox.");
         _ = ui
             .add(Checkbox::new(&mut self.checks.checkbox_val).label("Accept terms and conditions"));
         ui.add_space(4.0);

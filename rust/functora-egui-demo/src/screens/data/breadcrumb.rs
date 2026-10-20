@@ -23,8 +23,7 @@ impl crate::state::ShowcaseApp {
             }
         }
         ui.add_space(12.0);
-        _ = Typography::small("Custom separator (uses router history)").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Custom separator (uses router history)");
         if let Some(action) = Breadcrumb::new(self.router.current(), self.router.history())
             .separator(" > ")
             .show(ui, lang)

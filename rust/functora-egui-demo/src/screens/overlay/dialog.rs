@@ -3,10 +3,8 @@ use functora_egui::{Button, LucideIcon, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_dialog(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("A modal dialog with a backdrop.").show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small("On mobile the dialog opens as a bottom sheet.").show(ui);
-        ui.add_space(4.0);
+        crate::screens::intro(ui, "A modal dialog with a backdrop.");
+        crate::screens::section(ui, "On mobile the dialog opens as a bottom sheet.");
         if Button::new("Open Dialog")
             .icon(LucideIcon::SquareMenu)
             .show(ui)

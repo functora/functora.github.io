@@ -3,8 +3,7 @@ use functora_egui::{Button, ButtonVariant, Card, ComponentSize, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_card(ui: &mut egui::Ui) {
-        _ = Typography::muted("Bordered container for grouping content.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Bordered container for grouping content.");
         _ = Card::new().show(ui, |ui52| {
             _ = Typography::h4("Card Title").show(ui52);
             ui52.add_space(4.0);

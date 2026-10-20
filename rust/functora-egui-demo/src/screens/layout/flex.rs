@@ -11,16 +11,14 @@ impl crate::state::ShowcaseApp {
         .show(ui);
         ui.add_space(12.0);
 
-        _ = Typography::small("Row with gap").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Row with gap");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             _ = f.add(Button::new("Cancel").variant(ButtonVariant::Outline));
             _ = f.add(Button::new("Save"));
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Column with gap").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Column with gap");
         _ = Flex::column().gap(8.0).align_start().show(ui, |f| {
             _ = f.add(Badge::new("First"));
             _ = f.add(Badge::new("Second"));
@@ -28,8 +26,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Grow: input fills, button stays natural").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Grow: input fills, button stays natural");
         _ = Flex::row().gap(8.0).w_full().show(ui, |f| {
             _ = f.grow(
                 1.0,
@@ -39,24 +36,21 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Justify end").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Justify end");
         _ = Flex::row().justify_end().gap(8.0).w_full().show(ui, |f| {
             _ = f.add(Button::new("Cancel").variant(ButtonVariant::Outline));
             _ = f.add(Button::new("Confirm"));
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Justify between").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Justify between");
         _ = Flex::row().justify_between().w_full().show(ui, |f| {
             _ = f.add(Button::new("Previous").variant(ButtonVariant::Outline));
             _ = f.add(Button::new("Next"));
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Justify center").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Justify center");
         _ = Flex::row()
             .justify_center()
             .gap(8.0)
@@ -69,8 +63,7 @@ impl crate::state::ShowcaseApp {
             });
 
         ui.add_space(12.0);
-        _ = Typography::small("Wrap: overflowing items wrap to the next line").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Wrap: overflowing items wrap to the next line");
         let tags = [
             "Rust",
             "egui",
@@ -97,8 +90,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Spacer: pushes items apart").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Spacer: pushes items apart");
         _ = Flex::row().gap(8.0).w_full().show(ui, |f| {
             _ = f.add(Badge::new("Left"));
             _ = f.spacer();
@@ -106,8 +98,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Nested flex: two-column form").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Nested flex: two-column form");
         _ = Flex::row().gap(16.0).w_full().show(ui, |f| {
             _ = f.grow_nested(1.0, Flex::column().gap(8.0), |f4| {
                 _ = f4.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui70| {
@@ -132,8 +123,7 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
-        _ = Typography::small("Center utility").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Center utility");
         _ = egui::Frame::NONE
             .stroke(egui::Stroke::new(1.0, egui::Color32::from_gray(80)))
             .show(ui, |ui47| {

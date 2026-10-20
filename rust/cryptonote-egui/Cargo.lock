@@ -869,7 +869,6 @@ name = "cryptonote-egui"
 version = "0.1.10"
 dependencies = [
  "android-activity",
- "askama",
  "base64 0.22.1",
  "eframe",
  "egui",
@@ -883,7 +882,6 @@ dependencies = [
  "strum",
  "tap",
  "thiserror 2.0.20",
- "toml",
  "tracing",
  "wasm-bindgen",
  "zeroize",

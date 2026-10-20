@@ -3,8 +3,7 @@ use functora_egui::{Card, Resizable, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_resizable(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Draggable split pane with an adjustable divider.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Draggable split pane with an adjustable divider.");
         _ = Resizable::new().height(160.0).show(
             ui,
             &mut self.resizable_fraction,

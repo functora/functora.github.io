@@ -1,11 +1,10 @@
 use crate::catalog::NavSection;
+use functora_egui::NavigationMenuValue;
 use functora_egui::snippet;
-use functora_egui::{NavigationMenuValue, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_navigation_menu(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Top-level navigation with active item tracking.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Top-level navigation with active item tracking.");
         let entries = [
             (NavSection::Overview, "Overview".to_owned()),
             (NavSection::Integrations, "Integrations".to_owned()),

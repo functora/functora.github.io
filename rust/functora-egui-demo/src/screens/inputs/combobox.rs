@@ -4,8 +4,7 @@ use functora_egui::{ComboboxValue, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_combobox(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Searchable dropdown with type-ahead filtering.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Searchable dropdown with type-ahead filtering.");
         let entries = [
             (Framework::React, "React".to_owned()),
             (Framework::Vue, "Vue".to_owned()),

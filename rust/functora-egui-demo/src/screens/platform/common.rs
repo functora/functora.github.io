@@ -1,6 +1,6 @@
 use base64::Engine as _;
 use functora_egui::ToastState;
-use functora_egui::{ToastVariant, spawn_async};
+use functora_egui::{PollOutcome, ToastVariant, poll_channel, spawn_async};
 use std::sync::mpsc;
 
 fn poll_ok<T>(
@@ -10,19 +10,15 @@ fn poll_ok<T>(
     err_prefix: &str,
     disconnected: &str,
 ) -> Option<T> {
-    let rx = slot.take()?;
-    match rx.try_recv() {
-        Ok(Ok(value)) => Some(value),
-        Ok(Err(error)) => {
-            toast.add(format!("{err_prefix}: {error}"), ToastVariant::Error, now);
-            None
-        }
-        Err(mpsc::TryRecvError::Empty) => {
-            *slot = Some(rx);
-            None
-        }
-        Err(mpsc::TryRecvError::Disconnected) => {
+    match poll_channel(slot) {
+        None => None,
+        Some(PollOutcome::Disconnected) => {
             toast.add(disconnected, ToastVariant::Error, now);
+            None
+        }
+        Some(PollOutcome::Ready(Ok(value))) => Some(value),
+        Some(PollOutcome::Ready(Err(error))) => {
+            toast.add(format!("{err_prefix}: {error}"), ToastVariant::Error, now);
             None
         }
     }
@@ -201,53 +197,49 @@ impl crate::state::ShowcaseApp {
         ) {
             self.toast.add("Shared ok", ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.pick_rx.take() {
-            match rx.try_recv() {
-                Ok(res) => {
-                    match res {
-                        Ok(files) => {
-                            let incoming = files.len();
-                            for (name, data) in files {
-                                if let Some(pos) =
-                                    self.platform.picked.iter().position(|(n, _)| n == &name)
-                                {
-                                    drop(self.platform.picked.remove(pos));
-                                }
-                                self.platform.picked.push((name, data));
+        match poll_channel(&mut self.platform.pick_rx) {
+            None => {}
+            Some(PollOutcome::Disconnected) => {
+                self.platform.pick_cancel = None;
+                self.platform.pick_overlay_open = false;
+                self.platform.pick_job = None;
+                self.platform.pick_progress = None;
+            }
+            Some(PollOutcome::Ready(res)) => {
+                match res {
+                    Ok(files) => {
+                        let incoming = files.len();
+                        for (name, data) in files {
+                            if let Some(pos) =
+                                self.platform.picked.iter().position(|(n, _)| n == &name)
+                            {
+                                drop(self.platform.picked.remove(pos));
                             }
-                            let total = self.platform.picked.len();
-                            self.toast.add(
-                                if incoming > 1 {
-                                    format!("Picked {total} file(s) ({incoming} new)")
-                                } else {
-                                    format!("Picked {total} file(s) total")
-                                },
-                                ToastVariant::Success,
-                                now,
-                            );
+                            self.platform.picked.push((name, data));
                         }
-                        Err(functora_egui::error::Error::Cancelled) => {
-                            self.toast.add("Pick cancelled", ToastVariant::Default, now);
-                        }
-                        Err(e) => {
-                            self.toast
-                                .add(format!("Pick failed: {e}"), ToastVariant::Error, now);
-                        }
+                        let total = self.platform.picked.len();
+                        self.toast.add(
+                            if incoming > 1 {
+                                format!("Picked {total} file(s) ({incoming} new)")
+                            } else {
+                                format!("Picked {total} file(s) total")
+                            },
+                            ToastVariant::Success,
+                            now,
+                        );
                     }
-                    self.platform.pick_cancel = None;
-                    self.platform.pick_overlay_open = false;
-                    self.platform.pick_job = None;
-                    self.platform.pick_progress = None;
+                    Err(functora_egui::error::Error::Cancelled) => {
+                        self.toast.add("Pick cancelled", ToastVariant::Default, now);
+                    }
+                    Err(e) => {
+                        self.toast
+                            .add(format!("Pick failed: {e}"), ToastVariant::Error, now);
+                    }
                 }
-                Err(mpsc::TryRecvError::Empty) => {
-                    self.platform.pick_rx = Some(rx);
-                }
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.platform.pick_cancel = None;
-                    self.platform.pick_overlay_open = false;
-                    self.platform.pick_job = None;
-                    self.platform.pick_progress = None;
-                }
+                self.platform.pick_cancel = None;
+                self.platform.pick_overlay_open = false;
+                self.platform.pick_job = None;
+                self.platform.pick_progress = None;
             }
         }
         if self.platform.pick_rx.is_none() {
@@ -281,31 +273,27 @@ impl crate::state::ShowcaseApp {
         ) {
             self.toast.add(msg, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.thumbnail_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok((uri, jpeg))) => {
-                    let len = jpeg.len();
-                    self.platform.thumbnail_image = Some((uri, jpeg));
-                    self.toast.add(
-                        format!("Thumbnail ready ({len} bytes)"),
-                        ToastVariant::Success,
-                        now,
-                    );
-                }
-                Ok(Err(error)) => {
-                    self.toast.add(
-                        format!("Thumbnail error: {error}"),
-                        ToastVariant::Error,
-                        now,
-                    );
-                }
-                Err(mpsc::TryRecvError::Empty) => {
-                    self.platform.thumbnail_rx = Some(rx);
-                }
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.toast
-                        .add("Thumbnail disconnected", ToastVariant::Error, now);
-                }
+        match poll_channel(&mut self.platform.thumbnail_rx) {
+            None => {}
+            Some(PollOutcome::Disconnected) => {
+                self.toast
+                    .add("Thumbnail disconnected", ToastVariant::Error, now);
+            }
+            Some(PollOutcome::Ready(Ok((uri, jpeg)))) => {
+                let len = jpeg.len();
+                self.platform.thumbnail_image = Some((uri, jpeg));
+                self.toast.add(
+                    format!("Thumbnail ready ({len} bytes)"),
+                    ToastVariant::Success,
+                    now,
+                );
+            }
+            Some(PollOutcome::Ready(Err(error))) => {
+                self.toast.add(
+                    format!("Thumbnail error: {error}"),
+                    ToastVariant::Error,
+                    now,
+                );
             }
         }
         if let Some(summary) = poll_ok(
@@ -317,34 +305,30 @@ impl crate::state::ShowcaseApp {
         ) {
             self.toast.add(summary, ToastVariant::Success, now);
         }
-        if let Some(rx) = self.platform.crypto_rx.take() {
-            match rx.try_recv() {
-                Ok(Ok(text)) => {
-                    let label = match self.platform.crypto_op.take() {
-                        Some(crate::state::CryptoOp::Decrypt) => "Decrypted text",
-                        Some(crate::state::CryptoOp::Encrypt) | None => "Encrypted note",
-                    };
-                    let len = text.len();
-                    self.platform.crypto_output = text;
-                    self.toast.add(
-                        format!("{label} ready ({len} bytes)"),
-                        ToastVariant::Success,
-                        now,
-                    );
-                }
-                Ok(Err(error)) => {
-                    self.platform.crypto_op = None;
-                    self.toast
-                        .add(format!("Crypto error: {error}"), ToastVariant::Error, now);
-                }
-                Err(mpsc::TryRecvError::Empty) => {
-                    self.platform.crypto_rx = Some(rx);
-                }
-                Err(mpsc::TryRecvError::Disconnected) => {
-                    self.platform.crypto_op = None;
-                    self.toast
-                        .add("Crypto disconnected", ToastVariant::Error, now);
-                }
+        match poll_channel(&mut self.platform.crypto_rx) {
+            None => {}
+            Some(PollOutcome::Disconnected) => {
+                self.platform.crypto_op = None;
+                self.toast
+                    .add("Crypto disconnected", ToastVariant::Error, now);
+            }
+            Some(PollOutcome::Ready(Ok(text))) => {
+                let label = match self.platform.crypto_op.take() {
+                    Some(crate::state::CryptoOp::Decrypt) => "Decrypted text",
+                    Some(crate::state::CryptoOp::Encrypt) | None => "Encrypted note",
+                };
+                let len = text.len();
+                self.platform.crypto_output = text;
+                self.toast.add(
+                    format!("{label} ready ({len} bytes)"),
+                    ToastVariant::Success,
+                    now,
+                );
+            }
+            Some(PollOutcome::Ready(Err(error))) => {
+                self.platform.crypto_op = None;
+                self.toast
+                    .add(format!("Crypto error: {error}"), ToastVariant::Error, now);
             }
         }
         if let Some(msg) = poll_ok(

@@ -1,10 +1,9 @@
 use functora_egui::snippet;
-use functora_egui::{Button, ButtonVariant, Flex, LucideIcon, Tooltip, Typography};
+use functora_egui::{Button, ButtonVariant, Flex, LucideIcon, Tooltip};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_tooltip(ui: &mut egui::Ui) {
-        _ = Typography::muted("A small hint shown on hover.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "A small hint shown on hover.");
         _ = Flex::row().gap(8.0).show(ui, |f| {
             let settings = f.add(
                 Button::icon_only(LucideIcon::Settings)

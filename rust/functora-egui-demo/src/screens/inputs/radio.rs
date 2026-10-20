@@ -1,10 +1,9 @@
+use functora_egui::Radio;
 use functora_egui::snippet;
-use functora_egui::{Radio, Typography};
 
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_radio(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Individual radio buttons for exclusive selection.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Individual radio buttons for exclusive selection.");
         if ui
             .add(Radio::new(&mut self.radios.radio_a).label("Option A"))
             .clicked()

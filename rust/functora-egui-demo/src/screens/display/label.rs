@@ -1,10 +1,9 @@
+use functora_egui::Label;
 use functora_egui::snippet;
-use functora_egui::{Label, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_label(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Labels pair with inputs in forms and settings.").show(ui);
-        ui.add_space(12.0);
+        crate::screens::intro(ui, "Labels pair with inputs in forms and settings.");
         _ = Label::new("Your email address").show(ui);
         ui.add_space(8.0);
         _ = functora_egui::Input::new(&mut self.label_email)

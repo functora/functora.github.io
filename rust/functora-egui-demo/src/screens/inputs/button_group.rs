@@ -3,10 +3,8 @@ use functora_egui::{Button, ButtonGroup, ButtonVariant, LucideIcon, Typography};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_button_group(&mut self, ui: &mut egui::Ui) {
-        _ = Typography::muted("Connected button strip with merged borders.").show(ui);
-        ui.add_space(12.0);
-        _ = Typography::small("Selectable group").show(ui);
-        ui.add_space(4.0);
+        crate::screens::intro(ui, "Connected button strip with merged borders.");
+        crate::screens::section(ui, "Selectable group");
         let options = ["Left", "Center", "Right"];
         _ = ButtonGroup::show(ui, |g| {
             for (idx, label) in options.iter().enumerate() {
@@ -27,8 +25,7 @@ impl crate::state::ShowcaseApp {
         ))
         .show(ui);
         ui.add_space(12.0);
-        _ = Typography::small("Icon group").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Icon group");
         _ = ButtonGroup::show(ui, |g| {
             _ = Button::icon_only(LucideIcon::Undo2)
                 .variant(ButtonVariant::Ghost)
@@ -38,8 +35,7 @@ impl crate::state::ShowcaseApp {
                 .show(g);
         });
         ui.add_space(12.0);
-        _ = Typography::small("Disabled group").show(ui);
-        ui.add_space(4.0);
+        crate::screens::section(ui, "Disabled group");
         _ = ButtonGroup::show(ui, |g| {
             _ = Button::new("Cut").enabled(false).show(g);
             _ = Button::new("Copy").enabled(false).show(g);

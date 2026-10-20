@@ -1,5 +1,6 @@
 //! Maps radio state to concrete style values.
 
+use crate::utils::with_alpha;
 /// Resolves radio button colors based on selection state and interaction.
 #[must_use]
 pub fn resolve_radio_style(
@@ -38,8 +39,4 @@ pub fn resolve_radio_style(
         dot_color,
         text_color: theme.foreground,
     }
-}
-
-fn with_alpha(c: egui::Color32, a: u8) -> egui::Color32 {
-    crate::utils::with_alpha(c, a)
 }

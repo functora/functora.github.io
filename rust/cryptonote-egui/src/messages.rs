@@ -35,12 +35,12 @@ pub enum Msg {
     RemoveFile,
     ArchiveReady,
     OpenArchive,
-    Download,
-    DownloadAll,
+    Save,
+    SaveAll,
     File,
     PreviewUnavailable,
     FileNotFound,
-    Downloaded(String),
+    Saved(String),
 }
 
 impl I18N for Msg {
@@ -85,7 +85,7 @@ With Cryptonote, you can:
 - Share the note instantly via a URL or a scannable QR code
 - Attach files to your note and pack everything into a secure offline archive (.cryptonote)
 
-Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you download and share separately.
+Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you save and share separately.
 
 Cryptonote follows modern cryptographic best practices:
 
@@ -98,15 +98,15 @@ Secure, private, and truly offline - your notes remain yours alone.".into(),
             Self::AttachFiles => "Attach files".into(),
             Self::RemoveFile => "Remove".into(),
             Self::ArchiveReady => {
-                "Cryptonote archive ready. Press Download to save and share with your recipient.".into()
+                "Cryptonote archive ready. Press Save to save and share with your recipient.".into()
             }
             Self::OpenArchive => "Open archive".into(),
-            Self::Download => "Download".into(),
-            Self::DownloadAll => "Download all".into(),
+            Self::Save => "Save".into(),
+            Self::SaveAll => "Save all".into(),
             Self::File => "File".into(),
             Self::PreviewUnavailable => "Preview is not available for this file type".into(),
             Self::FileNotFound => "File not found".into(),
-            Self::Downloaded(loc) => format!("Downloaded: {loc}"),
+            Self::Saved(loc) => format!("Saved: {loc}"),
         }
     }
 
@@ -153,7 +153,7 @@ Con Cryptonote, puedes:
 - Compartir la nota instantáneamente a través de una URL o un código QR escaneable
 - Adjuntar archivos a tu nota y empaquetarlo todo en un archivo offline seguro (.cryptonote)
 
-El contenido de la nota - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR. Las notas con archivos adjuntos se empaquetan en un archivo que descargas y compartes por separado.
+El contenido de la nota - ya sea texto cifrado o plano - se incrusta directamente en la URL, lo que hace que compartir sea tan simple como enviar un enlace o mostrar un código QR. Las notas con archivos adjuntos se empaquetan en un archivo que guardas y compartes por separado.
 
 Cryptonote sigue las mejores prácticas criptográficas modernas:
 
@@ -166,17 +166,17 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".
             Self::AttachFiles => "Adjuntar archivos".into(),
             Self::RemoveFile => "Eliminar".into(),
             Self::ArchiveReady => {
-                "Archivo Cryptonote listo. Presiona Descargar para guardar y compartir con tu destinatario.".into()
+                "Archivo Cryptonote listo. Presiona Guardar para guardar y compartir con tu destinatario.".into()
             }
             Self::OpenArchive => "Abrir archivo".into(),
-            Self::Download => "Descargar".into(),
-            Self::DownloadAll => "Descargar todo".into(),
+            Self::Save => "Guardar".into(),
+            Self::SaveAll => "Guardar todo".into(),
             Self::File => "Archivo".into(),
             Self::PreviewUnavailable => {
                 "La vista previa no está disponible para este tipo de archivo".into()
             }
             Self::FileNotFound => "Archivo no encontrado".into(),
-            Self::Downloaded(loc) => format!("Descargado: {loc}"),
+            Self::Saved(loc) => format!("Guardado: {loc}"),
         }
     }
 
@@ -223,7 +223,7 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".
 - Мгновенно поделиться заметкой через URL или сканируемый QR-код
 - Прикрепить файлы к заметке и упаковать всё в защищённый автономный архив (.cryptonote)
 
-Содержимое заметки - будь то зашифрованный текст или открытый - встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода. Заметки с вложениями упаковываются в архивный файл, который вы скачиваете и отправляете отдельно.
+Содержимое заметки - будь то зашифрованный текст или открытый - встраивается непосредственно в URL, что делает совместное использование таким же простым, как отправка ссылки или демонстрация QR-кода. Заметки с вложениями упаковываются в архивный файл, который вы сохраняете и отправляете отдельно.
 
 Cryptonote следует современным криптографическим практикам:
 
@@ -236,17 +236,17 @@ Cryptonote следует современным криптографическ�
             Self::AttachFiles => "Прикрепить файлы".into(),
             Self::RemoveFile => "Удалить".into(),
             Self::ArchiveReady => {
-                "Архив Cryptonote готов. Нажмите Скачать, чтобы сохранить и поделиться с получателем.".into()
+                "Архив Cryptonote готов. Нажмите Сохранить, чтобы сохранить и поделиться с получателем.".into()
             }
             Self::OpenArchive => "Открыть архив".into(),
-            Self::Download => "Скачать".into(),
-            Self::DownloadAll => "Скачать всё".into(),
+            Self::Save => "Сохранить".into(),
+            Self::SaveAll => "Сохранить всё".into(),
             Self::File => "Файл".into(),
             Self::PreviewUnavailable => {
                 "Предварительный просмотр недоступен для этого типа файлов".into()
             }
             Self::FileNotFound => "Файл не найден".into(),
-            Self::Downloaded(loc) => format!("Скачано: {loc}"),
+            Self::Saved(loc) => format!("Сохранено: {loc}"),
         }
     }
 }

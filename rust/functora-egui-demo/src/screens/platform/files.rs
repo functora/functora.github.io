@@ -129,9 +129,8 @@ impl crate::state::ShowcaseApp {
                                 _ = Typography::small(format!("{preview:?}")).show(ui3);
                             }
                             functora_egui::files::Preview::Download => {
-                                _ = ui3.add(Badge::new("Download"));
-                                _ = Typography::small(format!("Ready to download: {name}"))
-                                    .show(ui3);
+                                _ = ui3.add(Badge::new("Save"));
+                                _ = Typography::small(format!("Ready to save: {name}")).show(ui3);
                             }
                         });
                     });

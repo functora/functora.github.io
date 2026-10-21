@@ -135,12 +135,12 @@ fn file_screen_dock_buttons_share_one_row() {
     assert_eq!(app.temporary.screen, Screen::File);
     let file_out = driver.run(&mut app, vec![]);
     let back = find_text(&file_out, &functora_egui::messages::Msg::Back.render(lang()));
-    let download = find_text(&file_out, &cryptonote_egui::Msg::Download.render(lang()));
-    assert_same_row(back, download, "file screen dock");
+    let save = find_text(&file_out, &cryptonote_egui::Msg::Save.render(lang()));
+    assert_same_row(back, save, "file screen dock");
 }
 
 #[test]
-fn view_screen_download_all_is_in_dock_row() {
+fn view_screen_save_all_is_in_dock_row() {
     let mut app = CryptonoteApp::default();
     app.temporary.attachments.push(functora_egui::files::Attachment {
         name: "photo.png".to_owned(),
@@ -163,6 +163,6 @@ fn view_screen_download_all_is_in_dock_row() {
     assert_eq!(app.temporary.screen, Screen::View);
     let view_out = driver.run(&mut app, vec![]);
     let back = find_text(&view_out, &functora_egui::messages::Msg::Back.render(lang()));
-    let download_all = find_text(&view_out, &cryptonote_egui::Msg::DownloadAll.render(lang()));
-    assert_same_row(back, download_all, "view screen dock");
+    let save_all = find_text(&view_out, &cryptonote_egui::Msg::SaveAll.render(lang()));
+    assert_same_row(back, save_all, "view screen dock");
 }

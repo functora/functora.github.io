@@ -49,8 +49,8 @@ impl CryptonoteApp {
             _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
                 self.dock_back_flex(f);
                 if f.add(
-                    Button::new(Msg::Download.render(lang))
-                        .icon(functora_egui::LucideIcon::Download)
+                    Button::new(Msg::Save.render(lang))
+                        .icon(functora_egui::LucideIcon::Save)
                         .variant(ButtonVariant::Default),
                 )
                 .inner

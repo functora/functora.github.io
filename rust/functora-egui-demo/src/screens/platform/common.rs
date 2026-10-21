@@ -249,11 +249,11 @@ impl crate::state::ShowcaseApp {
             &mut self.platform.download_rx,
             &mut self.toast,
             now,
-            "Download failed",
-            "Download disconnected",
+            "Save failed",
+            "Save disconnected",
         ) {
             self.toast
-                .add(format!("Downloaded {name}"), ToastVariant::Success, now);
+                .add(format!("Saved {name}"), ToastVariant::Success, now);
         }
         if let Some(msg) = poll_ok(
             &mut self.platform.pwa_rx,

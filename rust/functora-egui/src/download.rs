@@ -25,6 +25,6 @@ pub async fn download_with_progress(
     #[allow(unreachable_code)]
     {
         let _ = (data, filename, on_progress);
-        Err(Error::JS("Download not available".into()))
+        Err(Error::JS("Save not available".into()))
     }
 }

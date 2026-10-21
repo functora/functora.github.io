@@ -39,12 +39,12 @@ fn msg_all() -> Vec<Msg> {
         Msg::RemoveFile,
         Msg::ArchiveReady,
         Msg::OpenArchive,
-        Msg::Download,
-        Msg::DownloadAll,
+        Msg::Save,
+        Msg::SaveAll,
         Msg::File,
         Msg::PreviewUnavailable,
         Msg::FileNotFound,
-        Msg::Downloaded("note.txt".to_owned()),
+        Msg::Saved("note.txt".to_owned()),
     ]
 }
 
@@ -93,7 +93,7 @@ fn error_delegates_to_app_error() {
 
 #[test]
 fn downloaded_message_embeds_location() {
-    let rendered = Msg::Downloaded("/tmp/note.txt".to_owned()).render(Language::Eng);
+    let rendered = Msg::Saved("/tmp/note.txt".to_owned()).render(Language::Eng);
     assert!(rendered.contains("/tmp/note.txt"));
 }
 

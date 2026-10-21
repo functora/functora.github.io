@@ -477,7 +477,7 @@ impl ComponentId {
         (Self::Share, "Share"),
         (Self::DeepLink, "DeepLink"),
         (Self::Files, "Files"),
-        (Self::Download, "Download"),
+        (Self::Download, "Save"),
         (Self::Nav, "Nav"),
         (Self::ProgressWorker, "ProgressWorker"),
         (Self::Pwa, "PWA"),
@@ -951,11 +951,7 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
             ComponentDef::new("Share", LucideIcon::Share2, Some(ComponentId::Share)),
             ComponentDef::new("DeepLink", LucideIcon::Link2, Some(ComponentId::DeepLink)),
             ComponentDef::new("Files", LucideIcon::Files, Some(ComponentId::Files)),
-            ComponentDef::new(
-                "Download",
-                LucideIcon::Download,
-                Some(ComponentId::Download),
-            ),
+            ComponentDef::new("Save", LucideIcon::Save, Some(ComponentId::Download)),
             ComponentDef::new("Nav", LucideIcon::Compass, Some(ComponentId::Nav)),
             ComponentDef::new(
                 "ProgressWorker",

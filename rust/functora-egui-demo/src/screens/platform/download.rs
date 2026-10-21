@@ -4,7 +4,7 @@ use functora_egui::{Button, Input, Textarea, Typography, spawn_async};
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_download(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "Download via Blob+anchor (web), rfd save dialog (desktop), MediaStore Downloads (Android).",
+            "Save file via Blob+anchor (web), rfd save dialog (desktop), MediaStore (Android).",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -16,16 +16,12 @@ impl crate::state::ShowcaseApp {
                 .desired_width(ui.available_width()),
         );
         ui.add_space(8.0);
-        let downloading = self.platform.download_rx.is_some();
+        let saving = self.platform.download_rx.is_some();
         if ui
             .add_enabled(
-                !downloading,
-                Button::new(if downloading {
-                    "Downloading..."
-                } else {
-                    "Download"
-                })
-                .icon(functora_egui::LucideIcon::Download),
+                !saving,
+                Button::new(if saving { "Saving..." } else { "Save" })
+                    .icon(functora_egui::LucideIcon::Save),
             )
             .clicked()
         {
@@ -39,7 +35,7 @@ impl crate::state::ShowcaseApp {
         }
         snippet(
             ui,
-            "// Download: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;",
+            "// Save: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;",
         );
     }
 }

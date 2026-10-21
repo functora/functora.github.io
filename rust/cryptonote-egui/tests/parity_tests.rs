@@ -80,7 +80,7 @@ const BANNED: &[(&str, &str)] = &[
     ("Uploading...", "Base::PickingFiles overlay title"),
     ("temporary.message", "toast feedback"),
     ("\"Open\"", "Msg::ViewButton/Msg::OpenButton"),
-    ("\"Download\"", "Msg::Download"),
+    ("\"Download\"", "Msg::Save"),
     ("\"Copy\"", "Base::Copy"),
     ("\"Password\"", "Base::Password/PasswordPlaceholder"),
     ("\"File\"", "Msg::File"),

@@ -40,7 +40,7 @@ pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     std::future::ready(()).await;
     let _ = (data, filename);
     Err(Error::JS(
-        "Download not available (web feature disabled)".into(),
+        "Save not available (web feature disabled)".into(),
     ))
 }
 

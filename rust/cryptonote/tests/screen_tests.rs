@@ -123,7 +123,7 @@ fn about_shows_derived_dock_buttons() {
         "Share app",
         "Join testing",
         "Google Play",
-        "Download APK",
+        "Save APK",
         "Source code",
         "Author",
         "Donate",

@@ -310,7 +310,7 @@ impl CryptonoteApp {
             Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
             Some(functora_egui::PollOutcome::Ready(Ok(name))) => {
                 self.toast
-                    .add(Msg::Downloaded(name).render(lang), ToastVariant::Success, time);
+                    .add(Msg::Saved(name).render(lang), ToastVariant::Success, time);
                 self.end_op();
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => {

@@ -71,8 +71,8 @@ impl CryptonoteApp {
                 }
                 if pkg_ready
                     && f.add(
-                        Button::new(Msg::Download.render(lang))
-                            .icon(functora_egui::LucideIcon::Download)
+                        Button::new(Msg::Save.render(lang))
+                            .icon(functora_egui::LucideIcon::Save)
                             .variant(ButtonVariant::Default),
                     )
                     .inner

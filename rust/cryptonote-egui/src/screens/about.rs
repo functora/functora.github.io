@@ -123,7 +123,7 @@ impl CryptonoteApp {
             }
             if f.add(
                 Button::new(BaseMsg::DownloadApkButton.render(lang))
-                    .icon(functora_egui::LucideIcon::Download)
+                    .icon(functora_egui::LucideIcon::Save)
                     .variant(ButtonVariant::Outline),
             )
             .inner

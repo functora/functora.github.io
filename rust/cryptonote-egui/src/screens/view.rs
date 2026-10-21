@@ -63,8 +63,8 @@ impl CryptonoteApp {
                         self.navigate(Screen::File);
                     }
                     if f.add(
-                        Button::new(Msg::Download.render(lang))
-                            .icon(functora_egui::LucideIcon::Download)
+                        Button::new(Msg::Save.render(lang))
+                            .icon(functora_egui::LucideIcon::Save)
                             .size(ComponentSize::Sm),
                     )
                     .inner
@@ -147,8 +147,8 @@ impl CryptonoteApp {
             }
             if has_attachments
                 && f.add(
-                    Button::new(Msg::DownloadAll.render(lang))
-                        .icon(functora_egui::LucideIcon::Download)
+                    Button::new(Msg::SaveAll.render(lang))
+                        .icon(functora_egui::LucideIcon::Save)
                         .variant(ButtonVariant::Outline),
                 )
                 .inner

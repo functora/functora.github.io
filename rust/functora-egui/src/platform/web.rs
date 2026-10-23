@@ -113,12 +113,7 @@ pub async fn clipboard_write(text: String) -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Debug, Clone)]
-pub struct ShareData {
-    pub title: String,
-    pub text: String,
-    pub url: String,
-}
+pub use super::ShareData;
 
 pub async fn share(data: ShareData) -> Result<(), Error> {
     let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;

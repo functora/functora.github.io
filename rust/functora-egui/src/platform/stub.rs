@@ -7,7 +7,7 @@ use crate::camera::FrameData;
 use crate::error::Error;
 
 #[cfg(feature = "clipboard")]
-pub use super::web::ShareData;
+pub use super::ShareData;
 
 #[cfg(feature = "clipboard")]
 pub async fn clipboard_read() -> Result<String, Error> {

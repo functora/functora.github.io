@@ -3,17 +3,17 @@
 
   inputs = {
     stable.url = "github:nixos/nixpkgs?ref=nixos-26.05";
+    unstable.url = "github:nixos/nixpkgs?ref=nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
-    opencode-nix.url = "github:dominicnunez/opencode-nix";
   };
 
   outputs = {
     self,
     stable,
+    unstable,
     rust-overlay,
     flake-utils,
-    opencode-nix,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -21,6 +21,9 @@
           inherit system;
           overlays = [rust-overlay.overlays.default];
           config.android_sdk.accept_license = true;
+        };
+        unst = import unstable {
+          inherit system;
         };
         mobile-targets = [
           "i686-linux-android"
@@ -408,7 +411,7 @@
             version = manifest.package.version;
             src = pkgs.lib.fileset.toSource {
               root = ./.;
-              fileset = pkgs.lib.fileset.unions ([
+              fileset = pkgs.lib.fileset.unions [
                 (./. + "/${app}/Cargo.toml")
                 (./. + "/${app}/Cargo.lock")
                 (./. + "/${app}/build.rs")
@@ -438,9 +441,9 @@
                 ./egui-winit/src
                 ./functora-egui-winit/Cargo.toml
                 ./functora-egui-winit/src
-              ]);
+              ];
             };
-            cargoLock.lockFile = (./. + "/${app}/Cargo.lock");
+            cargoLock.lockFile = ./. + "/${app}/Cargo.lock";
             cargoRoot = app;
             buildAndTestSubdir = app;
             nativeBuildInputs = with pkgs; [
@@ -480,7 +483,7 @@
                   libxext
                 ])
               }" \
-                --suffix PATH : "${pkgs.lib.makeBinPath [ pkgs.xdg-utils ]}"
+                --suffix PATH : "${pkgs.lib.makeBinPath [pkgs.xdg-utils]}"
             '';
             meta = with pkgs.lib; {
               description = manifest.package.description;
@@ -799,7 +802,7 @@
               pkgs.cloudflared
               playwright
               playwright-test
-              (opencode-nix.packages.${system}.default)
+              unst.opencode
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''

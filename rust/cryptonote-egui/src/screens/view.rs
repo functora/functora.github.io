@@ -1,4 +1,4 @@
-use crate::app::CryptonoteApp;
+use crate::app::{CryptonoteApp, OpStart};
 use crate::error::AppError;
 use crate::hooks::{build_external, share_error};
 use crate::messages::Msg;
@@ -134,7 +134,7 @@ impl CryptonoteApp {
                     self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else if !matches!(self.temporary.external, External::Nothing) {
                     self.navigate(Screen::Share);
-                } else if let Some((cancel, progress)) = self.begin_op(Stage::Encrypt) {
+                } else if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
                     let share_note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher;
@@ -155,7 +155,7 @@ impl CryptonoteApp {
                 .clicked()
             {
                 let files = self.temporary.attachments.clone();
-                if let Some((cancel, progress)) = self.begin_op(Stage::Zip) {
+                if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Zip) {
                     let rx = functora_egui::spawn_async(async move {
                         let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip, cancel).await?;
                         functora_egui::download::download(zipped, "cryptonote-unlocked.zip")

@@ -86,18 +86,16 @@ pub async fn trigger_pwa_install() -> Result<PwaInstallOutcome, Error> {
         {
             tracing::warn!("Failed to clear __functoraPwaDeferred");
         }
-        return Ok(match outcome.as_str() {
+        Ok(match outcome.as_str() {
             "accepted" => PwaInstallOutcome::Accepted,
             "rejected" => PwaInstallOutcome::Rejected,
             _ => PwaInstallOutcome::NotAvailable,
-        });
+        })
     }
     #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
     {
-        return Ok(PwaInstallOutcome::NotAvailable);
+        Ok(PwaInstallOutcome::NotAvailable)
     }
-    #[allow(unreachable_code)]
-    Ok(PwaInstallOutcome::NotAvailable)
 }
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq)]
@@ -127,12 +125,10 @@ pub async fn install_hint() -> Result<InstallHint, Error> {
         {
             return Ok(InstallHint::Mac);
         }
-        return Ok(InstallHint::Unavailable);
+        Ok(InstallHint::Unavailable)
     }
     #[cfg(not(all(target_arch = "wasm32", feature = "web")))]
     {
-        return Ok(InstallHint::Unavailable);
+        Ok(InstallHint::Unavailable)
     }
-    #[allow(unreachable_code)]
-    Ok(InstallHint::Unavailable)
 }

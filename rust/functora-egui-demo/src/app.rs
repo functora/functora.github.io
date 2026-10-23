@@ -329,8 +329,8 @@ impl eframe::App for ShowcaseApp {
         self.sync_from_router();
         #[cfg(target_os = "android")]
         crate::android::poll_ime(&ctx);
-        let mut persistent = std::mem::take(&mut self.persistent);
-        let prev_persistent = persistent.clone();
+        let prev_persistent = self.persistent.clone();
+        let mut theme = self.persistent.theme;
         let mut collapsed_val = self.sidebar_collapsed;
         let route = self.router.current().clone();
         let history = self.router.history().clone();
@@ -338,7 +338,7 @@ impl eframe::App for ShowcaseApp {
         let needs_search = std::cell::Cell::new(false);
         let pending_nav = std::cell::Cell::new(None::<PendingNav>);
         let selected_snapshot = self.selected;
-        let lang_cell = std::cell::Cell::new(persistent.language);
+        let lang_cell = std::cell::Cell::new(self.persistent.language);
         let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, {
             let lang_ref = &lang_cell;
             let pending_ref = &pending_nav;
@@ -384,7 +384,7 @@ impl eframe::App for ShowcaseApp {
                 close
             }
         })
-        .theme(&mut persistent.theme)
+        .theme(&mut theme)
         .language(&lang_cell)
         .search(&SearchLabel.render(lang_cell.get()), Some("Ctrl K"))
         .on_brand(|| needs_reset.set(true))
@@ -405,9 +405,13 @@ impl eframe::App for ShowcaseApp {
             let cur_lang = lang_cell.get();
             self.render_component(content_ui, cur_lang);
         });
-        persistent.language = lang_cell.get();
+        if lang_cell.get() != prev_persistent.language {
+            self.persistent.language = lang_cell.get();
+        }
+        if theme != prev_persistent.theme {
+            self.persistent.theme = theme;
+        }
         self.sidebar_collapsed = collapsed_val;
-        self.persistent = persistent;
         if let Some(target) = pending_nav.get() {
             match target {
                 PendingNav::Overview => self.navigate_to(None),

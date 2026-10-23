@@ -166,9 +166,6 @@ impl crate::state::ShowcaseApp {
             self.platform.pick_job.clone_from(&guard);
         }
         let now = ctx.input(|i| i.time);
-        if self.has_pending_promises() {
-            ctx.request_repaint();
-        }
         if let Some(text) = poll_ok(
             &mut self.platform.clipboard_rx,
             &mut self.toast,

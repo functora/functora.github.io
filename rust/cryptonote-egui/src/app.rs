@@ -8,7 +8,7 @@ use functora_egui::{Button, ButtonVariant, ResponsiveExt, Shell, ToastState, Toa
 use crate::error::AppError;
 use crate::hooks::handle_open_url;
 use crate::messages::Msg;
-use crate::progress::{Job, Stage, claim_job, clear_progress};
+use crate::progress::{Job, Stage, clear_progress};
 use crate::route::Screen;
 use crate::state::{External, TemporaryState};
 use crate::storage::{APP_ATTRS, APP_SCOPE, PersistentState};
@@ -21,6 +21,12 @@ type PickResult = Result<Vec<(String, Vec<u8>)>, AppError>;
 type DecryptResult = Result<(String, Vec<crate::archive::Attachment>), AppError>;
 type SharedProgress = std::sync::Arc<std::sync::Mutex<Option<Job<Stage>>>>;
 type TrackFn = Box<dyn FnMut(Option<Job<Stage>>) + Send + 'static>;
+
+pub(crate) struct OpStart {
+    pub(crate) cancel: functora_egui::CancelToken,
+    pub(crate) slot: SharedProgress,
+    pub(crate) progress: TrackFn,
+}
 
 pub struct CryptonoteApp {
     pub(crate) router: AppRouter<Screen>,
@@ -191,13 +197,26 @@ impl CryptonoteApp {
         }
     }
 
-    pub(crate) fn begin_op(&mut self, stage: Stage) -> Option<(functora_egui::CancelToken, TrackFn)> {
-        let guard = claim_job(&mut self.temporary.progress, stage)?;
-        std::mem::forget(guard);
-        let token = functora_egui::new_cancel_token();
-        self.progress_cancel = Some(token.clone());
+    pub(crate) fn begin_op(&mut self, stage: Stage) -> Option<OpStart> {
+        if self.temporary.progress.is_some() {
+            return None;
+        }
+        self.temporary.progress = Some(Job {
+            stage,
+            done: 0,
+            total: 1,
+            name: None,
+        });
+        let cancel = functora_egui::new_cancel_token();
+        self.progress_cancel = Some(cancel.clone());
         self.progress_overlay_open = true;
-        Some((token, self.track_progress()))
+        let (slot, progress) = self.track_progress();
+        Some(OpStart { cancel, slot, progress })
+    }
+
+    #[doc(hidden)]
+    pub fn begin_attach_for_tests(&mut self) -> bool {
+        self.begin_op(Stage::Attach).is_some()
     }
 
     pub(crate) fn end_op(&mut self) {
@@ -212,17 +231,17 @@ impl CryptonoteApp {
     /// overlay deterministically without constructing a valid archive.
     #[doc(hidden)]
     pub fn open_progress_overlay_for_tests(&mut self, stage: Stage) {
-        if self.begin_op(stage).is_none() {
-            self.end_op();
-        }
+        _ = self.begin_op(stage);
     }
 
-    pub(crate) fn track_progress(&mut self) -> TrackFn {
+    pub(crate) fn track_progress(&mut self) -> (SharedProgress, TrackFn) {
         let slot: SharedProgress = std::sync::Arc::new(std::sync::Mutex::new(None));
         self.progress_slot = Some(std::sync::Arc::clone(&slot));
-        Box::new(move |job| {
-            *slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
-        })
+        let writer = std::sync::Arc::clone(&slot);
+        let track: TrackFn = Box::new(move |job| {
+            *writer.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
+        });
+        (slot, track)
     }
 
     fn sync_progress(&mut self) {
@@ -305,47 +324,45 @@ impl CryptonoteApp {
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
-        match functora_egui::poll_channel(&mut self.download_rx) {
-            None => {}
-            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
-            Some(functora_egui::PollOutcome::Ready(Ok(name))) => {
-                self.toast
-                    .add(Msg::Saved(name).render(lang), ToastVariant::Success, time);
-                self.end_op();
-            }
-            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
-                self.toast_error(e, lang, time);
-                self.end_op();
+        if let Some(outcome) = functora_egui::poll_channel(&mut self.download_rx) {
+            self.end_op();
+            match outcome {
+                functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok(name)) => {
+                    self.toast
+                        .add(Msg::Saved(name).render(lang), ToastVariant::Success, time);
+                }
+                functora_egui::PollOutcome::Ready(Err(e)) => self.toast_error(e, lang, time),
             }
         }
-        match functora_egui::poll_channel(&mut self.pick_rx) {
-            None => {}
-            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
-            Some(functora_egui::PollOutcome::Ready(Ok(files))) => {
-                let before = self.temporary.attachments.len();
-                for (name, data) in files {
-                    let att = functora_egui::files::Attachment {
-                        name,
-                        data: data.into(),
-                    };
-                    crate::hooks::add_attachment(&mut self.temporary.attachments, att);
+        if let Some(outcome) = functora_egui::poll_channel(&mut self.pick_rx) {
+            self.end_op();
+            match outcome {
+                functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok(files)) => {
+                    let before = self.temporary.attachments.len();
+                    for (name, data) in files {
+                        let att = functora_egui::files::Attachment {
+                            name,
+                            data: data.into(),
+                        };
+                        crate::hooks::add_attachment(&mut self.temporary.attachments, att);
+                    }
+                    let added = self.temporary.attachments.len() - before;
+                    self.toast
+                        .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
                 }
-                let added = self.temporary.attachments.len() - before;
-                self.toast
-                    .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
-                self.end_op();
-            }
-            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
-                if Self::is_cancelled(&e) {
-                    self.toast.add(e.render(lang), ToastVariant::Default, time);
-                } else {
-                    self.toast.add(
-                        Msg::Error(crate::error::MsgError::from(e)).render(lang),
-                        ToastVariant::Error,
-                        time,
-                    );
+                functora_egui::PollOutcome::Ready(Err(e)) => {
+                    if Self::is_cancelled(&e) {
+                        self.toast.add(e.render(lang), ToastVariant::Default, time);
+                    } else {
+                        self.toast.add(
+                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            ToastVariant::Error,
+                            time,
+                        );
+                    }
                 }
-                self.end_op();
             }
         }
         match functora_egui::poll_channel(&mut self.paste_image_rx) {
@@ -361,50 +378,44 @@ impl CryptonoteApp {
                 );
             }
         }
-        match functora_egui::poll_channel(&mut self.generate_rx) {
-            None => {}
-            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
-            Some(functora_egui::PollOutcome::Ready(Ok(external))) => {
-                self.temporary.external = external;
-                self.end_op();
-                self.navigate(Screen::Share);
-            }
-            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
-                self.toast_error(e, lang, time);
-                self.end_op();
-            }
-        }
-        match functora_egui::poll_channel(&mut self.decrypt_rx) {
-            None => {}
-            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
-            Some(functora_egui::PollOutcome::Ready(Ok((text, files)))) => {
-                self.temporary.note = text;
-                self.temporary.attachments = files;
-                self.temporary.external = External::Nothing;
-                self.end_op();
-                self.navigate(Screen::View);
-            }
-            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
-                self.toast_error(e, lang, time);
-                self.end_op();
-            }
-        }
-        match functora_egui::poll_channel(&mut self.archive_rx) {
-            None => {}
-            Some(functora_egui::PollOutcome::Disconnected) => self.end_op(),
-            Some(functora_egui::PollOutcome::Ready(Ok(opened))) => {
-                self.temporary.external = opened.external;
-                self.temporary.note = opened.note;
-                self.temporary.attachments = opened.attachments;
-                if opened.screen == Screen::Open {
-                    self.temporary.password.clear();
+        if let Some(outcome) = functora_egui::poll_channel(&mut self.generate_rx) {
+            self.end_op();
+            match outcome {
+                functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok(external)) => {
+                    self.temporary.external = external;
+                    self.navigate(Screen::Share);
                 }
-                self.end_op();
-                self.navigate(opened.screen);
+                functora_egui::PollOutcome::Ready(Err(e)) => self.toast_error(e, lang, time),
             }
-            Some(functora_egui::PollOutcome::Ready(Err(e))) => {
-                self.toast_error(e, lang, time);
-                self.end_op();
+        }
+        if let Some(outcome) = functora_egui::poll_channel(&mut self.decrypt_rx) {
+            self.end_op();
+            match outcome {
+                functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok((text, files))) => {
+                    self.temporary.note = text;
+                    self.temporary.attachments = files;
+                    self.temporary.external = External::Nothing;
+                    self.navigate(Screen::View);
+                }
+                functora_egui::PollOutcome::Ready(Err(e)) => self.toast_error(e, lang, time),
+            }
+        }
+        if let Some(outcome) = functora_egui::poll_channel(&mut self.archive_rx) {
+            self.end_op();
+            match outcome {
+                functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok(opened)) => {
+                    self.temporary.external = opened.external;
+                    self.temporary.note = opened.note;
+                    self.temporary.attachments = opened.attachments;
+                    if opened.screen == Screen::Open {
+                        self.temporary.password.clear();
+                    }
+                    self.navigate(opened.screen);
+                }
+                functora_egui::PollOutcome::Ready(Err(e)) => self.toast_error(e, lang, time),
             }
         }
         match functora_egui::poll_channel(&mut self.pwa_rx) {
@@ -459,7 +470,7 @@ impl CryptonoteApp {
         }
         if crate::deep_link::has_pending_archive()
             && let Some(source) = crate::deep_link::take_archive()
-            && let Some((cancel, progress)) = self.begin_op(Stage::Preview)
+            && let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Preview)
         {
             let rx =
                 functora_egui::spawn_async(
@@ -545,9 +556,8 @@ impl eframe::App for CryptonoteApp {
         if routed != self.temporary.screen {
             self.temporary.screen = routed;
         }
-        let mut persistent = std::mem::take(&mut self.persistent);
-        self.persistent = persistent.clone();
-        let prev_persistent = persistent.clone();
+        let prev_persistent = self.persistent.clone();
+        let mut theme = self.persistent.theme;
         let mut collapsed_val = self.sidebar_collapsed;
         let route = *self.router.current();
         let history = self.router.history().clone();
@@ -555,7 +565,7 @@ impl eframe::App for CryptonoteApp {
         let pending_nav = std::cell::Cell::new(None::<Screen>);
         let pending_reset = std::cell::Cell::new(false);
         let selected_snapshot = self.temporary.screen;
-        let lang_cell = std::cell::Cell::new(persistent.language);
+        let lang_cell = std::cell::Cell::new(self.persistent.language);
         let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
             (Screen::Home, functora_egui::LucideIcon::House),
             (Screen::About, functora_egui::LucideIcon::Info),
@@ -607,7 +617,7 @@ impl eframe::App for CryptonoteApp {
             }
         })
         .brand_icon(None)
-        .theme(&mut persistent.theme)
+        .theme(&mut theme)
         .language(&lang_cell)
         .on_brand(|| needs_reset.set(true))
         .sidebar_labels(sidebar_names.iter().map(String::as_str))
@@ -629,7 +639,9 @@ impl eframe::App for CryptonoteApp {
             self.footer(content_ui, content_lang);
         });
         self.sidebar_collapsed = collapsed_val;
-        self.persistent = persistent;
+        if theme != prev_persistent.theme {
+            self.persistent.theme = theme;
+        }
         self.set_language(lang_cell.get());
         if let Some(screen) = pending_nav.get() {
             self.navigate(screen);

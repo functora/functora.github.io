@@ -1,4 +1,4 @@
-use crate::app::CryptonoteApp;
+use crate::app::{CryptonoteApp, OpStart};
 use crate::encoding::NoteData;
 use crate::error::AppError;
 use crate::messages::Msg;
@@ -60,7 +60,7 @@ impl CryptonoteApp {
             );
             return;
         }
-        let Some((cancel, progress)) = self.begin_op(Stage::Decrypt) else {
+        let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Decrypt) else {
             return;
         };
         let external = self.temporary.external.clone();

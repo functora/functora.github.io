@@ -1,8 +1,8 @@
-use crate::app::CryptonoteApp;
+use crate::app::{CryptonoteApp, OpStart};
 use crate::error::AppError;
 use crate::hooks::share_error;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job};
+use crate::progress::Stage;
 use crate::route::Screen;
 use crate::state::CipherChoice;
 use functora_egui::i18n::I18N;
@@ -64,7 +64,7 @@ impl CryptonoteApp {
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher;
                     let attachments = self.temporary.attachments.clone();
-                    if let Some((cancel, progress)) = self.begin_op(Stage::Encrypt) {
+                    if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
                         let rx = functora_egui::spawn_async(async move {
                             crate::hooks::build_external(&note, &password, cipher, &attachments, cancel, progress).await
                         });
@@ -79,13 +79,9 @@ impl CryptonoteApp {
             )
             .inner
             .clicked()
-                && claim_job(&mut self.temporary.progress, Stage::Attach).is_some()
+                && let Some(start) = self.begin_op(Stage::Attach)
             {
-                let cancel = functora_egui::new_cancel_token();
-                self.progress_cancel = Some(cancel.clone());
-                self.progress_overlay_open = true;
-                let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
-                self.progress_slot = Some(std::sync::Arc::clone(&slot));
+                let OpStart { cancel, slot, .. } = start;
                 let rx = functora_egui::spawn_async(async move {
                     functora_egui::files::pick_files_with_shared_progress(true, Some(slot), Some(&cancel))
                         .await

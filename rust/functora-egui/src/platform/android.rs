@@ -130,12 +130,7 @@ pub async fn clipboard_write(text: String) -> Result<(), Error> {
     })
 }
 
-#[derive(Debug, Clone)]
-pub struct ShareData {
-    pub title: String,
-    pub text: String,
-    pub url: String,
-}
+pub use super::ShareData;
 
 pub async fn share(data: ShareData) -> Result<(), Error> {
     std::future::ready(()).await;
@@ -364,8 +359,8 @@ pub fn get_data_string() -> Option<String> {
     Some(String::from(url))
 }
 
-#[allow(clippy::unused_async)]
 pub async fn sleep(millis: u64) {
+    std::future::ready(()).await;
     std::thread::sleep(std::time::Duration::from_millis(millis));
 }
 
@@ -489,7 +484,6 @@ pub(crate) fn frame_rotation_blocking() -> crate::utils::FrameRotation {
 }
 
 /// Blocking single-frame capture used by the android scan loop.
-#[allow(clippy::similar_names)]
 pub(crate) fn capture_frame_blocking() -> Result<FrameData, Error> {
     let Some((width, height)) = *CAMERA_SIZE.lock().unwrap_or_else(PoisonError::into_inner) else {
         return Err(Error::CameraNotAvailable(
@@ -537,25 +531,21 @@ pub(crate) fn stop_camera_blocking() {
         .take();
 }
 
-#[allow(clippy::unused_async)]
 pub async fn check_camera() -> Result<(), Error> {
     std::future::ready(()).await;
     check_camera_blocking()
 }
 
-#[allow(clippy::unused_async)]
 pub async fn start_camera() -> Result<(), Error> {
     std::future::ready(()).await;
     start_camera_blocking()
 }
 
-#[allow(clippy::unused_async)]
 pub async fn capture_frame() -> Result<FrameData, Error> {
     std::future::ready(()).await;
     capture_frame_blocking()
 }
 
-#[allow(clippy::unused_async)]
 pub async fn stop_camera() -> Result<(), Error> {
     std::future::ready(()).await;
     stop_camera_blocking();

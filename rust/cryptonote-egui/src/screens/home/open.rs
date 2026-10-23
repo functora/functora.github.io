@@ -1,8 +1,8 @@
-use crate::app::CryptonoteApp;
+use crate::app::{CryptonoteApp, OpStart};
 use crate::error::AppError;
 use crate::hooks::handle_open_url;
 use crate::messages::Msg;
-use crate::progress::{Stage, claim_job};
+use crate::progress::Stage;
 use functora_egui::i18n::I18N;
 use functora_egui::{Button, ButtonVariant, Flex, Label, TextareaPasteClear, ToastVariant};
 
@@ -53,19 +53,13 @@ impl CryptonoteApp {
             )
             .inner
             .clicked()
-                && claim_job(&mut self.temporary.progress, Stage::Attach).is_some()
+                && let Some(start) = self.begin_op(Stage::Attach)
             {
-                let cancel = functora_egui::new_cancel_token();
-                self.progress_cancel = Some(cancel.clone());
-                self.progress_overlay_open = true;
-                let slot = std::sync::Arc::new(std::sync::Mutex::new(None));
-                self.progress_slot = Some(std::sync::Arc::clone(&slot));
-                let load_progress = {
-                    let load_slot = std::sync::Arc::clone(&slot);
-                    move |job| {
-                        *load_slot.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = job;
-                    }
-                };
+                let OpStart {
+                    cancel,
+                    slot,
+                    progress: load_progress,
+                } = start;
                 let load_cancel = cancel.clone();
                 let rx = functora_egui::spawn_async(async move {
                     let files =

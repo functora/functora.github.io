@@ -1,3 +1,12 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ShareData {
+    pub title: String,
+    pub text: String,
+    pub url: String,
+}
+
 #[cfg(target_os = "android")]
 #[cfg(feature = "platform")]
 pub mod android;

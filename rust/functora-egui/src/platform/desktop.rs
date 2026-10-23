@@ -21,12 +21,7 @@ pub async fn clipboard_write(text: String) -> Result<(), Error> {
         .map_err(|e| Error::JS(format!("Clipboard write: {e}")))
 }
 
-#[derive(Debug, Clone)]
-pub struct ShareData {
-    pub title: String,
-    pub text: String,
-    pub url: String,
-}
+pub use super::ShareData;
 
 const OPEN_URL_POLL_INTERVAL_MS: u64 = 50;
 const OPEN_URL_POLL_COUNT: u32 = 200;

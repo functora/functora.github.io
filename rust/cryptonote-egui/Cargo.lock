@@ -872,7 +872,6 @@ dependencies = [
  "base64 0.22.1",
  "eframe",
  "egui",
- "functora",
  "functora-core",
  "functora-egui",
  "functora-tagged",
@@ -1515,10 +1514,6 @@ checksum = "cb4cb245038516f5f85277875cdaa4f7d2c9a0fa0468de06ed190163b1581fcf"
 dependencies = [
  "percent-encoding",
 ]
-
-[[package]]
-name = "functora"
-version = "0.2.1"
 
 [[package]]
 name = "functora-core"

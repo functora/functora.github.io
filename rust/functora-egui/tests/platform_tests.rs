@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 #[cfg(feature = "files")]
 use functora_egui::files;
 #[cfg(feature = "storage")]
@@ -14,7 +13,7 @@ fn deep_link_lock() -> &'static Mutex<()> {
 #[test]
 #[cfg(feature = "storage")]
 fn storage_roundtrip() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = tempfile::tempdir().unwrap_or_else(|err| panic!("temp dir must be created: {err}"));
     let path = dir.path().join("storage.json");
     let key = "unit_test_key";
     let value = serde_json::json!({"a": 1});
@@ -143,7 +142,12 @@ fn nav_stack_reset() {
 fn progress_report_and_claim() {
     let mut slot: Option<progress::Job<progress::Stage>> = None;
     progress::report(&mut slot, progress::Stage::Attach, 5, 10);
-    assert_eq!(slot.as_ref().unwrap().done, 5);
+    assert_eq!(
+        slot.as_ref()
+            .unwrap_or_else(|| panic!("progress slot must exist"))
+            .done,
+        5
+    );
     progress::clear_progress(&mut slot);
     assert!(slot.is_none());
     let guard = progress::claim_job(&mut slot, progress::Stage::Zip);
@@ -251,8 +255,12 @@ fn in_flight_guard() {
 #[test]
 #[cfg(any(feature = "build", all(feature = "web", feature = "android")))]
 fn config_derive() {
-    let tmp = tempfile::NamedTempFile::new().unwrap();
-    let path = tmp.path().to_str().unwrap();
+    let tmp = tempfile::NamedTempFile::new()
+        .unwrap_or_else(|err| panic!("temp config file must be created: {err}"));
+    let path = tmp
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("temp path must be UTF-8"));
     std::fs::write(
         path,
         r##"
@@ -266,7 +274,7 @@ title = "Custom Title"
 theme_color = "#ff0000"
 "##,
     )
-    .unwrap();
+    .unwrap_or_else(|err| panic!("temp config must be written: {err}"));
     assert_eq!(
         functora_egui::config::shared::derive_pkg_js(path),
         "my_app.js"
@@ -288,8 +296,10 @@ fn encoding_helpers() {
         x: u32,
     }
     let v = Payload { x: 42 };
-    let enc = functora_egui::encoding::encode_payload(&v).unwrap();
-    let dec: Payload = functora_egui::encoding::decode_payload(&enc).unwrap();
+    let enc = functora_egui::encoding::encode_payload(&v)
+        .unwrap_or_else(|err| panic!("payload must encode: {err}"));
+    let dec: Payload = functora_egui::encoding::decode_payload(&enc)
+        .unwrap_or_else(|err| panic!("payload must decode: {err}"));
     assert_eq!(v, dec);
     let url = functora_egui::encoding::append_query_param("https://example.com", "k", "v");
     assert!(url.contains("k=v"));

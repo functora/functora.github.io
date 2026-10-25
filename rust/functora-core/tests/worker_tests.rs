@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use functora_core::Error;
 use functora_core::worker::{Reporter, run};
 use std::task::{Context, Poll, Waker};
@@ -39,5 +37,8 @@ fn run_reports_worker_result() {
             Poll::Pending => std::thread::yield_now(),
         }
     };
-    assert_eq!(result.unwrap(), 7);
+    assert_eq!(
+        result.unwrap_or_else(|err| panic!("worker must finish: {err}")),
+        7
+    );
 }

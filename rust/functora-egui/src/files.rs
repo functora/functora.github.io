@@ -4,6 +4,8 @@ pub use functora_core::files::{
 };
 
 use crate::error::Error;
+#[cfg(target_arch = "wasm32")]
+use crate::error::Missing;
 use crate::progress::yield_to_paint;
 use crate::progress::{Job, Stage};
 #[cfg(target_arch = "wasm32")]
@@ -20,6 +22,25 @@ const PICK_CHUNK: usize = 4 * 1024 * 1024;
 
 pub type PickResult = Result<Vec<(String, Vec<u8>)>, String>;
 pub type CancelToken = Arc<AtomicBool>;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FilePickerState {
+    Pending,
+    Done,
+    Cancelled,
+    Failed(i32),
+}
+
+impl From<i32> for FilePickerState {
+    fn from(code: i32) -> Self {
+        match code {
+            0 => Self::Pending,
+            1 => Self::Done,
+            -1 => Self::Cancelled,
+            other => Self::Failed(other),
+        }
+    }
+}
 
 #[must_use]
 pub fn new_cancel_token() -> CancelToken {
@@ -308,6 +329,14 @@ async fn pick_via_android_shared(
 }
 
 #[cfg(target_os = "android")]
+fn clear_file_picker() {
+    _ = crate::platform::android::with_app(|env, activity| {
+        let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
+        Ok(())
+    });
+}
+
+#[cfg(target_os = "android")]
 async fn android_pick_files(
     multiple: bool,
     cancel: Option<&CancelToken>,
@@ -332,46 +361,35 @@ async fn android_pick_files(
     let deadline = Instant::now() + PICKER_TIMEOUT;
     loop {
         if Instant::now() >= deadline {
-            _ = crate::platform::android::with_app(|env, activity| {
-                let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
-                Ok(())
-            });
-            return Err(Error::JS("File picker timed out".into()));
+            clear_file_picker();
+            return Err(Error::FilePickerTimedOut);
         }
         if let Some(token) = cancel
             && token.load(Ordering::Relaxed)
         {
-            _ = crate::platform::android::with_app(|env, activity| {
-                let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
-                Ok(())
-            });
+            clear_file_picker();
             return Err(Error::Cancelled);
         }
-        let state = crate::platform::android::with_app(|env, activity| {
+        let state = FilePickerState::from(crate::platform::android::with_app(|env, activity| {
             let v = env
                 .call_method(activity, "filePickerState", "()I", &[])?
                 .i()?;
             Ok(v)
-        })?;
+        })?);
         match state {
-            0 => {
+            FilePickerState::Pending => {
                 yield_to_paint().await;
                 std::thread::sleep(Duration::from_millis(80));
             }
-            1 => break,
-            -1 => {
-                _ = crate::platform::android::with_app(|env, activity| {
-                    let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
-                    Ok(())
-                });
+            FilePickerState::Done => break,
+            FilePickerState::Cancelled => {
+                clear_file_picker();
                 return Err(Error::Cancelled);
             }
-            _ => {
-                _ = crate::platform::android::with_app(|env, activity| {
-                    let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
-                    Ok(())
-                });
-                return Err(Error::JS("File picker failed".into()));
+            FilePickerState::Failed(code) => {
+                clear_file_picker();
+                tracing::warn!("File picker reported unexpected state {code}");
+                return Err(Error::FilePickerFailed);
             }
         }
     }
@@ -419,10 +437,7 @@ async fn android_pick_files(
         }
         Ok(out)
     })?;
-    _ = crate::platform::android::with_app(|env, activity| {
-        let _ = env.call_method(activity, "filePickerClear", "()V", &[])?;
-        Ok(())
-    });
+    clear_file_picker();
     let mut out = Vec::with_capacity(names.len().min(datas.len()));
     for (n, d) in names.into_iter().zip(datas) {
         out.push((n, d));
@@ -447,12 +462,6 @@ impl Drop for DomRemoval {
             drop(parent.remove_child(&self.0));
         }
     }
-}
-
-#[cfg(target_arch = "wasm32")]
-#[must_use]
-pub fn pick_files_sync_web(multiple: bool) -> Arc<Mutex<Option<PickResult>>> {
-    pick_files_sync_web_with_cancel(multiple, &new_cancel_token())
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -649,7 +658,7 @@ async fn collect_files_chunked_web_shared(
         }
         let file = file_list
             .get(i)
-            .ok_or_else(|| Error::JS("No file".into()))?;
+            .ok_or_else(|| Error::Missing(Missing::FileEntry))?;
         let blob: &web_sys::Blob = file.unchecked_ref();
         let size = crate::utils::f64_to_u64_clamped(blob.size());
         total = total.saturating_add(size);
@@ -675,7 +684,7 @@ async fn collect_files_chunked_web_shared(
         }
         let file = file_list
             .get(i)
-            .ok_or_else(|| Error::JS("No file".into()))?;
+            .ok_or_else(|| Error::Missing(Missing::FileEntry))?;
         let name = file.name();
         let data = read_single_file_chunked_shared(
             &file,
@@ -712,7 +721,10 @@ async fn read_single_file_chunked_shared(
     if size == 0 {
         return Ok(Vec::new());
     }
-    let size_usize = usize::try_from(size).map_err(|e| Error::JS(format!("{e:?}")))?;
+    let size_usize = usize::try_from(size).map_err(|source| Error::Convert {
+        context: "file size",
+        source,
+    })?;
     let mut buf = vec![0u8; size_usize];
     let mut offset: u64 = 0;
     let mut write_pos: usize = 0;
@@ -730,11 +742,11 @@ async fn read_single_file_chunked_shared(
                 crate::utils::u64_to_f64_js(offset),
                 crate::utils::u64_to_f64_js(end),
             )
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         let promise = chunk_blob.array_buffer();
         let buffer = wasm_bindgen_futures::JsFuture::from(promise)
             .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         let uint8 = js_sys::Uint8Array::new(&buffer);
         let chunk_len = uint8.length() as usize;
         if chunk_len == 0 {
@@ -771,21 +783,21 @@ async fn pick_via_web_shared(
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen_futures::JsFuture;
 
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let document = window
         .document()
-        .ok_or_else(|| Error::JS("No document".into()))?;
+        .ok_or_else(|| Error::Missing(Missing::Document))?;
     let input: web_sys::HtmlInputElement = document
         .create_element("input")
-        .map_err(|e| Error::JS(format!("{e:?}")))?
+        .map_err(Error::from)?
         .dyn_into()
-        .map_err(|_| Error::JS("Not an input".into()))?;
+        .map_err(|_| Error::Missing(Missing::Input))?;
     input.set_type("file");
     input.set_multiple(multiple);
     input
         .style()
         .set_property("display", "none")
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     let promise = {
         let input_clone = input.clone();
         js_sys::Promise::new(&mut |resolve, _reject| {
@@ -810,17 +822,13 @@ async fn pick_via_web_shared(
     drop(
         document
             .body()
-            .ok_or_else(|| Error::JS("No body".into()))?
+            .ok_or_else(|| Error::Missing(Missing::Body))?
             .append_child(&input)
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
+            .map_err(Error::from)?,
     );
     let _cleanup = DomRemoval::new(&input);
     input.click();
-    drop(
-        JsFuture::from(promise)
-            .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
-    );
+    drop(JsFuture::from(promise).await.map_err(Error::from)?);
     if let Some(token) = cancel
         && token.load(Ordering::Relaxed)
     {

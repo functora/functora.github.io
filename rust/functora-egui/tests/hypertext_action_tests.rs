@@ -2,8 +2,6 @@
 //! text/link/action segments in one text layout (one font, one baseline),
 //! and action clicks report their id for internal navigation.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
 use functora_egui::{Hypertext, Segment};
 
@@ -72,7 +70,10 @@ fn single_text(out: &egui::FullOutput) -> (Pos2, std::sync::Arc<egui::Galley>) {
         "mixed footer paragraph must be one text layout, got {}",
         texts.len()
     );
-    texts.into_iter().next().unwrap()
+    texts
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| panic!("paragraph must have a text layout"))
 }
 
 fn click_at(app: &mut App, pos: Pos2, body: &mut dyn FnMut(&mut egui::Ui)) {
@@ -121,7 +122,9 @@ fn action_click_reports_its_id() {
     let out = app.step(vec![], &mut body);
     let (pos, galley) = single_text(&out);
     let full = galley.text();
-    let byte = full.find("Privacy").expect("action label must render");
+    let byte = full
+        .find("Privacy")
+        .unwrap_or_else(|| panic!("action label must render"));
     let char_idx = full[..byte].chars().count();
     let glyph = galley.pos_from_cursor(egui::text::CCursor::new(char_idx));
     click_at(&mut app, pos + glyph.center().to_vec2(), &mut body);
@@ -137,7 +140,9 @@ fn clicking_plain_text_reports_no_action() {
     let out = app.step(vec![], &mut body);
     let (pos, galley) = single_text(&out);
     let full = galley.text();
-    let byte = full.find("Functora").expect("plain text must render");
+    let byte = full
+        .find("Functora")
+        .unwrap_or_else(|| panic!("plain text must render"));
     let char_idx = full[..byte].chars().count();
     let glyph = galley.pos_from_cursor(egui::text::CCursor::new(char_idx));
     click_at(&mut app, pos + glyph.center().to_vec2(), &mut body);

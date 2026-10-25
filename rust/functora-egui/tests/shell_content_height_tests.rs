@@ -4,8 +4,6 @@
 //! `egui::Image` with the default `Fraction(1,1)` fit) collapse to zero
 //! when the height is exhausted by preceding labels.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

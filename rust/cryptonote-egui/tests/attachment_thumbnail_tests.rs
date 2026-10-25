@@ -1,9 +1,11 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Image preview/thumbnail support for attachments: still images get a
 //! clickable thumbnail in attachment lists, other files keep label rows.
 
 use cryptonote_egui::screens::attachment_thumb::{attachment_uri, show_attachment_thumb};
 use functora_egui::files::{Attachment, Preview, preview_cached};
+
+pub mod common;
+use common::UiDriver;
 
 /// Minimal valid 1x1 PNG, reused as stand-in bytes for still images.
 const PIXEL_PNG: &[u8] = &[
@@ -16,37 +18,6 @@ fn attachment(name: &str, data: &[u8]) -> Attachment {
     Attachment {
         name: name.to_string(),
         data: data.to_vec().into(),
-    }
-}
-
-struct UiDriver {
-    ctx: egui::Context,
-    frame: u32,
-}
-
-impl UiDriver {
-    fn new() -> Self {
-        let ctx = egui::Context::default();
-        functora_egui::setup_fonts(&ctx);
-        functora_egui::setup_image_loaders(&ctx);
-        Self { ctx, frame: 0 }
-    }
-
-    fn run(&mut self, events: Vec<egui::Event>, body: &mut dyn FnMut(&mut egui::Ui)) {
-        self.frame += 1;
-        let raw = egui::RawInput {
-            screen_rect: Some(egui::Rect::from_min_size(
-                egui::Pos2::ZERO,
-                egui::Vec2::new(1280.0, 800.0),
-            )),
-            time: Some(f64::from(self.frame) / 60.0),
-            events,
-            ..Default::default()
-        };
-        let mut out = self.ctx.run_ui(raw, |ui| {
-            let _ = egui::CentralPanel::default().show(ui, |inner_ui| body(inner_ui));
-        });
-        out.textures_delta.clear();
     }
 }
 
@@ -83,15 +54,15 @@ fn attachment_uri_keeps_bytes_scheme_and_extension() {
 fn thumb_renders_for_images_only() {
     let png = attachment("photo.png", PIXEL_PNG);
     let txt = attachment("note.txt", b"hello");
-    let mut driver = UiDriver::new();
+    let mut driver = UiDriver::with_fonts();
     let seen_png = std::cell::Cell::new(false);
     let seen_txt = std::cell::Cell::new(false);
     let mut body = |ui: &mut egui::Ui| {
         seen_png.set(show_attachment_thumb(ui, &png).is_some());
         seen_txt.set(show_attachment_thumb(ui, &txt).is_some());
     };
-    driver.run(vec![], &mut body);
-    driver.run(vec![], &mut body);
+    driver.show(vec![], &mut body);
+    driver.show(vec![], &mut body);
     assert!(seen_png.get(), "png attachment must render a thumbnail");
     assert!(!seen_txt.get(), "txt attachment must not render a thumbnail");
 }
@@ -99,7 +70,7 @@ fn thumb_renders_for_images_only() {
 #[test]
 fn thumb_click_reports_clicked() {
     let png = attachment("photo.png", PIXEL_PNG);
-    let mut driver = UiDriver::new();
+    let mut driver = UiDriver::with_fonts();
     let center = std::cell::Cell::new(egui::Pos2::ZERO);
     let clicked = std::cell::Cell::new(false);
     let mut body = |ui: &mut egui::Ui| {
@@ -108,7 +79,7 @@ fn thumb_click_reports_clicked() {
             clicked.set(resp.clicked());
         }
     };
-    driver.run(vec![], &mut body);
+    driver.show(vec![], &mut body);
     let pos = center.get();
     assert_ne!(pos, egui::Pos2::ZERO, "thumbnail must occupy a rect");
     let press = |pressed: bool| egui::Event::PointerButton {
@@ -117,8 +88,8 @@ fn thumb_click_reports_clicked() {
         pressed,
         modifiers: egui::Modifiers::default(),
     };
-    driver.run(vec![egui::Event::PointerMoved(pos)], &mut body);
-    driver.run(vec![press(true)], &mut body);
-    driver.run(vec![press(false)], &mut body);
+    driver.show(vec![egui::Event::PointerMoved(pos)], &mut body);
+    driver.show(vec![press(true)], &mut body);
+    driver.show(vec![press(false)], &mut body);
     assert!(clicked.get(), "thumbnail click must report clicked");
 }

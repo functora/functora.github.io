@@ -1,5 +1,4 @@
 use crate::app::CryptonoteApp;
-use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::Stage;
 use egui::ScrollArea;
@@ -59,12 +58,9 @@ impl CryptonoteApp {
                 {
                     let data = att.data.to_vec();
                     let name = att.name.clone();
-                    let rx = functora_egui::spawn_async(async move {
-                        functora_egui::download::download(data, &name)
-                            .await
-                            .map_err(AppError::from)
-                    });
-                    self.download_rx = Some(rx);
+                    self.download_rx = Some(functora_egui::spawn_async(async move {
+                        Ok(functora_egui::download::download(data, &name).await?)
+                    }));
                 }
             });
         } else {

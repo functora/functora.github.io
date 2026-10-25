@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Textarea clipping: the inner scroll viewport must never extend past the
 //! outer border box, or text rows paint outside the borders.
 
@@ -17,7 +16,7 @@ fn border_box(output: &egui::FullOutput) -> Rect {
         })
         .collect();
     assert_eq!(borders.len(), 1, "expected one border box");
-    borders.pop().expect("border box")
+    borders.pop().unwrap_or_else(|| panic!("border box"))
 }
 
 #[test]

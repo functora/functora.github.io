@@ -45,10 +45,10 @@ impl CryptonoteApp {
                     .clicked()
                 {
                     let to_copy = url.clone();
-                    let rx = functora_egui::spawn_async(async move {
-                        functora_egui::clipboard::write(to_copy).await.map_err(AppError::from)
-                    });
-                    self.clipboard_write_rx = Some(rx);
+                    self.clipboard_write_rx = Some(functora_egui::spawn_async(async move {
+                        functora_egui::clipboard::write(to_copy).await?;
+                        Ok(())
+                    }));
                 }
                 if !url.is_empty()
                     && f.add(
@@ -64,10 +64,10 @@ impl CryptonoteApp {
                         text: Msg::SharedNoteText.render(lang),
                         url: url.clone(),
                     };
-                    let rx = functora_egui::spawn_async(async move {
-                        functora_egui::share::share(data).await.map_err(AppError::from)
-                    });
-                    self.share_rx = Some(rx);
+                    self.share_rx = Some(functora_egui::spawn_async(async move {
+                        functora_egui::share::share(data).await?;
+                        Ok(())
+                    }));
                 }
                 if pkg_ready
                     && f.add(
@@ -80,12 +80,9 @@ impl CryptonoteApp {
                 {
                     let bytes = self.temporary.external.archive_bytes();
                     if !bytes.is_empty() && self.begin_op(Stage::Download).is_some() {
-                        let rx = functora_egui::spawn_async(async move {
-                            functora_egui::download::download(bytes, "archive.cryptonote")
-                                .await
-                                .map_err(AppError::from)
-                        });
-                        self.download_rx = Some(rx);
+                        self.download_rx = Some(functora_egui::spawn_async(async move {
+                            Ok(functora_egui::download::download(bytes, "archive.cryptonote").await?)
+                        }));
                     }
                 }
                 if f.add(

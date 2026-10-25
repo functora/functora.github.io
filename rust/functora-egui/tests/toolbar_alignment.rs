@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used)]
 use egui::{Context, Pos2, RawInput, Rect, Vec2};
 use functora_egui::{Button, ButtonGroup, LucideIcon, Separator, Toolbar};
 

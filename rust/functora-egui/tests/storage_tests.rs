@@ -1,7 +1,6 @@
 //! `Storage::load`/`Storage::persist` round-trip with save/restore so the
 //! per-app storage file keeps its prior content.
 #![cfg(feature = "storage")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use functora_egui::storage::Storage;
 
@@ -58,7 +57,11 @@ fn scopes_isolate_same_key() {
     let second_loaded: Option<String> = second.load(KEY);
     assert_eq!(first_loaded.as_deref(), Some("first-value"));
     assert_eq!(second_loaded.as_deref(), Some("second-value"));
-    let first_dir = first.files_dir().expect("first files dir");
-    let second_dir = second.files_dir().expect("second files dir");
+    let first_dir = first
+        .files_dir()
+        .unwrap_or_else(|err| panic!("first files dir: {err}"));
+    let second_dir = second
+        .files_dir()
+        .unwrap_or_else(|err| panic!("second files dir: {err}"));
     assert_ne!(first_dir, second_dir);
 }

@@ -1,4 +1,6 @@
 use crate::error::Error;
+#[cfg(target_arch = "wasm32")]
+use crate::error::Missing;
 #[cfg(all(target_arch = "wasm32", feature = "web"))]
 use wasm_bindgen::JsCast;
 
@@ -48,33 +50,27 @@ pub async fn trigger_pwa_install() -> Result<PwaInstallOutcome, Error> {
     std::future::ready(()).await;
     #[cfg(all(target_arch = "wasm32", feature = "web"))]
     {
-        let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+        let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
         let val = js_sys::Reflect::get(&window, &js_sys::JsString::from("__functoraPwaDeferred"))
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         if val.is_undefined() || val.is_null() {
             return Ok(PwaInstallOutcome::NotAvailable);
         }
-        let deferred = val
-            .dyn_into::<js_sys::Object>()
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+        let deferred = val.dyn_into::<js_sys::Object>().map_err(Error::from)?;
         let prompt = js_sys::Reflect::get(&deferred, &js_sys::JsString::from("prompt"))
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let func = prompt
-            .dyn_into::<js_sys::Function>()
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
-        let _ = func
-            .call0(&deferred)
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
+        let func = prompt.dyn_into::<js_sys::Function>().map_err(Error::from)?;
+        let _ = func.call0(&deferred).map_err(Error::from)?;
         let user_choice = js_sys::Reflect::get(&deferred, &js_sys::JsString::from("userChoice"))
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         let promise = user_choice
             .dyn_into::<js_sys::Promise>()
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         let result = wasm_bindgen_futures::JsFuture::from(promise)
             .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+            .map_err(Error::from)?;
         let outcome = js_sys::Reflect::get(&result, &js_sys::JsString::from("outcome"))
-            .map_err(|e| Error::JS(format!("{e:?}")))?
+            .map_err(Error::from)?
             .as_string()
             .unwrap_or_default();
         if !js_sys::Reflect::set(
@@ -109,11 +105,8 @@ pub async fn install_hint() -> Result<InstallHint, Error> {
     std::future::ready(()).await;
     #[cfg(all(target_arch = "wasm32", feature = "web"))]
     {
-        let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-        let ua = window
-            .navigator()
-            .user_agent()
-            .map_err(|e| Error::JS(format!("{e:?}")))?;
+        let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
+        let ua = window.navigator().user_agent().map_err(Error::from)?;
         if ua.contains("iPad") || ua.contains("iPhone") || ua.contains("iPod") {
             return Ok(InstallHint::Ios);
         }

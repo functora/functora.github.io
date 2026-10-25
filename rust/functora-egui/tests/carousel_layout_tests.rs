@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Carousel layout regression: slide content must reserve its height so the
 //! code snippet below never overlaps the widget on mobile or desktop widths.
 
@@ -102,7 +101,7 @@ fn assert_no_overlap(screen_width: f32) {
             _ => None,
         })
         .find(|r| (r.height() - 200.0).abs() < 2.0 && r.width() >= 200.0)
-        .expect("200px slide rect not found");
+        .unwrap_or_else(|| panic!("200px slide rect not found"));
     let bottom = bottom_cell.get();
     let top = snippet_cell.get();
     assert!(

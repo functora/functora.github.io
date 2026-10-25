@@ -1,4 +1,8 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
+pub mod common;
+use common::collect_shape;
+#[cfg(not(target_arch = "wasm32"))]
+use common::run_async;
+
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::ArchiveSource;
 use cryptonote_egui::Attachment;
@@ -6,20 +10,9 @@ use cryptonote_egui::Attachment;
 use cryptonote_egui::crypto::CipherType;
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::{create_archive_package_async, extract_archive_package_async, load_archive_async};
-#[cfg(not(target_arch = "wasm32"))]
-use std::future::Future;
 use std::io::Write;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
-
-#[cfg(not(target_arch = "wasm32"))]
-fn run_async<T, F>(future: F) -> T
-where
-    T: Send + 'static,
-    F: Future<Output = T> + Send + 'static,
-{
-    functora_egui::spawn_async(future).recv().expect("task completes")
-}
 
 #[cfg(not(target_arch = "wasm32"))]
 fn attachments() -> Vec<Attachment> {
@@ -66,13 +59,13 @@ fn decrypt_encrypted_archive_without_note_preserves_attachments() {
         )
         .await
     })
-    .expect("package created");
+    .unwrap_or_else(|err| panic!("package created: {err}"));
     let opened = run_async(load_archive_async(
         ArchiveSource::Bytes(package),
         Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("archive opened");
+    .unwrap_or_else(|err| panic!("archive opened: {err}"));
     assert_eq!(opened.screen, Screen::Open);
     let mut app = CryptonoteApp::default();
     app.temporary.external = opened.external;
@@ -106,14 +99,14 @@ fn encrypted_archive_without_note_roundtrip() {
         )
         .await
     })
-    .expect("package created");
+    .unwrap_or_else(|err| panic!("package created: {err}"));
     let (text, files) = run_async(extract_archive_package_async(
         ArchiveSource::Bytes(package),
         "pw",
         Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("archive extracted");
+    .unwrap_or_else(|err| panic!("archive extracted: {err}"));
     assert_eq!(text, "");
     assert_files(&files);
 }
@@ -135,31 +128,16 @@ fn plain_archive_without_note_opens_view_with_files() {
         )
         .await
     })
-    .expect("package created");
+    .unwrap_or_else(|err| panic!("package created: {err}"));
     let opened = run_async(load_archive_async(
         ArchiveSource::Bytes(package),
         Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("archive opened");
+    .unwrap_or_else(|err| panic!("archive opened: {err}"));
     assert_eq!(opened.screen, Screen::View);
     assert_eq!(opened.note, "");
     assert_files(&opened.attachments);
-}
-
-fn collect_shape(shape: &egui::Shape, rendered: &mut String) {
-    match shape {
-        egui::Shape::Text(text) => {
-            rendered.push_str(text.galley.text());
-            rendered.push('\n');
-        }
-        egui::Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_shape(inner, rendered);
-            }
-        }
-        _ => {}
-    }
 }
 
 fn count_rects(shape: &egui::Shape) -> usize {
@@ -260,23 +238,33 @@ fn missing_note_entry_defaults_to_empty_text() {
         let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         writer
             .start_file("attachments/a.txt", zip::write::SimpleFileOptions::default())
-            .expect("inner entry");
-        writer.write_all(b"alpha").expect("inner bytes");
-        writer.finish().expect("inner zip").into_inner()
+            .unwrap_or_else(|err| panic!("inner entry: {err}"));
+        writer
+            .write_all(b"alpha")
+            .unwrap_or_else(|err| panic!("inner bytes: {err}"));
+        writer
+            .finish()
+            .unwrap_or_else(|err| panic!("inner zip: {err}"))
+            .into_inner()
     };
     let package = {
         let mut writer = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         writer
             .start_file("metadata.json", zip::write::SimpleFileOptions::default())
-            .expect("metadata entry");
+            .unwrap_or_else(|err| panic!("metadata entry: {err}"));
         writer
             .write_all(br#"{"cipher":null,"kdf":"Argon2id","nonce":[],"salt":[]}"#)
-            .expect("metadata bytes");
+            .unwrap_or_else(|err| panic!("metadata bytes: {err}"));
         writer
             .start_file("payload.cpt", zip::write::SimpleFileOptions::default())
-            .expect("payload entry");
-        writer.write_all(&inner).expect("payload bytes");
-        writer.finish().expect("outer zip").into_inner()
+            .unwrap_or_else(|err| panic!("payload entry: {err}"));
+        writer
+            .write_all(&inner)
+            .unwrap_or_else(|err| panic!("payload bytes: {err}"));
+        writer
+            .finish()
+            .unwrap_or_else(|err| panic!("outer zip: {err}"))
+            .into_inner()
     };
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -286,7 +274,7 @@ fn missing_note_entry_defaults_to_empty_text() {
             std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
             |_| {},
         ))
-        .expect("archive extracted");
+        .unwrap_or_else(|err| panic!("archive extracted: {err}"));
         assert_eq!(text, "");
         assert_eq!(files.len(), 1);
         assert_eq!(files[0].name, "a.txt");

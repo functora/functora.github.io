@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use std::sync::Arc;
 
 use functora_core::Error;
@@ -81,12 +79,18 @@ fn io_error_from_io_error_chains_into_wrapped_variant() {
 
 #[test]
 fn json_errors_are_equal_only_when_sharing_an_instance() {
-    let e = Arc::new(serde_json::from_str::<serde_json::Value>("{").unwrap_err());
+    let e = Arc::new(
+        serde_json::from_str::<serde_json::Value>("{")
+            .err()
+            .unwrap_or_else(|| panic!("malformed json must fail to parse")),
+    );
     let a = Error::Json(JsonError(e.clone()));
     let b = Error::Json(JsonError(e));
     assert_eq!(a, b);
     let c = Error::Json(JsonError(Arc::new(
-        serde_json::from_str::<serde_json::Value>("{").unwrap_err(),
+        serde_json::from_str::<serde_json::Value>("{")
+            .err()
+            .unwrap_or_else(|| panic!("malformed json must fail to parse")),
     )));
     assert_ne!(a, c);
 }
@@ -94,13 +98,21 @@ fn json_errors_are_equal_only_when_sharing_an_instance() {
 #[test]
 fn json_errors_preserve_class_and_position() {
     let a = Error::Json(JsonError::from(
-        serde_json::from_str::<serde_json::Value>("x").unwrap_err(),
+        serde_json::from_str::<serde_json::Value>("x")
+            .err()
+            .unwrap_or_else(|| panic!("malformed json must fail to parse")),
     ));
-    let raw_a = serde_json::from_str::<serde_json::Value>("x").unwrap_err();
+    let raw_a = serde_json::from_str::<serde_json::Value>("x")
+        .err()
+        .unwrap_or_else(|| panic!("malformed json must fail to parse"));
     let b = Error::Json(JsonError::from(
-        serde_json::from_str::<serde_json::Value>("{").unwrap_err(),
+        serde_json::from_str::<serde_json::Value>("{")
+            .err()
+            .unwrap_or_else(|| panic!("malformed json must fail to parse")),
     ));
-    let raw_b = serde_json::from_str::<serde_json::Value>("{").unwrap_err();
+    let raw_b = serde_json::from_str::<serde_json::Value>("{")
+        .err()
+        .unwrap_or_else(|| panic!("malformed json must fail to parse"));
     assert_eq!(
         json_props(&a),
         (raw_a.classify(), raw_a.line(), raw_a.column())
@@ -115,7 +127,9 @@ fn json_errors_preserve_class_and_position() {
 #[test]
 fn json_errors_are_unequal_to_other_variants() {
     let json = Error::Json(JsonError::from(
-        serde_json::from_str::<serde_json::Value>("{").unwrap_err(),
+        serde_json::from_str::<serde_json::Value>("{")
+            .err()
+            .unwrap_or_else(|| panic!("malformed json must fail to parse")),
     ));
     let b64 = Error::Base64(base64::DecodeError::InvalidLength(3));
     assert_ne!(std::mem::discriminant(&json), std::mem::discriminant(&b64));
@@ -187,4 +201,110 @@ fn worker_stopped_unit_error() {
         a.to_string(),
         "Background task error: Background task stopped unexpectedly"
     );
+}
+
+#[test]
+fn missing_objects_render_in_every_supported_language() {
+    use functora_core::error::Missing;
+    use functora_core::i18n::{I18N, SUPPORTED_LANGUAGES};
+
+    let objects = [
+        Missing::Window,
+        Missing::Document,
+        Missing::Body,
+        Missing::VideoElement,
+        Missing::Canvas,
+        Missing::Context2d,
+        Missing::LocalStorage,
+        Missing::Anchor,
+        Missing::Input,
+        Missing::FileEntry,
+        Missing::ClipboardText,
+        Missing::DesktopSession,
+        Missing::AndroidApp,
+        Missing::DataDir,
+    ];
+    for object in objects {
+        for lang in SUPPORTED_LANGUAGES.iter().copied() {
+            let rendered = Error::Missing(object).render(lang);
+            assert!(!rendered.is_empty(), "{object:?} rendered empty text");
+        }
+    }
+}
+
+#[test]
+fn platform_failures_never_render_as_javascript_evaluation_errors() {
+    use functora_core::error::{Capability, ClipboardError, Missing};
+    use functora_core::i18n::{I18N, SUPPORTED_LANGUAGES};
+
+    let failures = [
+        Error::Missing(Missing::Window),
+        Error::CapabilityDisabled(Capability::Clipboard),
+        Error::CapabilityDisabled(Capability::Share),
+        Error::CapabilityDisabled(Capability::Save),
+        Error::Clipboard(ClipboardError::Unavailable),
+        Error::Clipboard(ClipboardError::Busy),
+        Error::Clipboard(ClipboardError::ContentUnavailable),
+        Error::Clipboard(ClipboardError::ConversionFailed),
+        Error::Clipboard(ClipboardError::Unknown("detail".into())),
+        Error::FilePickerTimedOut,
+        Error::FilePickerFailed,
+        Error::SaveCancelled,
+        Error::OpenUrlFailed {
+            url: "https://example.com".into(),
+        },
+        Error::OpenUrlTimedOut {
+            url: "https://example.com".into(),
+        },
+        Error::Worker(WorkerStopped),
+    ];
+    for failure in &failures {
+        for lang in SUPPORTED_LANGUAGES.iter().copied() {
+            let rendered = failure.render(lang).to_lowercase();
+            assert!(
+                !rendered.contains("javascript"),
+                "mislabelled as a JS evaluation error: {rendered}"
+            );
+        }
+    }
+}
+
+#[test]
+fn platform_failures_render_precise_messages() {
+    use functora_core::error::{Capability, ClipboardError, Missing};
+    use functora_core::i18n::I18N;
+
+    assert_eq!(
+        Error::Missing(Missing::Window).render_eng(),
+        "Required object unavailable: window"
+    );
+    assert_eq!(
+        Error::Missing(Missing::DataDir).render_spa(),
+        "Objeto requerido no disponible: data directory"
+    );
+    assert_eq!(
+        Error::Missing(Missing::AndroidApp).render_rus(),
+        "Требуемый объект недоступен: Android application"
+    );
+    assert_eq!(
+        Error::CapabilityDisabled(Capability::Save).render_eng(),
+        "save is unavailable: web feature disabled"
+    );
+    assert_eq!(
+        Error::Clipboard(ClipboardError::Unknown("detail".to_string())).render_eng(),
+        "Clipboard error: detail"
+    );
+    assert_eq!(
+        Error::OpenUrlTimedOut {
+            url: "https://example.com".to_string(),
+        }
+        .render_eng(),
+        "xdg-open timed out for https://example.com"
+    );
+    assert_eq!(Error::SaveCancelled.to_string(), "Save was cancelled");
+    assert_eq!(
+        Error::FilePickerTimedOut.to_string(),
+        "File picker timed out"
+    );
+    assert_eq!(Error::FilePickerFailed.to_string(), "File picker failed");
 }

@@ -61,7 +61,7 @@ impl CryptonoteApp {
                     progress: load_progress,
                 } = start;
                 let load_cancel = cancel.clone();
-                let rx = functora_egui::spawn_async(async move {
+                self.archive_rx = Some(functora_egui::spawn_async(async move {
                     let files =
                         functora_egui::files::pick_files_with_shared_progress(false, Some(slot), Some(&cancel)).await?;
                     let bytes = files
@@ -71,8 +71,7 @@ impl CryptonoteApp {
                         .map(|(_, data)| data)?;
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
                     crate::hooks::load_archive_async(source, load_cancel, load_progress).await
-                });
-                self.archive_rx = Some(rx);
+                }));
             }
         });
     }

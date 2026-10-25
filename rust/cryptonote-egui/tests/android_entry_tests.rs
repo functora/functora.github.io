@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 const LIB_SRC: &str = include_str!("../src/lib.rs");
 const MAIN_SRC: &str = include_str!("../src/main.rs");
 

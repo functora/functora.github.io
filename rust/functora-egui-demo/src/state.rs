@@ -1,6 +1,6 @@
 use crate::catalog::{
-    Align, BlendMode, ComponentId, Framework, Fruit, Month, NavSection, ProfileTab, RadioOption,
-    SettingsTab, Swatch, Tool, Year,
+    Align, BlendMode, ButtonGroupOption, ComponentId, Framework, Fruit, Month, NavSection,
+    ProfileTab, RadioOption, SettingsTab, Swatch, Tool, Year,
 };
 use crate::route::AppRoute;
 use functora_egui::ToastState;
@@ -77,6 +77,22 @@ pub struct PlatformState {
     pub platform_info: String,
     pub md_source: String,
     pub md_cache: functora_egui::CommonMarkCache,
+}
+
+impl PlatformState {
+    pub(crate) fn has_pending_promises(&self) -> bool {
+        self.clipboard_rx.is_some()
+            || self.clipboard_write_rx.is_some()
+            || self.share_rx.is_some()
+            || self.pick_rx.is_some()
+            || self.download_rx.is_some()
+            || self.pwa_rx.is_some()
+            || self.camera_rx.is_some()
+            || self.thumbnail_rx.is_some()
+            || self.zip_rx.is_some()
+            || self.crypto_rx.is_some()
+            || self.worker_rx.is_some()
+    }
 }
 
 impl Default for PlatformState {
@@ -233,7 +249,7 @@ impl Default for FormState {
 #[derive(Default)]
 pub struct DemoState {
     pub button_selected: bool,
-    pub button_group_selected: usize,
+    pub button_group_selected: ButtonGroupOption,
     pub navbar_collapsed: bool,
     pub blocking_overlay_open: bool,
 }

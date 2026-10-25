@@ -5,7 +5,7 @@ use crate::error::AppError;
 use crate::messages::Msg;
 use crate::progress::{Job, Stage};
 use crate::route::Screen;
-use crate::state::{External, ExternalNote, OpenedArchive, TemporaryState};
+use crate::state::{CipherChoice, External, ExternalNote, OpenedArchive, TemporaryState};
 use crate::storage::APP_ATTRS;
 use functora_egui::Routable;
 use functora_tagged::InfallibleInto;
@@ -142,7 +142,7 @@ pub fn handle_open_url(url: &str, state: &mut TemporaryState) -> Result<Screen, 
         }
         NoteData::PlainText(text) => {
             state.note = text;
-            state.cipher = None;
+            state.cipher = CipherChoice::Plain;
             state.external = External::Nothing;
             Ok(Screen::View)
         }

@@ -1,5 +1,4 @@
 use crate::app::{CryptonoteApp, OpStart};
-use crate::error::AppError;
 use crate::hooks::share_error;
 use crate::messages::Msg;
 use crate::progress::Stage;
@@ -22,11 +21,11 @@ impl CryptonoteApp {
             (CipherChoice::Aes256Gcm, BaseMsg::CipherAesLabel.render(lang)),
             (CipherChoice::ChaCha20Poly1305, BaseMsg::CipherChaChaLabel.render(lang)),
         ];
-        let mut choice = CipherChoice::from(self.temporary.cipher);
+        let mut choice = self.temporary.cipher;
         _ = SelectValueLabeled::new(&mut choice, &options).show(ui);
-        self.temporary.cipher = choice.into();
+        self.temporary.cipher = choice;
         let () = ui.add_space(8.0);
-        if self.temporary.cipher.is_some() {
+        if self.temporary.cipher != CipherChoice::Plain {
             _ = Label::new(BaseMsg::Password.render(lang)).show(ui);
             let () = ui.add_space(4.0);
             let resp = InputPasteClear::new(&mut self.temporary.password)
@@ -57,18 +56,17 @@ impl CryptonoteApp {
             .inner
             .clicked()
             {
-                if let Some(err) = share_error(self.temporary.cipher, &self.temporary.password) {
+                if let Some(err) = share_error(self.temporary.cipher.into(), &self.temporary.password) {
                     self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else {
                     let note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
-                    let cipher = self.temporary.cipher;
+                    let cipher = self.temporary.cipher.into();
                     let attachments = self.temporary.attachments.clone();
                     if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
-                        let rx = functora_egui::spawn_async(async move {
+                        self.generate_rx = Some(functora_egui::spawn_async(async move {
                             crate::hooks::build_external(&note, &password, cipher, &attachments, cancel, progress).await
-                        });
-                        self.generate_rx = Some(rx);
+                        }));
                     }
                 }
             }
@@ -82,12 +80,9 @@ impl CryptonoteApp {
                 && let Some(start) = self.begin_op(Stage::Attach)
             {
                 let OpStart { cancel, slot, .. } = start;
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::files::pick_files_with_shared_progress(true, Some(slot), Some(&cancel))
-                        .await
-                        .map_err(AppError::from)
-                });
-                self.pick_rx = Some(rx);
+                self.pick_rx = Some(functora_egui::spawn_async(async move {
+                    Ok(functora_egui::files::pick_files_with_shared_progress(true, Some(slot), Some(&cancel)).await?)
+                }));
             }
             if f.add(
                 Button::new(Msg::ViewButton.render(lang))

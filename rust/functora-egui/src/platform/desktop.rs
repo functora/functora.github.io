@@ -1,24 +1,20 @@
 use crate::camera::FrameData;
-use crate::error::Error;
+#[cfg(feature = "clipboard")]
+use crate::clipboard::clipboard_error;
+use crate::error::{Error, Missing};
 
 #[cfg(feature = "clipboard")]
 pub async fn clipboard_read() -> Result<String, Error> {
     std::future::ready(()).await;
-    let mut clipboard =
-        arboard::Clipboard::new().map_err(|e| Error::JS(format!("Clipboard init: {e}")))?;
-    clipboard
-        .get_text()
-        .map_err(|e| Error::JS(format!("Clipboard read: {e}")))
+    let mut clipboard = arboard::Clipboard::new().map_err(clipboard_error)?;
+    clipboard.get_text().map_err(clipboard_error)
 }
 
 #[cfg(feature = "clipboard")]
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
     std::future::ready(()).await;
-    let mut clipboard =
-        arboard::Clipboard::new().map_err(|e| Error::JS(format!("Clipboard init: {e}")))?;
-    clipboard
-        .set_text(text)
-        .map_err(|e| Error::JS(format!("Clipboard write: {e}")))
+    let mut clipboard = arboard::Clipboard::new().map_err(clipboard_error)?;
+    clipboard.set_text(text).map_err(clipboard_error)
 }
 
 pub use super::ShareData;
@@ -33,7 +29,7 @@ fn has_desktop_session() -> bool {
 pub async fn open_url(url: String) -> Result<(), Error> {
     std::future::ready(()).await;
     if !has_desktop_session() {
-        return Err(Error::JS(format!("no desktop session to open {url}")));
+        return Err(Error::Missing(Missing::DesktopSession));
     }
     open_url_wait(&url)
 }
@@ -61,11 +57,15 @@ fn open_url_wait(url: &str) -> Result<(), Error> {
         status
             .success()
             .then_some(())
-            .ok_or_else(|| Error::JS(format!("xdg-open failed for {url}")))
+            .ok_or_else(|| Error::OpenUrlFailed {
+                url: url.to_string(),
+            })
     } else {
         let _kill_outcome = child.kill();
         let _wait_outcome = child.wait();
-        Err(Error::JS(format!("xdg-open timed out for {url}")))
+        Err(Error::OpenUrlTimedOut {
+            url: url.to_string(),
+        })
     }
 }
 
@@ -89,11 +89,8 @@ pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
         .set_file_name(filename)
         .save_file()
         .await
-        .ok_or_else(|| Error::JS("Save cancelled".into()))?;
-    handle
-        .write(&data)
-        .await
-        .map_err(|e| Error::JS(format!("{e}")))?;
+        .ok_or(Error::SaveCancelled)?;
+    handle.write(&data).await.map_err(Error::from)?;
     Ok(filename.to_string())
 }
 

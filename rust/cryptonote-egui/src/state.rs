@@ -89,7 +89,7 @@ impl External {
 pub struct TemporaryState {
     pub note: String,
     pub password: String,
-    pub cipher: Option<CipherType>,
+    pub cipher: CipherChoice,
     pub attachments: Vec<functora_egui::files::Attachment>,
     pub screen: crate::route::Screen,
     pub action: ActionMode,
@@ -104,7 +104,7 @@ impl Default for TemporaryState {
         Self {
             note: String::new(),
             password: String::new(),
-            cipher: Some(CipherType::Aes256Gcm),
+            cipher: CipherChoice::Aes256Gcm,
             attachments: Vec::new(),
             screen: crate::route::Screen::default(),
             action: ActionMode::Create,

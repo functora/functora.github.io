@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Event, Key, Modifiers};
 #[cfg(all(
     feature = "clipboard",
@@ -88,9 +86,10 @@ fn rgba_to_png_encodes_decodable_png() {
     let rgba = [
         255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 0, 255,
     ];
-    let png = rgba_to_png(2, 2, &rgba).expect("encode must succeed");
+    let png = rgba_to_png(2, 2, &rgba).unwrap_or_else(|err| panic!("encode must succeed: {err}"));
     assert_eq!(&png[..8], &[137, 80, 78, 71, 13, 10, 26, 10]);
-    let decoded = image::load_from_memory(&png).expect("png must decode");
+    let decoded =
+        image::load_from_memory(&png).unwrap_or_else(|err| panic!("png must decode: {err}"));
     assert_eq!((decoded.width(), decoded.height()), (2, 2));
 }
 
@@ -101,7 +100,9 @@ fn rgba_to_png_encodes_decodable_png() {
 ))]
 #[test]
 fn rgba_to_png_rejects_mismatched_buffer() {
-    let err = rgba_to_png(2, 2, &[0u8; 8]).expect_err("short buffer must fail");
+    let err = rgba_to_png(2, 2, &[0u8; 8])
+        .err()
+        .unwrap_or_else(|| panic!("short buffer must fail"));
     assert!(!err.to_string().is_empty());
 }
 

@@ -83,6 +83,10 @@ egui-winit = { path = "../egui-winit" }
 [dev-dependencies]
 zip = { version = "2", default-features = false, features = ["deflate"] }
 
+# proptest cannot build for wasm32, so property tests are host-only.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+proptest = "1.11.0"
+
 [profile.dev.package."*"]
 debug = "line-tables-only"
 

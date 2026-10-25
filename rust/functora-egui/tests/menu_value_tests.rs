@@ -1,8 +1,6 @@
 //! Typed menu/command widgets bind values directly instead of blind
 //! `usize` indexes: entries pair each value with its label.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
 use std::cell::Cell;
 use std::rc::Rc;
@@ -116,7 +114,7 @@ fn dropdown_menu_value_click_returns_picked_value() {
     let _ = app.step(vec![], &mut body);
     let center = trigger_rect
         .get()
-        .expect("trigger rect must be recorded")
+        .unwrap_or_else(|| panic!("trigger rect must be recorded"))
         .center();
     click_at(&mut app, center, &mut body);
     let open = app.step(vec![], &mut body);
@@ -163,7 +161,7 @@ fn context_menu_value_click_returns_picked_value() {
     let _ = app.step(vec![], &mut body);
     let center = target_rect
         .get()
-        .expect("target rect must be recorded")
+        .unwrap_or_else(|| panic!("target rect must be recorded"))
         .center();
     let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
     let _ = app.step(

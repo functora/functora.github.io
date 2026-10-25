@@ -1,5 +1,5 @@
-use crate::camera::FrameData;
-use crate::error::Error;
+use crate::camera::{CameraStartStatus, FrameData};
+use crate::error::{Error, Missing};
 use jni::{
     JavaVM,
     objects::{JByteArray, JObject, JString, JValue},
@@ -39,9 +39,7 @@ where
     F: FnOnce(&mut jni::JNIEnv, &JObject) -> Result<T, jni::errors::Error>,
 {
     let guard = APP.lock().unwrap_or_else(PoisonError::into_inner);
-    let app = guard
-        .as_ref()
-        .ok_or_else(|| Error::JS("No AndroidApp".into()))?;
+    let app = guard.as_ref().ok_or(Error::Missing(Missing::AndroidApp))?;
     let vm = unsafe { JavaVM::from_raw(app.vm_as_ptr().cast()) }?;
     let mut env = vm.attach_current_thread()?;
     let activity: JObject = unsafe { JObject::from_raw(app.activity_as_ptr().cast()) };
@@ -197,13 +195,6 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
         )?;
         Ok(())
     })
-}
-
-#[allow(clippy::needless_pass_by_value)]
-pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
-    std::future::ready(()).await;
-    save_to_downloads(&data, filename, |_, _| {})?;
-    Ok(filename.to_string())
 }
 
 pub fn save_to_downloads(
@@ -435,14 +426,14 @@ pub(crate) fn start_camera_blocking() -> Result<(), Error> {
             )?;
             value.i()
         })?;
-        match status {
-            1 => break,
-            -1 => {
+        match CameraStartStatus::from(status) {
+            CameraStartStatus::Running => break,
+            CameraStartStatus::Failed => {
                 return Err(Error::CameraNotAvailable(
                     "Android camera failed to start".into(),
                 ));
             }
-            _ => {
+            CameraStartStatus::Pending => {
                 if std::time::Instant::now() > deadline {
                     if !permission_granted()? {
                         return Err(Error::CameraPermissionDenied(

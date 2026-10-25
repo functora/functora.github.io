@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use cryptonote_egui::app::CryptonoteApp;
 use cryptonote_egui::state::ActionMode;
 use functora_egui::paste_image::{self, PasteImage};

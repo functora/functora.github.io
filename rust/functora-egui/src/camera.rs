@@ -30,6 +30,24 @@ impl FrameData {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CameraStartStatus {
+    Running,
+    Pending,
+    Failed,
+}
+
+impl From<i32> for CameraStartStatus {
+    fn from(code: i32) -> Self {
+        match code {
+            1 => Self::Running,
+            -1 => Self::Failed,
+            _ => Self::Pending,
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
 fn camera_error(msg: String) -> Error {
     if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
         Error::CameraPermissionDenied(msg)
@@ -38,13 +56,17 @@ fn camera_error(msg: String) -> Error {
     }
 }
 
-/// Maps backend JS failures to camera errors. Backends that already report
-/// `CameraNotAvailable`/`CameraPermissionDenied` pass through unchanged.
-fn map_camera_error(error: Error) -> Error {
-    if let Error::JS(msg) = error {
-        camera_error(msg)
-    } else {
-        error
+/// Maps low-level backend failures onto the precise public camera variants.
+/// Backends that already report a camera variant pass through unchanged.
+pub(crate) fn map_camera_error(error: Error) -> Error {
+    match error {
+        #[cfg(target_arch = "wasm32")]
+        Error::Js(e) => camera_error(e.to_string()),
+        Error::Missing(m) => Error::CameraNotAvailable(m.to_string()),
+        Error::CameraNotAvailable(_) | Error::CameraPermissionDenied(_) | Error::CameraStalled => {
+            error
+        }
+        other => other,
     }
 }
 

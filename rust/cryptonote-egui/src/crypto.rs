@@ -7,7 +7,7 @@ pub use functora_core::crypto::{CipherType, EncryptedNote, KEY_SIZE, Kdf, STREAM
 pub const AAD_PREFIX: &[u8] = b"cryptonote.v1";
 
 #[must_use]
-pub fn aad(cipher: CipherType, kdf: Kdf) -> Vec<u8> {
+fn aad(cipher: CipherType, kdf: Kdf) -> Vec<u8> {
     functora_core::package::aad(AAD_PREFIX, cipher, kdf)
 }
 

@@ -6,8 +6,6 @@
 //! rect on every content width, including subpixel jitter from translated
 //! labels).
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
@@ -109,7 +107,8 @@ fn divider_sits_on_sidebar_edge_without_fill_stripe() {
         .collect(),
     );
     for labels in &cases {
-        let (left, right, clip_min_x) = divider_geometry(labels).expect("divider must be painted");
+        let (left, right, clip_min_x) =
+            divider_geometry(labels).unwrap_or_else(|| panic!("divider must be painted"));
         assert!(
             left - clip_min_x >= -0.1,
             "divider must stay inside the clip rect, got left {left:.2} before clip {clip_min_x:.2} for {labels:?}"
@@ -151,8 +150,8 @@ fn divider_snaps_to_physical_pixels_across_widths() {
     ];
     for labels in &label_sets {
         for width in widths {
-            let (left, right, clip_min_x, ppp) =
-                divider_geometry_on_width(labels, width).expect("divider must be painted");
+            let (left, right, clip_min_x, ppp) = divider_geometry_on_width(labels, width)
+                .unwrap_or_else(|| panic!("divider must be painted"));
             assert!(
                 left - clip_min_x >= -0.1,
                 "divider must stay inside the clip rect, got left {left:.2} before clip {clip_min_x:.2} for {labels:?} at {width}"

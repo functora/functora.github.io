@@ -1,8 +1,6 @@
 //! Shell sidebar init: the shell owns the responsive collapsed default,
 //! so every app starts collapsed on mobile and expanded on desktop.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

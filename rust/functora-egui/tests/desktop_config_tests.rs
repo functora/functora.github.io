@@ -1,18 +1,23 @@
 #![cfg(any(feature = "build", feature = "desktop"))]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
+#![cfg(not(target_arch = "wasm32"))]
 use functora_egui::desktop::config::{iso_date_from_days_since_epoch, release_date};
 use functora_egui::desktop::load_desktop_config;
+use proptest::prelude::*;
+use proptest::test_runner::RngSeed;
 
 fn write_manifest(body: &str) -> tempfile::NamedTempFile {
-    let file = tempfile::NamedTempFile::new().expect("temp manifest");
-    std::fs::write(file.path(), body).expect("seed manifest");
+    let file = tempfile::NamedTempFile::new().unwrap_or_else(|err| panic!("temp manifest: {err}"));
+    std::fs::write(file.path(), body).unwrap_or_else(|err| panic!("seed manifest: {err}"));
     file
 }
 
 #[test]
 fn defaults_derive_from_package() {
     let file = write_manifest("[package]\nname = \"my-app\"\nversion = \"1.2.3\"\n");
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.app_id, "io.functora.my_app");
     assert_eq!(cfg.title, "My App");
@@ -34,7 +39,10 @@ fn web_title_is_fallback_before_pkg_name() {
     let file = write_manifest(
         "[package]\nname = \"my-app\"\nversion = \"0.1.0\"\n[package.metadata.functora-egui-web]\ntitle = \"Web Title\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.title, "Web Title");
 }
@@ -44,7 +52,10 @@ fn explicit_metadata_overrides_everything() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"2.0.0\"\ndescription = \"pkg desc\"\n[package.metadata.functora-egui-desktop]\napp_id = \"io.example.Notes\"\ntitle = \"Notes\"\ncomment = \"Take notes\"\ncategories = \"Office;\"\nmime_types = \"application/x-notes;\"\nschemes = \"notes;\"\nhomepage = \"https://example.com/notes\"\ndeveloper = \"Example Org\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.app_id, "io.example.Notes");
     assert_eq!(cfg.title, "Notes");
@@ -64,7 +75,10 @@ fn comment_falls_back_to_description() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\ndescription = \"Pkg description\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.comment, "Pkg description");
 }
@@ -74,7 +88,10 @@ fn description_falls_back_to_comment() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\n[package.metadata.functora-egui-desktop]\ncomment = \"Short pitch\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.description, "Short pitch");
 }
@@ -84,7 +101,10 @@ fn description_and_developer_id_can_be_overridden() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\n[package.metadata.functora-egui-desktop]\ndescription = \"Long pitch\"\ndeveloper_id = \"example.org\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.description, "Long pitch");
     assert_eq!(cfg.developer_id, "example.org");
@@ -95,7 +115,10 @@ fn homepage_prefers_homepage_over_repository() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\nhomepage = \"https://example.com/home\"\nrepository = \"https://example.com/repo\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.homepage, "https://example.com/home");
 }
@@ -105,7 +128,10 @@ fn homepage_falls_back_to_repository() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\nrepository = \"https://example.com/repo\"\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.homepage, "https://example.com/repo");
 }
@@ -115,7 +141,10 @@ fn developer_strips_email_from_first_author() {
     let file = write_manifest(
         "[package]\nname = \"pkg\"\nversion = \"0.1.0\"\nauthors = [\"Example Org <team@example.com>\"]\n",
     );
-    let path = file.path().to_str().expect("manifest path");
+    let path = file
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("manifest path"));
     let cfg = load_desktop_config(path);
     assert_eq!(cfg.developer, "Example Org");
 }
@@ -142,4 +171,40 @@ fn release_date_is_iso_formatted() {
             .all(|(_, b)| b.is_ascii_digit()),
         "unexpected date: {date}"
     );
+}
+
+fn is_leap(year: u32) -> bool {
+    (year.is_multiple_of(4) && !year.is_multiple_of(100)) || year.is_multiple_of(400)
+}
+
+fn days_in_month(year: u32, month: u32) -> u32 {
+    match month {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 if is_leap(year) => 29,
+        2 => 28,
+        _ => 0,
+    }
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig {
+        rng_seed: RngSeed::Fixed(0x00C0_FFEE),
+        ..ProptestConfig::default()
+    })]
+
+    #[test]
+    fn iso_date_is_always_a_valid_calendar_date(days in 0..3_000_000_u64) {
+        let rendered = iso_date_from_days_since_epoch(days);
+        let mut parts = rendered.split('-');
+        let year: u32 = parts.next().unwrap_or_else(|| panic!("year field")).parse().unwrap_or_else(|err| panic!("year digits: {err}"));
+        let month: u32 = parts.next().unwrap_or_else(|| panic!("month field")).parse().unwrap_or_else(|err| panic!("month digits: {err}"));
+        let day: u32 = parts.next().unwrap_or_else(|| panic!("day field")).parse().unwrap_or_else(|err| panic!("day digits: {err}"));
+        prop_assert!(parts.next().is_none(), "date must have exactly 3 fields");
+        prop_assert!((1..=12).contains(&month), "month {month} out of range");
+        prop_assert!(
+            (1..=days_in_month(year, month)).contains(&day),
+            "day {day} out of range for {year}-{month:02}"
+        );
+    }
 }

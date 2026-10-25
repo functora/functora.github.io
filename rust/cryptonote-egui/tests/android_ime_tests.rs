@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 const APP_SRC: &str = include_str!("../src/app.rs");
 
 #[test]

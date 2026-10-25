@@ -1,4 +1,9 @@
-pub use functora_core::error::{Error, IoError, JsonError, WorkerStopped};
+pub use functora_core::error::{
+    Capability, ClipboardError, Error, IoError, JsonError, Missing, WorkerStopped,
+};
+
+#[cfg(target_arch = "wasm32")]
+pub use functora_core::error::JsError;
 
 #[cfg(target_os = "android")]
 pub use functora_core::error::JniError;

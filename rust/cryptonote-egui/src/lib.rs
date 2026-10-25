@@ -33,11 +33,6 @@ pub use state::{ActionMode, CipherChoice, External, ExternalNote, TemporaryState
 pub use storage::{APP_ATTRS, PersistentState};
 pub use worker::*;
 
-pub mod qr_decode {
-    pub use functora_egui::qr::*;
-}
-pub use qr_decode::*;
-
 #[cfg(target_os = "android")]
 pub(crate) mod android {
     use android_activity::AndroidApp;

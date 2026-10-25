@@ -4,6 +4,8 @@ pub use functora_core::storage::{
 };
 
 use crate::error::Error;
+#[cfg(not(target_os = "android"))]
+use crate::error::Missing;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use std::path::PathBuf;
@@ -31,7 +33,7 @@ impl Storage {
 
     #[cfg(all(not(target_os = "android"), target_arch = "wasm32"))]
     pub fn files_dir(&self) -> Result<PathBuf, Error> {
-        Err(Error::JS("files_dir not available on wasm".into()))
+        Err(Error::Missing(Missing::DataDir))
     }
 
     #[cfg(all(not(target_os = "android"), not(target_arch = "wasm32")))]
@@ -90,7 +92,7 @@ pub fn files_dir_for(_app: &str) -> Result<PathBuf, Error> {
 
 #[cfg(all(not(target_os = "android"), target_arch = "wasm32"))]
 pub fn files_dir_for(_app: &str) -> Result<PathBuf, Error> {
-    Err(Error::JS("files_dir not available on wasm".into()))
+    Err(Error::Missing(Missing::DataDir))
 }
 
 #[cfg(all(not(target_os = "android"), not(target_arch = "wasm32")))]
@@ -102,7 +104,7 @@ pub fn files_dir_for(app: &str) -> Result<PathBuf, Error> {
 pub fn app_data_dir(app: &str) -> Result<PathBuf, Error> {
     directories::ProjectDirs::from("io", "functora", app)
         .map(|d| d.data_dir().to_path_buf())
-        .ok_or_else(|| Error::JS("No data dir".into()))
+        .ok_or(Error::Missing(Missing::DataDir))
 }
 
 #[cfg(all(not(target_os = "android"), not(target_arch = "wasm32")))]
@@ -198,41 +200,5 @@ where
     #[must_use]
     pub fn into_inner(self) -> T {
         self.value
-    }
-}
-
-#[cfg(all(
-    any(target_arch = "wasm32", target_os = "android"),
-    any(feature = "web", feature = "android")
-))]
-#[must_use]
-pub fn load_from_eframe<T: DeserializeOwned>(
-    storage: Option<&dyn eframe::Storage>,
-    app: &'static str,
-    key: &str,
-) -> Option<T> {
-    storage
-        .and_then(|s| s.get_string(key))
-        .and_then(|raw| {
-            serde_json::from_str(&raw)
-                .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
-                .ok()
-        })
-        .or_else(|| Storage::new(app).load(key))
-}
-
-#[cfg(all(
-    any(target_arch = "wasm32", target_os = "android"),
-    any(feature = "web", feature = "android")
-))]
-pub fn save_to_eframe<T: Serialize>(
-    storage: &mut dyn eframe::Storage,
-    app: &'static str,
-    key: &str,
-    value: &T,
-) {
-    if let Ok(json) = serde_json::to_string(value) {
-        storage.set_string(key, json.clone());
-        Storage::new(app).persist(key, value);
     }
 }

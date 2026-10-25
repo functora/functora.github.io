@@ -6,39 +6,8 @@ use cryptonote_egui::app::CryptonoteApp;
 use functora_egui::i18n::Language;
 use functora_egui::theme_extra::Theme;
 
-fn collect_shape(shape: &egui::Shape, rendered: &mut String) {
-    match shape {
-        egui::Shape::Text(text) => {
-            rendered.push_str(text.galley.text());
-            rendered.push('\n');
-        }
-        egui::Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_shape(inner, rendered);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn run_app(app: &mut CryptonoteApp) -> String {
-    use egui::{Pos2, RawInput, Rect, Vec2};
-    let ctx = egui::Context::default();
-    let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280.0, 800.0))),
-        ..Default::default()
-    };
-    let mut frame = eframe::Frame::_new_kittest();
-    let mut output = ctx.run_ui(raw, |ui| {
-        eframe::App::ui(app, ui, &mut frame);
-    });
-    output.textures_delta.clear();
-    let mut rendered = String::new();
-    for clipped in &output.shapes {
-        collect_shape(&clipped.shape, &mut rendered);
-    }
-    rendered
-}
+pub mod common;
+use common::run_app;
 
 #[test]
 fn idle_frame_leaves_persistent_state_unchanged() {

@@ -1,5 +1,5 @@
 use crate::camera::FrameData;
-use crate::error::Error;
+use crate::error::{Error, Missing};
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static PASTE_LISTENER_INSTALLED: AtomicBool = AtomicBool::new(false);
@@ -88,27 +88,27 @@ fn image_ext_for_mime(mime: &str) -> Option<&'static str> {
 }
 
 pub async fn clipboard_read() -> Result<String, Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let navigator = window.navigator();
     let clipboard = navigator.clipboard();
     let promise = clipboard.read_text();
     let result = wasm_bindgen_futures::JsFuture::from(promise)
         .await
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     result
         .as_string()
-        .ok_or_else(|| Error::JS("Clipboard read: not a string".into()))
+        .ok_or_else(|| Error::Missing(Missing::ClipboardText))
 }
 
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let navigator = window.navigator();
     let clipboard = navigator.clipboard();
     let promise = clipboard.write_text(&text);
     drop(
         wasm_bindgen_futures::JsFuture::from(promise)
             .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
+            .map_err(Error::from)?,
     );
     Ok(())
 }
@@ -116,7 +116,7 @@ pub async fn clipboard_write(text: String) -> Result<(), Error> {
 pub use super::ShareData;
 
 pub async fn share(data: ShareData) -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let navigator = window.navigator();
     let share_data = web_sys::ShareData::new();
     share_data.set_title(&data.title);
@@ -126,7 +126,7 @@ pub async fn share(data: ShareData) -> Result<(), Error> {
     drop(
         wasm_bindgen_futures::JsFuture::from(promise)
             .await
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
+            .map_err(Error::from)?,
     );
     Ok(())
 }
@@ -135,10 +135,10 @@ pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     use wasm_bindgen::JsCast as _;
     const REVOKE_DELAY_MS: i32 = 60_000;
     std::future::ready(()).await;
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let document = window
         .document()
-        .ok_or_else(|| Error::JS("No document".into()))?;
+        .ok_or_else(|| Error::Missing(Missing::Document))?;
     let mime = mime_for(filename);
     let array = js_sys::Uint8Array::from(data.as_slice());
     let blob_parts = js_sys::Array::new();
@@ -147,27 +147,24 @@ pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     let options = web_sys::BlobPropertyBag::new();
     options.set_type(mime);
     let blob = web_sys::Blob::new_with_u8_array_sequence_and_options(&blob_parts, &options)
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
-    let url = web_sys::Url::create_object_url_with_blob(&blob)
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
-    let anchor = document
-        .create_element("a")
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
+    let url = web_sys::Url::create_object_url_with_blob(&blob).map_err(Error::from)?;
+    let anchor = document.create_element("a").map_err(Error::from)?;
     let anchor_elem: web_sys::HtmlAnchorElement = anchor
         .dyn_into()
-        .map_err(|_| Error::JS("Not an anchor".into()))?;
+        .map_err(|_| Error::Missing(Missing::Anchor))?;
     anchor_elem.set_href(&url);
     anchor_elem.set_download(filename);
     anchor_elem
         .style()
         .set_property("display", "none")
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     drop(
         document
             .body()
-            .ok_or_else(|| Error::JS("No body".into()))?
+            .ok_or_else(|| Error::Missing(Missing::Body))?
             .append_child(&anchor_elem)
-            .map_err(|e| Error::JS(format!("{e:?}")))?,
+            .map_err(Error::from)?,
     );
     anchor_elem.click();
     let url_clone = url.clone();
@@ -207,14 +204,12 @@ pub fn storage_get(key: &str) -> Option<String> {
 }
 
 pub fn storage_set(key: &str, value: &str) -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let storage = window
         .local_storage()
-        .map_err(|e| Error::JS(format!("{e:?}")))?
-        .ok_or_else(|| Error::JS("No localStorage".into()))?;
-    storage
-        .set_item(key, value)
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?
+        .ok_or_else(|| Error::Missing(Missing::LocalStorage))?;
+    storage.set_item(key, value).map_err(Error::from)?;
     Ok(())
 }
 
@@ -259,11 +254,9 @@ pub fn stop_capture_worker() {
 
 pub async fn check_camera() -> Result<(), Error> {
     std::future::ready(()).await;
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let navigator = window.navigator();
-    let _ = navigator
-        .media_devices()
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    let _ = navigator.media_devices().map_err(Error::from)?;
     Ok(())
 }
 
@@ -284,11 +277,9 @@ pub async fn start_camera() -> Result<(), Error> {
     if let Some(prev_video) = VIDEO.with(|v| v.borrow_mut().take()) {
         prev_video.set_src_object(None);
     }
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let navigator = window.navigator();
-    let media = navigator
-        .media_devices()
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+    let media = navigator.media_devices().map_err(Error::from)?;
     let constraints = web_sys::MediaStreamConstraints::new();
     let video_constraints = js_sys::Object::new();
     let _ = js_sys::Reflect::set(
@@ -296,7 +287,7 @@ pub async fn start_camera() -> Result<(), Error> {
         &wasm_bindgen::JsValue::from_str("facingMode"),
         &wasm_bindgen::JsValue::from_str("environment"),
     )
-    .map_err(|e| Error::JS(format!("{e:?}")))?;
+    .map_err(Error::from)?;
     constraints.set_video(&video_constraints);
     let media_promise = media
         .get_user_media_with_constraints(&constraints)
@@ -307,7 +298,7 @@ pub async fn start_camera() -> Result<(), Error> {
     let stream: web_sys::MediaStream = stream_js.unchecked_into();
     let Some(document) = window.document() else {
         stop_media_stream(&stream);
-        return Err(Error::JS("No document".into()));
+        return Err(Error::Missing(Missing::Document));
     };
     let Some(video): Option<web_sys::HtmlVideoElement> = document
         .get_element_by_id("qr-video")
@@ -325,7 +316,7 @@ pub async fn start_camera() -> Result<(), Error> {
         })
     else {
         stop_media_stream(&stream);
-        return Err(Error::JS("No video element".into()));
+        return Err(Error::Missing(Missing::VideoElement));
     };
     video.set_src_object(Some(&stream));
     let play_promise = match video.play() {
@@ -348,10 +339,10 @@ pub async fn start_camera() -> Result<(), Error> {
 pub async fn capture_frame() -> Result<FrameData, Error> {
     use wasm_bindgen::JsCast as _;
     const MAX_DIM: f32 = 240.0;
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
     let document = window
         .document()
-        .ok_or_else(|| Error::JS("No document".into()))?;
+        .ok_or_else(|| Error::Missing(Missing::Document))?;
     let video: web_sys::HtmlVideoElement = VIDEO
         .with(|v| v.borrow().clone())
         .or_else(|| {
@@ -359,7 +350,7 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
                 .get_element_by_id("qr-video")
                 .and_then(|el| el.dyn_into::<web_sys::HtmlVideoElement>().ok())
         })
-        .ok_or_else(|| Error::JS("No video element".into()))?;
+        .ok_or_else(|| Error::Missing(Missing::VideoElement))?;
     let mut waited: u64 = 0;
     while video.video_width() == 0 || video.video_height() == 0 {
         if waited > 5000 {
@@ -390,7 +381,7 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
                 el.dyn_into::<web_sys::HtmlCanvasElement>().ok()
             })
         })
-        .ok_or_else(|| Error::JS("No canvas".into()))?;
+        .ok_or_else(|| Error::Missing(Missing::Canvas))?;
     if canvas.width() != scaled_w || canvas.height() != scaled_h {
         canvas.set_width(scaled_w);
         canvas.set_height(scaled_h);
@@ -403,10 +394,10 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
         f64::from(scaled_w),
         f64::from(scaled_h),
     )
-    .map_err(|e| Error::JS(format!("{e:?}")))?;
+    .map_err(Error::from)?;
     let image_data = ctx
         .get_image_data(0.0, 0.0, f64::from(scaled_w), f64::from(scaled_h))
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     let data = image_data.data();
     let rgba = data.to_vec();
     let luma: Vec<u8> = rgba
@@ -458,10 +449,10 @@ fn readback_context(
             || {
                 canvas
                     .get_context("2d")
-                    .map_err(|e| Error::JS(format!("{e:?}")))?
-                    .ok_or_else(|| Error::JS("No 2d context".into()))?
+                    .map_err(Error::from)?
+                    .ok_or_else(|| Error::Missing(Missing::Context2d))?
                     .dyn_into::<web_sys::CanvasRenderingContext2d>()
-                    .map_err(|_| Error::JS("Not 2d context".into()))
+                    .map_err(|_| Error::Missing(Missing::Context2d))
             },
             Ok,
         )
@@ -516,49 +507,27 @@ pub fn location_pathname() -> Option<String> {
 }
 
 pub fn history_push(url: &str) -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
+    let history = window.history().map_err(Error::from)?;
     let target = location_pathname().map_or_else(
         || url.to_owned(),
         |pathname| crate::route::resolve_history_url(&pathname, url),
     );
     history
         .push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&target))
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     Ok(())
 }
 
 pub fn history_replace(url: &str) -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
+    let history = window.history().map_err(Error::from)?;
     let target = location_pathname().map_or_else(
         || url.to_owned(),
         |pathname| crate::route::resolve_history_url(&pathname, url),
     );
     history
         .replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&target))
-        .map_err(|e| Error::JS(format!("{e:?}")))?;
-    Ok(())
-}
-
-#[must_use]
-pub fn history_length() -> u32 {
-    web_sys::window()
-        .and_then(|w| w.history().ok())
-        .and_then(|h| h.length().ok())
-        .unwrap_or(0)
-}
-
-pub fn history_back() -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
-    history.back().map_err(|e| Error::JS(format!("{e:?}")))?;
-    Ok(())
-}
-
-pub fn history_forward() -> Result<(), Error> {
-    let window = web_sys::window().ok_or_else(|| Error::JS("No window".into()))?;
-    let history = window.history().map_err(|e| Error::JS(format!("{e:?}")))?;
-    history.forward().map_err(|e| Error::JS(format!("{e:?}")))?;
+        .map_err(Error::from)?;
     Ok(())
 }

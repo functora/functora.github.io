@@ -4,8 +4,6 @@
 //! type and one clipboard/slot core, so a fix in the shared logic applies to
 //! single-line and multi-line fields together.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Pos2, RawInput, Rect, Vec2};
 
 /// `InputPasteClearResponse` and `TextareaPasteClearResponse` are two names

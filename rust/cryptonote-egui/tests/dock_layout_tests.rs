@@ -3,85 +3,18 @@
 //! dock actions via `ui.add` after `dock_back` split Back from its sibling
 //! buttons into separate rows.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use cryptonote_egui::app::CryptonoteApp;
 use cryptonote_egui::route::Screen;
 use functora_egui::i18n::I18N;
+
+pub mod common;
+use common::{UiDriver, all_texts};
 
 const PIXEL_PNG: &[u8] = &[
     137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196,
     137, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 0, 1, 0, 0, 5, 0, 1, 13, 10, 45, 180, 0, 0, 0, 0, 73, 69, 78, 68,
     174, 66, 96, 130,
 ];
-
-struct UiDriver {
-    ctx: egui::Context,
-    frame: u32,
-}
-
-impl UiDriver {
-    fn new() -> Self {
-        let ctx = egui::Context::default();
-        functora_egui::setup_fonts(&ctx);
-        functora_egui::setup_image_loaders(&ctx);
-        Self { ctx, frame: 0 }
-    }
-
-    fn run(&mut self, app: &mut CryptonoteApp, events: Vec<egui::Event>) -> egui::FullOutput {
-        self.frame += 1;
-        let raw = egui::RawInput {
-            screen_rect: Some(egui::Rect::from_min_size(
-                egui::Pos2::ZERO,
-                egui::Vec2::new(1280.0, 800.0),
-            )),
-            time: Some(f64::from(self.frame) / 60.0),
-            events,
-            ..Default::default()
-        };
-        let mut frame = eframe::Frame::_new_kittest();
-        let mut out = self.ctx.run_ui(raw, |ui| {
-            eframe::App::ui(app, ui, &mut frame);
-        });
-        out.textures_delta.clear();
-        out
-    }
-
-    fn click(&mut self, app: &mut CryptonoteApp, pos: egui::Pos2) {
-        let press = |pressed: bool| egui::Event::PointerButton {
-            pos,
-            button: egui::PointerButton::Primary,
-            pressed,
-            modifiers: egui::Modifiers::default(),
-        };
-        let _ = self.run(app, vec![egui::Event::PointerMoved(pos)]);
-        let _ = self.run(app, vec![press(true)]);
-        let _ = self.run(app, vec![press(false)]);
-        let _ = self.run(app, vec![]);
-    }
-}
-
-fn all_texts(output: &egui::FullOutput) -> Vec<(String, egui::Rect)> {
-    fn walk(shape: &egui::Shape, out: &mut Vec<(String, egui::Rect)>) {
-        match shape {
-            egui::Shape::Text(text) => out.push((
-                text.galley.text().to_owned(),
-                text.galley.rect.translate(text.pos.to_vec2()),
-            )),
-            egui::Shape::Vec(shapes) => {
-                for inner in shapes {
-                    walk(inner, out);
-                }
-            }
-            _ => {}
-        }
-    }
-    let mut found = Vec::new();
-    for clipped in &output.shapes {
-        walk(&clipped.shape, &mut found);
-    }
-    found
-}
 
 fn lang() -> functora_egui::i18n::Language {
     cryptonote_egui::detect_browser_language()
@@ -116,7 +49,7 @@ fn file_screen_dock_buttons_share_one_row() {
         name: "photo.png".to_owned(),
         data: PIXEL_PNG.into(),
     });
-    let mut driver = UiDriver::new();
+    let mut driver = UiDriver::with_fonts();
     let out = driver.run(&mut app, vec![]);
     let row = center_of_rect_at(&out, |text| text.contains("photo.png"));
     let texts = all_texts(&out);
@@ -146,7 +79,7 @@ fn view_screen_save_all_is_in_dock_row() {
         name: "photo.png".to_owned(),
         data: PIXEL_PNG.into(),
     });
-    let mut driver = UiDriver::new();
+    let mut driver = UiDriver::with_fonts();
     let out = driver.run(&mut app, vec![]);
     let dock_view = all_texts(&out)
         .iter()

@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Interaction tests: pointer drag on Resizable, wheel scroll on `ScrollArea`.
 
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
@@ -101,7 +100,7 @@ fn resizable_handle_drag_changes_fraction() {
     let handle = App::rects(&out)
         .into_iter()
         .find(|r| r.width() < 20.0 && r.height() > 100.0)
-        .expect("handle rect not found");
+        .unwrap_or_else(|| panic!("handle rect not found"));
 
     let center = handle.center();
     drag(
@@ -164,7 +163,7 @@ fn resizable_inside_demo_shell_has_full_width() {
     let handle = App::rects(&out)
         .into_iter()
         .find(|r| r.width() < 20.0 && r.height() > 100.0)
-        .expect("handle rect not found");
+        .unwrap_or_else(|| panic!("handle rect not found"));
     println!("DEBUG: {reported}");
     println!("DEBUG: handle={handle:?} fraction={fraction}");
     assert!(
@@ -265,7 +264,7 @@ fn scroll_area_wheel_scrolls_content() {
     let marker_before = App::rects(&before)
         .into_iter()
         .find(|r| r.height() < 25.0 && r.top() < 400.0)
-        .expect("marker rect not found");
+        .unwrap_or_else(|| panic!("marker rect not found"));
 
     let hover = marker_before.center();
     let _ = app.step(vec![Event::PointerMoved(hover)], &mut body);
@@ -286,7 +285,7 @@ fn scroll_area_wheel_scrolls_content() {
     let marker_after = App::rects(&after)
         .into_iter()
         .find(|r| r.height() < 25.0 && r.top() < 400.0)
-        .expect("marker rect not found");
+        .unwrap_or_else(|| panic!("marker rect not found"));
 
     assert!(
         (marker_after.top() - marker_before.top()).abs() > 10.0,
@@ -341,7 +340,7 @@ fn sidebar_item_click_registers() {
                 && r.height() <= 50.0
                 && r.top() > 30.0
         })
-        .expect("nav button rect not found");
+        .unwrap_or_else(|| panic!("nav button rect not found"));
 
     let center = button.center();
     let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
@@ -436,7 +435,9 @@ fn tooltip_inside_flex_shows_on_hover() {
 
     let mut app = App::new();
     let _ = app.step(vec![], &mut body);
-    let rect = rect_cell.get().expect("button rect not found");
+    let rect = rect_cell
+        .get()
+        .unwrap_or_else(|| panic!("button rect not found"));
     let center = rect.center();
     let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
     let mut found = false;
@@ -514,7 +515,7 @@ fn tooltip_direct_shows_on_hover() {
 
     let mut app = App::new();
     let _ = app.step(vec![], &mut body);
-    let rect = rect_cell.get().expect("button rect");
+    let rect = rect_cell.get().unwrap_or_else(|| panic!("button rect"));
     let center = rect.center();
     let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
     let mut found = false;
@@ -758,7 +759,7 @@ fn toast_buttons_inside_flex_trigger_toast() {
     let button_rect = App::rects(&out_initial)
         .into_iter()
         .find(|r| r.width() > 40.0 && r.width() < 150.0 && r.height() > 20.0 && r.height() < 50.0)
-        .expect("toast button rect not found");
+        .unwrap_or_else(|| panic!("toast button rect not found"));
     let center = button_rect.center();
     let _ = app.step(vec![Event::PointerMoved(center)], &mut body);
     let _ = app.step(
@@ -852,7 +853,7 @@ fn toast_vertical_spacing_is_consistent() {
         let out = app.step(&mut toast);
         let mut rects = App::toast_rects(&out);
         assert_eq!(rects.len(), 2, "expected 2 toasts, found {rects:?}");
-        rects.sort_by(|left, right| right.max.y.partial_cmp(&left.max.y).unwrap());
+        rects.sort_by(|left, right| right.max.y.total_cmp(&left.max.y));
         let bottom = rects[0];
         let top = rects[1];
         let gap = bottom.min.y - top.max.y;
@@ -936,7 +937,7 @@ fn toast_vertical_spacing_is_consistent() {
             "toast must keep right margin, got {rect:?}"
         );
     }
-    rects.sort_by(|left, right| right.max.y.partial_cmp(&left.max.y).unwrap());
+    rects.sort_by(|left, right| right.max.y.total_cmp(&left.max.y));
     let gap = rects[0].min.y - rects[1].max.y;
     assert!(
         (gap - 8.0).abs() < 1.0,

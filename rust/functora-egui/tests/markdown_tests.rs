@@ -1,5 +1,4 @@
 #![cfg(feature = "markdown")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Markdown rendering: headings, emphasis, links, tables and code render to
 //! native text; empty and untrusted input renders without panic.
 

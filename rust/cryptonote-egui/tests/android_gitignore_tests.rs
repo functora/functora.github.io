@@ -1,16 +1,15 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use std::path::PathBuf;
 
 fn android_gitignore() -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("android/.gitignore");
-    std::fs::read_to_string(&path).expect("read android gitignore")
+    std::fs::read_to_string(&path).unwrap_or_else(|err| panic!("read android gitignore: {err}"))
 }
 
 #[test]
 fn android_gitignore_mirrors_demo_verbatim() {
     let ours = android_gitignore();
     let demo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../functora-egui-demo/android/.gitignore");
-    let expected = std::fs::read_to_string(&demo).expect("read demo android gitignore");
+    let expected = std::fs::read_to_string(&demo).unwrap_or_else(|err| panic!("read demo android gitignore: {err}"));
     assert_eq!(
         ours, expected,
         "cryptonote android gitignore must mirror the demo file verbatim"

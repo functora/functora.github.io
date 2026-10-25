@@ -1,5 +1,4 @@
 #![cfg(any(feature = "build", feature = "desktop"))]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use askama::Template;
 use functora_egui::desktop::templates::{LinuxDesktop, Metainfo};
 
@@ -14,7 +13,7 @@ fn entry(mime: &str) -> String {
         schemes: "",
     }
     .render()
-    .expect("render desktop entry")
+    .unwrap_or_else(|err| panic!("render desktop entry: {err}"))
 }
 
 #[test]
@@ -56,7 +55,7 @@ fn metainfo(developer: &str) -> String {
         developer_id: "io.functora.cryptonote_egui",
     }
     .render()
-    .expect("render metainfo")
+    .unwrap_or_else(|err| panic!("render metainfo: {err}"))
 }
 
 #[test]

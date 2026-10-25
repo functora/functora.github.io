@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote_egui::crypto::{CipherType, decrypt_symmetric, encrypt_symmetric};
 use cryptonote_egui::encoding::{NoteData, decode_note, encode_note};
 use cryptonote_egui::route::Screen;
@@ -21,7 +20,7 @@ fn screen_roundtrip() {
         Screen::File,
     ] {
         let s = screen.to_string();
-        let parsed = Screen::from_str(&s).expect("parse");
+        let parsed = Screen::from_str(&s).unwrap_or_else(|err| panic!("parse: {err}"));
         assert_eq!(screen, parsed);
     }
 }
@@ -103,7 +102,7 @@ fn temporary_state_default() {
     let state = TemporaryState::default();
     assert!(state.note.is_empty());
     assert!(state.password.is_empty());
-    assert_eq!(state.cipher, Some(CipherType::Aes256Gcm));
+    assert_eq!(state.cipher, CipherChoice::Aes256Gcm);
     assert!(state.attachments.is_empty());
     assert_eq!(state.screen, Screen::Home);
 }
@@ -112,8 +111,9 @@ fn temporary_state_default() {
 fn crypto_roundtrip_aes() {
     let plaintext = b"hello cryptonote";
     let password = "s3cret";
-    let enc = encrypt_symmetric(plaintext, password, CipherType::Aes256Gcm).expect("encrypt");
-    let dec = decrypt_symmetric(&enc, password).expect("decrypt");
+    let enc =
+        encrypt_symmetric(plaintext, password, CipherType::Aes256Gcm).unwrap_or_else(|err| panic!("encrypt: {err}"));
+    let dec = decrypt_symmetric(&enc, password).unwrap_or_else(|err| panic!("decrypt: {err}"));
     assert_eq!(plaintext.to_vec(), dec);
 }
 
@@ -121,16 +121,17 @@ fn crypto_roundtrip_aes() {
 fn crypto_roundtrip_chacha() {
     let plaintext = b"hello cryptonote chacha";
     let password = "another secret";
-    let enc = encrypt_symmetric(plaintext, password, CipherType::ChaCha20Poly1305).expect("encrypt");
-    let dec = decrypt_symmetric(&enc, password).expect("decrypt");
+    let enc = encrypt_symmetric(plaintext, password, CipherType::ChaCha20Poly1305)
+        .unwrap_or_else(|err| panic!("encrypt: {err}"));
+    let dec = decrypt_symmetric(&enc, password).unwrap_or_else(|err| panic!("decrypt: {err}"));
     assert_eq!(plaintext.to_vec(), dec);
 }
 
 #[test]
 fn encoding_plain_roundtrip() {
     let note = NoteData::PlainText("hello world".to_string());
-    let encoded = encode_note(&note).expect("encode");
-    let decoded = decode_note(&encoded).expect("decode");
+    let encoded = encode_note(&note).unwrap_or_else(|err| panic!("encode: {err}"));
+    let decoded = decode_note(&encoded).unwrap_or_else(|err| panic!("decode: {err}"));
     match decoded {
         NoteData::PlainText(t) => assert_eq!(t, "hello world"),
         NoteData::CipherText(_) => panic!("expected plaintext"),
@@ -139,13 +140,14 @@ fn encoding_plain_roundtrip() {
 
 #[test]
 fn encoding_cipher_roundtrip() {
-    let enc = encrypt_symmetric(b"secret note", "pwd", CipherType::Aes256Gcm).expect("encrypt");
+    let enc =
+        encrypt_symmetric(b"secret note", "pwd", CipherType::Aes256Gcm).unwrap_or_else(|err| panic!("encrypt: {err}"));
     let note = NoteData::CipherText(enc);
-    let encoded = encode_note(&note).expect("encode");
-    let decoded = decode_note(&encoded).expect("decode");
+    let encoded = encode_note(&note).unwrap_or_else(|err| panic!("encode: {err}"));
+    let decoded = decode_note(&encoded).unwrap_or_else(|err| panic!("decode: {err}"));
     match decoded {
         NoteData::CipherText(c) => {
-            let dec = decrypt_symmetric(&c, "pwd").expect("decrypt");
+            let dec = decrypt_symmetric(&c, "pwd").unwrap_or_else(|err| panic!("decrypt: {err}"));
             assert_eq!(dec, b"secret note");
         }
         NoteData::PlainText(_) => panic!("expected ciphertext"),
@@ -155,16 +157,18 @@ fn encoding_cipher_roundtrip() {
 #[test]
 fn build_url_contains_note() {
     let note = NoteData::PlainText("test".to_string());
-    let url = cryptonote_egui::encoding::build_url("https://example.com/?screen=open", &note).expect("build");
+    let url = cryptonote_egui::encoding::build_url("https://example.com/?screen=open", &note)
+        .unwrap_or_else(|err| panic!("build: {err}"));
     assert!(url.contains("note="));
 }
 
 #[test]
 fn extract_note_param_roundtrip() {
     let note = NoteData::PlainText("extract test".to_string());
-    let url = cryptonote_egui::encoding::build_url("https://example.com", &note).expect("build");
-    let param = cryptonote_egui::encoding::extract_note_param(&url).expect("extract");
-    let decoded = decode_note(&param).expect("decode");
+    let url =
+        cryptonote_egui::encoding::build_url("https://example.com", &note).unwrap_or_else(|err| panic!("build: {err}"));
+    let param = cryptonote_egui::encoding::extract_note_param(&url).unwrap_or_else(|err| panic!("extract: {err}"));
+    let decoded = decode_note(&param).unwrap_or_else(|err| panic!("decode: {err}"));
     match decoded {
         NoteData::PlainText(t) => assert_eq!(t, "extract test"),
         NoteData::CipherText(_) => panic!("expected plaintext"),

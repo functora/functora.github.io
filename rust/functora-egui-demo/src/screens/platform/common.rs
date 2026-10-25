@@ -25,20 +25,6 @@ fn poll_ok<T>(
 }
 
 impl crate::state::ShowcaseApp {
-    fn has_pending_promises(&self) -> bool {
-        self.platform.clipboard_rx.is_some()
-            || self.platform.clipboard_write_rx.is_some()
-            || self.platform.share_rx.is_some()
-            || self.platform.pick_rx.is_some()
-            || self.platform.download_rx.is_some()
-            || self.platform.pwa_rx.is_some()
-            || self.platform.camera_rx.is_some()
-            || self.platform.thumbnail_rx.is_some()
-            || self.platform.zip_rx.is_some()
-            || self.platform.crypto_rx.is_some()
-            || self.platform.worker_rx.is_some()
-    }
-
     /// Cuts `url` down to at most `max_bytes` on a char boundary, so preview
     /// labels can never panic on multi-byte data URLs. Pure so tests can
     /// exercise every boundary.
@@ -337,7 +323,7 @@ impl crate::state::ShowcaseApp {
         ) {
             self.toast.add(msg, ToastVariant::Success, now);
         }
-        if self.has_pending_promises() {
+        if self.platform.has_pending_promises() {
             ctx.request_repaint();
         }
     }

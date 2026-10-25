@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Pagination layout regression: the bar must fit the available width on
 //! mobile viewports instead of overflowing horizontally.
 

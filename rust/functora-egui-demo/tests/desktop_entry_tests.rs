@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 const MAIN_SRC: &str = include_str!("../src/main.rs");
 const BUILD_SRC: &str = include_str!("../build.rs");
 const MANIFEST: &str = include_str!("../Cargo.toml");

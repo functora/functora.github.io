@@ -1,3 +1,5 @@
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+use crate::error::ClipboardError;
 use crate::error::Error;
 
 pub async fn read() -> Result<String, Error> {
@@ -6,6 +8,18 @@ pub async fn read() -> Result<String, Error> {
 
 pub async fn write(text: String) -> Result<(), Error> {
     crate::platform::backend::clipboard_write(text).await
+}
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+pub(crate) fn clipboard_error(e: arboard::Error) -> Error {
+    Error::Clipboard(match e {
+        arboard::Error::ContentNotAvailable => ClipboardError::ContentUnavailable,
+        arboard::Error::ClipboardNotSupported => ClipboardError::Unavailable,
+        arboard::Error::ClipboardOccupied => ClipboardError::Busy,
+        arboard::Error::ConversionFailure => ClipboardError::ConversionFailed,
+        arboard::Error::Unknown { description } => ClipboardError::Unknown(description),
+        other => ClipboardError::Unknown(other.to_string()),
+    })
 }
 
 #[cfg(all(
@@ -42,7 +56,7 @@ fn read_image_from(
                 }))
             }
             Err(arboard::Error::ContentNotAvailable) => Ok(None),
-            Err(e) => Err(Error::JS(format!("Clipboard image read: {e}"))),
+            Err(e) => Err(clipboard_error(e)),
         }
     }
 }
@@ -84,6 +98,6 @@ pub fn rgba_to_png(width: usize, height: usize, rgba: &[u8]) -> Result<Vec<u8>, 
     let mut out = Vec::new();
     image::codecs::png::PngEncoder::new(&mut out)
         .write_image(rgba, width_u32, height_u32, image::ExtendedColorType::Rgba8)
-        .map_err(|e| Error::JS(format!("Clipboard image encode: {e}")))?;
+        .map_err(|_| Error::Clipboard(ClipboardError::ConversionFailed))?;
     Ok(out)
 }

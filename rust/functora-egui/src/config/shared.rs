@@ -51,6 +51,7 @@ pub(crate) fn metadata_str_in(value: &toml::Value, table: &str, key: &str) -> Op
         .map(ToOwned::to_owned)
 }
 
+#[cfg(any(feature = "android", feature = "build"))]
 pub(crate) fn metadata_bool_in(value: &toml::Value, table: &str, key: &str) -> bool {
     value
         .get("package")
@@ -95,18 +96,4 @@ pub fn derive_pkg_js(manifest_path: &str) -> String {
 #[must_use]
 pub fn derive_lib_name(manifest_path: &str) -> String {
     parse_toml(manifest_path).map_or_else(|| "app".to_owned(), |value| derive_lib_name_in(&value))
-}
-
-#[must_use]
-pub fn metadata_str(manifest_path: &str, table: &str, key: &str) -> Option<String> {
-    parse_toml(manifest_path)
-        .as_ref()
-        .and_then(|value| metadata_str_in(value, table, key))
-}
-
-#[must_use]
-pub fn metadata_bool(manifest_path: &str, table: &str, key: &str) -> bool {
-    parse_toml(manifest_path)
-        .as_ref()
-        .is_some_and(|value| metadata_bool_in(value, table, key))
 }

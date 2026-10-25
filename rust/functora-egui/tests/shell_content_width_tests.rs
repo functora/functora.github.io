@@ -1,8 +1,6 @@
 //! Shell content width: text screens must lay their paragraphs out near
 //! the full content width of the shell column, on any viewport width.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use std::borrow::Cow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

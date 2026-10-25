@@ -2,8 +2,6 @@
 //! (plan step 6a): dialogs render only when open, toasts appear and expire,
 //! calendars clamp invalid months, comboboxes show placeholders.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 
 struct Harness {

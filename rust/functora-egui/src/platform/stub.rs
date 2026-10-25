@@ -4,7 +4,7 @@
 //! it backs the `backend` alias in `super`.
 
 use crate::camera::FrameData;
-use crate::error::Error;
+use crate::error::{Capability, Error};
 
 #[cfg(feature = "clipboard")]
 pub use super::ShareData;
@@ -12,36 +12,28 @@ pub use super::ShareData;
 #[cfg(feature = "clipboard")]
 pub async fn clipboard_read() -> Result<String, Error> {
     std::future::ready(()).await;
-    Err(Error::JS(
-        "Clipboard not available (web feature disabled)".into(),
-    ))
+    Err(Error::CapabilityDisabled(Capability::Clipboard))
 }
 
 #[cfg(feature = "clipboard")]
 pub async fn clipboard_write(text: String) -> Result<(), Error> {
     std::future::ready(()).await;
     let _ = text;
-    Err(Error::JS(
-        "Clipboard not available (web feature disabled)".into(),
-    ))
+    Err(Error::CapabilityDisabled(Capability::Clipboard))
 }
 
 #[cfg(feature = "clipboard")]
 pub async fn share(data: ShareData) -> Result<(), Error> {
     std::future::ready(()).await;
     let _ = data;
-    Err(Error::JS(
-        "Share not available (web feature disabled)".into(),
-    ))
+    Err(Error::CapabilityDisabled(Capability::Share))
 }
 
 #[cfg(feature = "files")]
 pub async fn download(data: Vec<u8>, filename: &str) -> Result<String, Error> {
     std::future::ready(()).await;
     let _ = (data, filename);
-    Err(Error::JS(
-        "Save not available (web feature disabled)".into(),
-    ))
+    Err(Error::CapabilityDisabled(Capability::Save))
 }
 
 pub async fn sleep(millis: u64) {

@@ -1,8 +1,6 @@
 //! Select trigger must grow to fit long labels when space allows,
 //! instead of sticking to a fixed 200px cap and overflowing.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use egui::{Context, Pos2, RawInput, Rect, Vec2};
 use std::cell::Cell;
 use std::rc::Rc;
@@ -119,5 +117,65 @@ fn select_trigger_never_exceeds_narrow_container() {
         trigger_width.get() <= 150.5,
         "trigger must shrink to a narrow container instead of overflowing, got {}",
         trigger_width.get()
+    );
+}
+
+fn collect_texts(output: &egui::FullOutput) -> Vec<(String, egui::Rect)> {
+    fn walk(shape: &egui::Shape, out: &mut Vec<(String, egui::Rect)>) {
+        match shape {
+            egui::Shape::Text(text) => out.push((
+                text.galley.text().to_owned(),
+                text.galley.rect.translate(text.pos.to_vec2()),
+            )),
+            egui::Shape::Vec(shapes) => {
+                for inner in shapes {
+                    walk(inner, out);
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut found = Vec::new();
+    for clipped in &output.shapes {
+        walk(&clipped.shape, &mut found);
+    }
+    found
+}
+
+#[test]
+fn select_value_labeled_renders_identically_to_select_labeled() {
+    let all = cipher_entries();
+
+    let value_ctx = Context::default();
+    let mut value_selected: u8 = 2;
+    let value_rect: Rc<Cell<egui::Rect>> = Rc::new(Cell::new(egui::Rect::NOTHING));
+    let value_rect_slot = value_rect.clone();
+    let value_out = run_frames(&value_ctx, DESKTOP, 1, |ui| {
+        let resp = functora_egui::SelectValueLabeled::new(&mut value_selected, &all).show(ui);
+        value_rect_slot.set(resp.rect);
+    });
+
+    let labeled_ctx = Context::default();
+    let mut labeled_selected: Option<u8> = Some(2);
+    let labeled_rect: Rc<Cell<egui::Rect>> = Rc::new(Cell::new(egui::Rect::NOTHING));
+    let labeled_rect_slot = labeled_rect.clone();
+    let labeled_out = run_frames(&labeled_ctx, DESKTOP, 1, |ui| {
+        let resp = functora_egui::SelectLabeled::new(&mut labeled_selected, &all).show(ui);
+        labeled_rect_slot.set(resp.rect);
+    });
+
+    assert_eq!(
+        value_rect.get(),
+        labeled_rect.get(),
+        "SelectValueLabeled must occupy the same trigger rect as SelectLabeled"
+    );
+    assert_eq!(
+        collect_texts(&value_out),
+        collect_texts(&labeled_out),
+        "SelectValueLabeled must paint the same text as SelectLabeled"
+    );
+    assert_eq!(
+        value_selected, 2,
+        "selection must stay untouched while the popup stays closed"
     );
 }

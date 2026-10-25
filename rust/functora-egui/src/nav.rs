@@ -1,14 +1,7 @@
 use crate::route::Routable;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct HistoryPos(pub usize);
-
-impl HistoryPos {
-    #[must_use]
-    pub fn get(self) -> usize {
-        self.0
-    }
-}
+struct HistoryPos(pub usize);
 
 #[derive(Debug, Clone)]
 pub struct NavHistory<R: Routable> {
@@ -89,20 +82,5 @@ impl<R: Routable> NavHistory<R> {
         } else {
             self.push(route.clone());
         }
-    }
-
-    #[must_use]
-    pub fn stack(&self) -> &[R] {
-        &self.stack
-    }
-
-    #[must_use]
-    pub fn pos(&self) -> usize {
-        self.pos.0
-    }
-
-    #[must_use]
-    pub fn history_pos(&self) -> HistoryPos {
-        self.pos
     }
 }

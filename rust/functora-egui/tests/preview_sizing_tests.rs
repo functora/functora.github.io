@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use functora_egui::i18n::Language;
 use functora_egui::utils::responsive_preview_size;
 
@@ -58,7 +57,7 @@ fn run_on(
         });
     });
     out.textures_delta.clear();
-    captured.expect("body must run")
+    captured.unwrap_or_else(|| panic!("body must run"))
 }
 
 #[test]

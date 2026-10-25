@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use egui::{FullOutput, Pos2, RawInput, Rect, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(800.0, 600.0);
@@ -26,7 +25,7 @@ fn run_on(
         });
     });
     out.textures_delta.clear();
-    let (response, available) = captured.expect("body must run");
+    let (response, available) = captured.unwrap_or_else(|| panic!("body must run"));
     (response, available, out)
 }
 

@@ -1,11 +1,12 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
+pub mod common;
+#[cfg(not(target_arch = "wasm32"))]
+use common::run_async;
+
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::crypto::CipherType;
 use cryptonote_egui::{ArchiveSource, has_pending_archive, store_archive, take_archive};
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote_egui::{External, Screen, create_archive_package_async, load_archive_async, read_archive_metadata};
-#[cfg(not(target_arch = "wasm32"))]
-use std::future::Future;
 use std::sync::{Mutex, MutexGuard};
 
 static STATE_LOCK: Mutex<()> = Mutex::new(());
@@ -19,16 +20,7 @@ fn crate_file(relative: &str) -> String {
 }
 
 fn generated(relative: &str) -> String {
-    std::fs::read_to_string(crate_file(relative)).expect("generated file")
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn run_async<T, F>(future: F) -> T
-where
-    T: Send + 'static,
-    F: Future<Output = T> + Send + 'static,
-{
-    functora_egui::spawn_async(future).recv().expect("task completes")
+    std::fs::read_to_string(crate_file(relative)).unwrap_or_else(|err| panic!("generated file: {err}"))
 }
 
 fn generated_manifest() -> String {
@@ -40,7 +32,7 @@ fn activity_fqn(manifest: &str) -> String {
         .lines()
         .find(|line| line.contains(".MainActivity\""))
         .and_then(|line| line.split('"').nth(1))
-        .expect("activity fqn")
+        .unwrap_or_else(|| panic!("activity fqn"))
         .to_owned()
 }
 
@@ -71,10 +63,12 @@ fn generated_manifest_registers_cryptonote_view_filters() {
     let pattern_line = manifest
         .lines()
         .find(|line| line.contains("pathPattern"))
-        .expect("path pattern line");
+        .unwrap_or_else(|| panic!("path pattern line"));
     assert!(pattern_line.starts_with("            "));
-    let pattern = manifest.find(r#"android:pathPattern=""#).expect("path pattern");
-    let activity_close = manifest.find("</activity>").expect("activity close");
+    let pattern = manifest
+        .find(r#"android:pathPattern=""#)
+        .unwrap_or_else(|| panic!("path pattern"));
+    let activity_close = manifest.find("</activity>").unwrap_or_else(|| panic!("activity close"));
     assert!(pattern < activity_close);
 }
 
@@ -104,8 +98,10 @@ fn jni_symbols_match_generated_activity_class() {
 #[test]
 fn app_checks_pending_archive_before_consuming() {
     let source = include_str!("../src/app.rs");
-    let pending = source.find("has_pending_archive()").expect("pending check");
-    let take = source.find("take_archive()").expect("take call");
+    let pending = source
+        .find("has_pending_archive()")
+        .unwrap_or_else(|| panic!("pending check"));
+    let take = source.find("take_archive()").unwrap_or_else(|| panic!("take call"));
     assert!(pending < take);
 }
 
@@ -125,12 +121,15 @@ fn store_take_archive_roundtrip_tracks_pending_state() {
 fn store_and_take_archive_path_roundtrip() {
     let _guard = lock_state();
     let path = std::env::temp_dir().join(format!("cryptonote-egui-path-{}.cryptonote", std::process::id()));
-    std::fs::write(&path, b"archive bytes").expect("write archive");
+    std::fs::write(&path, b"archive bytes").unwrap_or_else(|err| panic!("write archive: {err}"));
     store_archive(ArchiveSource::Path(path.clone()));
     assert!(has_pending_archive());
-    let taken = take_archive().expect("archive present");
+    let taken = take_archive().unwrap_or_else(|| panic!("archive present"));
     assert_eq!(taken, ArchiveSource::Path(path.clone()));
-    assert_eq!(taken.into_bytes().expect("read bytes"), b"archive bytes");
+    assert_eq!(
+        taken.into_bytes().unwrap_or_else(|err| panic!("read bytes: {err}")),
+        b"archive bytes"
+    );
     assert!(!has_pending_archive());
     drop(std::fs::remove_file(path));
 }
@@ -141,7 +140,7 @@ fn take_archive_path_missing_file_returns_error() {
     drop(take_archive());
     let path = std::env::temp_dir().join("cryptonote-egui-missing.cryptonote");
     store_archive(ArchiveSource::Path(path));
-    let taken = take_archive().expect("archive present");
+    let taken = take_archive().unwrap_or_else(|| panic!("archive present"));
     assert!(taken.into_bytes().is_err());
 }
 
@@ -159,16 +158,16 @@ fn load_archive_opens_plain_package_from_stored_path() {
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("package created");
-    std::fs::write(&path, package).expect("write package");
+    .unwrap_or_else(|err| panic!("package created: {err}"));
+    std::fs::write(&path, package).unwrap_or_else(|err| panic!("write package: {err}"));
     store_archive(ArchiveSource::Path(path.clone()));
-    let source = take_archive().expect("archive present");
+    let source = take_archive().unwrap_or_else(|| panic!("archive present"));
     let opened = run_async(load_archive_async(
         source,
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("archive loaded");
+    .unwrap_or_else(|err| panic!("archive loaded: {err}"));
     assert!(matches!(opened.screen, Screen::View));
     assert_eq!(opened.note, "deep link note");
     assert!(opened.attachments.is_empty());
@@ -190,17 +189,17 @@ fn load_archive_routes_encrypted_package_to_open_screen() {
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("package created");
-    std::fs::write(&path, package).expect("write package");
+    .unwrap_or_else(|err| panic!("package created: {err}"));
+    std::fs::write(&path, package).unwrap_or_else(|err| panic!("write package: {err}"));
     let source = ArchiveSource::Path(path.clone());
-    let meta = read_archive_metadata(&source).expect("metadata");
+    let meta = read_archive_metadata(&source).unwrap_or_else(|err| panic!("metadata: {err}"));
     assert!(meta.cipher.is_some());
     let opened = run_async(load_archive_async(
         source,
         std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
         |_| {},
     ))
-    .expect("archive loaded");
+    .unwrap_or_else(|err| panic!("archive loaded: {err}"));
     assert!(matches!(opened.screen, Screen::Open));
     assert!(matches!(opened.external, External::Archive(_)));
     drop(std::fs::remove_file(path));

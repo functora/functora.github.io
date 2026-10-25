@@ -117,14 +117,7 @@ impl CameraViewState {
             feed.running = true;
             feed.error = None;
         }
-        super::pump::spawn_pump(
-            (*ctx).clone(),
-            Arc::clone(&self.inner),
-            epoch,
-            interval_ms,
-            handler,
-            guard,
-        );
+        super::pump::spawn_pump(ctx, &self.inner, epoch, interval_ms, handler, guard);
         true
     }
 
@@ -200,20 +193,5 @@ impl CameraViewState {
             }
             self.preview_dims = Some((width, height));
         }
-    }
-}
-
-/// Maps low-level camera failures onto precise public error variants.
-#[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
-pub(crate) fn map_camera_error(e: &Error) -> Error {
-    match e {
-        Error::JS(msg) => {
-            if msg.contains("Permission") || msg.contains("denied") || msg.contains("NotAllowed") {
-                Error::CameraPermissionDenied(msg.clone())
-            } else {
-                Error::CameraNotAvailable(msg.clone())
-            }
-        }
-        other => Error::CameraNotAvailable(other.to_string()),
     }
 }

@@ -62,18 +62,4 @@ impl ToastState {
         self.toasts
             .retain(|t| current_time - t.created_at < t.duration_secs);
     }
-
-    #[must_use]
-    pub fn next_y_offset(&self) -> f32 {
-        let mut y_offset = -16.0;
-        for toast in &self.toasts {
-            let h = if toast.description.is_some() {
-                72.0
-            } else {
-                52.0
-            };
-            y_offset -= h + 8.0;
-        }
-        y_offset
-    }
 }

@@ -2,8 +2,6 @@
 //! in `screens`/shell, full `WhiteLabel` footer sentence, complete
 //! About/Donate content, and toast-only feedback (no message banners).
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 const APP_SRC: &str = include_str!("../src/app.rs");
 const HOME_SRC: &str = include_str!("../src/screens/home/mod.rs");
 const HOME_CREATE_SRC: &str = include_str!("../src/screens/home/create.rs");

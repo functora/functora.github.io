@@ -1,5 +1,4 @@
 #![cfg(feature = "markdown")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Data URL bytes must load synchronously (wasm has no threads).
 //! Upstream `egui_commonmark_backend::DataUrlLoader` spawns a thread and
 //! panics on wasm (`operation not supported`). Our loader must return

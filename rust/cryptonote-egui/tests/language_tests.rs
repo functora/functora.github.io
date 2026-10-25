@@ -1,42 +1,10 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use cryptonote_egui::app::CryptonoteApp;
 use cryptonote_egui::encoding::{NoteData, build_url};
 use cryptonote_egui::route::Screen;
 use functora_egui::i18n::Language;
 
-fn collect_shape(shape: &egui::Shape, rendered: &mut String) {
-    match shape {
-        egui::Shape::Text(text) => {
-            rendered.push_str(text.galley.text());
-            rendered.push('\n');
-        }
-        egui::Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_shape(inner, rendered);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn run_app(app: &mut CryptonoteApp) -> String {
-    use egui::{Pos2, RawInput, Rect, Vec2};
-    let ctx = egui::Context::default();
-    let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, Vec2::new(1280.0, 800.0))),
-        ..Default::default()
-    };
-    let mut frame = eframe::Frame::_new_kittest();
-    let mut output = ctx.run_ui(raw, |ui| {
-        eframe::App::ui(app, ui, &mut frame);
-    });
-    output.textures_delta.clear();
-    let mut rendered = String::new();
-    for clipped in &output.shapes {
-        collect_shape(&clipped.shape, &mut rendered);
-    }
-    rendered
-}
+pub mod common;
+use common::run_app;
 
 fn other_language() -> Language {
     match cryptonote_egui::detect_browser_language() {
@@ -58,7 +26,7 @@ fn empty_view_banner_follows_selected_language() {
     let lang = other_language();
     app.set_language(lang);
     let note = NoteData::PlainText("x".to_string());
-    let url = build_url("https://example.com/?screen=open", &note).expect("build");
+    let url = build_url("https://example.com/?screen=open", &note).unwrap_or_else(|err| panic!("build: {err}"));
     cryptonote_egui::store_url(url);
     let _ = run_app(&mut app);
     assert_eq!(app.temporary.screen, Screen::View);

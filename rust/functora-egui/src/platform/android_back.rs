@@ -26,9 +26,8 @@ pub fn wake_via_repaint() {
 }
 
 #[cfg(all(target_os = "android", feature = "platform"))]
-#[unsafe(no_mangle)]
-#[allow(non_snake_case)]
-pub extern "system" fn Java_com_functora_Waker_wake(
+#[unsafe(export_name = "Java_com_functora_Waker_wake")]
+pub extern "system" fn java_com_functora_waker_wake(
     _env: jni::JNIEnv<'_>,
     _class: jni::objects::JClass<'_>,
 ) {

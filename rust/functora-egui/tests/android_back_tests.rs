@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use egui::{Context, Event, Modifiers, Pos2, RawInput, Rect, Vec2};
 use functora_egui::{BackOutcome, NavHistory, Shell, is_back_pressed};
 use std::fmt::Display;
@@ -61,7 +60,9 @@ impl functora_egui::route::RouteMetadata for DemoRoute {
 fn ctx_with_events(events: Vec<Event>) -> (Context, egui::RawInput) {
     let ctx = Context::default();
     ctx.memory_mut(|m| {
-        m.options.max_passes = 1.try_into().unwrap();
+        m.options.max_passes = 1
+            .try_into()
+            .unwrap_or_else(|err| panic!("max_passes must convert: {err}"));
     });
     let raw = RawInput {
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),

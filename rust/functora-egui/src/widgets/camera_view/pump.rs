@@ -1,8 +1,10 @@
 //! Platform frame pumps shared by `CameraView` and `QrScanner`.
 
+#[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
+use super::camera_view_state::camera_epoch;
 use super::camera_view_state::{FeedInner, FrameHandler};
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
-use super::camera_view_state::{camera_epoch, map_camera_error};
+use crate::camera::map_camera_error;
 use crate::error::Error;
 use crate::in_flight::InFlightGuard;
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
@@ -10,7 +12,7 @@ use std::ops::ControlFlow;
 use std::sync::{Arc, Mutex};
 
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]
-fn set_error(feed: &Arc<Mutex<FeedInner>>, epoch: u64, err: &Error) {
+fn set_error(feed: &Arc<Mutex<FeedInner>>, epoch: u64, err: Error) {
     if camera_epoch() == epoch
         && let Ok(mut guard) = feed.lock()
         && guard.epoch == epoch
@@ -71,7 +73,7 @@ pub(crate) fn spawn_web_pump(
     wasm_bindgen_futures::spawn_local(async move {
         let interval = interval_ms.max(16);
         if let Err(e) = crate::camera::check_camera().await {
-            set_error(&feed, epoch, &e);
+            set_error(&feed, epoch, e);
             ctx.request_repaint();
             drop(guard);
             return;
@@ -81,7 +83,7 @@ pub(crate) fn spawn_web_pump(
             return;
         }
         if let Err(e) = crate::camera::start_camera().await {
-            set_error(&feed, epoch, &e);
+            set_error(&feed, epoch, e);
             ctx.request_repaint();
             drop(guard);
             return;
@@ -106,7 +108,7 @@ pub(crate) fn spawn_web_pump(
                     ctx.request_repaint();
                 }
                 Err(e) => {
-                    set_error(&feed, epoch, &e);
+                    set_error(&feed, epoch, e);
                     ctx.request_repaint();
                     break;
                 }
@@ -134,7 +136,7 @@ pub(crate) fn spawn_android_pump(
         .spawn(move || {
             let interval = std::time::Duration::from_millis(interval_ms.max(16));
             if let Err(e) = crate::platform::android::check_camera_blocking() {
-                set_error(&feed, epoch, &e);
+                set_error(&feed, epoch, e);
                 ctx.request_repaint();
                 drop(guard);
                 return;
@@ -144,7 +146,7 @@ pub(crate) fn spawn_android_pump(
                 return;
             }
             if let Err(e) = crate::platform::android::start_camera_blocking() {
-                set_error(&feed, epoch, &e);
+                set_error(&feed, epoch, e);
                 ctx.request_repaint();
                 drop(guard);
                 return;
@@ -169,7 +171,7 @@ pub(crate) fn spawn_android_pump(
                         ctx.request_repaint();
                     }
                     Err(e) => {
-                        set_error(&feed, epoch, &e);
+                        set_error(&feed, epoch, e);
                         ctx.request_repaint();
                         break;
                     }
@@ -184,17 +186,16 @@ pub(crate) fn spawn_android_pump(
         set_error(
             &fail_feed,
             epoch,
-            &Error::CameraNotAvailable(format!("Camera thread failed to start: {e}")),
+            Error::CameraNotAvailable(format!("Camera thread failed to start: {e}")),
         );
         fail_ctx.request_repaint();
     }
 }
 
 /// Spawns the pump for the current target.
-#[allow(clippy::needless_pass_by_value)]
 pub(crate) fn spawn_pump(
-    ctx: egui::Context,
-    feed: Arc<Mutex<FeedInner>>,
+    ctx: &egui::Context,
+    feed: &Arc<Mutex<FeedInner>>,
     epoch: u64,
     interval_ms: u64,
     handler: FrameHandler,
@@ -202,11 +203,25 @@ pub(crate) fn spawn_pump(
 ) {
     #[cfg(all(target_arch = "wasm32", feature = "web"))]
     {
-        spawn_web_pump(ctx, feed, epoch, interval_ms, handler, guard);
+        spawn_web_pump(
+            ctx.clone(),
+            Arc::clone(feed),
+            epoch,
+            interval_ms,
+            handler,
+            guard,
+        );
     }
     #[cfg(target_os = "android")]
     {
-        spawn_android_pump(ctx, feed, epoch, interval_ms, handler, guard);
+        spawn_android_pump(
+            ctx.clone(),
+            Arc::clone(feed),
+            epoch,
+            interval_ms,
+            handler,
+            guard,
+        );
     }
     #[cfg(not(any(all(target_arch = "wasm32", feature = "web"), target_os = "android")))]
     {

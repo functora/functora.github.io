@@ -285,7 +285,7 @@ impl CryptonoteApp {
                 && functora_egui::paste_image::is_paste_image_intent(&ctx.input(|i| i.events.clone()))
             {
                 self.paste_image_rx = Some(functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::read_image().await.map_err(AppError::from)
+                    Ok(functora_egui::clipboard::read_image().await?)
                 }));
             }
         }
@@ -430,19 +430,24 @@ impl CryptonoteApp {
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
-        if self.clipboard_write_rx.is_some()
-            || self.share_rx.is_some()
-            || self.download_rx.is_some()
-            || self.pick_rx.is_some()
-            || self.generate_rx.is_some()
-            || self.decrypt_rx.is_some()
-            || self.archive_rx.is_some()
-            || self.pwa_rx.is_some()
-        {
+        if self.has_pending_receivers() {
             ctx.request_repaint();
         } else {
             self.progress_slot = None;
         }
+    }
+
+    #[must_use]
+    pub fn has_pending_receivers(&self) -> bool {
+        self.clipboard_write_rx.is_some()
+            || self.share_rx.is_some()
+            || self.download_rx.is_some()
+            || self.pick_rx.is_some()
+            || self.paste_image_rx.is_some()
+            || self.generate_rx.is_some()
+            || self.decrypt_rx.is_some()
+            || self.archive_rx.is_some()
+            || self.pwa_rx.is_some()
     }
 
     fn handle_deep_link(&mut self, ctx: &egui::Context) {
@@ -472,11 +477,9 @@ impl CryptonoteApp {
             && let Some(source) = crate::deep_link::take_archive()
             && let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Preview)
         {
-            let rx =
-                functora_egui::spawn_async(
-                    async move { crate::hooks::load_archive_async(source, cancel, progress).await },
-                );
-            self.archive_rx = Some(rx);
+            self.archive_rx = Some(functora_egui::spawn_async(async move {
+                crate::hooks::load_archive_async(source, cancel, progress).await
+            }));
         }
     }
 

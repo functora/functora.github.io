@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
 use functora_egui::{
     Breakpoint, Button, ComponentSize, Dialog, Flex, Input, ResponsiveExt, SelectValue, Sheet,
@@ -148,7 +147,7 @@ fn form_controls_use_touch_height_on_mobile() {
     let input = find_rect(&rects, |r| {
         (r.height() - 44.0).abs() < 0.5 && r.width() > 300.0
     })
-    .expect("input field must be drawn with touch height");
+    .unwrap_or_else(|| panic!("input field must be drawn with touch height"));
     assert!(
         (input.width() - MOBILE.x).abs() < 1.0,
         "input must fill the mobile width, got {input:?}"
@@ -166,7 +165,7 @@ fn input_height_follows_spacing_on_desktop() {
     let input = find_rect(&rects, |r| {
         (r.height() - 32.0).abs() < 0.5 && r.width() > 300.0
     })
-    .expect("input field must be drawn");
+    .unwrap_or_else(|| panic!("input field must be drawn"));
     assert!(
         (input.width() - DESKTOP.x).abs() < 1.0,
         "input must fill the desktop width, got {input:?}"
@@ -189,7 +188,7 @@ fn dialog_becomes_bottom_sheet_on_mobile() {
             && r.width() > 300.0
             && r.width() < MOBILE.x - 0.5
     })
-    .expect("bottom-anchored dialog panel must be drawn");
+    .unwrap_or_else(|| panic!("bottom-anchored dialog panel must be drawn"));
     assert!(
         (panel.width() - (MOBILE.x - 2.0 * Spacing::mobile().page_padding)).abs() < 2.0,
         "panel must span the screen minus page padding, got {panel:?}"
@@ -213,7 +212,7 @@ fn dialog_stays_centered_on_desktop() {
     let panel = find_rect(&rects, |r| {
         r.width() < DESKTOP.x - 0.5 && (r.center().x - DESKTOP.x / 2.0).abs() < 2.0
     })
-    .expect("centered dialog panel must be drawn");
+    .unwrap_or_else(|| panic!("centered dialog panel must be drawn"));
     assert!(
         (panel.center().x - DESKTOP.x / 2.0).abs() < 2.0,
         "panel must be horizontally centered, got {panel:?}"
@@ -241,7 +240,7 @@ fn sheet_clamps_width_to_viewport_on_mobile() {
             && r.width() > 300.0
             && r.width() < MOBILE.x + 50.0
     })
-    .expect("bottom sheet panel must be drawn on mobile");
+    .unwrap_or_else(|| panic!("bottom sheet panel must be drawn on mobile"));
     assert!(
         (panel.width() - MOBILE.x).abs() < 2.0,
         "panel must be full width on mobile bottom sheet, got {panel:?}"
@@ -290,7 +289,7 @@ fn responsive_sidebar_draws_overlay_when_open_on_mobile() {
             && r.width() < MOBILE.x - 0.5
             && r.height() > 600.0
     })
-    .expect("right overlay panel must be drawn");
+    .unwrap_or_else(|| panic!("right overlay panel must be drawn"));
     assert!(
         panel.min.x >= -0.5 && panel.max.y <= MOBILE.y,
         "overlay panel must stay inside the screen, got {panel:?}"

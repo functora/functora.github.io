@@ -175,17 +175,9 @@ pub mod router_impl {
             &self.history
         }
 
-        pub fn history_mut(&mut self) -> &mut NavHistory<R> {
-            &mut self.history
-        }
-
         #[must_use]
         pub fn system_back(&self) -> bool {
             self.system_back
-        }
-
-        pub fn set_system_back(&mut self, enabled: bool) {
-            self.system_back = enabled;
         }
 
         #[must_use]
@@ -274,10 +266,6 @@ pub mod router_impl {
                 }
             }
             let _ = self.handle_back(ui.ctx());
-        }
-
-        pub fn active_route(&self) -> Option<String> {
-            Some(self.current.to_url())
         }
     }
 

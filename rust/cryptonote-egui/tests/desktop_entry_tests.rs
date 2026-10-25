@@ -1,5 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 const MAIN_SRC: &str = include_str!("../src/main.rs");
 const DEEP_LINK_SRC: &str = include_str!("../src/deep_link.rs");
 const APP_SRC: &str = include_str!("../src/app.rs");

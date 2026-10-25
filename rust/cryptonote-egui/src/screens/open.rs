@@ -68,7 +68,7 @@ impl CryptonoteApp {
         match external {
             External::Note(note) => {
                 if let NoteData::CipherText(enc) = note.data {
-                    let rx = functora_egui::spawn_async(async move {
+                    self.decrypt_rx = Some(functora_egui::spawn_async(async move {
                         let password_clone = password.clone();
                         let enc_clone = enc.clone();
                         let res: Result<(String, Vec<crate::archive::Attachment>), AppError> = (|| {
@@ -77,18 +77,16 @@ impl CryptonoteApp {
                         })(
                         );
                         res
-                    });
-                    self.decrypt_rx = Some(rx);
+                    }));
                 }
             }
             External::Archive(archive) => {
-                let rx = functora_egui::spawn_async(async move {
+                self.decrypt_rx = Some(functora_egui::spawn_async(async move {
                     let bytes = archive.untag();
                     let source = crate::archive::ArchiveSource::Bytes(bytes);
                     crate::archive::extract_archive_package_async_with_progress(source, &password, cancel, progress)
                         .await
-                });
-                self.decrypt_rx = Some(rx);
+                }));
             }
             External::Nothing => {
                 self.end_op();

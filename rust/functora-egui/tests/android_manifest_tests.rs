@@ -1,5 +1,4 @@
 #![cfg(any(feature = "build", feature = "android"))]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use askama::Template;
 use functora_egui::android::templates::ManifestXml;
 use functora_egui::android::{AndroidConfig, load_android_config};
@@ -24,15 +23,19 @@ fn config(extra_filters: Option<&str>) -> AndroidConfig {
 }
 
 fn config_metadata(metadata: &str) -> AndroidConfig {
-    let tmp = tempfile::NamedTempFile::new().unwrap();
-    let path = tmp.path().to_str().unwrap();
+    let tmp = tempfile::NamedTempFile::new()
+        .unwrap_or_else(|err| panic!("temp manifest file must be created: {err}"));
+    let path = tmp
+        .path()
+        .to_str()
+        .unwrap_or_else(|| panic!("temp path must be UTF-8"));
     std::fs::write(
         path,
         format!(
             "[package]\nname = \"deep-link-app\"\nversion = \"1.0.0\"\n[package.metadata.functora-egui-android]\n{metadata}"
         ),
     )
-    .unwrap();
+    .unwrap_or_else(|err| panic!("temp manifest must be written: {err}"));
     load_android_config(path)
 }
 
@@ -48,7 +51,7 @@ fn render(cfg: &AndroidConfig) -> String {
         internet: cfg.internet,
     }
     .render()
-    .unwrap()
+    .unwrap_or_else(|err| panic!("android manifest must render: {err}"))
 }
 
 #[test]
@@ -84,8 +87,12 @@ fn rendered_manifest_embeds_extra_filters_inside_activity() {
     let cfg = config(Some(EXTRA_FILTERS));
     let manifest = render(&cfg);
     assert!(!manifest.contains("{{"));
-    let pattern = manifest.find(r#"android:pathPattern=""#).unwrap();
-    let activity_close = manifest.find("</activity>").unwrap();
+    let pattern = manifest
+        .find(r#"android:pathPattern=""#)
+        .unwrap_or_else(|| panic!("pathPattern filter must render"));
+    let activity_close = manifest
+        .find("</activity>")
+        .unwrap_or_else(|| panic!("activity end tag must render"));
     assert!(pattern < activity_close);
     assert!(manifest.contains(r#"android:autoVerify="true""#));
     assert!(manifest.contains(r#"android:launchMode="singleInstance""#));

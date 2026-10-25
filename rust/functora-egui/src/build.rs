@@ -16,8 +16,7 @@ pub enum Error {
         context: &'static str,
         source: std::io::Error,
     },
-    AndroidIcons(crate::android::icons::IconsError),
-    DesktopIcons(crate::desktop::icons::IconsError),
+    Icons(crate::icon_export::IconsError),
 }
 
 impl std::fmt::Display for Error {
@@ -25,8 +24,7 @@ impl std::fmt::Display for Error {
         match self {
             Self::Template { context, .. } => write!(f, "cannot render {context} template"),
             Self::Io { context, .. } => write!(f, "cannot {context}"),
-            Self::AndroidIcons(e) => write!(f, "{e}"),
-            Self::DesktopIcons(e) => write!(f, "{e}"),
+            Self::Icons(e) => write!(f, "{e}"),
         }
     }
 }
@@ -36,21 +34,14 @@ impl std::error::Error for Error {
         match self {
             Self::Template { source, .. } => Some(source),
             Self::Io { source, .. } => Some(source),
-            Self::AndroidIcons(e) => Some(e),
-            Self::DesktopIcons(e) => Some(e),
+            Self::Icons(e) => Some(e),
         }
     }
 }
 
-impl From<crate::android::icons::IconsError> for Error {
-    fn from(e: crate::android::icons::IconsError) -> Self {
-        Self::AndroidIcons(e)
-    }
-}
-
-impl From<crate::desktop::icons::IconsError> for Error {
-    fn from(e: crate::desktop::icons::IconsError) -> Self {
-        Self::DesktopIcons(e)
+impl From<crate::icon_export::IconsError> for Error {
+    fn from(e: crate::icon_export::IconsError) -> Self {
+        Self::Icons(e)
     }
 }
 

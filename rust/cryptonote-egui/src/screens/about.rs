@@ -1,5 +1,4 @@
 use crate::app::CryptonoteApp;
-use crate::error::AppError;
 use crate::messages::Msg;
 use crate::route::Screen;
 use crate::storage::APP_ATTRS;
@@ -48,10 +47,10 @@ impl CryptonoteApp {
             .clicked()
             {
                 let text = format!("{}\n{app_url}", Msg::ShareAppDesc.render(lang));
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(text).await.map_err(AppError::from)
-                });
-                self.clipboard_write_rx = Some(rx);
+                self.clipboard_write_rx = Some(functora_egui::spawn_async(async move {
+                    functora_egui::clipboard::write(text).await?;
+                    Ok(())
+                }));
             }
             if f.add(
                 Button::new(BaseMsg::ShareAppLink.render(lang))
@@ -66,10 +65,10 @@ impl CryptonoteApp {
                     text: Msg::ShareAppDesc.render(lang),
                     url: app_url.clone(),
                 };
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::share::share(data).await.map_err(AppError::from)
-                });
-                self.share_rx = Some(rx);
+                self.share_rx = Some(functora_egui::spawn_async(async move {
+                    functora_egui::share::share(data).await?;
+                    Ok(())
+                }));
             }
             #[cfg(all(target_arch = "wasm32", not(target_os = "android")))]
             {
@@ -81,24 +80,20 @@ impl CryptonoteApp {
                 .inner
                 .clicked()
                 {
-                    let rx = functora_egui::spawn_async(async move {
-                        match functora_egui::pwa::trigger_pwa_install().await {
-                            Ok(functora_egui::pwa::PwaInstallOutcome::Accepted) => Ok(BaseMsg::PwaInstallSuccess),
-                            Ok(functora_egui::pwa::PwaInstallOutcome::Rejected) => Ok(BaseMsg::PwaInstallRejected),
-                            Ok(functora_egui::pwa::PwaInstallOutcome::NotAvailable) => {
-                                functora_egui::pwa::install_hint()
-                                    .await
-                                    .map(|hint| match hint {
-                                        functora_egui::pwa::InstallHint::Ios => BaseMsg::PwaInstallIos,
-                                        functora_egui::pwa::InstallHint::Mac => BaseMsg::PwaInstallMac,
-                                        functora_egui::pwa::InstallHint::Unavailable => BaseMsg::PwaInstallUnavailable,
-                                    })
-                                    .map_err(AppError::from)
+                    self.pwa_rx = Some(functora_egui::spawn_async(async move {
+                        let outcome = functora_egui::pwa::trigger_pwa_install().await?;
+                        Ok(match outcome {
+                            functora_egui::pwa::PwaInstallOutcome::Accepted => BaseMsg::PwaInstallSuccess,
+                            functora_egui::pwa::PwaInstallOutcome::Rejected => BaseMsg::PwaInstallRejected,
+                            functora_egui::pwa::PwaInstallOutcome::NotAvailable => {
+                                match functora_egui::pwa::install_hint().await? {
+                                    functora_egui::pwa::InstallHint::Ios => BaseMsg::PwaInstallIos,
+                                    functora_egui::pwa::InstallHint::Mac => BaseMsg::PwaInstallMac,
+                                    functora_egui::pwa::InstallHint::Unavailable => BaseMsg::PwaInstallUnavailable,
+                                }
                             }
-                            Err(e) => Err(AppError::from(e)),
-                        }
-                    });
-                    self.pwa_rx = Some(rx);
+                        })
+                    }));
                 }
             }
             if f.add(

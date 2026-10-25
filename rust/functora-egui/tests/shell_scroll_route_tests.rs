@@ -1,8 +1,6 @@
 //! Shell content scroll: jumping to another screen resets the scrollable
 //! area to the top instead of inheriting the previous screen's offset.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 use std::borrow::Cow;
 use std::cell::Cell;
 

@@ -74,6 +74,8 @@ pub use files::revoke_blob_url;
 #[cfg(all(feature = "files", feature = "thumbnail"))]
 pub use files::video_thumbnail;
 
+#[cfg(any(feature = "android", feature = "desktop", feature = "build"))]
+pub mod icon_export;
 pub mod icons;
 #[cfg(feature = "images")]
 pub mod image_samples;

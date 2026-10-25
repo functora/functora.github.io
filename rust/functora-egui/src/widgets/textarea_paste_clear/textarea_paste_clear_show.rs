@@ -1,8 +1,8 @@
 use crate::icons::lucide_icon::LucideIcon;
 use crate::widgets::paste_clear_core::{
-    apply_clear, copy_pending, disabled_color, hover_color, paint_focused, paint_outer,
-    paint_tool_icon, paste_pending, pending_color, poll_copy, poll_paste, request_copy,
-    request_paste, respond, take_slots,
+    apply_clear, copy_pending, maybe_pending_color, paint_focused, paint_outer, paint_tool_icon,
+    paste_pending, poll_copy, poll_paste, request_copy, request_paste, respond, take_slots,
+    tool_color,
 };
 use crate::widgets::textarea::textarea_widget_impl::wrap_anywhere_layouter_with_color;
 
@@ -131,30 +131,22 @@ pub(crate) fn show_textarea_paste_clear(
         && let Some(resp) = &copy_resp
         && ui.is_rect_visible(rect)
     {
-        let base_color = if text.is_empty() {
-            disabled_color(&theme)
-        } else {
-            hover_color(&theme, resp.hovered())
-        };
-        let display_color = if is_copy_pending {
-            pending_color(base_color)
-        } else {
-            base_color
-        };
-        paint_tool_icon(ui.painter(), rect, copy_icon, display_color);
+        let color = maybe_pending_color(
+            tool_color(&theme, resp.hovered(), !text.is_empty()),
+            is_copy_pending,
+        );
+        paint_tool_icon(ui.painter(), rect, copy_icon, color);
     }
 
     if let Some(rect) = paste_rect
         && let Some(resp) = &paste_resp
         && ui.is_rect_visible(rect)
     {
-        let base_paste_color = hover_color(&theme, resp.hovered());
-        let display_paste_color = if is_paste_pending {
-            pending_color(base_paste_color)
-        } else {
-            base_paste_color
-        };
-        paint_tool_icon(ui.painter(), rect, paste_icon, display_paste_color);
+        let color = maybe_pending_color(
+            tool_color(&theme, resp.hovered(), !readonly),
+            is_paste_pending,
+        );
+        paint_tool_icon(ui.painter(), rect, paste_icon, color);
     }
 
     if let Some(rect) = clear_rect
@@ -162,17 +154,13 @@ pub(crate) fn show_textarea_paste_clear(
         && ui.is_rect_visible(rect)
     {
         let clear_enabled = *text != default_value;
-        let clear_color = if clear_enabled {
-            hover_color(&theme, resp.hovered())
-        } else {
-            disabled_color(&theme)
-        };
         let icon = if clear_enabled {
             clear_icon
         } else {
             LucideIcon::X
         };
-        paint_tool_icon(ui.painter(), rect, icon, clear_color);
+        let color = tool_color(&theme, resp.hovered(), clear_enabled);
+        paint_tool_icon(ui.painter(), rect, icon, color);
     }
 
     let mut child_ui = ui.new_child(

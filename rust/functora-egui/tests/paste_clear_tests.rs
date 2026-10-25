@@ -1,5 +1,4 @@
 #![cfg(feature = "clipboard")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
 
@@ -110,7 +109,7 @@ fn input_paste_clear_clear_resets_to_empty() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let pos = Pos2::new(outer.max.x - 10.0, outer.center().y);
     click_at(&mut app, pos, &mut body);
     assert_eq!(text, "");
@@ -131,7 +130,7 @@ fn input_paste_clear_clear_resets_to_custom_default() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let pos = Pos2::new(outer.max.x - 10.0, outer.center().y);
     click_at(&mut app, pos, &mut body);
     assert_eq!(text, "default123");
@@ -152,7 +151,7 @@ fn input_paste_clear_no_clear_when_already_default() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let pos = Pos2::new(outer.max.x - 10.0, outer.center().y);
     click_at(&mut app, pos, &mut body);
     assert!(!cleared);
@@ -217,7 +216,7 @@ fn textarea_paste_clear_clear_works() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 192.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let toolbar_y = outer.min.y + 14.0;
     let pos = Pos2::new(outer.max.x - 10.0, toolbar_y);
     click_at(&mut app, pos, &mut body);
@@ -239,7 +238,7 @@ fn textarea_paste_clear_custom_default() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 192.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let toolbar_y = outer.min.y + 14.0;
     let pos = Pos2::new(outer.max.x - 10.0, toolbar_y);
     click_at(&mut app, pos, &mut body);
@@ -261,7 +260,7 @@ fn input_paste_clear_password_eye_toggle_preserves_text() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let eye_pos = Pos2::new(outer.max.x - 56.0, outer.center().y);
     click_at(&mut app, eye_pos, &mut body);
     click_at(&mut app, eye_pos, &mut body);
@@ -283,7 +282,7 @@ fn input_paste_clear_password_clear_still_works() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let clear_pos = Pos2::new(outer.max.x - 10.0, outer.center().y);
     click_at(&mut app, clear_pos, &mut body);
     assert_eq!(text, "");
@@ -306,7 +305,7 @@ fn input_paste_clear_password_eye_does_not_clear() {
     let outer = rects
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let eye_pos = Pos2::new(outer.max.x - 56.0, outer.center().y);
     click_at(&mut app, eye_pos, &mut body);
     assert!(!cleared);
@@ -355,7 +354,7 @@ fn input_readonly_click_copies_text_like_copy_button() {
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     click_at(&mut app, outer.center(), &mut body);
     pump_copy_outcome(&mut app, &mut body, &copied, &errored);
     assert!(
@@ -384,7 +383,7 @@ fn textarea_readonly_click_copies_text_like_copy_button() {
         .iter()
         .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     click_at(&mut app, outer.center(), &mut body);
     pump_copy_outcome(&mut app, &mut body, &copied, &errored);
     assert!(
@@ -410,7 +409,7 @@ fn input_editable_click_does_not_copy() {
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     click_at(&mut app, outer.center(), &mut body);
     pump_copy_outcome(&mut app, &mut body, &copied, &errored);
     assert!(
@@ -439,7 +438,7 @@ fn input_readonly_click_without_copy_button_does_nothing() {
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     click_at(&mut app, outer.center(), &mut body);
     pump_copy_outcome(&mut app, &mut body, &copied, &errored);
     assert!(
@@ -484,7 +483,7 @@ fn input_copy_button_paints_by_default() {
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let copy_region = Rect::from_min_max(
         Pos2::new(outer.min.x + 40.0, outer.min.y),
         Pos2::new(outer.min.x + 80.0, outer.max.y),
@@ -524,7 +523,7 @@ fn textarea_copy_button_paints_by_default() {
         .iter()
         .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let copy_region = Rect::from_min_max(
         Pos2::new(outer.min.x + 36.0, outer.min.y),
         Pos2::new(outer.min.x + 64.0, outer.min.y + 28.0),
@@ -565,7 +564,7 @@ fn input_readonly_hides_paste_and_clear_keeps_copy() {
         .iter()
         .find(|r| (r.height() - 32.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let left_band = Rect::from_min_max(
         Pos2::new(outer.min.x, outer.min.y),
         Pos2::new(outer.min.x + 40.0, outer.max.y),
@@ -620,7 +619,7 @@ fn textarea_readonly_hides_paste_and_clear_keeps_copy() {
         .iter()
         .find(|r| (r.height() - 80.0).abs() < 2.0 && r.width() > 1000.0)
         .copied()
-        .expect("outer rect not found");
+        .unwrap_or_else(|| panic!("outer rect not found"));
     let copy_band = Rect::from_min_max(
         Pos2::new(outer.min.x, outer.min.y),
         Pos2::new(outer.min.x + 32.0, outer.min.y + 24.0),

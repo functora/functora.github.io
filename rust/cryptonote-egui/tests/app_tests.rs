@@ -80,3 +80,24 @@ fn pick_error_toasts() {
         "real errors must fire exactly one error toast"
     );
 }
+
+#[test]
+fn in_flight_promises_keep_the_app_pending() {
+    let mut app = CryptonoteApp::default();
+    assert!(!app.has_pending_receivers(), "an idle app has nothing in flight");
+
+    let (_pick_tx, pick) = std::sync::mpsc::channel();
+    app.pick_rx = Some(pick);
+    assert!(
+        app.has_pending_receivers(),
+        "an in-flight file pick must count as pending"
+    );
+    app.pick_rx = None;
+
+    let (_paste_tx, paste) = std::sync::mpsc::channel();
+    app.paste_image_rx = Some(paste);
+    assert!(
+        app.has_pending_receivers(),
+        "an in-flight paste-image promise must count as pending"
+    );
+}

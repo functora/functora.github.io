@@ -1,5 +1,4 @@
 #![cfg(feature = "markdown")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Markdown viewer must be theme-aware: rendered elements must paint shadcn
 //! tokens (code bg, text, links, headings, checkboxes), not stock egui
 //! light-leaning visuals.
@@ -280,7 +279,7 @@ fn dark_theme_selection_uses_shadcn_primary() {
             _ => None,
         })
         .max_by(|a, b| a.area().total_cmp(&b.area()))
-        .expect("code block must be painted");
+        .unwrap_or_else(|| panic!("code block must be painted"));
     let start = Pos2::new(code_rect.left() + 4.0, code_rect.center().y);
     let end = Pos2::new(code_rect.right() - 4.0, code_rect.center().y + 6.0);
 
@@ -349,7 +348,7 @@ fn theme_restored_after_render() {
         });
     });
     out.textures_delta.clear();
-    let (before, restored) = after.get().expect("body must run");
+    let (before, restored) = after.get().unwrap_or_else(|| panic!("body must run"));
     assert_eq!(
         before, restored,
         "markdown render must restore original visuals",

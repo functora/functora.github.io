@@ -1,5 +1,8 @@
 use std::path::{Path, PathBuf};
 
+pub use crate::icon_export::IconsError;
+use crate::icon_export::{IconSet, ensure_dest};
+
 const HICOLOR_SIZES: [u32; 7] = [16, 32, 48, 64, 128, 256, 512];
 
 const MIPMAP_FALLBACK: [(&str, u32); 5] = [
@@ -10,65 +13,8 @@ const MIPMAP_FALLBACK: [(&str, u32); 5] = [
     ("mipmap-xxxhdpi.png", 192),
 ];
 
-#[derive(Debug)]
-pub enum IconsError {
-    CreateDir {
-        dir: PathBuf,
-        source: std::io::Error,
-    },
-    ReadSource {
-        path: PathBuf,
-        source: std::io::Error,
-    },
-    WriteDest {
-        path: PathBuf,
-        source: std::io::Error,
-    },
-}
-
-impl std::fmt::Display for IconsError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::CreateDir { dir, .. } => {
-                write!(f, "cannot create desktop icon directory {}", dir.display())
-            }
-            Self::ReadSource { path, .. } => {
-                write!(f, "cannot read desktop icon source {}", path.display())
-            }
-            Self::WriteDest { path, .. } => {
-                write!(f, "cannot write desktop icon {}", path.display())
-            }
-        }
-    }
-}
-
-impl std::error::Error for IconsError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::CreateDir { source, .. }
-            | Self::ReadSource { source, .. }
-            | Self::WriteDest { source, .. } => Some(source),
-        }
-    }
-}
-
 fn dest_for(desktop_dir: &Path, app_id: &str, size: u32) -> PathBuf {
     desktop_dir.join(format!("icons/hicolor/{size}x{size}/apps/{app_id}.png"))
-}
-
-fn ensure_dest(to: PathBuf, png: &[u8]) -> Result<PathBuf, IconsError> {
-    let dir = to
-        .parent()
-        .map_or_else(|| PathBuf::from("."), Path::to_path_buf);
-    std::fs::create_dir_all(&dir).map_err(|source| IconsError::CreateDir { dir, source })?;
-    let fresh = std::fs::read(&to).ok().as_deref() != Some(png);
-    if fresh {
-        std::fs::write(&to, png).map_err(|source| IconsError::WriteDest {
-            path: to.clone(),
-            source,
-        })?;
-    }
-    Ok(to)
 }
 
 fn copy_size(
@@ -79,9 +25,12 @@ fn copy_size(
 ) -> Result<Option<PathBuf>, IconsError> {
     let sized = assets_dir.join(format!("icon-{size}.png"));
     match std::fs::read(&sized) {
-        Ok(png) => ensure_dest(dest_for(desktop_dir, app_id, size), &png).map(Some),
+        Ok(png) => {
+            ensure_dest(IconSet::Desktop, dest_for(desktop_dir, app_id, size), &png).map(Some)
+        }
         Err(source) if source.kind() == std::io::ErrorKind::NotFound => Ok(None),
         Err(source) => Err(IconsError::ReadSource {
+            set: IconSet::Desktop,
             path: sized,
             source,
         }),
@@ -97,9 +46,15 @@ fn copy_mipmap(
 ) -> Result<Option<PathBuf>, IconsError> {
     let from = favicon_dir.join(file);
     match std::fs::read(&from) {
-        Ok(png) => ensure_dest(dest_for(desktop_dir, app_id, size), &png).map(Some),
+        Ok(png) => {
+            ensure_dest(IconSet::Desktop, dest_for(desktop_dir, app_id, size), &png).map(Some)
+        }
         Err(source) if source.kind() == std::io::ErrorKind::NotFound => Ok(None),
-        Err(source) => Err(IconsError::ReadSource { path: from, source }),
+        Err(source) => Err(IconsError::ReadSource {
+            set: IconSet::Desktop,
+            path: from,
+            source,
+        }),
     }
 }
 
@@ -119,7 +74,9 @@ pub fn copy_desktop_icons(
         match std::fs::read(assets_dir.join("icon.png")) {
             Ok(png) => [512_u32, 256, 128]
                 .into_iter()
-                .map(|size| ensure_dest(dest_for(desktop_dir, app_id, size), &png))
+                .map(|size| {
+                    ensure_dest(IconSet::Desktop, dest_for(desktop_dir, app_id, size), &png)
+                })
                 .collect::<Result<Vec<PathBuf>, IconsError>>(),
             Err(source) if source.kind() == std::io::ErrorKind::NotFound => MIPMAP_FALLBACK
                 .into_iter()
@@ -129,6 +86,7 @@ pub fn copy_desktop_icons(
                 .collect::<Result<Vec<Option<PathBuf>>, IconsError>>()
                 .map(|hits| hits.into_iter().flatten().collect()),
             Err(source) => Err(IconsError::ReadSource {
+                set: IconSet::Desktop,
                 path: assets_dir.join("icon.png"),
                 source,
             }),

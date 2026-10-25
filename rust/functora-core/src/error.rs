@@ -140,6 +140,116 @@ pub enum Error {
     FileTooLarge { name: String, size: u64, limit: u64 },
     #[error("Operation cancelled")]
     Cancelled,
+    #[error("Required object unavailable: {0}")]
+    Missing(Missing),
+    #[error("{0} is unavailable: web feature disabled")]
+    CapabilityDisabled(Capability),
+    #[error("Clipboard error: {0}")]
+    Clipboard(ClipboardError),
+    #[cfg(target_arch = "wasm32")]
+    #[error("JavaScript operation failed: {0}")]
+    Js(JsError),
+    #[error("File picker timed out")]
+    FilePickerTimedOut,
+    #[error("File picker failed")]
+    FilePickerFailed,
+    #[error("Save was cancelled")]
+    SaveCancelled,
+    #[error("xdg-open failed for {url}")]
+    OpenUrlFailed { url: String },
+    #[error("xdg-open timed out for {url}")]
+    OpenUrlTimedOut { url: String },
+}
+
+/// A browser object, platform handle, or storage location the operation
+/// requires, but which the current platform or build does not provide.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum Missing {
+    #[error("window")]
+    Window,
+    #[error("document")]
+    Document,
+    #[error("document body")]
+    Body,
+    #[error("video element")]
+    VideoElement,
+    #[error("canvas")]
+    Canvas,
+    #[error("2D context")]
+    Context2d,
+    #[error("localStorage")]
+    LocalStorage,
+    #[error("anchor element")]
+    Anchor,
+    #[error("input element")]
+    Input,
+    #[error("file entry")]
+    FileEntry,
+    #[error("clipboard text")]
+    ClipboardText,
+    #[error("desktop session")]
+    DesktopSession,
+    #[error("Android application")]
+    AndroidApp,
+    #[error("data directory")]
+    DataDir,
+}
+
+/// A capability that the current build does not enable.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum Capability {
+    #[error("clipboard")]
+    Clipboard,
+    #[error("share")]
+    Share,
+    #[error("save")]
+    Save,
+}
+
+/// A clipboard that exists but refused the operation.
+#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
+pub enum ClipboardError {
+    #[error("unavailable")]
+    Unavailable,
+    #[error("busy")]
+    Busy,
+    #[error("content unavailable")]
+    ContentUnavailable,
+    #[error("conversion failed")]
+    ConversionFailed,
+    #[error("{0}")]
+    Unknown(String),
+}
+
+/// A JavaScript value rejected by a Web API call, kept alive so that its
+/// original payload stays inspectable.
+#[cfg(target_arch = "wasm32")]
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("{0:?}")]
+pub struct JsError(pub Arc<web_sys::wasm_bindgen::JsValue>);
+
+#[cfg(target_arch = "wasm32")]
+impl PartialEq for JsError {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl Eq for JsError {}
+
+#[cfg(target_arch = "wasm32")]
+impl From<web_sys::wasm_bindgen::JsValue> for JsError {
+    fn from(e: web_sys::wasm_bindgen::JsValue) -> Self {
+        Self(Arc::new(e))
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl From<web_sys::wasm_bindgen::JsValue> for Error {
+    fn from(e: web_sys::wasm_bindgen::JsValue) -> Self {
+        Self::Js(JsError::from(e))
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
@@ -229,6 +339,16 @@ impl I18N for Error {
                 format!("File too large ({name}: {size} bytes, limit {limit} bytes)")
             }
             Self::Cancelled => "Operation cancelled".into(),
+            Self::Missing(m) => format!("Required object unavailable: {m}"),
+            Self::CapabilityDisabled(c) => format!("{c} is unavailable: web feature disabled"),
+            Self::Clipboard(e) => format!("Clipboard error: {e}"),
+            #[cfg(target_arch = "wasm32")]
+            Self::Js(e) => format!("JavaScript operation failed: {e}"),
+            Self::FilePickerTimedOut => "File picker timed out".into(),
+            Self::FilePickerFailed => "File picker failed".into(),
+            Self::SaveCancelled => "Save was cancelled".into(),
+            Self::OpenUrlFailed { url } => format!("xdg-open failed for {url}"),
+            Self::OpenUrlTimedOut { url } => format!("xdg-open timed out for {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("JNI error: {e}"),
         }
@@ -275,6 +395,18 @@ impl I18N for Error {
                 format!("Archivo demasiado grande ({name}: {size} bytes, límite {limit} bytes)")
             }
             Self::Cancelled => "Operación cancelada".into(),
+            Self::Missing(m) => format!("Objeto requerido no disponible: {m}"),
+            Self::CapabilityDisabled(c) => {
+                format!("{c} no está disponible: función web deshabilitada")
+            }
+            Self::Clipboard(e) => format!("Error de portapapeles: {e}"),
+            #[cfg(target_arch = "wasm32")]
+            Self::Js(e) => format!("La operación JavaScript falló: {e}"),
+            Self::FilePickerTimedOut => "El selector de archivos agotó el tiempo de espera".into(),
+            Self::FilePickerFailed => "El selector de archivos falló".into(),
+            Self::SaveCancelled => "Se canceló el guardado".into(),
+            Self::OpenUrlFailed { url } => format!("xdg-open falló al abrir {url}"),
+            Self::OpenUrlTimedOut { url } => format!("xdg-open agotó el tiempo para {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
         }
@@ -317,6 +449,16 @@ impl I18N for Error {
                 format!("Файл слишком большой ({name}: {size} байт, лимит {limit} байт)")
             }
             Self::Cancelled => "Операция отменена".into(),
+            Self::Missing(m) => format!("Требуемый объект недоступен: {m}"),
+            Self::CapabilityDisabled(c) => format!("{c} недоступна: веб-функция отключена"),
+            Self::Clipboard(e) => format!("Ошибка буфера обмена: {e}"),
+            #[cfg(target_arch = "wasm32")]
+            Self::Js(e) => format!("Операция JavaScript не выполнена: {e}"),
+            Self::FilePickerTimedOut => "Выбор файла: время ожидания истекло".into(),
+            Self::FilePickerFailed => "Не удалось выбрать файл".into(),
+            Self::SaveCancelled => "Сохранение отменено".into(),
+            Self::OpenUrlFailed { url } => format!("xdg-open не смог открыть {url}"),
+            Self::OpenUrlTimedOut { url } => format!("xdg-open превысил время ожидания для {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Ошибка JNI: {e}"),
         }

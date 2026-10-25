@@ -72,12 +72,9 @@ impl CryptonoteApp {
                     {
                         let att_clone = att.clone();
                         if self.begin_op(Stage::Download).is_some() {
-                            let rx = functora_egui::spawn_async(async move {
-                                functora_egui::download::download(att_clone.data.to_vec(), &att_clone.name)
-                                    .await
-                                    .map_err(AppError::from)
-                            });
-                            self.download_rx = Some(rx);
+                            self.download_rx = Some(functora_egui::spawn_async(async move {
+                                Ok(functora_egui::download::download(att_clone.data.to_vec(), &att_clone.name).await?)
+                            }));
                         }
                     }
                 });
@@ -117,10 +114,10 @@ impl CryptonoteApp {
             .clicked()
             {
                 let text = self.temporary.note.clone();
-                let rx = functora_egui::spawn_async(async move {
-                    functora_egui::clipboard::write(text).await.map_err(AppError::from)
-                });
-                self.clipboard_write_rx = Some(rx);
+                self.clipboard_write_rx = Some(functora_egui::spawn_async(async move {
+                    functora_egui::clipboard::write(text).await?;
+                    Ok(())
+                }));
             }
             if f.add(
                 Button::new(Msg::Share.render(lang))
@@ -130,19 +127,18 @@ impl CryptonoteApp {
             .inner
             .clicked()
             {
-                if let Some(err) = share_error(self.temporary.cipher, &self.temporary.password) {
+                if let Some(err) = share_error(self.temporary.cipher.into(), &self.temporary.password) {
                     self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else if !matches!(self.temporary.external, External::Nothing) {
                     self.navigate(Screen::Share);
                 } else if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
                     let share_note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
-                    let cipher = self.temporary.cipher;
+                    let cipher = self.temporary.cipher.into();
                     let attachments = self.temporary.attachments.clone();
-                    let rx = functora_egui::spawn_async(async move {
+                    self.generate_rx = Some(functora_egui::spawn_async(async move {
                         build_external(&share_note, &password, cipher, &attachments, cancel, progress).await
-                    });
-                    self.generate_rx = Some(rx);
+                    }));
                 }
             }
             if has_attachments
@@ -156,13 +152,10 @@ impl CryptonoteApp {
             {
                 let files = self.temporary.attachments.clone();
                 if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Zip) {
-                    let rx = functora_egui::spawn_async(async move {
+                    self.download_rx = Some(functora_egui::spawn_async(async move {
                         let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip, cancel).await?;
-                        functora_egui::download::download(zipped, "cryptonote-unlocked.zip")
-                            .await
-                            .map_err(AppError::from)
-                    });
-                    self.download_rx = Some(rx);
+                        Ok(functora_egui::download::download(zipped, "cryptonote-unlocked.zip").await?)
+                    }));
                 }
             }
             if f.add(

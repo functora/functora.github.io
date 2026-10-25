@@ -52,6 +52,22 @@ pub(crate) fn take_slots(ui: &mut egui::Ui, base_id: egui::Id) -> Slots {
 
 /// Polls a pending paste read: applies finished text, reports errors, and
 /// restores the slot while the read is still in flight.
+fn poll_clipboard<T>(
+    ui: &egui::Ui,
+    channel: &mut Option<std::sync::mpsc::Receiver<Result<T, crate::error::Error>>>,
+) -> Option<Result<T, crate::error::Error>> {
+    match poll_channel(channel) {
+        None => {
+            ui.ctx().request_repaint();
+            None
+        }
+        Some(PollOutcome::Disconnected) => Some(Err(crate::error::Error::Worker(
+            crate::error::WorkerStopped,
+        ))),
+        Some(PollOutcome::Ready(outcome)) => Some(outcome),
+    }
+}
+
 pub(crate) fn poll_paste(
     ui: &egui::Ui,
     slot: &PasteSlot,
@@ -60,22 +76,13 @@ pub(crate) fn poll_paste(
     let Ok(mut guard) = slot.0.lock() else {
         return (false, None);
     };
-    match poll_channel(&mut guard) {
-        None => {
-            ui.ctx().request_repaint();
-            (false, None)
-        }
-        Some(PollOutcome::Disconnected) => (
-            false,
-            Some(crate::error::Error::JS(
-                "Clipboard channel disconnected".into(),
-            )),
-        ),
-        Some(PollOutcome::Ready(Ok(incoming))) => {
+    match poll_clipboard(ui, &mut guard) {
+        None => (false, None),
+        Some(Ok(incoming)) => {
             incoming.clone_into(text);
             (true, None)
         }
-        Some(PollOutcome::Ready(Err(error))) => (false, Some(error)),
+        Some(Err(error)) => (false, Some(error)),
     }
 }
 
@@ -84,19 +91,10 @@ pub(crate) fn poll_copy(ui: &egui::Ui, slot: &CopySlot) -> (bool, Option<crate::
     let Ok(mut guard) = slot.0.lock() else {
         return (false, None);
     };
-    match poll_channel(&mut guard) {
-        None => {
-            ui.ctx().request_repaint();
-            (false, None)
-        }
-        Some(PollOutcome::Disconnected) => (
-            false,
-            Some(crate::error::Error::JS(
-                "Clipboard channel disconnected".into(),
-            )),
-        ),
-        Some(PollOutcome::Ready(Ok(()))) => (true, None),
-        Some(PollOutcome::Ready(Err(error))) => (false, Some(error)),
+    match poll_clipboard(ui, &mut guard) {
+        None => (false, None),
+        Some(Ok(())) => (true, None),
+        Some(Err(error)) => (false, Some(error)),
     }
 }
 
@@ -164,6 +162,20 @@ pub(crate) fn pending_color(color: egui::Color32) -> egui::Color32 {
 /// Disabled tool-icon color: muted at low alpha.
 pub(crate) fn disabled_color(theme: &ShadcnTheme) -> egui::Color32 {
     with_alpha(theme.muted_foreground, 90)
+}
+
+/// Idle tool-icon color for an enabled tool, dimmed for a disabled one.
+pub(crate) fn tool_color(theme: &ShadcnTheme, hovered: bool, enabled: bool) -> egui::Color32 {
+    if enabled {
+        hover_color(theme, hovered)
+    } else {
+        disabled_color(theme)
+    }
+}
+
+/// Applies the busy tint only while clipboard work is in flight.
+pub(crate) fn maybe_pending_color(color: egui::Color32, pending: bool) -> egui::Color32 {
+    if pending { pending_color(color) } else { color }
 }
 
 pub(crate) fn paint_tool_icon(

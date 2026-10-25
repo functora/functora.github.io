@@ -162,6 +162,22 @@ impl RadioOption {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum ButtonGroupOption {
+    #[default]
+    Left,
+    Center,
+    Right,
+}
+
+impl ButtonGroupOption {
+    pub const ALL: [(Self, &'static str); 3] = [
+        (Self::Left, "Left"),
+        (Self::Center, "Center"),
+        (Self::Right, "Right"),
+    ];
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Fruit {
     #[default]
     Apple,

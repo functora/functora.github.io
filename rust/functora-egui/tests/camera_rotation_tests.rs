@@ -1,5 +1,4 @@
 #![cfg(feature = "platform")]
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use functora_egui::camera::FrameData;
 use functora_egui::utils::{FrameRotation, fit_preview_size, rotate_luma, rotate_rgba};
 
@@ -97,7 +96,9 @@ fn frame_upright_rotates_luma_and_preview_together() {
     let upright = frame.upright(FrameRotation::Cw90);
     assert_eq!((upright.width, upright.height), (2, 3));
     assert_eq!(upright.data, vec![3, 0, 4, 1, 5, 2]);
-    let preview = upright.preview_rgba.expect("preview must survive");
+    let preview = upright
+        .preview_rgba
+        .unwrap_or_else(|| panic!("preview must survive"));
     assert_eq!(preview.len(), 2 * 3 * 4);
     assert_eq!(&preview[0..4], &[3, 3, 3, 255]);
 }

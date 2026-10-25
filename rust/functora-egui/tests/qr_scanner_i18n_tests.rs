@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! `QrScanner` is fully automatic: no Start/Stop/Clear buttons are rendered,
 //! and the file-picker entry uses the translated catalog.
 

@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 //! Empty textarea must gain focus when clicking anywhere inside its border,
 //! not only on the first text line.
 
@@ -93,7 +92,7 @@ fn empty_textarea_bottom_click_focuses() {
                 .partial_cmp(&b.height())
                 .unwrap_or(std::cmp::Ordering::Equal)
         })
-        .expect("textarea border must render");
+        .unwrap_or_else(|| panic!("textarea border must render"));
     let pos = Pos2::new(outer.center().x, outer.max.y - 12.0);
     assert!(
         outer.contains(pos),
@@ -127,7 +126,7 @@ fn empty_textarea_paste_clear_bottom_click_focuses() {
                 .partial_cmp(&b.height())
                 .unwrap_or(std::cmp::Ordering::Equal)
         })
-        .expect("textarea border must render");
+        .unwrap_or_else(|| panic!("textarea border must render"));
     let pos = Pos2::new(outer.center().x, outer.max.y - 12.0);
     assert!(
         outer.contains(pos),

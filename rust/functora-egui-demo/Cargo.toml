@@ -47,6 +47,10 @@ developer = "Functora"
 [build-dependencies]
 functora-egui = { path = "../functora-egui", features = ["build"] }
 
+# proptest cannot build for wasm32, so property tests are host-only.
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
+proptest = "1.11.0"
+
 [patch.crates-io]
 egui-winit = { path = "../egui-winit" }
 

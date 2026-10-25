@@ -4,8 +4,6 @@
 //! preserve: desktop camera ops report "use file picker", stop/sleep always
 //! succeed, and share (clipboard fallback) always succeeds.
 
-#![allow(clippy::unwrap_used, clippy::expect_used)]
-
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 #[cfg(all(feature = "platform", feature = "runtime"))]
 mod desktop {
@@ -18,7 +16,9 @@ mod desktop {
 
     #[test]
     fn check_camera_reports_file_picker_fallback() {
-        let error = pollster::block_on(functora_egui::camera::check_camera()).unwrap_err();
+        let error = pollster::block_on(functora_egui::camera::check_camera())
+            .err()
+            .unwrap_or_else(|| panic!("camera check must report a fallback"));
         assert!(
             camera_unavailable_message(&error).contains("file picker"),
             "unexpected message: {error:?}"
@@ -27,7 +27,9 @@ mod desktop {
 
     #[test]
     fn start_camera_reports_file_picker_fallback() {
-        let error = pollster::block_on(functora_egui::camera::start_camera()).unwrap_err();
+        let error = pollster::block_on(functora_egui::camera::start_camera())
+            .err()
+            .unwrap_or_else(|| panic!("camera start must report a fallback"));
         assert!(
             camera_unavailable_message(&error).contains("file picker"),
             "unexpected message: {error:?}"
@@ -36,7 +38,9 @@ mod desktop {
 
     #[test]
     fn capture_frame_reports_file_picker_fallback() {
-        let error = pollster::block_on(functora_egui::camera::capture_frame()).unwrap_err();
+        let error = pollster::block_on(functora_egui::camera::capture_frame())
+            .err()
+            .unwrap_or_else(|| panic!("camera capture must report a fallback"));
         assert!(
             camera_unavailable_message(&error).contains("file picker"),
             "unexpected message: {error:?}"
@@ -45,12 +49,14 @@ mod desktop {
 
     #[test]
     fn stop_camera_always_succeeds() {
-        pollster::block_on(functora_egui::camera::stop_camera()).unwrap();
+        pollster::block_on(functora_egui::camera::stop_camera())
+            .unwrap_or_else(|err| panic!("camera must stop: {err}"));
     }
 
     #[test]
     fn sleep_always_succeeds() {
-        pollster::block_on(functora_egui::camera::sleep(1)).unwrap();
+        pollster::block_on(functora_egui::camera::sleep(1))
+            .unwrap_or_else(|err| panic!("camera sleep must complete: {err}"));
     }
 
     #[test]
@@ -68,6 +74,7 @@ mod desktop {
             text: "text".into(),
             url: BROWSER_FREE_URL.into(),
         };
-        pollster::block_on(functora_egui::share::share(data)).unwrap();
+        pollster::block_on(functora_egui::share::share(data))
+            .unwrap_or_else(|err| panic!("share must complete: {err}"));
     }
 }

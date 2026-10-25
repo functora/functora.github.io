@@ -1,4 +1,3 @@
-#![allow(clippy::unwrap_used, clippy::expect_used)]
 use egui::{Context, Event, Pos2, RawInput, Rect, Shape, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
@@ -59,7 +58,10 @@ fn marker_center(output: &egui::FullOutput) -> Pos2 {
             found.push(text.galley.rect.translate(text.pos.to_vec2()).center());
         }
     }
-    found.into_iter().next().expect("BELOW marker must render")
+    found
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| panic!("BELOW marker must render"))
 }
 
 #[test]
@@ -80,7 +82,7 @@ fn textarea_readonly_grows_to_fit_short_content() {
         .iter()
         .copied()
         .reduce(f32::max)
-        .expect("expected at least one border box");
+        .unwrap_or_else(|| panic!("expected at least one border box"));
     assert!(
         tallest > 80.5,
         "readonly field must grow past its minimum to fit content, got {tallest}"
@@ -157,13 +159,17 @@ fn textarea_readonly_renders_muted_background() {
     let muted_y = fills
         .iter()
         .find(|(_, color)| *color == dark.muted)
-        .map(|(y, _)| *y)
-        .expect("readonly field must render a muted inactive background");
+        .map_or_else(
+            || panic!("readonly field must render a muted inactive background"),
+            |(y, _)| *y,
+        );
     let plain_y = fills
         .iter()
         .find(|(_, color)| *color == dark.background)
-        .map(|(y, _)| *y)
-        .expect("editable field must keep the default background");
+        .map_or_else(
+            || panic!("editable field must keep the default background"),
+            |(y, _)| *y,
+        );
     assert!(
         muted_y < plain_y,
         "muted box must belong to the first (readonly) field"
@@ -220,7 +226,7 @@ fn textarea_wheel_reaches_page_when_content_fits() {
     let field = border_boxes(&page(Vec::new()))
         .into_iter()
         .reduce(|a, b| if a.height() > b.height() { a } else { b })
-        .expect("field box must render");
+        .unwrap_or_else(|| panic!("field box must render"));
     let center = field.center();
     let before = marker_center(&page(vec![Event::PointerMoved(center)]));
     let _ = page(vec![wheel(-30.0)]);

@@ -243,12 +243,19 @@
         srWeb = app:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [coreutils psmisc python3];
+            runtimeInputs = with pkgs; [coreutils psmisc gzip python3];
             text = ''
                   cd "${app}"
                   VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                   dx bundle --release --web --debug-symbols=false
                     cp ../functora-dioxus/assets/sw.js ../target/dx/${app}/release/web/public/sw.js
+                    for W in ../target/dx/${app}/release/web/public/*.wasm ../target/dx/${app}/release/web/public/*/*.wasm
+                    do
+                      if [ -f "$W" ]
+                      then
+                        gzip -9 -c "$W" > "$W.gz"
+                      fi
+                    done
                     fuser -k -TERM 8000/tcp 2>/dev/null || true
                     sleep 0.5
                     exec python3 <<PYEOF
@@ -258,6 +265,7 @@
               ROOT = os.path.abspath("../target/dx/${app}/release/web/public")
 
               class Handler(http.server.SimpleHTTPRequestHandler):
+                  precompressed = False
                   def __init__(self, *a, **k):
                       super().__init__(*a, directory=ROOT, **k)
                   def do_GET(self):
@@ -267,8 +275,25 @@
                           self.send_error(404)
                           return
                       super().do_GET()
+                  def send_head(self):
+                      head, sep, query = self.path.partition("?")
+                      gz = head + ".gz"
+                      self.precompressed = (
+                          head.endswith(".wasm")
+                          and "gzip" in self.headers.get("Accept-Encoding", "")
+                          and os.path.isfile(self.translate_path(gz))
+                      )
+                      if self.precompressed:
+                          self.path = gz + sep + query
+                      return super().send_head()
+                  def guess_type(self, path):
+                      return super().guess_type(path[:-3] if self.precompressed else path)
+                  def end_headers(self):
+                      if self.precompressed:
+                          self.send_header("Content-Encoding", "gzip")
+                      super().end_headers()
 
-              http.server.HTTPServer(("", PORT), Handler).serve_forever()
+              http.server.ThreadingHTTPServer(("", PORT), Handler).serve_forever()
               PYEOF
             '';
           };
@@ -313,7 +338,7 @@
         srFunctoraEguiWeb = app: icons:
           pkgs.writeShellApplication {
             name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep python3];
+            runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep gzip python3];
             text = ''
                   cd "${app}"
                   LIBNAME="$(echo "${app}" | tr - _)"
@@ -323,6 +348,13 @@
                       --no-typescript \
                       --out-dir /tmp/${app}-web/pkg \
                       "../target/wasm32-unknown-unknown/release/$LIBNAME.wasm"
+                    for W in /tmp/${app}-web/pkg/*.wasm
+                    do
+                      if [ -f "$W" ]
+                      then
+                        gzip -9 -c "$W" > "$W.gz"
+                      fi
+                    done
                     cp assets/index.html /tmp/${app}-web/index.html
                     cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
                     cp assets/egui.js /tmp/${app}-web/egui.js
@@ -333,15 +365,33 @@
                     fuser -k -TERM 8000/tcp 2>/dev/null || true
                     sleep 0.5
                     exec python3 <<PYEOF
-              import http.server
+              import http.server, os
               PORT = 8000
               ROOT = "/tmp/${app}-web"
 
               class Handler(http.server.SimpleHTTPRequestHandler):
+                  precompressed = False
                   def __init__(self, *a, **k):
                       super().__init__(*a, directory=ROOT, **k)
+                  def send_head(self):
+                      head, sep, query = self.path.partition("?")
+                      gz = head + ".gz"
+                      self.precompressed = (
+                          head.endswith(".wasm")
+                          and "gzip" in self.headers.get("Accept-Encoding", "")
+                          and os.path.isfile(self.translate_path(gz))
+                      )
+                      if self.precompressed:
+                          self.path = gz + sep + query
+                      return super().send_head()
+                  def guess_type(self, path):
+                      return super().guess_type(path[:-3] if self.precompressed else path)
+                  def end_headers(self):
+                      if self.precompressed:
+                          self.send_header("Content-Encoding", "gzip")
+                      super().end_headers()
 
-              http.server.HTTPServer(("", PORT), Handler).serve_forever()
+              http.server.ThreadingHTTPServer(("", PORT), Handler).serve_forever()
               PYEOF
             '';
           };

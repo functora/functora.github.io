@@ -10,21 +10,37 @@ impl egui::Widget for super::widget::Checkbox<'_> {
 
         // Layout: box + optional label (14pt to match Radio/Switch labels)
         let label_font = egui::FontId::proportional(14.0);
+        let label_max_width = (ui.available_width() - box_size - spacing).max(0.0);
         let label_galley = self.label.map(|l| {
-            ui.painter()
-                .layout_no_wrap(l.text().to_owned(), label_font, theme.foreground)
+            crate::text::layout(
+                ui,
+                l.text().to_owned(),
+                label_font,
+                theme.foreground,
+                label_max_width,
+                None,
+            )
         });
 
         let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
+        let label_height = label_galley.as_ref().map_or(0.0, |g| g.size().y);
         let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let row_height = touch.max(box_size);
         let desired = egui::vec2(
             (box_size + label_width).min(ui.available_width()),
-            row_height,
+            row_height.max(label_height),
         );
 
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        let intrinsic_label_width = label_galley
+            .as_ref()
+            .map_or(0.0, |g| g.intrinsic_size().x + spacing);
+        let intrinsic_label_height = label_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y);
+        response.set_intrinsic_size(egui::vec2(
+            box_size + intrinsic_label_width,
+            row_height.max(intrinsic_label_height).max(desired.y),
+        ));
 
         if response.clicked() {
             *self.checked = !*self.checked;

@@ -27,15 +27,11 @@ impl super::widget::ContextMenu {
             let max_text_width: f32 = entries
                 .iter()
                 .map(|(_, label)| {
-                    inner_ui
-                        .painter()
-                        .layout_no_wrap(
-                            label.clone(),
-                            egui::FontId::proportional(14.0),
-                            theme.popover_foreground,
-                        )
-                        .size()
-                        .x
+                    crate::text::natural_width(
+                        inner_ui.ctx(),
+                        label.clone(),
+                        egui::FontId::proportional(14.0),
+                    )
                 })
                 .fold(0.0_f32, f32::max);
 
@@ -60,10 +56,13 @@ impl super::widget::ContextMenu {
             inner_ui.set_max_width(menu_width);
 
             for (value, label) in entries {
-                let galley = inner_ui.painter().layout_no_wrap(
+                let galley = crate::text::layout(
+                    inner_ui,
                     label.to_owned(),
                     egui::FontId::proportional(14.0),
                     theme.popover_foreground,
+                    (menu_width - 16.0).max(0.0),
+                    None,
                 );
                 let desired = egui::vec2(menu_width, galley.size().y + 8.0);
                 let (rect, r) = inner_ui.allocate_exact_size(desired, egui::Sense::click());

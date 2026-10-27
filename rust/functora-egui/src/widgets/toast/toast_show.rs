@@ -56,17 +56,13 @@ impl super::toast_state::ToastState {
                             let close_size = 14.0;
                             let gap = 8.0;
                             let title_width = (toast_width - close_size - gap).max(50.0);
-                            let title_galley = egui::WidgetText::from(
-                                egui::RichText::new(&toast.title)
-                                    .color(accent)
-                                    .size(14.0)
-                                    .strong(),
-                            )
-                            .into_galley(
+                            let title_galley = crate::text::layout(
                                 inner_ui3,
-                                Some(egui::TextWrapMode::Wrap),
+                                &toast.title,
+                                egui::FontId::proportional(14.0),
+                                accent,
                                 title_width,
-                                egui::TextStyle::Body,
+                                Some(crate::text::Wrap::Word),
                             );
                             let row_height = title_galley.size().y.max(close_size);
                             let (row_rect, _) = inner_ui3.allocate_exact_size(
@@ -106,11 +102,15 @@ impl super::toast_state::ToastState {
 
                         if let Some(desc) = &toast.description {
                             content_ui.add_space(2.0);
-                            let _ = content_ui.label(
-                                egui::RichText::new(desc)
-                                    .color(theme.muted_foreground)
-                                    .size(13.0),
+                            let desc_galley = crate::text::layout(
+                                content_ui,
+                                desc.clone(),
+                                egui::FontId::proportional(13.0),
+                                theme.muted_foreground,
+                                toast_width,
+                                Some(crate::text::Wrap::Word),
                             );
+                            let _ = content_ui.label(desc_galley);
                         }
                     });
                 }

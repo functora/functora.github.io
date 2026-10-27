@@ -12,14 +12,11 @@ const POPUP_ITEM_PADDING: f32 = 32.0;
 const POPUP_CONTENT_FLOOR: f32 = 144.0;
 
 pub(crate) fn text_width(ui: &egui::Ui, text: &str) -> f32 {
-    ui.painter()
-        .layout_no_wrap(
-            text.to_owned(),
-            egui::FontId::proportional(TRIGGER_FONT_SIZE),
-            egui::Color32::PLACEHOLDER,
-        )
-        .size()
-        .x
+    crate::text::natural_width(
+        ui.ctx(),
+        text.to_owned(),
+        egui::FontId::proportional(TRIGGER_FONT_SIZE),
+    )
 }
 
 pub(crate) fn max_text_width<'a>(ui: &egui::Ui, texts: impl IntoIterator<Item = &'a str>) -> f32 {

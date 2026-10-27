@@ -7,15 +7,25 @@ impl egui::Widget for super::widget::Toggle<'_> {
             &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
         );
 
-        let text_galley = ui.painter().layout_no_wrap(
+        let text_galley = crate::text::layout(
+            ui,
             self.text.text().to_owned(),
             egui::FontId::proportional(font_size),
             theme.foreground,
+            (ui.available_width() - h_padding * 2.0).max(0.0),
+            None,
         );
 
-        let desired = egui::vec2(text_galley.size().x + h_padding * 2.0, height);
+        let desired = egui::vec2(
+            text_galley.size().x + h_padding * 2.0,
+            crate::text::box_height(&text_galley, height),
+        );
 
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        response.set_intrinsic_size(egui::vec2(
+            text_galley.intrinsic_size().x + h_padding * 2.0,
+            crate::text::intrinsic_box_height(&text_galley, height).max(desired.y),
+        ));
 
         if response.clicked() {
             *self.pressed = !*self.pressed;

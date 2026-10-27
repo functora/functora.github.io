@@ -1,28 +1,56 @@
 //! Widget trait implementation for Button.
 
-impl egui::Widget for super::widget::Button<'_> {
-    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+use std::sync::Arc;
 
-        // Check if inside a ButtonGroup and claim an index
-        let group_key = crate::widgets::button_group::widget::ButtonGroup::context_key();
-        let group_info = ui.ctx().data_mut(|d| {
-            d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(
-                group_key,
-            )
-            .and_then(|mut ctx| {
-                if !ctx.active {
-                    return None;
-                }
-                let index = ctx.current_index;
-                let cached_count = ctx.cached_count;
-                let cr = ctx.corner_radius;
-                ctx.current_index += 1;
-                let _ = d.insert_temp(group_key, ctx);
-                Some((index, cached_count, cr))
-            })
-        });
-        let in_group = group_info.is_some();
+/// Paint-independent geometry of a button, computed once and shared by
+/// [`super::widget::Button::measure`] and the widget implementation.
+struct Metrics {
+    width: f32,
+    height: f32,
+    intrinsic: egui::Vec2,
+    text_galley: Arc<egui::Galley>,
+    shortcut_galley: Option<Arc<egui::Galley>>,
+    icon_size: f32,
+    icon_gap: f32,
+}
+
+impl Metrics {
+    fn size(&self) -> egui::Vec2 {
+        egui::vec2(self.width, self.height)
+    }
+}
+
+/// Where a button sits in its [`crate::ButtonGroup`], resolved from the
+/// group's cached row structure.
+#[derive(Clone, Copy)]
+struct GroupInfo {
+    corner_radius: f32,
+    first: bool,
+    last: bool,
+}
+
+const ROW_ROUNDING_SLACK: f32 = 0.5;
+
+fn fit_room(fixed: f32, room: f32) -> f32 {
+    if room > 0.0 && fixed > room && fixed - room <= ROW_ROUNDING_SLACK {
+        room
+    } else {
+        fixed
+    }
+}
+
+impl super::widget::Button<'_> {
+    /// The size this button takes up inside `available_width` of room.
+    ///
+    /// Text is wrapped into that room, so a title that does not fit on one
+    /// line makes the button taller instead of wider.
+    #[must_use]
+    pub fn measure(&self, ui: &egui::Ui, available_width: f32) -> egui::Vec2 {
+        self.metrics(ui, available_width, 0.0).size()
+    }
+
+    fn metrics(&self, ui: &egui::Ui, available_width: f32, min_height: f32) -> Metrics {
+        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let mut style = super::button_variant_style::resolve_button_style(
             &theme,
@@ -43,6 +71,169 @@ impl egui::Widget for super::widget::Button<'_> {
             style.font_size = fs;
         }
 
+        let text_string = self.text.text().to_owned();
+        let is_icon_only = text_string.is_empty() && self.icon.is_some();
+        let has_icon = self.icon.is_some();
+
+        let icon_size = style.height * 0.5;
+        let icon_gap = 6.0;
+        let shortcut_gap = 16.0;
+        let icon_width = if is_icon_only {
+            style.height
+        } else if has_icon {
+            icon_size + icon_gap
+        } else {
+            0.0
+        };
+
+        // The box: a fixed box keeps its width, a content-sized box is capped
+        // by the room that is actually available, so neither can grow past
+        // their container.
+        let fixed_width = self
+            .fixed_width
+            .map(|width| fit_room(width, ui.available_rect_before_wrap().width()));
+        let room_width = fixed_width.unwrap_or(available_width);
+
+        let shortcut_galley = self.shortcut_text.as_ref().map(|st| {
+            crate::text::layout(
+                ui,
+                st.clone(),
+                egui::FontId::proportional(style.font_size - 1.0),
+                theme.muted_foreground,
+                (room_width - style.h_padding * 2.0 - icon_width).max(0.0),
+                Some(crate::text::Wrap::Truncate),
+            )
+        });
+        let shortcut_width = shortcut_galley
+            .as_ref()
+            .map_or(0.0, |g| shortcut_gap + g.size().x);
+
+        // Everything the title has to wrap around: padding, icon, shortcut.
+        let chrome = if is_icon_only {
+            icon_width
+        } else {
+            icon_width + style.h_padding * 2.0 + shortcut_width
+        };
+
+        let text_galley = crate::text::layout(
+            ui,
+            text_string,
+            egui::FontId::proportional(style.font_size),
+            style.fg,
+            (room_width - chrome).max(0.0),
+            self.wrap,
+        );
+
+        let width = fixed_width.unwrap_or_else(|| {
+            let natural = if is_icon_only {
+                chrome
+            } else {
+                chrome + text_galley.size().x
+            };
+            natural.min(room_width)
+        });
+        let height = crate::text::box_height(&text_galley, style.height).max(min_height);
+
+        let intrinsic_width = self.fixed_width.unwrap_or_else(|| {
+            if is_icon_only {
+                chrome
+            } else {
+                chrome + text_galley.intrinsic_size().x
+            }
+        });
+        let intrinsic_height = crate::text::intrinsic_box_height(&text_galley, style.height)
+            .max(min_height)
+            .max(height);
+
+        Metrics {
+            width,
+            height,
+            intrinsic: egui::vec2(intrinsic_width, intrinsic_height),
+            text_galley,
+            shortcut_galley,
+            icon_size,
+            icon_gap,
+        }
+    }
+}
+
+impl egui::Widget for super::widget::Button<'_> {
+    fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+
+        // Check if inside a ButtonGroup and claim an index
+        let group_key = crate::widgets::button_group::widget::ButtonGroup::context_key();
+        let group_info = ui.ctx().data_mut(|d| {
+            d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(
+                group_key,
+            )
+            .and_then(|mut ctx| {
+                if !ctx.active {
+                    return None;
+                }
+                let index = ctx.current_index;
+                let cached_count = ctx.cached_count;
+                let cached_rows = ctx.cached_rows.clone();
+                let cr = ctx.corner_radius;
+                ctx.current_index += 1;
+                let _ = d.insert_temp(group_key, ctx);
+                let (first, last) = row_span(&cached_rows, index, cached_count);
+                Some(GroupInfo {
+                    corner_radius: cr,
+                    first,
+                    last,
+                })
+            })
+        });
+        let in_group = group_info.is_some();
+
+        let min_height = if in_group {
+            let cached_max_height = ui.ctx().data(|d| {
+                d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(
+                    group_key,
+                )
+                .map_or(0.0, |ctx| ctx.cached_max_height)
+            });
+            self.min_height.max(cached_max_height)
+        } else {
+            self.min_height
+        };
+
+        let Metrics {
+            width,
+            height,
+            intrinsic,
+            text_galley,
+            shortcut_galley,
+            icon_size,
+            icon_gap,
+        } = self.metrics(ui, ui.available_width(), min_height);
+
+        let desired = egui::vec2(width, height);
+
+        // fixed_width: exact size for equal-width strips (e.g. stretched tabs).
+        // full_width: use allocate_at_least so the button stretches to fill
+        // the menu/list width without inflating the menu's own desired size.
+        let (rect, mut response) = if self.fixed_width.is_some() {
+            ui.allocate_exact_size(desired, egui::Sense::click())
+        } else if self.full_width {
+            ui.allocate_at_least(desired, egui::Sense::click())
+        } else {
+            ui.allocate_exact_size(desired, egui::Sense::click())
+        };
+        response.set_intrinsic_size(intrinsic);
+
+        // Record the rect in the group so it can lay out its rows
+        if in_group {
+            ui.ctx().data_mut(|d| {
+                if let Some(mut ctx) = d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(group_key)
+                    && ctx.active {
+                        ctx.rects.push(rect);
+                        let _ = d.insert_temp(group_key, ctx);
+                    }
+            });
+        }
+
         let is_loader = matches!(
             self.icon,
             Some(
@@ -55,75 +246,10 @@ impl egui::Widget for super::widget::Button<'_> {
             ui.ctx().request_repaint();
         }
 
-        let text_string = self.text.text().to_owned();
-        let is_icon_only = text_string.is_empty() && self.icon.is_some();
         let has_icon = self.icon.is_some();
-        let has_text = !text_string.is_empty();
+        let is_icon_only = self.text.text().is_empty() && has_icon;
+        let has_text = !self.text.text().is_empty();
         let has_shortcut = self.shortcut_text.is_some();
-
-        let text_galley = ui.painter().layout_no_wrap(
-            text_string.clone(),
-            egui::FontId::proportional(style.font_size),
-            style.fg,
-        );
-
-        let shortcut_galley = self.shortcut_text.as_ref().map(|st| {
-            ui.painter().layout_no_wrap(
-                st.clone(),
-                egui::FontId::proportional(style.font_size - 1.0),
-                theme.muted_foreground,
-            )
-        });
-
-        let icon_size = style.height * 0.5;
-        let icon_gap = 6.0;
-        let shortcut_gap = 16.0;
-
-        let shortcut_width = shortcut_galley
-            .as_ref()
-            .map_or(0.0, |g| shortcut_gap + g.size().x);
-
-        let content_width = if is_icon_only {
-            style.height
-        } else if has_icon && has_text {
-            style.h_padding
-                + icon_size
-                + icon_gap
-                + text_galley.size().x
-                + shortcut_width
-                + style.h_padding
-        } else {
-            text_galley.size().x + shortcut_width + style.h_padding * 2.0
-        };
-
-        let width = self.fixed_width.unwrap_or(content_width);
-        let desired = egui::vec2(width, style.height);
-
-        // fixed_width: exact size for equal-width strips (e.g. stretched tabs).
-        // full_width: use allocate_at_least so the button stretches to fill
-        // the menu/list width without inflating the menu's own desired size.
-        let (rect, response) = if self.fixed_width.is_some() {
-            ui.allocate_exact_size(desired, egui::Sense::click())
-        } else if self.full_width {
-            ui.allocate_at_least(desired, egui::Sense::click())
-        } else {
-            ui.allocate_exact_size(desired, egui::Sense::click())
-        };
-
-        // Record boundary and rect in group context
-        if in_group {
-            ui.ctx().data_mut(|d| {
-                if let Some(mut ctx) = d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(group_key)
-                    && ctx.active {
-                        ctx.boundaries.push(rect.max.x);
-                        ctx.group_rect = Some(match ctx.group_rect {
-                            Some(r) => r.union(rect),
-                            None => rect,
-                        });
-                        let _ = d.insert_temp(group_key, ctx);
-                    }
-            });
-        }
 
         // Re-resolve with actual interaction state
         let mut active_style = super::button_variant_style::resolve_button_style(
@@ -325,18 +451,13 @@ impl egui::Widget for super::widget::Button<'_> {
 
             // Underline for Link variant
             if active_style.underline && response.hovered() {
-                let galley2 = painter.layout_no_wrap(
-                    text_string,
-                    egui::FontId::proportional(active_style.font_size),
-                    active_style.fg,
-                );
                 let text_pos = egui::pos2(
-                    rect.center().x - galley2.size().x / 2.0,
-                    rect.center().y - galley2.size().y / 2.0,
+                    rect.center().x - text_galley.size().x / 2.0,
+                    rect.center().y - text_galley.size().y / 2.0,
                 );
-                let underline_y = text_pos.y + galley2.size().y;
+                let underline_y = text_pos.y + text_galley.size().y;
                 let _ = painter.hline(
-                    text_pos.x..=text_pos.x + galley2.size().x,
+                    text_pos.x..=text_pos.x + text_galley.size().x,
                     underline_y,
                     egui::Stroke::new(1.0, active_style.fg),
                 );
@@ -361,22 +482,32 @@ impl egui::Widget for super::widget::Button<'_> {
     }
 }
 
-fn group_corner_radius(
-    group_info: Option<&(usize, usize, f32)>,
-    default_cr: f32,
-) -> egui::CornerRadius {
+fn group_corner_radius(group_info: Option<&GroupInfo>, default_cr: f32) -> egui::CornerRadius {
     match group_info {
-        Some((index, cached_count, group_cr)) => {
-            let r = crate::utils::f32_to_u8_clamped(*group_cr);
-            let is_first = *index == 0;
-            let is_last = *cached_count > 0 && *index == *cached_count - 1;
+        Some(info) => {
+            let r = crate::utils::f32_to_u8_clamped(info.corner_radius);
             egui::CornerRadius {
-                nw: if is_first { r } else { 0 },
-                sw: if is_first { r } else { 0 },
-                ne: if is_last { r } else { 0 },
-                se: if is_last { r } else { 0 },
+                nw: if info.first { r } else { 0 },
+                sw: if info.first { r } else { 0 },
+                ne: if info.last { r } else { 0 },
+                se: if info.last { r } else { 0 },
             }
         }
         None => egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(default_cr)),
+    }
+}
+
+/// First/last button of the row `index` belongs to, from the group's cached
+/// row structure. Falls back to a single row before the first frame of a
+/// group, mirroring how [`ButtonGroupContext::cached_count`] behaves.
+///
+/// [`ButtonGroupContext::cached_count`]: crate::widgets::button_group::button_group_context::ButtonGroupContext::cached_count
+fn row_span(rows: &[(usize, usize)], index: usize, cached_count: usize) -> (bool, bool) {
+    match rows
+        .iter()
+        .find(|(first, last)| *first <= index && index <= *last)
+    {
+        Some((first, last)) => (index == *first, index == *last),
+        None => (index == 0, cached_count > 0 && index == cached_count - 1),
     }
 }

@@ -4,15 +4,19 @@ impl super::widget::InputOtp {
     /// Shows the OTP input. `value` is a mutable string holding the entered digits.
     pub fn show(self, ui: &mut egui::Ui, value: &mut String) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cell_size: f32 = 40.0;
+        let base_cell: f32 = 40.0;
         let gap: f32 = 8.0;
-        let font_size: f32 = 20.0;
+        let base_font_size: f32 = 20.0;
+        let cells = crate::utils::usize_to_f32(self.length);
+        let gaps = gap * crate::utils::usize_to_f32(self.length.saturating_sub(1));
+        let cell_size = base_cell.min(((ui.available_width() - gaps) / cells).max(0.0));
+        let font_size = base_font_size * (cell_size / base_cell);
         let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
 
-        let total_width = cell_size * crate::utils::usize_to_f32(self.length)
-            + gap * crate::utils::usize_to_f32(self.length.saturating_sub(1));
-        let (full_rect, response) =
+        let total_width = cell_size * cells + gaps;
+        let (full_rect, mut response) =
             ui.allocate_exact_size(egui::vec2(total_width, cell_size), egui::Sense::click());
+        response.set_intrinsic_size(egui::vec2(base_cell * cells + gaps, base_cell));
 
         // Handle keyboard input when focused
         if response.has_focus() || response.clicked() {
@@ -76,10 +80,13 @@ impl super::widget::InputOtp {
                 );
 
                 if let Some(&ch) = updated_digits.get(i) {
-                    let galley = painter.layout_no_wrap(
+                    let galley = crate::text::layout(
+                        ui,
                         ch.to_string(),
                         egui::FontId::proportional(font_size),
                         theme.foreground,
+                        (cell_size - 8.0).max(0.0),
+                        Some(crate::text::Wrap::Truncate),
                     );
                     let pos = egui::pos2(
                         cell_rect.center().x - galley.size().x / 2.0,

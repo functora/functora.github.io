@@ -33,7 +33,7 @@ impl CryptonoteApp {
             }
             self.paste_clear_feedback(resp, toast_time);
             let () = ui.add_space(12.0);
-            _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
                 if f.add(
                     Button::new(Msg::DecryptButton.render(lang))
                         .icon(functora_egui::LucideIcon::LockOpen)

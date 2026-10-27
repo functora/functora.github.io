@@ -43,12 +43,19 @@ impl super::widget::InputGroup {
         let mut cursor_x = outer_rect.min.x;
         let h_padding: f32 = 10.0;
 
+        // Suffix area (reserve space on right)
+        let suffix_width: f32 = if suffix.is_some() { 40.0 } else { 0.0 };
+        let input_right = outer_rect.max.x - suffix_width;
+
         // Prefix text
         if let Some(prefix_text) = prefix {
-            let galley = ui.painter().layout_no_wrap(
+            let galley = crate::text::layout(
+                ui,
                 prefix_text.to_owned(),
                 egui::FontId::proportional(14.0),
                 theme.muted_foreground,
+                (width - suffix_width - h_padding * 4.0).max(0.0),
+                Some(crate::text::Wrap::Truncate),
             );
             let prefix_w = galley.size().x + h_padding;
             let text_pos = egui::pos2(
@@ -66,10 +73,6 @@ impl super::widget::InputGroup {
                 egui::Stroke::new(1.0, theme.border),
             );
         }
-
-        // Suffix area (reserve space on right)
-        let suffix_width: f32 = if suffix.is_some() { 40.0 } else { 0.0 };
-        let input_right = outer_rect.max.x - suffix_width;
 
         // Input area
         let input_rect = egui::Rect::from_min_max(

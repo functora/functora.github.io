@@ -97,6 +97,7 @@ pub mod storage;
 pub use storage::Persistent;
 #[cfg(feature = "storage")]
 pub use storage::{Storage, files_dir_for};
+pub mod text;
 pub mod theme;
 pub mod theme_extra;
 pub mod tokens;
@@ -190,6 +191,7 @@ pub use route::SCREEN_PARAM;
 pub use route::breadcrumbs_for;
 pub use route::{history_push, history_replace};
 pub use state::PersistentState;
+pub use text::Wrap;
 pub use theme::setup_fonts::setup_fonts;
 pub use theme::setup_image_loaders::setup_image_loaders;
 pub use theme::shadcn_theme::ShadcnTheme;

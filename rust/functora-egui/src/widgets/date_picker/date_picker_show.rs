@@ -33,10 +33,18 @@ impl super::widget::DatePicker {
         let h_padding: f32 = 8.0;
         let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
-        let galley =
-            ui.painter()
-                .layout_no_wrap(display_text, egui::FontId::proportional(14.0), text_color);
-        let desired = egui::vec2(icon_size + gap + galley.size().x + h_padding * 2.0, height);
+        let galley = crate::text::layout(
+            ui,
+            display_text,
+            egui::FontId::proportional(14.0),
+            text_color,
+            (ui.available_width() - icon_size - gap - h_padding * 2.0).max(0.0),
+            None,
+        );
+        let desired = egui::vec2(
+            icon_size + gap + galley.size().x + h_padding * 2.0,
+            crate::text::box_height(&galley, height),
+        );
         let (trigger_rect, btn_response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(trigger_rect) {

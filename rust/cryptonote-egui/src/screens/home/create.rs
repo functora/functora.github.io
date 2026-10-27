@@ -44,7 +44,7 @@ impl CryptonoteApp {
         let () = ui.add_space(8.0);
         self.show_attachments(ui);
         let () = ui.add_space(8.0);
-        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+        _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
             self.dock_back_flex(f);
             let can_share = self.temporary.progress.is_none();
             if f.add(

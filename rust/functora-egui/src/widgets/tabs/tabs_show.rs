@@ -44,6 +44,12 @@ impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
         ui.vertical(|inner_ui| {
             let avail = inner_ui.available_width().max(0.0);
             let share = fill.then(|| avail / crate::utils::usize_to_f32(count).max(1.0));
+            // Measure every title wrapped into its share first, so a wrapping
+            // tab bar grows to one common height instead of ragged tabs.
+            let row_height = entries
+                .iter()
+                .map(|(_, label)| measure_tab(inner_ui, label, share, avail))
+                .fold(0.0, f32::max);
             let _ = crate::widgets::button_group::widget::ButtonGroup::show(inner_ui, |group_ui| {
                 for (value, label) in entries {
                     let is_active = *value == *selected;
@@ -52,7 +58,8 @@ impl<T: Clone + PartialEq> super::widget::TabsValue<'_, T> {
                             crate::tokens::button_variant::ButtonVariant::Default
                         } else {
                             crate::tokens::button_variant::ButtonVariant::Outline
-                        });
+                        })
+                        .min_height(row_height);
                     if let Some(width) = share {
                         button = button.fixed_width(width);
                     }
@@ -119,40 +126,45 @@ impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
         ui.vertical(|inner_ui| {
             let avail = inner_ui.available_width().max(0.0);
             let share = fill.then(|| avail / crate::utils::usize_to_f32(count).max(1.0));
+            let row_height = entries
+                .iter()
+                .map(|(_, entry)| measure_icon_tab(inner_ui, entry, share, avail))
+                .fold(0.0, f32::max);
             let _ = crate::widgets::button_group::widget::ButtonGroup::show(inner_ui, |group_ui| {
                 for (value, entry) in entries {
                     let is_active = *value == *selected;
-                    let response =
-                        match entry {
-                            super::widget::TabEntry::Text(label) => {
-                                let mut button =
-                                    crate::widgets::button::widget::Button::new(label.clone())
-                                        .variant(if is_active {
-                                            crate::tokens::button_variant::ButtonVariant::Default
-                                        } else {
-                                            crate::tokens::button_variant::ButtonVariant::Outline
-                                        });
-                                if let Some(width) = share {
-                                    button = button.fixed_width(width);
-                                }
-                                button.show(group_ui)
+                    let response = match entry {
+                        super::widget::TabEntry::Text(label) => {
+                            let mut button =
+                                crate::widgets::button::widget::Button::new(label.clone())
+                                    .variant(if is_active {
+                                        crate::tokens::button_variant::ButtonVariant::Default
+                                    } else {
+                                        crate::tokens::button_variant::ButtonVariant::Outline
+                                    })
+                                    .min_height(row_height);
+                            if let Some(width) = share {
+                                button = button.fixed_width(width);
                             }
-                            super::widget::TabEntry::Icon { icon, tooltip } => {
-                                let mut button =
-                                    crate::widgets::button::widget::Button::icon_only(*icon)
-                                        .variant(if is_active {
-                                            crate::tokens::button_variant::ButtonVariant::Default
-                                        } else {
-                                            crate::tokens::button_variant::ButtonVariant::Outline
-                                        });
-                                if let Some(width) = share {
-                                    button = button.fixed_width(width);
-                                }
-                                let response = button.show(group_ui);
-                                let _ = response.clone().on_hover_text(tooltip);
-                                response
+                            button.show(group_ui)
+                        }
+                        super::widget::TabEntry::Icon { icon, tooltip } => {
+                            let mut button =
+                                crate::widgets::button::widget::Button::icon_only(*icon)
+                                    .variant(if is_active {
+                                        crate::tokens::button_variant::ButtonVariant::Default
+                                    } else {
+                                        crate::tokens::button_variant::ButtonVariant::Outline
+                                    })
+                                    .min_height(row_height);
+                            if let Some(width) = share {
+                                button = button.fixed_width(width);
                             }
-                        };
+                            let response = button.show(group_ui);
+                            let _ = response.clone().on_hover_text(tooltip);
+                            response
+                        }
+                    };
                     if response.clicked() {
                         *selected = value.clone();
                         group_ui.ctx().request_repaint();
@@ -164,5 +176,45 @@ impl<T: Clone + PartialEq> super::widget::IconTabsValue<'_, T> {
             content(inner_ui, selected);
         })
         .response
+    }
+}
+
+/// Height a text tab needs for `label`, wrapped into `share` when stretched.
+fn measure_tab(ui: &egui::Ui, label: &str, share: Option<f32>, available_width: f32) -> f32 {
+    tab_height(
+        ui,
+        crate::widgets::button::widget::Button::new(label.to_owned()),
+        share,
+        available_width,
+    )
+}
+
+/// Height an icon tab needs, so icon and text tabs share one strip height.
+fn measure_icon_tab(
+    ui: &egui::Ui,
+    entry: &super::widget::TabEntry,
+    share: Option<f32>,
+    available_width: f32,
+) -> f32 {
+    match entry {
+        super::widget::TabEntry::Text(label) => measure_tab(ui, label, share, available_width),
+        super::widget::TabEntry::Icon { icon, .. } => tab_height(
+            ui,
+            crate::widgets::button::widget::Button::icon_only(*icon),
+            share,
+            available_width,
+        ),
+    }
+}
+
+fn tab_height(
+    ui: &egui::Ui,
+    button: crate::widgets::button::widget::Button<'_>,
+    share: Option<f32>,
+    available_width: f32,
+) -> f32 {
+    match share {
+        Some(width) => button.fixed_width(width).measure(ui, available_width).y,
+        None => button.measure(ui, available_width).y,
     }
 }

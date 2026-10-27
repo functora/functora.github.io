@@ -28,7 +28,7 @@ impl super::widget::Carousel {
                     content(content_ui, *current);
                 });
                 inner_ui.add_space(8.0);
-                let _ = inner_ui.horizontal(|nav_ui| {
+                let _ = inner_ui.horizontal_wrapped(|nav_ui| {
                     let prev_enabled = *current > 0;
                     let prev_btn = crate::widgets::button::widget::Button::icon_only(
                         crate::icons::lucide_icon::LucideIcon::ChevronLeft,

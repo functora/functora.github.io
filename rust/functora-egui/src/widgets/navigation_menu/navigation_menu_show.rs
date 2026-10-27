@@ -17,8 +17,11 @@ impl<T: Clone + PartialEq> super::widget::NavigationMenuValue<'_, T> {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let mut clicked = None;
 
-        let _ = ui.horizontal(|inner_ui| {
+        let _ = ui.horizontal_wrapped(|inner_ui| {
             inner_ui.spacing_mut().item_spacing.x = 2.0;
+            // Navigation menu items should stay single-line with truncation
+            // for consistent row height when wrapping on narrow screens.
+            inner_ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
             for (value, label) in self.entries {
                 let is_active = *value == *active;
                 let font_size: f32 = 14.0;
@@ -34,13 +37,19 @@ impl<T: Clone + PartialEq> super::widget::NavigationMenuValue<'_, T> {
                     theme.muted_foreground
                 };
 
-                let galley = inner_ui.painter().layout_no_wrap(
+                let galley = crate::text::layout(
+                    inner_ui,
                     label.clone(),
                     egui::FontId::proportional(font_size),
                     fg,
+                    (inner_ui.available_width() - h_pad * 2.0).max(0.0),
+                    None,
                 );
 
-                let desired = egui::vec2(galley.size().x + h_pad * 2.0, height);
+                let desired = egui::vec2(
+                    galley.size().x + h_pad * 2.0,
+                    crate::text::box_height(&galley, height),
+                );
                 let (rect, response) = inner_ui.allocate_exact_size(desired, egui::Sense::click());
 
                 if inner_ui.is_rect_visible(rect) {

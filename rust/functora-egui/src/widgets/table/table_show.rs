@@ -127,11 +127,13 @@ impl super::widget::Table {
             .map(|(idx, cell)| {
                 let col_w = col_widths.get(idx).copied().unwrap_or(100.0);
                 let wrap_w = (col_w - 24.0).max(40.0);
-                ui.painter().layout(
+                crate::text::layout(
+                    ui,
                     cell.clone(),
                     egui::FontId::proportional(font_size),
                     style.fg,
                     wrap_w,
+                    Some(crate::text::Wrap::Word),
                 )
             })
             .collect();

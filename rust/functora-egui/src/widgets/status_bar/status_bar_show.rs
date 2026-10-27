@@ -30,6 +30,9 @@ impl super::widget::StatusBar {
 
         frame
             .show(ui, |inner_ui| {
+                // Status bar items should stay single-line with truncation
+                // for consistent row height when wrapping.
+                inner_ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
                 let _ = inner_ui.horizontal_wrapped(content);
             })
             .response

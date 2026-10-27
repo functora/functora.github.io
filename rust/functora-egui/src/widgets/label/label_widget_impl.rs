@@ -19,15 +19,30 @@ impl egui::Widget for super::widget::Label {
             None => (14.0, None),
         };
 
-        let galley =
-            ui.painter()
-                .layout_no_wrap(self.text, egui::FontId::proportional(font_size), color);
+        let galley = crate::text::layout(
+            ui,
+            self.text,
+            egui::FontId::proportional(font_size),
+            color,
+            ui.available_width(),
+            self.wrap,
+        );
 
-        let desired = match fixed_height {
-            Some(h) => egui::vec2(galley.size().x, h),
-            None => galley.size(),
+        let desired_width = galley.size().x;
+        let desired_height = match fixed_height {
+            Some(h) => crate::text::box_height(&galley, h),
+            None => galley.size().y,
         };
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let (rect, mut response) = ui.allocate_exact_size(
+            egui::vec2(desired_width, desired_height),
+            egui::Sense::hover(),
+        );
+        let intrinsic_width = galley.intrinsic_size().x;
+        let intrinsic_height = match fixed_height {
+            Some(h) => crate::text::intrinsic_box_height(&galley, h).max(desired_height),
+            None => galley.intrinsic_size().y.max(desired_height),
+        };
+        response.set_intrinsic_size(egui::vec2(intrinsic_width, intrinsic_height));
 
         if ui.is_rect_visible(rect) {
             // Center text vertically within the allocated rect (matches button centering)

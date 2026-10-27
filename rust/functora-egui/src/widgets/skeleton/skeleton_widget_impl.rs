@@ -10,7 +10,8 @@ impl egui::Widget for super::widget::Skeleton {
             egui::vec2(self.width, self.height)
         };
 
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        response.set_intrinsic_size(desired);
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();

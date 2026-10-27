@@ -77,12 +77,7 @@ pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
         .iter()
         .map(|name| {
             let font_id = egui::FontId::proportional(14.0);
-            ctx.fonts_mut(|fonts| {
-                fonts
-                    .layout_no_wrap((*name).to_owned(), font_id, egui::Color32::WHITE)
-                    .rect
-                    .width()
-            })
+            crate::text::natural_width(ctx, (*name).to_owned(), font_id)
         })
         .fold(0.0, f32::max);
     let icon = spacing.touch_height * 0.5;

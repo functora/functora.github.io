@@ -5,7 +5,8 @@ impl egui::Widget for super::widget::Avatar {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let desired = egui::vec2(self.size, self.size);
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        response.set_intrinsic_size(desired);
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
@@ -17,10 +18,13 @@ impl egui::Widget for super::widget::Avatar {
 
             // Initials text
             let font_size = self.size * 0.4;
-            let galley = painter.layout_no_wrap(
+            let galley = crate::text::layout(
+                ui,
                 self.initials,
                 egui::FontId::proportional(font_size),
                 theme.muted_foreground,
+                self.size,
+                Some(crate::text::Wrap::Truncate),
             );
             let text_pos = egui::pos2(
                 center.x - galley.size().x / 2.0,

@@ -114,8 +114,14 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
                 theme.muted_foreground
             };
 
-            let galley =
-                painter.layout_no_wrap(display_text, egui::FontId::proportional(14.0), text_color);
+            let galley = crate::text::layout(
+                ui,
+                display_text,
+                egui::FontId::proportional(14.0),
+                text_color,
+                (rect.width() - h_padding - chevron_width).max(0.0),
+                Some(crate::text::Wrap::Truncate),
+            );
             let text_pos = egui::pos2(
                 rect.min.x + h_padding,
                 rect.center().y - galley.size().y / 2.0,
@@ -195,10 +201,18 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
             for (value, label) in entries {
                 let is_selected = selected.as_ref().is_some_and(|current| current == value);
 
-                let galley = popup_ui.painter().layout_no_wrap(
+                let reserved = if is_selected {
+                    check_icon_size + 14.0
+                } else {
+                    6.0
+                };
+                let galley = crate::text::layout(
+                    popup_ui,
                     label.clone(),
                     egui::FontId::proportional(14.0),
                     style.item_text,
+                    (popup_width - 6.0 - reserved).max(0.0),
+                    None,
                 );
 
                 let item_height = galley.size().y + 8.0;

@@ -47,6 +47,11 @@ impl super::widget::Toolbar {
                 .map(|s| s.metrics_for(&spacing).0)
                 .fold(0.0, f32::max);
                 inner_ui.spacing_mut().interact_size.y = max_h;
+                // When wrapping, use truncate wrap mode so buttons stay single-line
+                // and share a consistent row height.
+                if self.wrap || inner_ui.on_mobile() {
+                    inner_ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+                }
                 let wrap = self.wrap || inner_ui.on_mobile();
                 if wrap {
                     let _ = inner_ui.horizontal_wrapped(content);

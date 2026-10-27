@@ -10,11 +10,20 @@ impl egui::Widget for super::widget::ColorSwatch {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
+        let gap = if self.label.is_some() || self.show_hex {
+            8.0
+        } else {
+            0.0
+        };
+        let text_max_width = (ui.available_width() - self.size - gap).max(0.0);
         let label_galley = self.label.as_ref().map(|label| {
-            ui.painter().layout_no_wrap(
+            crate::text::layout(
+                ui,
                 label.clone(),
                 egui::FontId::proportional(13.0),
                 theme.foreground,
+                text_max_width,
+                None,
             )
         });
         let hex = format!(
@@ -24,18 +33,16 @@ impl egui::Widget for super::widget::ColorSwatch {
             self.color.b()
         );
         let hex_galley = self.show_hex.then(|| {
-            ui.painter().layout_no_wrap(
+            crate::text::layout(
+                ui,
                 hex,
                 egui::FontId::proportional(11.0),
                 theme.muted_foreground,
+                text_max_width,
+                None,
             )
         });
 
-        let gap = if label_galley.is_some() || hex_galley.is_some() {
-            8.0
-        } else {
-            0.0
-        };
         let text_width = label_galley
             .as_ref()
             .map_or(0.0, |g| g.size().x)
@@ -49,7 +56,22 @@ impl egui::Widget for super::widget::ColorSwatch {
             + hex_galley.as_ref().map_or(0.0, |g| g.size().y);
 
         let desired = egui::vec2(self.size + gap + text_width, self.size.max(text_height));
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        let intrinsic_text_width = label_galley
+            .as_ref()
+            .map_or(0.0, |g| g.intrinsic_size().x)
+            .max(hex_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().x));
+        let intrinsic_text_height = label_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y)
+            + if label_galley.is_some() && hex_galley.is_some() {
+                2.0
+            } else {
+                0.0
+            }
+            + hex_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y);
+        response.set_intrinsic_size(egui::vec2(
+            self.size + gap + intrinsic_text_width,
+            self.size.max(intrinsic_text_height).max(desired.y),
+        ));
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();

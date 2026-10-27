@@ -96,35 +96,23 @@ fn show_core<T: Clone>(
             let _ = frame.show(inner_ui, |content_ui| {
                 let mut content_w: f32 = 0.0;
                 for (_, item) in entries {
-                    let gw = content_ui
-                        .painter()
-                        .layout_no_wrap(
-                            item.group.clone(),
-                            egui::FontId::proportional(12.0),
-                            egui::Color32::PLACEHOLDER,
-                        )
-                        .size()
-                        .x;
-                    let lw = content_ui
-                        .painter()
-                        .layout_no_wrap(
-                            item.label.clone(),
-                            egui::FontId::proportional(14.0),
-                            egui::Color32::PLACEHOLDER,
-                        )
-                        .size()
-                        .x;
+                    let gw = crate::text::natural_width(
+                        content_ui.ctx(),
+                        item.group.clone(),
+                        egui::FontId::proportional(12.0),
+                    );
+                    let lw = crate::text::natural_width(
+                        content_ui.ctx(),
+                        item.label.clone(),
+                        egui::FontId::proportional(14.0),
+                    );
                     content_w = content_w.max(gw + 16.0 + 6.0).max(lw + 16.0 + 6.0);
                 }
-                let placeholder_w = content_ui
-                    .painter()
-                    .layout_no_wrap(
-                        placeholder.to_owned(),
-                        egui::FontId::proportional(14.0),
-                        egui::Color32::PLACEHOLDER,
-                    )
-                    .size()
-                    .x;
+                let placeholder_w = crate::text::natural_width(
+                    content_ui.ctx(),
+                    placeholder.to_owned(),
+                    egui::FontId::proportional(14.0),
+                );
                 content_w = content_w.max(placeholder_w);
                 content_w += 48.0;
 
@@ -204,10 +192,16 @@ fn show_core<T: Clone>(
                                     current_group.clone_from(&item.group);
                                 }
 
-                                let galley = inner_ui4.painter().layout_no_wrap(
+                                let icon_size = 14.0;
+                                let text_max =
+                                    (inner_ui4.available_width() - 16.0 - icon_size - 6.0).max(0.0);
+                                let galley = crate::text::layout(
+                                    inner_ui4,
                                     item.label.clone(),
                                     egui::FontId::proportional(14.0),
                                     theme.popover_foreground,
+                                    text_max,
+                                    None,
                                 );
                                 let desired =
                                     egui::vec2(inner_ui4.available_width(), galley.size().y + 8.0);
@@ -228,7 +222,6 @@ fn show_core<T: Clone>(
                                 }
 
                                 if inner_ui4.is_rect_visible(rect) {
-                                    let icon_size = 14.0;
                                     let fg = if hovered {
                                         theme.accent_foreground
                                     } else {
@@ -247,10 +240,13 @@ fn show_core<T: Clone>(
                                         &item.icon,
                                         fg,
                                     );
-                                    let text_galley = inner_ui4.painter().layout_no_wrap(
+                                    let text_galley = crate::text::layout(
+                                        inner_ui4,
                                         item.label.clone(),
                                         egui::FontId::proportional(14.0),
                                         fg,
+                                        text_max,
+                                        None,
                                     );
                                     inner_ui4.painter().galley(
                                         egui::pos2(

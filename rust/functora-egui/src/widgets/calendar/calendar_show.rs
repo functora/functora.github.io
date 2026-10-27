@@ -33,7 +33,7 @@ impl super::widget::Calendar {
         let _ = ui.vertical(|inner_ui| {
             let nav_icon_size: f32 = 14.0;
             let nav_touch = spacing.touch_height.min(32.0);
-            let _ = inner_ui.horizontal(|content_ui| {
+            let _ = inner_ui.horizontal_wrapped(|content_ui| {
                 let (prev_rect, prev_resp) = content_ui
                     .allocate_exact_size(egui::vec2(nav_touch, nav_touch), egui::Sense::click());
                 if content_ui.is_rect_visible(prev_rect) {
@@ -101,10 +101,13 @@ impl super::widget::Calendar {
                         egui::Sense::hover(),
                     );
                     if content_ui.is_rect_visible(rect) {
-                        let galley = content_ui.painter().layout_no_wrap(
+                        let galley = crate::text::layout(
+                            content_ui,
                             day_name.to_owned(),
                             egui::FontId::proportional(12.0),
                             theme.muted_foreground,
+                            (cell_size - 4.0).max(0.0),
+                            Some(crate::text::Wrap::Truncate),
                         );
                         let pos = egui::pos2(
                             rect.center().x - galley.size().x / 2.0,
@@ -152,10 +155,13 @@ impl super::widget::Calendar {
                                     let _ = painter.rect_filled(rect, cr, bg);
                                 }
 
-                                let galley = painter.layout_no_wrap(
+                                let galley = crate::text::layout(
+                                    content_ui,
                                     format!("{day}"),
                                     egui::FontId::proportional(font_size),
                                     fg,
+                                    (cell_size - 4.0).max(0.0),
+                                    Some(crate::text::Wrap::Truncate),
                                 );
                                 let pos = egui::pos2(
                                     rect.center().x - galley.size().x / 2.0,

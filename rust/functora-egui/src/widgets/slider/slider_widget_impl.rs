@@ -13,18 +13,25 @@ impl egui::Widget for super::widget::Slider<'_> {
         let base_slider_width = self
             .width
             .map_or_else(|| ui.available_width(), |w| w.min(ui.available_width()));
+        let unit_max_width = (ui.available_width() * 0.25).max(0.0);
         let prefix_galley = self.prefix.as_ref().map(|p| {
-            ui.painter().layout_no_wrap(
+            crate::text::layout(
+                ui,
                 p.clone(),
                 egui::FontId::proportional(12.0),
                 theme.muted_foreground,
+                unit_max_width,
+                Some(crate::text::Wrap::Truncate),
             )
         });
         let suffix_galley = self.suffix.as_ref().map(|s| {
-            ui.painter().layout_no_wrap(
+            crate::text::layout(
+                ui,
                 s.clone(),
                 egui::FontId::proportional(12.0),
                 theme.muted_foreground,
+                unit_max_width,
+                Some(crate::text::Wrap::Truncate),
             )
         });
 

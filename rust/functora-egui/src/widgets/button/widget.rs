@@ -20,6 +20,8 @@ pub struct Button<'a> {
     pub(crate) selected: bool,
     pub(crate) full_width: bool,
     pub(crate) fixed_width: Option<f32>,
+    pub(crate) wrap: Option<crate::text::Wrap>,
+    pub(crate) min_height: f32,
     _phantom: std::marker::PhantomData<&'a ()>,
 }
 
@@ -35,6 +37,8 @@ impl Button<'_> {
             selected: false,
             full_width: false,
             fixed_width: None,
+            wrap: None,
+            min_height: 0.0,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -51,6 +55,8 @@ impl Button<'_> {
             selected: false,
             full_width: false,
             fixed_width: None,
+            wrap: None,
+            min_height: 0.0,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -98,6 +104,30 @@ impl Button<'_> {
     /// Content stays centered; the group ring still wraps the final rect.
     pub fn fixed_width(mut self, width: f32) -> Self {
         self.fixed_width = Some(width);
+        self
+    }
+
+    /// Overrides how the title breaks when it does not fit the button.
+    ///
+    /// Defaults to [`crate::text::Wrap::Word`]: the title splits on word
+    /// boundaries and the button grows taller when it wraps.
+    pub fn wrap(mut self, wrap: crate::text::Wrap) -> Self {
+        self.wrap = Some(wrap);
+        self
+    }
+
+    /// Grows the button to at least `height` (e.g. to keep a wrapping row of
+    /// buttons the same height).
+    pub fn min_height(mut self, height: f32) -> Self {
+        self.min_height = height;
+        self
+    }
+
+    /// Makes the button single-line: text truncates with `…` instead of wrapping.
+    /// Ideal for toolbars, docks, and status bars where buttons must share
+    /// a consistent height when wrapped to multiple rows.
+    pub fn single_line(mut self) -> Self {
+        self.wrap = Some(crate::text::Wrap::Truncate);
         self
     }
 

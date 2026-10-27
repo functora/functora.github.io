@@ -38,7 +38,7 @@ impl CryptonoteApp {
             for (idx, att) in attachments.iter().enumerate() {
                 let size = format_size(att.data.len() as u64);
                 let name = att.name.clone();
-                _ = Flex::row().gap(8.0).show(ui, |f| {
+                _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
                     let thumb_clicked = f
                         .ui(|inner| crate::screens::attachment_thumb::show_attachment_thumb(inner, att))
                         .inner
@@ -103,7 +103,7 @@ impl CryptonoteApp {
         }
         let () = ui.add_space(12.0);
         let has_attachments = !self.temporary.attachments.is_empty();
-        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+        _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
             self.dock_back_flex(f);
             if f.add(
                 Button::new(BaseMsg::Copy.render(lang))

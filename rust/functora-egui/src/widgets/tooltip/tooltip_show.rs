@@ -19,6 +19,8 @@ impl super::widget::Tooltip {
         tooltip.popup = tooltip.popup.frame(themed_frame);
 
         let _ = tooltip.show(|popup_ui| {
+            let screen_w = popup_ui.ctx().viewport_rect().width();
+            popup_ui.set_max_width((screen_w - 32.0).clamp(0.0, 320.0));
             let _ = popup_ui.label(
                 egui::RichText::new(&self.text)
                     .color(theme.primary_foreground)

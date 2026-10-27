@@ -3,7 +3,7 @@
 impl egui::Widget for super::widget::Typography {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let (font_size, _line_height, is_bold) = self.variant.metrics();
+        let (font_size, _line_height, _is_bold) = self.variant.metrics();
 
         let color = match self.variant {
             crate::tokens::typography_variant::TypographyVariant::Muted
@@ -17,11 +17,20 @@ impl egui::Widget for super::widget::Typography {
             | crate::tokens::typography_variant::TypographyVariant::Small => theme.foreground,
         };
 
-        let mut rich_text = egui::RichText::new(self.text).color(color).size(font_size);
-        if is_bold {
-            rich_text = rich_text.strong();
-        }
-
-        ui.label(rich_text)
+        let galley = crate::text::layout(
+            ui,
+            self.text,
+            egui::FontId::proportional(font_size),
+            color,
+            ui.available_width(),
+            None,
+        );
+        let mut response = ui.label(galley.clone());
+        let intrinsic = galley.intrinsic_size();
+        response.set_intrinsic_size(egui::vec2(
+            intrinsic.x,
+            intrinsic.y.max(response.rect.height()),
+        ));
+        response
     }
 }

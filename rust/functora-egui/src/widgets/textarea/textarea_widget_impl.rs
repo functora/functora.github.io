@@ -47,6 +47,7 @@ impl egui::Widget for super::widget::Textarea<'_> {
         let inner_rect = outer_rect.shrink2(egui::vec2(h_padding, v_padding));
         let mut child_ui = ui.new_child(
             egui::UiBuilder::new()
+                .id_salt(outer_response.id)
                 .max_rect(inner_rect)
                 .layout(egui::Layout::top_down(egui::Align::LEFT)),
         );
@@ -116,16 +117,12 @@ pub(crate) fn wrap_anywhere_layouter_with_color(
     wrap_width: f32,
     color: egui::Color32,
 ) -> std::sync::Arc<egui::Galley> {
-    let mut job = egui::text::LayoutJob::single_section(
+    crate::text::layout(
+        ui,
         text.as_str().to_owned(),
-        egui::TextFormat {
-            font_id: egui::FontId::proportional(14.0),
-            color,
-            ..Default::default()
-        },
-    );
-    job.wrap.max_width = wrap_width;
-    job.wrap.max_rows = usize::MAX;
-    job.wrap.break_anywhere = true;
-    ui.fonts_mut(|fonts| fonts.layout_job(job))
+        egui::FontId::proportional(14.0),
+        color,
+        wrap_width,
+        Some(crate::text::Wrap::Word),
+    )
 }

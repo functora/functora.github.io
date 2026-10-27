@@ -1,7 +1,5 @@
 //! Ergonomic flexbox layout builder wrapping `egui_flex::Flex`.
 
-use crate::responsive::responsive_ext::ResponsiveExt;
-
 /// A flexbox layout container with CSS-familiar naming.
 ///
 /// Thin wrapper over [`egui_flex::Flex`] that provides shorthand builder
@@ -18,170 +16,211 @@ use crate::responsive::responsive_ext::ResponsiveExt;
 /// ```
 #[must_use]
 pub struct Flex {
-    pub(crate) flex: egui_flex::Flex,
-    wrap_on_mobile: bool,
+    pub(crate) inner: egui_flex::Flex,
+    wrap: bool,
+    single_line_items: bool,
 }
 
 impl Flex {
-    /// Horizontal (row) layout — items flow left to right. On mobile
-    /// viewports the row wraps onto multiple lines when items overflow.
+    /// Horizontal (row) layout — items flow left to right. The row wraps onto
+    /// multiple lines whenever items do not fit the container, on any
+    /// viewport. Use [`Flex::no_wrap`] to keep it on a single line.
     pub fn row() -> Self {
         Self {
-            flex: egui_flex::Flex::horizontal(),
-            wrap_on_mobile: true,
+            inner: egui_flex::Flex::horizontal(),
+            wrap: true,
+            single_line_items: false,
         }
     }
 
     /// Vertical (column) layout — items flow top to bottom.
     pub fn column() -> Self {
         Self {
-            flex: egui_flex::Flex::vertical(),
-            wrap_on_mobile: false,
+            inner: egui_flex::Flex::vertical(),
+            wrap: false,
+            single_line_items: false,
         }
     }
 
     /// Space between items on both axes (uniform gap).
     pub fn gap(self, gap: f32) -> Self {
         Self {
-            flex: self.flex.gap(egui::vec2(gap, gap)),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.gap(egui::vec2(gap, gap)),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Enable wrapping when items exceed the container width.
+    ///
+    /// This is already the default for [`Flex::row`].
     pub fn wrap(self) -> Self {
         Self {
-            flex: self.flex.wrap(true),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner,
+            wrap: true,
+            single_line_items: self.single_line_items,
         }
     }
 
-    /// Disables mobile wrapping, keeping the row on a single line even on
-    /// narrow screens.
-    pub fn no_wrap_on_mobile(self) -> Self {
+    /// Disables wrapping, keeping the row on a single line even when items
+    /// exceed the container width.
+    pub fn no_wrap(self) -> Self {
         Self {
-            flex: self.flex,
-            wrap_on_mobile: false,
+            inner: self.inner,
+            wrap: false,
+            single_line_items: self.single_line_items,
+        }
+    }
+
+    /// Disables wrapping, keeping the row on a single line even on narrow
+    /// screens.
+    pub fn no_wrap_on_mobile(self) -> Self {
+        self.no_wrap()
+    }
+
+    /// Makes items single-line: text truncates with `…` instead of wrapping.
+    /// Ideal for toolbars, docks, and status bars where items must share
+    /// a consistent height when wrapped to multiple rows.
+    pub fn single_line_items(self) -> Self {
+        Self {
+            inner: self.inner,
+            wrap: self.wrap,
+            single_line_items: true,
         }
     }
 
     /// Cross-axis: align items to start.
     pub fn align_start(self) -> Self {
         Self {
-            flex: self.flex.align_items(egui_flex::FlexAlign::Start),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.align_items(egui_flex::FlexAlign::Start),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Cross-axis: center items.
     pub fn align_center(self) -> Self {
         Self {
-            flex: self.flex.align_items(egui_flex::FlexAlign::Center),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.align_items(egui_flex::FlexAlign::Center),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Cross-axis: align items to end.
     pub fn align_end(self) -> Self {
         Self {
-            flex: self.flex.align_items(egui_flex::FlexAlign::End),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.align_items(egui_flex::FlexAlign::End),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Cross-axis: stretch items to fill.
     pub fn align_stretch(self) -> Self {
         Self {
-            flex: self.flex.align_items(egui_flex::FlexAlign::Stretch),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.align_items(egui_flex::FlexAlign::Stretch),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: pack items to the start.
     pub fn justify_start(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::Start),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::Start),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: center items.
     pub fn justify_center(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::Center),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::Center),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: pack items to the end.
     pub fn justify_end(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::End),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::End),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: distribute with equal space between items.
     pub fn justify_between(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::SpaceBetween),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::SpaceBetween),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: distribute with equal space around items.
     pub fn justify_around(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::SpaceAround),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::SpaceAround),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Main-axis: distribute with equal space between and around items.
     pub fn justify_evenly(self) -> Self {
         Self {
-            flex: self.flex.justify(egui_flex::FlexJustify::SpaceEvenly),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.justify(egui_flex::FlexJustify::SpaceEvenly),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Fill all available width.
     pub fn w_full(self) -> Self {
         Self {
-            flex: self.flex.w_full(),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.w_full(),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Fill all available height.
     pub fn h_full(self) -> Self {
         Self {
-            flex: self.flex.h_full(),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.h_full(),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Explicit width in points.
     pub fn width(self, width: f32) -> Self {
         Self {
-            flex: self.flex.width(width),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.width(width),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Explicit height in points.
     pub fn height(self, height: f32) -> Self {
         Self {
-            flex: self.flex.height(height),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.height(height),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
     /// Default grow factor for all children.
     pub fn grow_items(self, grow: f32) -> Self {
         Self {
-            flex: self.flex.grow_items(grow),
-            wrap_on_mobile: self.wrap_on_mobile,
+            inner: self.inner.grow_items(grow),
+            wrap: self.wrap,
+            single_line_items: self.single_line_items,
         }
     }
 
@@ -191,18 +230,20 @@ impl Flex {
         ui: &mut egui::Ui,
         f: impl FnOnce(&mut super::flex_instance::FlexInst) -> R,
     ) -> egui::InnerResponse<R> {
-        let wrap = self.wrap_on_mobile
-            && (ui.on_mobile()
-                || ui.available_width()
-                    < crate::responsive::breakpoint::Breakpoint::MOBILE_MAX_WIDTH);
-        let flex = if wrap {
-            self.flex.wrap(true)
+        let flex = if self.wrap {
+            self.inner.wrap(true)
         } else {
-            self.flex
+            self.inner
         };
-        flex.show(ui, |instance| {
-            let mut inst = super::flex_instance::FlexInst(instance);
-            f(&mut inst)
+        ui.scope(|inner_ui| {
+            if self.single_line_items {
+                inner_ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+            }
+            flex.show(inner_ui, |instance| {
+                let mut inst = super::flex_instance::FlexInst(instance);
+                f(&mut inst)
+            })
         })
+        .inner
     }
 }

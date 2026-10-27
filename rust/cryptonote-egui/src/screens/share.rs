@@ -33,7 +33,7 @@ impl CryptonoteApp {
         }
         let () = ui.add_space(12.0);
         if pkg_ready || !url.is_empty() {
-            _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
                 self.dock_back_flex(f);
                 if !url.is_empty()
                     && f.add(

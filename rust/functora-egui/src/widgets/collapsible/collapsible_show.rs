@@ -21,10 +21,13 @@ impl super::widget::Collapsible {
 
                 let icon_size: f32 = 14.0;
                 let gap: f32 = 4.0;
-                let galley = content_ui.painter().layout_no_wrap(
+                let galley = crate::text::layout(
+                    content_ui,
                     self.title.clone(),
                     egui::FontId::proportional(14.0),
                     theme.foreground,
+                    (content_ui.available_width() - icon_size - gap).max(0.0),
+                    None,
                 );
                 let desired = egui::vec2(
                     icon_size + gap + galley.size().x,

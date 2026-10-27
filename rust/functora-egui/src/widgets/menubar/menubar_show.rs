@@ -26,7 +26,10 @@ impl super::widget::Menubar {
         frame
             .show(ui, |inner_ui| {
                 inner_ui.set_min_height(36.0);
-                let _ = inner_ui.horizontal_centered(|content_ui| {
+                // Menubar items should stay single-line with truncation
+                // for consistent row height when wrapping on narrow screens.
+                inner_ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
+                let _ = inner_ui.horizontal_wrapped(|content_ui| {
                     content_ui.spacing_mut().item_spacing.x = 4.0;
                     content(content_ui);
                 });
@@ -38,14 +41,19 @@ impl super::widget::Menubar {
     pub fn item(ui: &mut egui::Ui, label: &str) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
-        let galley = ui.painter().layout_no_wrap(
+        let h_pad: f32 = 8.0;
+        let galley = crate::text::layout(
+            ui,
             label.to_owned(),
             egui::FontId::proportional(13.0),
             theme.foreground,
+            (ui.available_width() - h_pad * 2.0).max(0.0),
+            None,
         );
-
-        let h_pad: f32 = 8.0;
-        let desired = egui::vec2(galley.size().x + h_pad * 2.0, 28.0);
+        let desired = egui::vec2(
+            galley.size().x + h_pad * 2.0,
+            crate::text::box_height(&galley, 28.0),
+        );
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(rect) {

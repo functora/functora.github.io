@@ -36,13 +36,19 @@ impl super::widget::ToggleGroup {
             0.0
         };
 
-        let galley = ui.painter().layout_no_wrap(
+        let galley = crate::text::layout(
+            ui,
             label.to_owned(),
             egui::FontId::proportional(font_size),
             theme.foreground,
+            (ui.available_width() - h_pad * 2.0 - icon_w).max(0.0),
+            None,
         );
 
-        let desired = egui::vec2(galley.size().x + h_pad * 2.0 + icon_w, height);
+        let desired = egui::vec2(
+            galley.size().x + h_pad * 2.0 + icon_w,
+            crate::text::box_height(&galley, height),
+        );
         let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(rect) {
@@ -114,7 +120,7 @@ impl<T: Clone + PartialEq> super::widget::ToggleGroupValue<'_, T> {
 
         outer_frame
             .show(ui, |inner_ui| {
-                let _ = inner_ui.horizontal(|content_ui| {
+                let _ = inner_ui.horizontal_wrapped(|content_ui| {
                     content_ui.spacing_mut().item_spacing.x = 2.0;
                     for (value, label) in self.entries {
                         let is_selected = *value == *selected;

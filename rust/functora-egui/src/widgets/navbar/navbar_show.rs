@@ -34,7 +34,7 @@ impl super::widget::Navbar<'_> {
                     .w_full()
                     .show(frame_ui, |flex| {
                         let _ = flex.ui(|left_ui| {
-                            let _ = left_ui.horizontal(|inner_ui| {
+                            let _ = left_ui.horizontal_wrapped(|inner_ui| {
                                 let ctx = inner_ui.ctx().clone();
                                 let th = ShadcnThemeExt::shadcn_theme(&ctx);
                                 let icon_clicked = if let Some(icon) = self.brand_icon {

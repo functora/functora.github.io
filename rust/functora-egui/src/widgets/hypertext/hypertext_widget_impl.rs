@@ -14,8 +14,9 @@ impl super::widget::Hypertext {
     pub(crate) fn show_inner(self, ui: &mut egui::Ui) -> (egui::Response, Option<String>) {
         let theme = ShadcnThemeExt::shadcn_theme(ui.ctx());
         let font_id = FontId::proportional(self.size);
+        let available_w = ui.available_width();
         let mut job = egui::text::LayoutJob::default();
-        job.wrap.max_width = ui.available_width();
+        job.wrap.max_width = available_w;
         job.halign = if self.centered {
             Align::Center
         } else {
@@ -59,14 +60,22 @@ impl super::widget::Hypertext {
                 None,
             );
         }
-        let galley = ui.fonts_mut(|fonts| fonts.layout_job(job.clone()));
-        let available_w = ui.available_width();
+        let word_galley = ui.fonts_mut(|fonts| fonts.layout_job(job.clone()));
+        let galley = if word_galley.size().x <= available_w {
+            word_galley
+        } else {
+            let mut hard = job.clone();
+            hard.wrap.break_anywhere = true;
+            ui.fonts_mut(|fonts| fonts.layout_job(hard))
+        };
         let desired = if self.centered {
             egui::vec2(available_w, galley.size().y)
         } else {
             galley.size()
         };
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
+        let intrinsic = galley.intrinsic_size();
+        response.set_intrinsic_size(egui::vec2(intrinsic.x, intrinsic.y.max(desired.y)));
         response
             .widget_info(|| WidgetInfo::labeled(WidgetType::Label, ui.is_enabled(), galley.text()));
         let galley_pos = match galley.job.halign {

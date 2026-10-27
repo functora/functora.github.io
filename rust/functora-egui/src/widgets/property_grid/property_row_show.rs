@@ -14,16 +14,20 @@ impl super::property_row::PropertyRow {
             .unwrap_or(112.0);
 
         ui.horizontal(|inner_ui| {
+            let column_width = label_width.min(inner_ui.available_width());
             let label_rect = inner_ui
                 .allocate_exact_size(
-                    egui::vec2(label_width, inner_ui.spacing().interact_size.y),
+                    egui::vec2(column_width, inner_ui.spacing().interact_size.y),
                     egui::Sense::hover(),
                 )
                 .0;
-            let galley = inner_ui.painter().layout_no_wrap(
+            let galley = crate::text::layout(
+                inner_ui,
                 self.label,
                 egui::FontId::proportional(12.0),
                 theme.muted_foreground,
+                label_rect.width(),
+                Some(crate::text::Wrap::Truncate),
             );
             inner_ui.painter().galley(
                 egui::pos2(

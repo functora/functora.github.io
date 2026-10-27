@@ -5,7 +5,8 @@ impl egui::Widget for super::widget::Spinner {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
 
         let desired = egui::vec2(self.size, self.size);
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        response.set_intrinsic_size(desired);
 
         if ui.is_rect_visible(rect) {
             let time = crate::utils::f64_to_f32(ui.input(|i| i.time));

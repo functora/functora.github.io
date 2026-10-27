@@ -10,16 +10,23 @@ impl egui::Widget for super::widget::Separator {
                 let icon_size = 12.0;
                 let icon_gap = 4.0;
                 let gap = 8.0;
+                let has_icon = self.icon.is_some();
+                let available_w = ui.available_width();
+                let text_max_width =
+                    (available_w - gap * 2.0 - if has_icon { icon_size + icon_gap } else { 0.0 })
+                        .max(0.0);
                 let galley_opt = self.text.as_ref().map(|text| {
-                    ui.painter().layout_no_wrap(
+                    crate::text::layout(
+                        ui,
                         text.clone(),
                         egui::FontId::proportional(12.0),
                         theme.muted_foreground,
+                        text_max_width,
+                        None,
                     )
                 });
                 let text_w = galley_opt.as_ref().map_or(0.0, |g| g.size().x);
                 let text_h = galley_opt.as_ref().map_or(0.0, |g| g.size().y);
-                let has_icon = self.icon.is_some();
                 let has_text = galley_opt.is_some();
                 let label_w = text_w
                     + if has_icon {
@@ -28,7 +35,6 @@ impl egui::Widget for super::widget::Separator {
                         0.0
                     };
                 let label_h = text_h.max(if has_icon { icon_size } else { 0.0 });
-                let available_w = ui.available_width();
                 let desired = egui::vec2(available_w, label_h + 8.0);
                 let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
 

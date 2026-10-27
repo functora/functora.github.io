@@ -17,7 +17,7 @@ impl CryptonoteApp {
         let mut to_open: Option<AttachmentIdx> = None;
         for (idx, att) in self.temporary.attachments.iter().enumerate() {
             let size = format_size(att.data.len() as u64);
-            _ = Flex::row().gap(8.0).show(ui, |f| {
+            _ = Flex::row().gap(8.0).wrap().single_line_items().show(ui, |f| {
                 let thumb_clicked = f
                     .ui(|inner| crate::screens::attachment_thumb::show_attachment_thumb(inner, att))
                     .inner

@@ -5,16 +5,26 @@ impl egui::Widget for super::widget::Badge {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::badge_variant_style::resolve_badge_style(&theme, self.variant);
 
-        let galley = ui.painter().layout_no_wrap(
+        let h_padding: f32 = 8.0; // px-2
+        let height: f32 = 20.0; // h-5
+        let galley = crate::text::layout(
+            ui,
             self.text,
             egui::FontId::proportional(12.0), // text-xs
             style.fg,
+            (ui.available_width() - h_padding * 2.0).max(0.0),
+            None,
         );
 
-        let h_padding: f32 = 8.0; // px-2
-        let height: f32 = 20.0; // h-5
-        let desired = egui::vec2(galley.size().x + h_padding * 2.0, height);
-        let (rect, response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        let desired = egui::vec2(
+            galley.size().x + h_padding * 2.0,
+            crate::text::box_height(&galley, height),
+        );
+        let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::hover());
+        response.set_intrinsic_size(egui::vec2(
+            galley.intrinsic_size().x + h_padding * 2.0,
+            crate::text::intrinsic_box_height(&galley, height).max(desired.y),
+        ));
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();

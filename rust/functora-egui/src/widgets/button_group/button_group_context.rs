@@ -6,14 +6,18 @@
 pub struct ButtonGroupContext {
     /// Whether a button group is currently being rendered.
     pub active: bool,
-    /// Right-edge x positions of each button in the group.
-    pub boundaries: Vec<f32>,
+    /// Rect of each button in the group, in render order.
+    pub rects: Vec<egui::Rect>,
     /// How many buttons were in the group last frame (for first/last detection).
     pub cached_count: usize,
     /// Current button index, incremented by each button.
     pub current_index: usize,
     /// The group's corner radius.
     pub corner_radius: f32,
-    /// Union rect of all buttons in the group so far.
-    pub group_rect: Option<egui::Rect>,
+    /// First/last button index of each row of buttons, from last frame.
+    /// Empty until the group has rendered once.
+    pub cached_rows: Vec<(usize, usize)>,
+    /// Tallest button of the group last frame, so every button of a wrapping
+    /// strip can share one row height.
+    pub cached_max_height: f32,
 }

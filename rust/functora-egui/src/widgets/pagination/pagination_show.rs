@@ -194,10 +194,13 @@ impl super::widget::Pagination {
             theme.foreground
         };
 
-        let galley = ui.painter().layout_no_wrap(
+        let galley = crate::text::layout(
+            ui,
             label.to_owned(),
             egui::FontId::proportional(font_size),
             fg,
+            (size - 4.0).max(0.0),
+            Some(crate::text::Wrap::Truncate),
         );
 
         let (rect, response) = ui.allocate_exact_size(egui::vec2(size, size), egui::Sense::click());

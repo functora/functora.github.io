@@ -48,10 +48,13 @@ impl egui::Widget for super::widget::NumberInput<'_> {
         // Paint prefix text in a dedicated leading slot so it cannot overlap
         // the DragValue edit field when the control is compact.
         if let Some(ref prefix) = self.prefix {
-            let galley = ui.painter().layout_no_wrap(
+            let galley = crate::text::layout(
+                ui,
                 prefix.clone(),
                 egui::FontId::proportional(11.0),
                 theme.muted_foreground,
+                (inner_rect.width() * 0.5).max(0.0),
+                Some(crate::text::Wrap::Truncate),
             );
             let text_pos = egui::pos2(
                 inner_rect.min.x,

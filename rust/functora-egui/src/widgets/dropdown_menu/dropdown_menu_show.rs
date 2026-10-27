@@ -89,27 +89,19 @@ impl super::widget::DropdownMenu {
                     label, shortcut, ..
                 } = item
                 {
-                    let lw = popup_ui
-                        .painter()
-                        .layout_no_wrap(
-                            label.clone(),
-                            egui::FontId::proportional(14.0),
-                            theme.popover_foreground,
-                        )
-                        .size()
-                        .x;
+                    let lw = crate::text::natural_width(
+                        popup_ui.ctx(),
+                        label.clone(),
+                        egui::FontId::proportional(14.0),
+                    );
                     max_label_w = max_label_w.max(lw);
 
                     if let Some(sc) = shortcut {
-                        let sw = popup_ui
-                            .painter()
-                            .layout_no_wrap(
-                                sc.clone(),
-                                egui::FontId::proportional(12.0),
-                                theme.muted_foreground,
-                            )
-                            .size()
-                            .x;
+                        let sw = crate::text::natural_width(
+                            popup_ui.ctx(),
+                            sc.clone(),
+                            egui::FontId::proportional(12.0),
+                        );
                         max_shortcut_w = max_shortcut_w.max(sw);
                     }
                 }
@@ -153,10 +145,13 @@ impl super::widget::DropdownMenu {
                             theme.muted_foreground
                         };
 
-                        let galley = popup_ui.painter().layout_no_wrap(
+                        let galley = crate::text::layout(
+                            popup_ui,
                             label.clone(),
                             egui::FontId::proportional(14.0),
                             fg,
+                            (menu_width - 16.0 - shortcut_space - trailing_check).max(0.0),
+                            None,
                         );
                         let desired = egui::vec2(menu_width, galley.size().y + 8.0);
                         let (rect, r) = popup_ui.allocate_exact_size(desired, egui::Sense::click());
@@ -178,10 +173,13 @@ impl super::widget::DropdownMenu {
                             );
 
                             if let Some(sc) = shortcut {
-                                let sc_galley = popup_ui.painter().layout_no_wrap(
+                                let sc_galley = crate::text::layout(
+                                    popup_ui,
                                     sc.clone(),
                                     egui::FontId::proportional(12.0),
                                     theme.muted_foreground,
+                                    (shortcut_space - 24.0).max(0.0),
+                                    Some(crate::text::Wrap::Truncate),
                                 );
                                 popup_ui.painter().galley(
                                     egui::pos2(

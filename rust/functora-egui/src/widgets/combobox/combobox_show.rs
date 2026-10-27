@@ -63,9 +63,14 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
             icon_size + 4.0,
             220.0,
         );
-        let galley =
-            ui.painter()
-                .layout_no_wrap(display, egui::FontId::proportional(14.0), text_color);
+        let galley = crate::text::layout(
+            ui,
+            display,
+            egui::FontId::proportional(14.0),
+            text_color,
+            (width - h_padding * 2.0 - icon_size - 4.0).max(0.0),
+            Some(crate::text::Wrap::Truncate),
+        );
         let desired = egui::vec2(width, height);
         let (trigger_rect, trigger) = ui.allocate_exact_size(desired, egui::Sense::click());
 
@@ -157,16 +162,11 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
             let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
             let mut content_w: f32 = 200.0;
             for (_, label) in self.entries {
-                let w = ui
-                    .painter()
-                    .layout_no_wrap(
-                        label.clone(),
-                        egui::FontId::proportional(14.0),
-                        egui::Color32::PLACEHOLDER,
-                    )
-                    .size()
-                    .x
-                    + 32.0;
+                let w = crate::text::natural_width(
+                    ui.ctx(),
+                    label.clone(),
+                    egui::FontId::proportional(14.0),
+                ) + 32.0;
                 content_w = content_w.max(w);
             }
             let base = trigger_rect.width().max(content_w);
@@ -213,10 +213,13 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
 
                 for (value, label) in filtered {
                     let is_selected = selected.as_ref().is_some_and(|current| current == value);
-                    let item_galley = popup_ui.painter().layout_no_wrap(
+                    let item_galley = crate::text::layout(
+                        popup_ui,
                         label.clone(),
                         egui::FontId::proportional(14.0),
                         theme.popover_foreground,
+                        (popup_ui.available_width() - item_left_pad - 4.0).max(0.0),
+                        None,
                     );
                     let item_desired =
                         egui::vec2(popup_ui.available_width(), item_galley.size().y + 8.0);

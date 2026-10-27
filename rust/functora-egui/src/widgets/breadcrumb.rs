@@ -40,15 +40,23 @@ impl<'a, R: RouteMetadata> Breadcrumb<'a, R> {
         let mut action = None;
 
         let font_id = egui::FontId::proportional(14.0);
-        let sample_galley =
-            ui.painter()
-                .layout_no_wrap("A".into(), font_id.clone(), theme.foreground);
+        let sample_galley = crate::text::layout(
+            ui,
+            "A".to_owned(),
+            font_id.clone(),
+            theme.foreground,
+            ui.available_width(),
+            None,
+        );
         let pill_height = sample_galley.size().y + 8.0;
         let btn_side = pill_height;
         let icon_side = btn_side * 0.6;
 
-        let _ = ui.horizontal(|ui_inner| {
+        let _ = ui.horizontal_wrapped(|ui_inner| {
             ui_inner.spacing_mut().item_spacing.x = 4.0;
+            // Breadcrumb segments should stay single-line with truncation
+            // for consistent row height when wrapping on narrow screens.
+            ui_inner.style_mut().wrap_mode = Some(egui::TextWrapMode::Truncate);
 
             if self.history.can_go_back() {
                 let (rect, mut response) =
@@ -78,12 +86,15 @@ impl<'a, R: RouteMetadata> Breadcrumb<'a, R> {
                     Sense::click()
                 };
 
-                let galley = ui_inner.painter().layout_no_wrap(
+                let padding = vec2(8.0, 4.0);
+                let galley = crate::text::layout(
+                    ui_inner,
                     seg.name.clone(),
                     font_id.clone(),
                     theme.foreground,
+                    (ui_inner.available_width() - padding.x * 2.0).max(0.0),
+                    None,
                 );
-                let padding = vec2(8.0, 4.0);
                 let desired = galley.size() + padding * 2.0;
 
                 let (rect, response) = ui_inner.allocate_at_least(desired, sense);

@@ -21,15 +21,18 @@ fn snippet_impl(ui: &mut egui::Ui, code: &str, break_long_words: bool) {
     let available = ui.available_width();
     let wrap_width = (available - 20.0).max(0.0);
 
-    let mut job = egui::text::LayoutJob::simple(
+    let galley = crate::text::layout(
+        ui,
         code.to_owned(),
         FontId::monospace(11.5),
         theme.foreground,
         wrap_width,
+        Some(if break_long_words {
+            crate::text::Wrap::Any
+        } else {
+            crate::text::Wrap::Word
+        }),
     );
-    job.wrap.break_anywhere = break_long_words;
-
-    let galley = ui.fonts_mut(|f| f.layout_job(job));
     let height = galley.size().y + 20.0;
     let response = ui
         .allocate_response(vec2(available, height), Sense::hover())

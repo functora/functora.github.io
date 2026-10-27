@@ -54,7 +54,7 @@ impl FlexInst<'_, '_> {
         content: impl FnOnce(&mut FlexInst) -> R,
     ) -> egui::InnerResponse<R> {
         self.0
-            .add_flex(egui_flex::FlexItem::new(), flex.flex, |inner| {
+            .add_flex(egui_flex::FlexItem::new(), flex.inner, |inner| {
                 let mut inst = FlexInst(inner);
                 content(&mut inst)
             })
@@ -69,7 +69,7 @@ impl FlexInst<'_, '_> {
     ) -> egui::InnerResponse<R> {
         self.0.add_flex(
             egui_flex::FlexItem::new().grow(factor),
-            flex.flex,
+            flex.inner,
             |inner| {
                 let mut inst = FlexInst(inner);
                 content(&mut inst)

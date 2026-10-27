@@ -254,3 +254,16 @@ pub(crate) fn respond(
         clipboard_error: copy_error.or(paste_error),
     }
 }
+
+/// Shows the localized tool tooltip while the pointer rests on the icon.
+pub(crate) fn tool_tooltip(
+    resp: Option<&egui::Response>,
+    msg: &crate::messages::Msg,
+    ctx: &egui::Context,
+) {
+    if let Some(hovered) = resp {
+        let _ = hovered
+            .clone()
+            .on_hover_text(crate::language::label(msg, ctx));
+    }
+}

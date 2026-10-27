@@ -39,9 +39,9 @@ fn ui_sources() -> [&'static str; 14] {
 /// User-visible English literals that must come from the trilingual catalog
 /// instead. Each entry names the replacement.
 const BANNED: &[(&str, &str)] = &[
-    ("\"Pasted\"", "Base::Copied"),
+    ("\"Pasted\"", "Base::Pasted"),
     ("\"Copied\"", "Base::Copied"),
-    ("\"Shared\"", "Msg::Sent"),
+    ("\"Shared\"", "Msg::Shared"),
     ("Copied for printing", "drop Print"),
     ("Copied URL for printing", "drop Print"),
     ("\"Dismiss\"", "Base::Dismiss"),
@@ -84,9 +84,9 @@ const BANNED: &[(&str, &str)] = &[
     ("\"File\"", "Msg::File"),
     ("\"View\"", "Msg::ViewButton"),
     ("\"Share\"", "Msg::Share"),
-    ("\"About\"", "Base::Application"),
+    ("\"About\"", "Base::About"),
     ("\"Donate\"", "Base::Donate"),
-    ("\"License\"", "Base::TermsOfServiceTitle"),
+    ("\"License\"", "Base::License"),
     ("\"Privacy\"", "Base::PrivacyPolicyTitle"),
     ("\"Back\"", "Base::Back"),
     ("\"Home\"", "Base::Home"),
@@ -141,6 +141,30 @@ fn footer_is_one_uniform_hypertext_layout() {
     );
     assert!(!APP_SRC.contains("footer_link"), "footer must not use per-link buttons");
     assert!(APP_SRC.contains(".centered()"), "footer paragraph must be centered");
+}
+
+#[test]
+fn paste_and_copy_report_their_own_outcome() {
+    // A paste reads the clipboard into the field and a copy writes the
+    // field out; the toasts must say which happened, not one shared word.
+    assert!(
+        !APP_SRC.contains("resp.pasted || resp.copied"),
+        "paste and copy must not share one toast"
+    );
+    let pasted_arm = APP_SRC
+        .find("if resp.pasted")
+        .map_or(0, |at| APP_SRC[at..].find("BaseMsg::").unwrap_or(0) + at);
+    assert!(
+        APP_SRC[pasted_arm..].starts_with("BaseMsg::Pasted"),
+        "a completed paste must toast BaseMsg::Pasted"
+    );
+    let copied_arm = APP_SRC
+        .find("if resp.copied")
+        .map_or(0, |at| APP_SRC[at..].find("BaseMsg::").unwrap_or(0) + at);
+    assert!(
+        APP_SRC[copied_arm..].starts_with("BaseMsg::Copied"),
+        "a completed copy must toast BaseMsg::Copied"
+    );
 }
 
 #[test]
@@ -273,7 +297,7 @@ fn route_labels_are_localized() {
         !ROUTE_SRC.contains("\"Home\""),
         "route labels must render from the catalog, not literals"
     );
-    for fragment in ["TermsOfServiceTitle", "PrivacyPolicyTitle", "OpenButton", "ViewButton"] {
+    for fragment in ["License", "PrivacyPolicyTitle", "ActionOpen", "ViewButton"] {
         assert!(ROUTE_SRC.contains(fragment), "route labels must include {fragment}");
     }
 }

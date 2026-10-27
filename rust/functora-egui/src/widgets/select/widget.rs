@@ -8,7 +8,7 @@
 pub struct Select<'a, T: Clone + std::fmt::Display + PartialEq + 'static> {
     pub(crate) selected: &'a mut Option<T>,
     pub(crate) options: &'a [T],
-    pub(crate) placeholder: String,
+    pub(crate) placeholder: Option<String>,
     pub(crate) width: Option<f32>,
     pub(crate) selected_text_override: Option<String>,
 }
@@ -18,14 +18,14 @@ impl<'a, T: Clone + std::fmt::Display + PartialEq + 'static> Select<'a, T> {
         Self {
             selected,
             options,
-            placeholder: "Select...".to_owned(),
+            placeholder: None,
             width: None,
             selected_text_override: None,
         }
     }
 
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
-        self.placeholder = placeholder.into();
+        self.placeholder = Some(placeholder.into());
         self
     }
 
@@ -86,7 +86,7 @@ impl<'a, T: Clone + std::fmt::Display + PartialEq + 'static> SelectValue<'a, T> 
 pub struct SelectLabeled<'a, T: Clone + PartialEq + 'static> {
     pub(crate) selected: &'a mut Option<T>,
     pub(crate) entries: &'a [(T, String)],
-    pub(crate) placeholder: String,
+    pub(crate) placeholder: Option<String>,
     pub(crate) width: Option<f32>,
 }
 
@@ -95,13 +95,13 @@ impl<'a, T: Clone + PartialEq + 'static> SelectLabeled<'a, T> {
         Self {
             selected,
             entries,
-            placeholder: "Select...".to_owned(),
+            placeholder: None,
             width: None,
         }
     }
 
     pub fn placeholder(mut self, placeholder: impl Into<String>) -> Self {
-        self.placeholder = placeholder.into();
+        self.placeholder = Some(placeholder.into());
         self
     }
 

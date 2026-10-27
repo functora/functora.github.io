@@ -108,6 +108,22 @@ pub(crate) fn show_input_paste_clear(
     let clear_resp = clear_rect.map(|r| ui.interact(r, clear_id, egui::Sense::click()));
     let eye_resp = eye_rect.map(|r| ui.interact(r, eye_id, egui::Sense::click()));
 
+    crate::widgets::paste_clear_core::tool_tooltip(
+        paste_resp.as_ref(),
+        &crate::messages::Msg::Paste,
+        ui.ctx(),
+    );
+    crate::widgets::paste_clear_core::tool_tooltip(
+        copy_resp.as_ref(),
+        &crate::messages::Msg::Copy,
+        ui.ctx(),
+    );
+    crate::widgets::paste_clear_core::tool_tooltip(
+        clear_resp.as_ref(),
+        &crate::messages::Msg::Clear,
+        ui.ctx(),
+    );
+
     let is_paste_pending = paste_pending(&slots.paste);
     let is_copy_pending = copy_pending(&slots.copy);
 

@@ -99,6 +99,22 @@ pub(crate) fn show_textarea_paste_clear(
     let paste_resp = paste_rect.map(|r| ui.interact(r, paste_id, egui::Sense::click()));
     let clear_resp = clear_rect.map(|r| ui.interact(r, clear_id, egui::Sense::click()));
 
+    crate::widgets::paste_clear_core::tool_tooltip(
+        paste_resp.as_ref(),
+        &crate::messages::Msg::Paste,
+        ui.ctx(),
+    );
+    crate::widgets::paste_clear_core::tool_tooltip(
+        copy_resp.as_ref(),
+        &crate::messages::Msg::Copy,
+        ui.ctx(),
+    );
+    crate::widgets::paste_clear_core::tool_tooltip(
+        clear_resp.as_ref(),
+        &crate::messages::Msg::Clear,
+        ui.ctx(),
+    );
+
     let is_paste_pending = paste_pending(&slots.paste);
     let is_copy_pending = copy_pending(&slots.copy);
 

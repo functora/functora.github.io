@@ -121,6 +121,7 @@ pub mod encoding {
 pub mod i18n {
     pub use functora_core::i18n::*;
 }
+pub mod language;
 #[cfg(feature = "html-markdown")]
 pub mod markdown {
     pub use functora_core::markdown::*;
@@ -315,4 +316,5 @@ pub use worker::Reporter;
 pub use worker::run as worker_run;
 
 pub use functora_core::{FUNCTORA_CORE_DATE, FUNCTORA_CORE_YEAR};
+pub use language::{current_language, set_language};
 pub use theme_extra::{Theme, current_theme, set_theme};

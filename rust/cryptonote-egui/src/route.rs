@@ -26,12 +26,12 @@ impl RouteMetadata for Screen {
     fn label(&self, lang: Language) -> Cow<'static, str> {
         match self {
             Self::Home => BaseMsg::Home.render(lang).into(),
-            Self::Open => Msg::OpenButton.render(lang).into(),
+            Self::Open => Msg::ActionOpen.render(lang).into(),
             Self::View => Msg::ViewButton.render(lang).into(),
             Self::Share => Msg::Share.render(lang).into(),
-            Self::About => BaseMsg::Application.render(lang).into(),
+            Self::About => BaseMsg::About.render(lang).into(),
             Self::Donate => BaseMsg::Donate.render(lang).into(),
-            Self::License => BaseMsg::TermsOfServiceTitle.render(lang).into(),
+            Self::License => BaseMsg::License.render(lang).into(),
             Self::Privacy => BaseMsg::PrivacyPolicyTitle.render(lang).into(),
             Self::File => Msg::File.render(lang).into(),
         }

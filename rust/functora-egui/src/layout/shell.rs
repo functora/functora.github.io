@@ -261,6 +261,9 @@ where
             system_back,
         } = self;
         let ctx = ui.ctx().clone();
+        if let Some(lang_cell) = language {
+            crate::language::set_language(&ctx, lang_cell.get());
+        }
         let route_id = egui::Id::new("shell_prev_route");
         let prev_route = ctx.data(|d| d.get_temp::<R>(route_id));
         let route_changed = breadcrumb.is_some_and(|(route, _)| prev_route.as_ref() != Some(route));

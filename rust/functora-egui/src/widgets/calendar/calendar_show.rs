@@ -59,10 +59,17 @@ impl super::widget::Calendar {
                 }
 
                 let _ = content_ui.label(
-                    egui::RichText::new(format!("{} {}", Self::month_name(*month), year))
-                        .color(theme.foreground)
-                        .size(14.0)
-                        .strong(),
+                    egui::RichText::new(format!(
+                        "{} {}",
+                        crate::language::month_name(
+                            *month,
+                            crate::language::current_language(content_ui.ctx())
+                        ),
+                        year
+                    ))
+                    .color(theme.foreground)
+                    .size(14.0)
+                    .strong(),
                 );
 
                 let (next_rect, next_resp) = content_ui
@@ -95,7 +102,9 @@ impl super::widget::Calendar {
             // Day-of-week headers
             let _ = inner_ui.horizontal(|content_ui| {
                 content_ui.spacing_mut().item_spacing.x = 2.0;
-                for day_name in ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] {
+                let lang = crate::language::current_language(content_ui.ctx());
+                for col in 0..7_u32 {
+                    let day_name = crate::language::weekday_short(col, lang);
                     let (rect, _) = content_ui.allocate_exact_size(
                         egui::vec2(cell_size, cell_size * 0.75),
                         egui::Sense::hover(),
@@ -222,23 +231,5 @@ impl super::widget::Calendar {
             - 2 * zero_based_century)
             % 7;
         u32::try_from(((zeller_h + 5) % 7 + 7) % 7).unwrap_or(0)
-    }
-
-    fn month_name(month: u32) -> &'static str {
-        match month {
-            1 => "January",
-            2 => "February",
-            3 => "March",
-            4 => "April",
-            5 => "May",
-            6 => "June",
-            7 => "July",
-            8 => "August",
-            9 => "September",
-            10 => "October",
-            11 => "November",
-            12 => "December",
-            _ => "Unknown",
-        }
     }
 }

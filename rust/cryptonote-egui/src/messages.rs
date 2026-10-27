@@ -8,11 +8,10 @@ pub enum Msg {
     Error(MsgError),
     Note,
     NotePlaceholder,
-    Mode,
+    Encryption,
     NoEncryption,
-    EncryptionSuffix,
     Share,
-    Sent,
+    Shared,
     SharedNoteText,
     ShareAppDesc,
     EncryptedNote,
@@ -30,7 +29,6 @@ pub enum Msg {
     ActionOpen,
     ActionScan,
     AboutText,
-    Clear,
     AttachFiles,
     RemoveFile,
     ArchiveReady,
@@ -49,11 +47,10 @@ impl I18N for Msg {
             Self::Base(m) => m.render_eng(),
             Self::Note => "Note".into(),
             Self::NotePlaceholder => "Enter your note here (Markdown/HTML supported)...".into(),
-            Self::Mode => "Mode".into(),
+            Self::Encryption => "Encryption".into(),
             Self::NoEncryption => "No encryption (plaintext)".into(),
-            Self::EncryptionSuffix => "encryption".into(),
             Self::Share => "Share".into(),
-            Self::Sent => "Sent!".into(),
+            Self::Shared => "Shared!".into(),
             Self::SharedNoteText => "A note sent via Cryptonote".into(),
             Self::ShareAppDesc => {
                 "Cryptonote is a cross-platform, serverless app for encrypted offline notes. Try it:".into()
@@ -70,7 +67,7 @@ impl I18N for Msg {
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Paste shared note URL here...".into(),
             Self::OpenButton => "Open URL".into(),
-            Self::ActionLabel => "Action".into(),
+            Self::ActionLabel => "Choose action".into(),
             Self::ActionCreate => "Create note".into(),
             Self::ActionOpen => "Open note".into(),
             Self::ActionScan => "Scan note".into(),
@@ -94,11 +91,10 @@ Cryptonote follows modern cryptographic best practices:
 - No data ever leaves your device unless you explicitly choose to share it
 
 Secure, private, and truly offline - your notes remain yours alone.".into(),
-            Self::Clear => "Clear".into(),
             Self::AttachFiles => "Attach files".into(),
             Self::RemoveFile => "Remove".into(),
             Self::ArchiveReady => {
-                "Cryptonote archive ready. Press Save to save and share with your recipient.".into()
+                "Archive ready. Press Save to share it with your recipient.".into()
             }
             Self::OpenArchive => "Open archive".into(),
             Self::Save => "Save".into(),
@@ -117,16 +113,15 @@ Secure, private, and truly offline - your notes remain yours alone.".into(),
             Self::NotePlaceholder => {
                 "Escribe tu nota aquí (Markdown/HTML soportado)...".into()
             }
-            Self::Mode => "Modo".into(),
+            Self::Encryption => "Cifrado".into(),
             Self::NoEncryption => "Sin cifrado (texto plano)".into(),
-            Self::EncryptionSuffix => "cifrado".into(),
             Self::Share => "Compartir".into(),
-            Self::Sent => "¡Enviado!".into(),
+            Self::Shared => "¡Compartido!".into(),
             Self::SharedNoteText => "Nota enviada vía Cryptonote".into(),
             Self::ShareAppDesc => {
                 "Cryptonote es una aplicación multiplataforma y sin servidores para notas cifradas sin conexión. Pruébala:".into()
             }
-            Self::EncryptedNote => "Cifrado".into(),
+            Self::EncryptedNote => "Nota cifrada".into(),
             Self::EncryptedNoteDesc => {
                 "Esta nota está cifrada. Ingresa la contraseña para descifrarla.".into()
             }
@@ -138,7 +133,7 @@ Secure, private, and truly offline - your notes remain yours alone.".into(),
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Pega la URL de la nota compartida aquí...".into(),
             Self::OpenButton => "Abrir URL".into(),
-            Self::ActionLabel => "Acción".into(),
+            Self::ActionLabel => "Elige una acción".into(),
             Self::ActionCreate => "Crear nota".into(),
             Self::ActionOpen => "Abrir nota".into(),
             Self::ActionScan => "Escanear nota".into(),
@@ -162,11 +157,10 @@ Cryptonote sigue las mejores prácticas criptográficas modernas:
 - Ningún dato sale de su dispositivo a menos que usted elija explícitamente compartirlo
 
 Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".into(),
-            Self::Clear => "Borrar".into(),
             Self::AttachFiles => "Adjuntar archivos".into(),
             Self::RemoveFile => "Eliminar".into(),
             Self::ArchiveReady => {
-                "Archivo Cryptonote listo. Presiona Guardar para guardar y compartir con tu destinatario.".into()
+                "Archivo listo. Presiona Guardar para compartirlo con tu destinatario.".into()
             }
             Self::OpenArchive => "Abrir archivo".into(),
             Self::Save => "Guardar".into(),
@@ -187,28 +181,27 @@ Seguro, privado y verdaderamente offline - sus notas siguen siendo solo suyas.".
             Self::NotePlaceholder => {
                 "Введите вашу заметку здесь (Markdown/HTML поддерживается)...".into()
             }
-            Self::Mode => "Режим".into(),
+            Self::Encryption => "Шифрование".into(),
             Self::NoEncryption => "Без шифрования (открытый текст)".into(),
-            Self::EncryptionSuffix => "шифрование".into(),
             Self::Share => "Поделиться".into(),
-            Self::Sent => "Отправлено!".into(),
+            Self::Shared => "Отправлено!".into(),
             Self::SharedNoteText => "Заметка, отправленная через Cryptonote".into(),
             Self::ShareAppDesc => {
                 "Cryptonote - кроссплатформенное бессерверное приложение для зашифрованных офлайн-заметок. Попробуйте:".into()
             }
-            Self::EncryptedNote => "Шифр".into(),
+            Self::EncryptedNote => "Зашифровано".into(),
             Self::EncryptedNoteDesc => {
                 "Эта заметка зашифрована. Введите пароль для расшифровки.".into()
             }
             Self::DecryptButton => "Расшифровать".into(),
-            Self::EditNote => "Правка".into(),
+            Self::EditNote => "Изменить".into(),
             Self::Reset => "Сбросить".into(),
             Self::ResetDone => "Приложение сброшено".into(),
-            Self::ViewButton => "Смотреть".into(),
+            Self::ViewButton => "Просмотр".into(),
             Self::OpenUrlLabel => "URL".into(),
             Self::OpenUrlPlaceholder => "Вставьте URL заметки здесь...".into(),
             Self::OpenButton => "Открыть URL".into(),
-            Self::ActionLabel => "Действие".into(),
+            Self::ActionLabel => "Выберите действие".into(),
             Self::ActionCreate => "Создать заметку".into(),
             Self::ActionOpen => "Открыть заметку".into(),
             Self::ActionScan => "Сканировать заметку".into(),
@@ -232,11 +225,10 @@ Cryptonote следует современным криптографическ�
 - Никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 
 Безопасно, приватно и по-настоящему автономно - ваши заметки остаются только вашими.".into(),
-            Self::Clear => "Очистить".into(),
             Self::AttachFiles => "Прикрепить файлы".into(),
             Self::RemoveFile => "Удалить".into(),
             Self::ArchiveReady => {
-                "Архив Cryptonote готов. Нажмите Сохранить, чтобы сохранить и поделиться с получателем.".into()
+                "Архив готов. Нажмите «Сохранить», чтобы поделиться им с получателем.".into()
             }
             Self::OpenArchive => "Открыть архив".into(),
             Self::Save => "Сохранить".into(),

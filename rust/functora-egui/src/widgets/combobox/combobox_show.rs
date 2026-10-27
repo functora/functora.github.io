@@ -10,7 +10,10 @@ impl super::widget::Combobox {
         search_text: &mut String,
     ) -> egui::Response {
         let entries: Vec<(usize, String)> = self.items.into_iter().enumerate().collect();
-        let mut typed = super::widget::ComboboxValue::new(&entries).placeholder(self.placeholder);
+        let mut typed = super::widget::ComboboxValue::new(&entries);
+        if let Some(placeholder) = self.placeholder {
+            typed = typed.placeholder(placeholder);
+        }
         if let Some(width) = self.width {
             typed = typed.width(width);
         }
@@ -29,6 +32,9 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
         search_text: &mut String,
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
+        let placeholder = self
+            .placeholder
+            .unwrap_or_else(|| crate::language::label(&crate::messages::Msg::Select, ui.ctx()));
 
         let display = selected
             .as_ref()
@@ -38,7 +44,7 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
                     .find(|entry| entry.0 == *value)
                     .map(|(_, label)| label.clone())
             })
-            .unwrap_or_else(|| self.placeholder.clone());
+            .unwrap_or(placeholder);
 
         let text_color = if selected.is_some() {
             theme.foreground
@@ -58,7 +64,7 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
             self.entries
                 .iter()
                 .map(|(_, label)| label.as_str())
-                .chain([self.placeholder.as_str()]),
+                .chain([display.as_str()]),
             h_padding,
             icon_size + 4.0,
             220.0,
@@ -187,7 +193,10 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
 
             // Themed search input
             let input_resp = crate::widgets::input::widget::Input::new(search_text)
-                .placeholder("Search...")
+                .placeholder(crate::language::label(
+                    &crate::messages::Msg::Search,
+                    popup_ui.ctx(),
+                ))
                 .desired_width(popup_ui.available_width())
                 .show(popup_ui);
             if trigger.clicked() {

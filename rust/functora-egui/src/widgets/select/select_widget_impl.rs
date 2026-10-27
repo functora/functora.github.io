@@ -9,11 +9,14 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
             .iter()
             .map(|option| (option.clone(), option.to_string()))
             .collect();
+        let placeholder = self
+            .placeholder
+            .unwrap_or_else(|| crate::language::label(&crate::messages::Msg::Select, ui.ctx()));
         super::widget::SelectLabeled::show_labeled(
             ui,
             self.selected,
             &entries,
-            &self.placeholder,
+            &placeholder,
             self.width,
             self.selected_text_override.as_deref(),
         )
@@ -22,11 +25,14 @@ impl<T: Clone + std::fmt::Display + PartialEq + 'static> egui::Widget
 
 impl<T: Clone + PartialEq + 'static> egui::Widget for super::widget::SelectLabeled<'_, T> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
+        let placeholder = self
+            .placeholder
+            .unwrap_or_else(|| crate::language::label(&crate::messages::Msg::Select, ui.ctx()));
         Self::show_labeled(
             ui,
             self.selected,
             self.entries,
-            &self.placeholder,
+            &placeholder,
             self.width,
             None,
         )

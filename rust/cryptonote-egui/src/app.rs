@@ -167,7 +167,10 @@ impl CryptonoteApp {
 
     pub(crate) fn paste_clear_feedback(&mut self, resp: functora_egui::InputPasteClearResponse, now: f64) {
         let lang = self.lang();
-        if resp.pasted || resp.copied {
+        if resp.pasted {
+            self.toast.add(BaseMsg::Pasted.render(lang), ToastVariant::Success, now);
+        }
+        if resp.copied {
             self.toast.add(BaseMsg::Copied.render(lang), ToastVariant::Success, now);
         }
         if let Some(clipboard_error) = resp.clipboard_error {
@@ -320,7 +323,7 @@ impl CryptonoteApp {
         match functora_egui::poll_channel(&mut self.share_rx) {
             None | Some(functora_egui::PollOutcome::Disconnected) => {}
             Some(functora_egui::PollOutcome::Ready(Ok(()))) => {
-                self.toast.add(Msg::Sent.render(lang), ToastVariant::Success, time);
+                self.toast.add(Msg::Shared.render(lang), ToastVariant::Success, time);
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }

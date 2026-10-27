@@ -14,7 +14,7 @@ impl CryptonoteApp {
     pub(crate) fn home_create(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let toast_time = ui.ctx().input(|i| i.time);
-        _ = Label::new(Msg::Mode.render(lang)).show(ui);
+        _ = Label::new(Msg::Encryption.render(lang)).show(ui);
         let () = ui.add_space(4.0);
         let options = [
             (CipherChoice::Plain, Msg::NoEncryption.render(lang)),

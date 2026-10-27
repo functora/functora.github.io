@@ -76,8 +76,7 @@ impl egui::Widget for super::widget::ColorSwatch {
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
             let swatch_rect = egui::Rect::from_min_size(rect.min, egui::vec2(self.size, self.size));
-            let radius =
-                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius * 0.75));
+            let radius = crate::paint::corner_radius(theme.radius * 0.75);
 
             if self.color.a() < 255 {
                 super::paint_checkerboard::paint_checkerboard(painter, swatch_rect, 5.0);
@@ -105,7 +104,7 @@ impl egui::Widget for super::widget::ColorSwatch {
             if self.selected {
                 let _ = painter.rect_stroke(
                     render_rect.expand(3.0),
-                    egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0)),
+                    crate::paint::corner_radius(theme.radius + 2.0),
                     egui::Stroke::new(1.5, theme.primary),
                     egui::epaint::StrokeKind::Outside,
                 );

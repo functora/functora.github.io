@@ -569,16 +569,7 @@ impl eframe::App for CryptonoteApp {
         let pending_reset = std::cell::Cell::new(false);
         let selected_snapshot = self.temporary.screen;
         let lang_cell = std::cell::Cell::new(self.persistent.language);
-        let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
-            (Screen::Home, functora_egui::LucideIcon::House),
-            (Screen::About, functora_egui::LucideIcon::Info),
-            (Screen::Donate, functora_egui::LucideIcon::Heart),
-        ]
-        .iter()
-        .map(|(screen, icon)| (*screen, screen.label(lang_cell.get()).into_owned(), *icon))
-        .collect();
-        let mut sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
-        sidebar_names.push(Msg::Reset.render(lang_cell.get()));
+        let (nav_items, sidebar_names) = Self::sidebar_entries(lang_cell.get());
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, {
             let pending_ref = &pending_nav;
             let reset_ref = &pending_reset;
@@ -671,5 +662,25 @@ impl eframe::App for CryptonoteApp {
             }
         }
         self.toast.show(&ctx);
+    }
+}
+
+impl CryptonoteApp {
+    /// Sidebar entries for `lang`: the navigable screens with their labels
+    /// and icons, plus the label list the shell sizes itself against.
+    fn sidebar_entries(
+        lang: functora_egui::i18n::Language,
+    ) -> (Vec<(Screen, String, functora_egui::LucideIcon)>, Vec<String>) {
+        let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
+            (Screen::Home, functora_egui::LucideIcon::House),
+            (Screen::About, functora_egui::LucideIcon::Info),
+            (Screen::Donate, functora_egui::LucideIcon::Heart),
+        ]
+        .iter()
+        .map(|(screen, icon)| (*screen, screen.label(lang).into_owned(), *icon))
+        .collect();
+        let mut sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
+        sidebar_names.push(Msg::Reset.render(lang));
+        (nav_items, sidebar_names)
     }
 }

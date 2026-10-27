@@ -23,9 +23,7 @@ impl super::widget::StatusBar {
         let frame = egui::Frame::NONE
             .fill(theme.muted)
             .inner_margin(margin)
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius * 0.75,
-            )))
+            .corner_radius(crate::paint::corner_radius(theme.radius * 0.75))
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         frame

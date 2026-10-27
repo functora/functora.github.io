@@ -75,7 +75,7 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
         let (trigger_rect, trigger) = ui.allocate_exact_size(desired, egui::Sense::click());
 
         if ui.is_rect_visible(trigger_rect) {
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+            let cr = crate::paint::corner_radius(theme.radius);
             let bg = if trigger.is_pointer_button_down_on() {
                 crate::paint::interpolate_color::interpolate_color(
                     theme.background,
@@ -174,7 +174,11 @@ impl<T: Clone + PartialEq> super::widget::ComboboxValue<'_, T> {
             if popup_spacing.is_mobile() {
                 base.clamp(0.0, screen_cap).max(trigger_rect.width())
             } else {
-                crate::utils::clamp_overlay_width(base.min(screen_w * 0.6), 200.0, screen_cap)
+                crate::widgets::overlay_common::clamp_overlay_width(
+                    base.min(screen_w * 0.6),
+                    200.0,
+                    screen_cap,
+                )
             }
         };
         let _ = popup.show(|popup_ui: &mut egui::Ui| {

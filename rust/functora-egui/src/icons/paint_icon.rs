@@ -60,7 +60,7 @@ fn paint_element(
                 egui::pos2(x * scale + offset.x, y * scale + offset.y),
                 egui::vec2(width * scale, height * scale),
             );
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(rx * scale));
+            let cr = crate::paint::corner_radius(rx * scale);
             let _ = painter.rect_stroke(r, cr, stroke, egui::epaint::StrokeKind::Outside);
         }
         super::icon_element::IconElement::Line { x1, y1, x2, y2 } => {

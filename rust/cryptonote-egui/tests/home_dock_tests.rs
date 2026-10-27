@@ -3,9 +3,7 @@
 //! wrapping the text inside a button.
 
 use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::messages::Msg;
 use functora_core::i18n::Language;
-use functora_egui::i18n::I18N;
 
 pub mod common;
 use common::{UiDriver, all_texts};
@@ -14,12 +12,14 @@ const HEIGHT: f32 = 800.0;
 const WIDTHS: [f32; 6] = [200.0, 240.0, 320.0, 360.0, 480.0, 1280.0];
 
 fn dock_labels() -> Vec<String> {
-    [
-        Msg::Share.render(Language::Rus),
-        Msg::AttachFiles.render(Language::Rus),
-        Msg::ViewButton.render(Language::Rus),
-    ]
-    .to_vec()
+    common::rendered_labels(
+        &[
+            cryptonote_egui::Msg::Share,
+            cryptonote_egui::Msg::AttachFiles,
+            cryptonote_egui::Msg::ViewButton,
+        ],
+        functora_core::i18n::Language::Rus,
+    )
 }
 
 fn render_dock(width: f32) -> Vec<(String, egui::Rect)> {

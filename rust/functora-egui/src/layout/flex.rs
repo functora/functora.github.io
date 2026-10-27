@@ -46,8 +46,7 @@ impl Flex {
     pub fn gap(self, gap: f32) -> Self {
         Self {
             inner: self.inner.gap(egui::vec2(gap, gap)),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -55,20 +54,15 @@ impl Flex {
     ///
     /// This is already the default for [`Flex::row`].
     pub fn wrap(self) -> Self {
-        Self {
-            inner: self.inner,
-            wrap: true,
-            single_line_items: self.single_line_items,
-        }
+        Self { wrap: true, ..self }
     }
 
     /// Disables wrapping, keeping the row on a single line even when items
     /// exceed the container width.
     pub fn no_wrap(self) -> Self {
         Self {
-            inner: self.inner,
             wrap: false,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -83,9 +77,8 @@ impl Flex {
     /// a consistent height when wrapped to multiple rows.
     pub fn single_line_items(self) -> Self {
         Self {
-            inner: self.inner,
-            wrap: self.wrap,
             single_line_items: true,
+            ..self
         }
     }
 
@@ -93,8 +86,7 @@ impl Flex {
     pub fn align_start(self) -> Self {
         Self {
             inner: self.inner.align_items(egui_flex::FlexAlign::Start),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -102,8 +94,7 @@ impl Flex {
     pub fn align_center(self) -> Self {
         Self {
             inner: self.inner.align_items(egui_flex::FlexAlign::Center),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -111,8 +102,7 @@ impl Flex {
     pub fn align_end(self) -> Self {
         Self {
             inner: self.inner.align_items(egui_flex::FlexAlign::End),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -120,8 +110,7 @@ impl Flex {
     pub fn align_stretch(self) -> Self {
         Self {
             inner: self.inner.align_items(egui_flex::FlexAlign::Stretch),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -129,8 +118,7 @@ impl Flex {
     pub fn justify_start(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::Start),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -138,8 +126,7 @@ impl Flex {
     pub fn justify_center(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::Center),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -147,8 +134,7 @@ impl Flex {
     pub fn justify_end(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::End),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -156,8 +142,7 @@ impl Flex {
     pub fn justify_between(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::SpaceBetween),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -165,8 +150,7 @@ impl Flex {
     pub fn justify_around(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::SpaceAround),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -174,8 +158,7 @@ impl Flex {
     pub fn justify_evenly(self) -> Self {
         Self {
             inner: self.inner.justify(egui_flex::FlexJustify::SpaceEvenly),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -183,8 +166,7 @@ impl Flex {
     pub fn w_full(self) -> Self {
         Self {
             inner: self.inner.w_full(),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -192,8 +174,7 @@ impl Flex {
     pub fn h_full(self) -> Self {
         Self {
             inner: self.inner.h_full(),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -201,8 +182,7 @@ impl Flex {
     pub fn width(self, width: f32) -> Self {
         Self {
             inner: self.inner.width(width),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -210,8 +190,7 @@ impl Flex {
     pub fn height(self, height: f32) -> Self {
         Self {
             inner: self.inner.height(height),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 
@@ -219,8 +198,7 @@ impl Flex {
     pub fn grow_items(self, grow: f32) -> Self {
         Self {
             inner: self.inner.grow_items(grow),
-            wrap: self.wrap,
-            single_line_items: self.single_line_items,
+            ..self
         }
     }
 

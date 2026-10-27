@@ -11,7 +11,7 @@ impl super::widget::InputOtp {
         let gaps = gap * crate::utils::usize_to_f32(self.length.saturating_sub(1));
         let cell_size = base_cell.min(((ui.available_width() - gaps) / cells).max(0.0));
         let font_size = base_font_size * (cell_size / base_cell);
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+        let cr = crate::paint::corner_radius(theme.radius);
 
         let total_width = cell_size * cells + gaps;
         let (full_rect, mut response) =
@@ -26,11 +26,8 @@ impl super::widget::InputOtp {
             for event in &events {
                 match event {
                     egui::Event::Text(t) => {
-                        for ch in t.chars() {
-                            if ch.is_ascii_digit() && value.len() < self.length {
-                                value.push(ch);
-                            }
-                        }
+                        let room = self.length.saturating_sub(value.len());
+                        value.extend(t.chars().filter(char::is_ascii_digit).take(room));
                         ui.ctx().request_repaint();
                     }
                     egui::Event::Key {
@@ -61,7 +58,7 @@ impl super::widget::InputOtp {
             let painter = ui.painter();
             let updated_digits: Vec<char> = value.chars().collect();
 
-            for i in 0..self.length {
+            (0..self.length).for_each(|i| {
                 let x = full_rect.min.x + (cell_size + gap) * crate::utils::usize_to_f32(i);
                 let cell_rect = egui::Rect::from_min_size(
                     egui::pos2(x, full_rect.min.y),
@@ -94,7 +91,7 @@ impl super::widget::InputOtp {
                     );
                     painter.galley(pos, galley, theme.foreground);
                 }
-            }
+            });
 
             // Focus ring
             if response.has_focus() {

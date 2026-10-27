@@ -58,7 +58,7 @@ impl super::widget::Sidebar {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+            let cr = crate::paint::corner_radius(theme.radius);
             if response.hovered() || response.is_pointer_button_down_on() {
                 let _ = painter.rect_filled(rect, cr, theme.muted);
             }
@@ -103,7 +103,7 @@ impl super::widget::Sidebar {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+            let cr = crate::paint::corner_radius(theme.radius);
             if response.hovered() || response.is_pointer_button_down_on() {
                 let _ = painter.rect_filled(rect, cr, theme.muted);
             }
@@ -195,8 +195,7 @@ impl super::widget::Sidebar {
                 let response = inner_ui.allocate_rect(button_rect, egui::Sense::click());
                 if inner_ui.is_rect_visible(button_rect) {
                     let painter = inner_ui.painter();
-                    let cr =
-                        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+                    let cr = crate::paint::corner_radius(theme.radius);
                     if response.hovered() || response.is_pointer_button_down_on() {
                         let _ = painter.rect_filled(button_rect, cr, theme.muted);
                     }
@@ -341,8 +340,7 @@ impl super::widget::Sidebar {
                     let response = content_ui.allocate_rect(button_rect, egui::Sense::click());
                     if content_ui.is_rect_visible(button_rect) {
                         let painter = content_ui.painter();
-                        let cr =
-                            egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+                        let cr = crate::paint::corner_radius(theme.radius);
                         if response.hovered() || response.is_pointer_button_down_on() {
                             let _ = painter.rect_filled(button_rect, cr, theme.muted);
                         }

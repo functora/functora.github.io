@@ -19,7 +19,7 @@ impl egui::Widget for super::widget::Input<'_> {
         };
 
         let style = super::input_style::resolve_input_style(&theme, false);
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(style.corner_radius));
+        let cr = crate::paint::corner_radius(style.corner_radius);
 
         let desired = egui::vec2(width, height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::hover());

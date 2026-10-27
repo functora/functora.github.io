@@ -37,7 +37,7 @@ impl egui::Widget for super::widget::Toggle<'_> {
                 &theme,
                 self.variant,
                 *self.pressed,
-                response.hovered(),
+                &crate::widgets::interaction::Interaction::of(&response, true),
             );
             if response.is_pointer_button_down_on() {
                 style.bg = crate::paint::interpolate_color::interpolate_color(
@@ -48,7 +48,7 @@ impl egui::Widget for super::widget::Toggle<'_> {
                 style.fg = theme.accent_foreground;
             }
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(style.corner_radius));
+            let cr = crate::paint::corner_radius(style.corner_radius);
 
             let _ = painter.rect_filled(rect, cr, style.bg);
 

@@ -15,9 +15,7 @@ impl egui::Widget for super::widget::QrImage<'_> {
             egui::Frame::new()
                 .fill(theme.card)
                 .stroke(egui::Stroke::new(1.0, theme.border))
-                .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                    theme.radius,
-                )))
+                .corner_radius(crate::paint::corner_radius(theme.radius))
                 .inner_margin(egui::Margin::same(12))
                 .show(centered, |band| {
                     let band_full = band.available_width();
@@ -98,11 +96,9 @@ fn fallback(ui: &mut egui::Ui, side: f32) -> egui::Response {
     let theme = ui.ctx().shadcn_theme();
     let (rect, response) = ui.allocate_exact_size(egui::Vec2::splat(side), egui::Sense::hover());
     if ui.is_rect_visible(rect) {
-        let _ = ui.painter().rect_filled(
-            rect,
-            egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius)),
-            theme.muted,
-        );
+        let _ =
+            ui.painter()
+                .rect_filled(rect, crate::paint::corner_radius(theme.radius), theme.muted);
         let _ = ui.painter().text(
             rect.center(),
             egui::Align2::CENTER_CENTER,

@@ -34,13 +34,17 @@ pub enum Wrap {
 /// [`egui::Style::wrap_mode`] is honored, otherwise text wraps on words.
 #[must_use]
 pub fn resolve(ui: &egui::Ui, wrap: Option<Wrap>) -> Wrap {
-    wrap.unwrap_or_else(|| {
-        ui.style().wrap_mode.map_or(Wrap::Word, |mode| match mode {
-            egui::TextWrapMode::Extend => Wrap::Nowrap,
-            egui::TextWrapMode::Wrap => Wrap::Word,
-            egui::TextWrapMode::Truncate => Wrap::Truncate,
-        })
-    })
+    wrap.unwrap_or_else(|| ui.style().wrap_mode.map_or(Wrap::Word, Into::into))
+}
+
+impl From<egui::TextWrapMode> for Wrap {
+    fn from(mode: egui::TextWrapMode) -> Self {
+        match mode {
+            egui::TextWrapMode::Extend => Self::Nowrap,
+            egui::TextWrapMode::Wrap => Self::Word,
+            egui::TextWrapMode::Truncate => Self::Truncate,
+        }
+    }
 }
 
 /// Lays `text` out so that no row is wider than `max_width`.

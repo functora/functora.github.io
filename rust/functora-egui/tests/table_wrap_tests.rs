@@ -2,42 +2,13 @@
 //! inside its column, breaking between characters as a last resort, instead
 //! of painting the word across the neighboring columns.
 
-use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+pub mod common;
+use common::{Harness, all_texts};
+
+use egui::{Rect, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(320.0, 640.0);
 const LONG_WORD: &str = "https://functora.github.io/apps/demo/?page=about&lang=en&theme=dark";
-
-fn collect_texts(shape: &Shape, out: &mut Vec<(Rect, String)>) {
-    match shape {
-        Shape::Text(text) => out.push((
-            text.galley.rect.translate(text.pos.to_vec2()),
-            text.galley.text().to_owned(),
-        )),
-        Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_texts(inner, out);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn rendered(body: &mut dyn FnMut(&mut egui::Ui)) -> Vec<(Rect, String)> {
-    let ctx = Context::default();
-    let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, SCREEN)),
-        ..Default::default()
-    };
-    let mut out = ctx.run_ui(raw, |ui| {
-        let _ = egui::CentralPanel::default().show(ui, |inner| body(inner));
-    });
-    out.textures_delta.clear();
-    let mut texts = Vec::new();
-    for clipped in &out.shapes {
-        collect_texts(&clipped.shape, &mut texts);
-    }
-    texts
-}
 
 fn long_word_rects(texts: &[(Rect, String)]) -> Vec<(Rect, String)> {
     texts
@@ -47,9 +18,13 @@ fn long_word_rects(texts: &[(Rect, String)]) -> Vec<(Rect, String)> {
         .collect()
 }
 
+fn table_texts(body: &mut dyn FnMut(&mut egui::Ui)) -> Vec<(Rect, String)> {
+    all_texts(&Harness::new(Vec2::new(320.0, 640.0)).step(body))
+}
+
 #[test]
 fn long_cell_word_breaks_inside_its_column() {
-    let mut texts = rendered(&mut |ui| {
+    let mut texts = table_texts(&mut |ui| {
         let _ = functora_egui::Table::new(vec!["Name".to_owned(), "Link".to_owned()])
             .rows(vec![vec!["Demo".to_owned(), LONG_WORD.to_owned()]])
             .show(ui);
@@ -86,7 +61,7 @@ fn long_cell_word_breaks_inside_its_column() {
 
 #[test]
 fn wrapped_cell_grows_its_row_instead_of_its_column() {
-    let cells = rendered(&mut |ui| {
+    let cells = table_texts(&mut |ui| {
         let _ = functora_egui::Table::new(vec!["Name".to_owned(), "Link".to_owned()])
             .rows(vec![vec![
                 "Demo".to_owned(),

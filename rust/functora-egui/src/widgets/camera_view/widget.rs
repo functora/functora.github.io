@@ -65,9 +65,7 @@ impl CameraView {
         let frame = egui::Frame::new()
             .fill(theme.card)
             .stroke(egui::Stroke::new(1.0, theme.border))
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius,
-            )))
+            .corner_radius(crate::paint::corner_radius(theme.radius))
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
                 let fresh = state.drain_rgba().is_some_and(|(rgba, w, h)| {

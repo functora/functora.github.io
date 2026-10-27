@@ -39,13 +39,12 @@ impl BlockingOverlay {
         }
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ctx);
         let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
-        let screen = ctx.input(egui::InputState::viewport_rect);
         let _ = crate::widgets::overlay_common::paint_backdrop(
             ctx,
             "blocking_backdrop",
             crate::widgets::overlay_common::BACKDROP_ALPHA,
         );
-        let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
+        let max_panel_width = crate::widgets::overlay_common::max_panel_width(ctx, &spacing);
         let panel_width = 380.0_f32.clamp(0.0, max_panel_width);
         let _ = egui::Area::new(egui::Id::new("blocking_panel"))
             .order(egui::Order::Foreground)
@@ -54,9 +53,7 @@ impl BlockingOverlay {
                 let frame = egui::Frame::NONE
                     .fill(theme.card)
                     .inner_margin(egui::Margin::same(24))
-                    .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                        theme.radius + 2.0,
-                    )))
+                    .corner_radius(crate::paint::corner_radius(theme.radius + 2.0))
                     .stroke(egui::Stroke::new(1.0, theme.border))
                     .shadow(egui::Shadow {
                         offset: [0, 8],

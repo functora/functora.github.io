@@ -16,38 +16,28 @@ impl egui::Widget for super::widget::Switch<'_> {
         } else {
             theme.foreground
         };
-        let label_max_width = (ui.available_width() - track_w - spacing).max(0.0);
-        let label_galley = self.label.map(|l| {
-            crate::text::layout(
-                ui,
-                l.text().to_owned(),
-                egui::FontId::proportional(14.0),
-                label_color,
-                label_max_width,
-                None,
-            )
-        });
+        let label = super::super::control_label::ControlLabel::new(
+            ui,
+            self.label,
+            label_color,
+            track_w,
+            spacing,
+        );
 
-        let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
-        let label_height = label_galley.as_ref().map_or(0.0, |g| g.size().y);
         let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let desired = egui::vec2(
-            (track_w + label_width).min(ui.available_width()),
-            touch.max(track_h).max(20.0).max(label_height),
+            (track_w + label.width()).min(ui.available_width()),
+            touch.max(track_h).max(20.0).max(label.height()),
         );
 
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
-        let intrinsic_label_width = label_galley
-            .as_ref()
-            .map_or(0.0, |g| g.intrinsic_size().x + spacing);
-        let intrinsic_label_height = label_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y);
         response.set_intrinsic_size(egui::vec2(
-            track_w + intrinsic_label_width,
+            track_w + label.intrinsic_width(),
             touch
                 .max(track_h)
                 .max(20.0)
-                .max(intrinsic_label_height)
+                .max(label.intrinsic_height())
                 .max(desired.y),
         ));
 
@@ -118,14 +108,7 @@ impl egui::Widget for super::widget::Switch<'_> {
             }
             let _ = painter.circle_filled(thumb_center, thumb_size / 2.0, style.thumb_color);
 
-            // Label
-            if let Some(galley) = label_galley {
-                let text_pos = egui::pos2(
-                    track_rect.max.x + spacing,
-                    rect.center().y - galley.size().y / 2.0,
-                );
-                painter.galley(text_pos, galley, label_color);
-            }
+            label.paint(painter, track_rect.max.x, rect, label_color);
 
             // Focus ring
             if response.has_focus() && !disabled {

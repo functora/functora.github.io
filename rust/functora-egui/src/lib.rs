@@ -19,8 +19,10 @@ pub mod android;
 pub mod build;
 #[cfg(feature = "platform")]
 pub mod camera;
+pub mod cast;
 #[cfg(any(feature = "desktop", feature = "build"))]
 pub mod desktop;
+pub mod frame;
 #[cfg(feature = "platform")]
 pub use camera::{
     FrameData, begin_capture_session, capture_frame, check_camera, sleep, start_camera,

@@ -1,6 +1,6 @@
 //! Maps button variant + size + interaction state to concrete style values.
 
-use crate::utils::with_alpha;
+use crate::paint::interpolate_color::with_alpha;
 /// Resolves concrete button style from variant, size, and interaction state.
 #[must_use]
 pub fn resolve_button_style(
@@ -8,9 +8,7 @@ pub fn resolve_button_style(
     spacing: &crate::responsive::Spacing,
     variant: crate::tokens::button_variant::ButtonVariant,
     size: crate::tokens::component_size::ComponentSize,
-    hovered: bool,
-    active: bool,
-    disabled: bool,
+    interaction: &crate::widgets::interaction::Interaction,
 ) -> super::resolved_button_style::ResolvedButtonStyle {
     let (height, h_padding, font_size) = size.metrics_for(spacing);
     let corner_radius = theme.radius; // rounded-lg (full radius, not radius - 2)
@@ -41,14 +39,14 @@ pub fn resolve_button_style(
         }
     };
 
-    if disabled {
+    if interaction.disabled {
         // Keep transparent backgrounds transparent (Ghost, Link) so
         // disabled menu items don't get a gray box.
         if bg.a() > 0 {
             bg = with_alpha(bg, 128);
         }
         fg = theme.muted_foreground;
-    } else if active {
+    } else if interaction.pressed {
         match variant {
             crate::tokens::button_variant::ButtonVariant::Ghost
             | crate::tokens::button_variant::ButtonVariant::Outline => {
@@ -65,7 +63,7 @@ pub fn resolve_button_style(
                 bg = with_alpha(bg, 204); // 80% = /80
             }
         }
-    } else if hovered {
+    } else if interaction.hovered {
         match variant {
             crate::tokens::button_variant::ButtonVariant::Ghost
             | crate::tokens::button_variant::ButtonVariant::Outline => {

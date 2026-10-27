@@ -2,56 +2,20 @@
 //! stale per-item slot recorded by the flex container - e.g. after
 //! navigating between screens that reuse the same flex id - can never
 //! lock a widget into a wrapped, degenerate shape.
+#![cfg(not(target_arch = "wasm32"))]
 
-use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+pub mod common;
+use common::{Harness, all_texts};
+
+use egui::{Pos2, Rect, Vec2};
 use functora_egui::{Avatar, Badge, Button, Checkbox, Flex, Kbd, Skeleton, Spinner};
+use proptest::prelude::*;
+use proptest::test_runner::RngSeed;
 
 const LINE_HEIGHT: f32 = 20.0;
 
-fn collect_texts(shape: &Shape, out: &mut Vec<(Rect, String)>) {
-    match shape {
-        Shape::Text(text) => out.push((
-            text.galley.rect.translate(text.pos.to_vec2()),
-            text.galley.text().to_owned(),
-        )),
-        Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_texts(inner, out);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn texts(out: &egui::FullOutput) -> Vec<(Rect, String)> {
-    let mut found = Vec::new();
-    for clipped in &out.shapes {
-        collect_texts(&clipped.shape, &mut found);
-    }
-    found
-}
-
-fn step(
-    ctx: &Context,
-    frame: &mut u32,
-    screen: egui::Vec2,
-    body: &mut dyn FnMut(&mut egui::Ui),
-) -> egui::FullOutput {
-    *frame += 1;
-    let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
-        time: Some(f64::from(*frame) / 60.0),
-        ..Default::default()
-    };
-    let mut out = ctx.run_ui(raw, |ui| {
-        let _ = egui::CentralPanel::default().show(ui, |inner| body(inner));
-    });
-    out.textures_delta.clear();
-    out
-}
-
 fn label_heights(out: &egui::FullOutput, labels: &[&str]) -> Vec<(f32, String)> {
-    texts(out)
+    all_texts(out)
         .into_iter()
         .filter(|(_, text)| labels.contains(&text.as_str()))
         .map(|(rect, text)| (rect.height(), text))
@@ -102,10 +66,9 @@ fn button_labels_stay_single_line_after_the_flex_slot_changes_owner() {
         "RadioGroup",
         "Flex",
     ];
-    let ctx = Context::default();
-    let mut frame = 0;
+    let mut app = Harness::new(Vec2::new(800.0, 600.0));
     for _ in 0..3 {
-        let out = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let out = app.step(&mut |ui| {
             screen_buttons(ui);
         });
         for (height, text) in label_heights(&out, &labels) {
@@ -113,12 +76,12 @@ fn button_labels_stay_single_line_after_the_flex_slot_changes_owner() {
         }
     }
     for _ in 0..3 {
-        let _ = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let _ = app.step(&mut |ui| {
             screen_narrow_buttons(ui);
         });
     }
     for frames_after in 0..5 {
-        let out = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let out = app.step(&mut |ui| {
             screen_buttons(ui);
         });
         let rendered = label_heights(&out, &labels);
@@ -136,27 +99,26 @@ fn button_labels_stay_single_line_after_the_flex_slot_changes_owner() {
 #[test]
 fn other_flex_widgets_keep_their_natural_shape_after_slot_reuse() {
     let labels = ["Some Long Variant"];
-    let ctx = Context::default();
-    let mut frame = 0;
+    let mut app = Harness::new(Vec2::new(800.0, 600.0));
     let mut value = false;
     for _ in 0..3 {
-        let _ = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let _ = app.step(&mut |ui| {
             screen_narrow_buttons(ui);
         });
     }
     for _ in 0..3 {
-        let out = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let out = app.step(&mut |ui| {
             screen_mixed_widgets(&mut value, ui);
         });
         assert_eq!(label_heights(&out, &labels).len(), 2);
     }
     for _ in 0..3 {
-        let _ = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let _ = app.step(&mut |ui| {
             screen_narrow_buttons(ui);
         });
     }
     for frames_after in 0..5 {
-        let out = step(&ctx, &mut frame, egui::vec2(800.0, 600.0), &mut |ui| {
+        let out = app.step(&mut |ui| {
             screen_mixed_widgets(&mut value, ui);
         });
         let rendered = label_heights(&out, &labels);
@@ -173,21 +135,84 @@ fn other_flex_widgets_keep_their_natural_shape_after_slot_reuse() {
 
 #[test]
 fn a_button_alone_in_a_narrow_row_stays_inside_the_container() {
-    let ctx = Context::default();
-    let mut frame = 0;
     let screen = Vec2::new(240.0, 400.0);
+    let mut app = Harness::new(screen);
     let mut out = egui::FullOutput::default();
     for _ in 0..3 {
-        out = step(&ctx, &mut frame, screen, &mut |ui| {
+        out = app.step(&mut |ui| {
             let _ = Flex::row().gap(4.0).wrap().show(ui, |f| {
                 let _ = f.add(Button::new("An extremely long button title"));
             });
         });
     }
-    for (rect, text) in texts(&out) {
+    for (rect, text) in all_texts(&out) {
         assert!(
             rect.max.x <= screen.x + 1.0,
             "squeezed button title {text:?} at {rect:?} escapes the container"
+        );
+    }
+}
+
+fn button_in_slot(text: &str, slot: f32) -> (Option<Vec2>, Vec2) {
+    let ctx = egui::Context::default();
+    let raw = egui::RawInput {
+        screen_rect: Some(Rect::from_min_size(
+            Pos2::ZERO,
+            Vec2::new(slot.max(60.0), 400.0),
+        )),
+        ..Default::default()
+    };
+    let mut intrinsic = None;
+    let mut painted = Vec2::ZERO;
+    let mut out = ctx.run_ui(raw, |ui| {
+        let _ = egui::CentralPanel::default().show(ui, |inner| {
+            let response = inner.add(functora_egui::Button::new(text.to_owned()));
+            intrinsic = response.intrinsic_size();
+            painted = response.rect.size();
+        });
+    });
+    out.textures_delta.clear();
+    (intrinsic, painted)
+}
+
+proptest! {
+    #![proptest_config(ProptestConfig {
+        rng_seed: RngSeed::Fixed(0x00F1_E111),
+        cases: 32,
+        ..ProptestConfig::default()
+    })]
+
+    #[test]
+    fn intrinsic_width_does_not_depend_on_the_slot(
+        text in proptest::collection::vec(
+            proptest::prop_oneof![any::<char>(), Just(' ')],
+            0..60,
+        ).prop_map(|chars: Vec<char>| chars.into_iter().collect::<String>()),
+        slot_a in 60.0_f32..500.0,
+        slot_b in 60.0_f32..500.0,
+    ) {
+        let (intrinsic_a, _) = button_in_slot(&text, slot_a);
+        let (intrinsic_b, _) = button_in_slot(&text, slot_b);
+        prop_assert!(
+            (intrinsic_a.map_or(0.0, |s| s.x) - intrinsic_b.map_or(0.0, |s| s.x)).abs() < 0.5,
+            "intrinsic width of {text:?} changed between {slot_a}px and {slot_b}px slots"
+        );
+    }
+
+    #[test]
+    fn intrinsic_size_covers_the_painted_rect(
+        text in proptest::collection::vec(
+            proptest::prop_oneof![any::<char>(), Just(' ')],
+            0..60,
+        ).prop_map(|chars: Vec<char>| chars.into_iter().collect::<String>()),
+        slot in 60.0_f32..400.0,
+    ) {
+        let (reported, painted) = button_in_slot(&text, slot);
+        let intrinsic = reported
+            .unwrap_or_else(|| panic!("a button must report intrinsic size"));
+        prop_assert!(
+            intrinsic.x >= painted.x - 0.5 && intrinsic.y >= painted.y - 0.5,
+            "intrinsic {intrinsic:?} does not cover the painted {painted:?} of {text:?}"
         );
     }
 }

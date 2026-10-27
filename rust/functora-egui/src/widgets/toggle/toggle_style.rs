@@ -6,7 +6,7 @@ pub fn resolve_toggle_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     variant: crate::tokens::toggle_variant::ToggleVariant,
     pressed: bool,
-    hovered: bool,
+    interaction: &crate::widgets::interaction::Interaction,
 ) -> super::resolved_toggle_style::ResolvedToggleStyle {
     let corner_radius = theme.radius; // rounded-lg (Nova)
 
@@ -17,7 +17,7 @@ pub fn resolve_toggle_style(
 
     let (bg, fg) = if pressed {
         (theme.accent, theme.accent_foreground)
-    } else if hovered {
+    } else if interaction.hovered {
         (theme.muted, theme.muted_foreground)
     } else {
         (egui::Color32::TRANSPARENT, theme.foreground)

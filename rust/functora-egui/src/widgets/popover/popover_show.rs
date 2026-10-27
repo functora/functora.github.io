@@ -40,7 +40,7 @@ impl super::widget::Popover {
             );
             let screen_w = popup_ui.ctx().input(|i| i.viewport_rect().width());
             let w = if spacing.is_mobile() {
-                crate::utils::clamp_overlay_width(
+                crate::widgets::overlay_common::clamp_overlay_width(
                     screen_w,
                     200.0,
                     screen_w - 2.0 * spacing.page_padding - 16.0,

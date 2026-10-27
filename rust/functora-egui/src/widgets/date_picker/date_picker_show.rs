@@ -60,7 +60,7 @@ impl super::widget::DatePicker {
                 };
                 let _ = ui.painter().rect_filled(
                     trigger_rect,
-                    egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius)),
+                    crate::paint::corner_radius(theme.radius),
                     bg,
                 );
             }

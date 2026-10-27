@@ -1,6 +1,6 @@
 //! Maps switch state to concrete style values.
 
-use crate::utils::with_alpha;
+use crate::paint::interpolate_color::with_alpha;
 /// Resolves switch colors based on on/off state. Uses iOS-style white thumb
 /// for enabled and muted transparent look for disabled.
 #[must_use]

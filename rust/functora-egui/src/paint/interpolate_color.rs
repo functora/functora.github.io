@@ -17,3 +17,10 @@ pub fn interpolate_color(a: egui::Color32, b: egui::Color32, t: f32) -> egui::Co
         lerp(hue_a[3], hue_b[3]),
     )
 }
+
+/// The same color with `alpha` over its original alpha channel.
+#[must_use]
+pub(crate) fn with_alpha(color: egui::Color32, alpha: u8) -> egui::Color32 {
+    let [r, g, b, _] = color.to_srgba_unmultiplied();
+    egui::Color32::from_rgba_unmultiplied(r, g, b, alpha)
+}

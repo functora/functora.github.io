@@ -53,8 +53,7 @@ impl<T: Clone + PartialEq> super::widget::NavigationMenuValue<'_, T> {
                 let (rect, response) = inner_ui.allocate_exact_size(desired, egui::Sense::click());
 
                 if inner_ui.is_rect_visible(rect) {
-                    let cr =
-                        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+                    let cr = crate::paint::corner_radius(theme.radius);
 
                     if is_active {
                         let _ = inner_ui.painter().rect_filled(rect, cr, theme.accent);

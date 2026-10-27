@@ -40,9 +40,10 @@ fn button_disabled_bg_preserves_hue() {
         &spacing,
         functora_egui::ButtonVariant::Default,
         functora_egui::ComponentSize::Default,
-        false,
-        false,
-        true,
+        &functora_egui::widgets::interaction::Interaction {
+            disabled: true,
+            ..functora_egui::widgets::interaction::Interaction::IDLE
+        },
     );
     assert!(
         hue_close(style.bg.to_srgba_unmultiplied(), [200, 100, 50, 128]),
@@ -60,9 +61,10 @@ fn button_opaque_bg_realpha_is_stable() {
         &spacing,
         functora_egui::ButtonVariant::Default,
         functora_egui::ComponentSize::Default,
-        false,
-        false,
-        true,
+        &functora_egui::widgets::interaction::Interaction {
+            disabled: true,
+            ..functora_egui::widgets::interaction::Interaction::IDLE
+        },
     );
     assert!(
         hue_close(

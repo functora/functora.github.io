@@ -16,7 +16,7 @@ impl egui::Widget for super::widget::Textarea<'_> {
             }
         });
         let corner_radius = theme.radius;
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(corner_radius));
+        let cr = crate::paint::corner_radius(corner_radius);
 
         let desired = egui::vec2(width, self.min_height);
         let (outer_rect, outer_response) = ui.allocate_exact_size(desired, egui::Sense::click());

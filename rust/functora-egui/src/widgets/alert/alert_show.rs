@@ -5,7 +5,7 @@ impl super::widget::Alert {
     pub fn show(self, ui: &mut egui::Ui, content: impl FnOnce(&mut egui::Ui)) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
         let style = super::alert_variant_style::resolve_alert_style(&theme, self.variant);
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+        let cr = crate::paint::corner_radius(theme.radius);
 
         let frame = egui::Frame::NONE
             .fill(style.bg)

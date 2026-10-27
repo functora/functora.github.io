@@ -8,35 +8,25 @@ impl egui::Widget for super::widget::Radio<'_> {
         let inner_radius = 4.0;
         let spacing = 8.0;
 
-        let label_max_width = (ui.available_width() - outer_radius * 2.0 - spacing).max(0.0);
-        let label_galley = self.label.map(|l| {
-            crate::text::layout(
-                ui,
-                l.text().to_owned(),
-                egui::FontId::proportional(14.0),
-                theme.foreground,
-                label_max_width,
-                None,
-            )
-        });
+        let label = super::super::control_label::ControlLabel::new(
+            ui,
+            self.label,
+            theme.foreground,
+            outer_radius * 2.0,
+            spacing,
+        );
 
-        let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
-        let label_height = label_galley.as_ref().map_or(0.0, |g| g.size().y);
         let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let desired = egui::vec2(
-            (outer_radius * 2.0 + label_width).min(ui.available_width()),
-            touch.max(20.0).max(label_height),
+            (outer_radius * 2.0 + label.width()).min(ui.available_width()),
+            touch.max(20.0).max(label.height()),
         );
 
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
-        let intrinsic_label_width = label_galley
-            .as_ref()
-            .map_or(0.0, |g| g.intrinsic_size().x + spacing);
-        let intrinsic_label_height = label_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y);
         response.set_intrinsic_size(egui::vec2(
-            outer_radius * 2.0 + intrinsic_label_width,
-            touch.max(20.0).max(intrinsic_label_height).max(desired.y),
+            outer_radius * 2.0 + label.intrinsic_width(),
+            touch.max(20.0).max(label.intrinsic_height()).max(desired.y),
         ));
 
         if response.clicked() {
@@ -52,8 +42,7 @@ impl egui::Widget for super::widget::Radio<'_> {
             let mut style = super::radio_style::resolve_radio_style(
                 &theme,
                 *self.selected,
-                response.hovered(),
-                !ui.is_enabled(),
+                &crate::widgets::interaction::Interaction::of(&response, ui.is_enabled()),
             );
             if response.is_pointer_button_down_on() {
                 style.circle_border = theme.ring;
@@ -74,14 +63,12 @@ impl egui::Widget for super::widget::Radio<'_> {
                 let _ = painter.circle_filled(center, inner_radius * anim_t, style.dot_color);
             }
 
-            // Label
-            if let Some(galley) = label_galley {
-                let text_pos = egui::pos2(
-                    rect.min.x + outer_radius * 2.0 + spacing,
-                    rect.center().y - galley.size().y / 2.0,
-                );
-                painter.galley(text_pos, galley, style.text_color);
-            }
+            label.paint(
+                painter,
+                rect.min.x + outer_radius * 2.0,
+                rect,
+                style.text_color,
+            );
 
             // Focus ring
             if response.has_focus() {

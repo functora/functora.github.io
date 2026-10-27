@@ -268,20 +268,7 @@ where
             let _ = ctx.data_mut(|d| d.insert_temp(route_id, route.clone()));
         }
         let mut collapsed_val = sync_sidebar_collapsed(&ctx, *collapsed);
-        let mut breadcrumb_action: Option<NavAction<R>> = None;
-        if system_back {
-            if let Some((_, history)) = breadcrumb {
-                let can = history.can_go_back();
-                let mut do_nav = false;
-                let _ =
-                    crate::platform::android_back::handle_system_back(&ctx, can, || do_nav = true);
-                if do_nav {
-                    breadcrumb_action = Some(NavAction::Back);
-                }
-            } else {
-                let _ = crate::platform::android_back::handle_system_back(&ctx, false, || {});
-            }
-        }
+        let mut breadcrumb_action = system_back_action(&ctx, system_back, breadcrumb);
         let brand_clicked = std::rc::Rc::new(std::cell::Cell::new(false));
         if let Some(th) = theme.as_deref() {
             crate::theme_extra::set_theme(&ctx, *th);
@@ -368,67 +355,117 @@ where
                     central_ui.add_space(-central_ui.spacing().item_spacing.y);
                 }
                 if let Some((route, history)) = breadcrumb {
-                    let should_show = !brand_clicked.get()
-                        && (history.can_go_back()
-                            || history.can_go_forward()
-                            || route.parent().is_some());
-                    if should_show {
-                        let lang = language
-                            .as_ref()
-                            .map_or_else(functora_core::i18n::detect_browser_language, |c| c.get());
-                        let available_w = central_ui.available_width();
-                        let strip_theme = ShadcnThemeExt::shadcn_theme(central_ui.ctx());
-                        let strip = egui::Frame::NONE
-                            .fill(strip_theme.card)
-                            .inner_margin(egui::Margin::symmetric(12, 8))
-                            .show(central_ui, |strip_ui| {
-                                strip_ui.set_min_width(available_w - 24.0);
-                                if let Some(action) =
-                                    Breadcrumb::new(route, history).show(strip_ui, lang)
-                                {
-                                    breadcrumb_action = Some(action);
-                                }
-                            });
-                        let _ = central_ui.painter().hline(
-                            central_ui.max_rect().x_range(),
-                            strip.response.rect.max.y + 0.5,
-                            egui::Stroke::new(1.0, strip_theme.border),
-                        );
-                        central_ui.add_space(8.0);
-                    }
+                    render_breadcrumb_strip(
+                        central_ui,
+                        route,
+                        history,
+                        !brand_clicked.get(),
+                        language,
+                        &mut breadcrumb_action,
+                    );
                 }
-                let spacing = central_ui.responsive_spacing();
-                let available = central_ui.available_width();
-                let content_width = available.min(spacing.content_max_width);
-                let margin = ((available - content_width) * 0.5).max(0.0);
-                let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
-                let mut scroll = egui::ScrollArea::vertical().auto_shrink([false; 2]);
-                if scroll_top || route_changed {
-                    scroll = scroll.vertical_scroll_offset(0.0);
-                }
-                let mut footer_opt = footer;
-                let _ = scroll.show(central_ui, |scroll_ui| {
-                    scroll_ui.add_space(spacing.page_padding);
-                    let _ = scroll_ui.horizontal_top(|h_ui| {
-                        h_ui.add_space(margin);
-                        h_ui.add_space(spacing.page_padding);
-                        let _ = h_ui.vertical(|v_ui| {
-                            v_ui.set_max_width(inner_width);
-                            content(v_ui);
-                            if let Some(f) = footer_opt.take() {
-                                v_ui.add_space(16.0);
-                                let _ = crate::widgets::footer::widget::Footer::new().show(v_ui, f);
-                                v_ui.add_space(12.0);
-                            } else {
-                                v_ui.add_space(48.0);
-                            }
-                        });
-                        h_ui.add_space(spacing.page_padding);
-                        h_ui.add_space(margin);
-                    });
-                });
+                render_scrolled_content(central_ui, scroll_top, route_changed, footer, content);
             });
         *collapsed = collapsed_val;
         breadcrumb_action
     }
+}
+
+/// Maps the hardware back button onto a shell navigation action: `Back`
+/// when the history can go back, consumed otherwise.
+fn system_back_action<R: RouteMetadata>(
+    ctx: &egui::Context,
+    system_back: bool,
+    breadcrumb: Option<(&R, &NavHistory<R>)>,
+) -> Option<NavAction<R>> {
+    if !system_back {
+        None
+    } else if let Some((_, history)) = breadcrumb {
+        let mut do_nav = false;
+        let _ =
+            crate::platform::android_back::handle_system_back(ctx, history.can_go_back(), || {
+                do_nav = true
+            });
+        do_nav.then_some(NavAction::Back)
+    } else {
+        let _ = crate::platform::android_back::handle_system_back(ctx, false, || {});
+        None
+    }
+}
+
+/// Renders the breadcrumb strip when there is anywhere to go, recording the
+/// clicked action into `breadcrumb_action`.
+fn render_breadcrumb_strip<R: RouteMetadata>(
+    central_ui: &mut egui::Ui,
+    route: &R,
+    history: &NavHistory<R>,
+    brand_alive: bool,
+    language: Option<&std::cell::Cell<functora_core::i18n::Language>>,
+    breadcrumb_action: &mut Option<NavAction<R>>,
+) {
+    let should_show = brand_alive
+        && (history.can_go_back() || history.can_go_forward() || route.parent().is_some());
+    if should_show {
+        let lang = language.map_or_else(
+            functora_core::i18n::detect_browser_language,
+            std::cell::Cell::get,
+        );
+        let available_w = central_ui.available_width();
+        let strip_theme = ShadcnThemeExt::shadcn_theme(central_ui.ctx());
+        let strip = egui::Frame::NONE
+            .fill(strip_theme.card)
+            .inner_margin(egui::Margin::symmetric(12, 8))
+            .show(central_ui, |strip_ui| {
+                strip_ui.set_min_width(available_w - 24.0);
+                if let Some(action) = Breadcrumb::new(route, history).show(strip_ui, lang) {
+                    *breadcrumb_action = Some(action);
+                }
+            });
+        let _ = central_ui.painter().hline(
+            central_ui.max_rect().x_range(),
+            strip.response.rect.max.y + 0.5,
+            egui::Stroke::new(1.0, strip_theme.border),
+        );
+        central_ui.add_space(8.0);
+    }
+}
+
+/// Renders the centered, scrollable page content with the footer docked at
+/// its end, resetting the scroll position when the route changed.
+fn render_scrolled_content(
+    central_ui: &mut egui::Ui,
+    scroll_top: bool,
+    route_changed: bool,
+    mut footer: Option<FooterFn<'_>>,
+    content: impl FnOnce(&mut egui::Ui),
+) {
+    let spacing = central_ui.responsive_spacing();
+    let available = central_ui.available_width();
+    let content_width = available.min(spacing.content_max_width);
+    let margin = ((available - content_width) * 0.5).max(0.0);
+    let inner_width = (content_width - 2.0 * spacing.page_padding).max(0.0);
+    let mut scroll = egui::ScrollArea::vertical().auto_shrink([false; 2]);
+    if scroll_top || route_changed {
+        scroll = scroll.vertical_scroll_offset(0.0);
+    }
+    let _ = scroll.show(central_ui, |scroll_ui| {
+        scroll_ui.add_space(spacing.page_padding);
+        let _ = scroll_ui.horizontal_top(|h_ui| {
+            h_ui.add_space(margin);
+            h_ui.add_space(spacing.page_padding);
+            let _ = h_ui.vertical(|v_ui| {
+                v_ui.set_max_width(inner_width);
+                content(v_ui);
+                if let Some(f) = footer.take() {
+                    v_ui.add_space(16.0);
+                    let _ = crate::widgets::footer::widget::Footer::new().show(v_ui, f);
+                    v_ui.add_space(12.0);
+                } else {
+                    v_ui.add_space(48.0);
+                }
+            });
+            h_ui.add_space(spacing.page_padding);
+            h_ui.add_space(margin);
+        });
+    });
 }

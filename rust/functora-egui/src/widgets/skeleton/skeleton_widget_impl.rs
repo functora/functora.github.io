@@ -29,7 +29,7 @@ impl egui::Widget for super::widget::Skeleton {
             let cr = if self.circle {
                 egui::CornerRadius::same(255) // rounded-full
             } else {
-                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius))
+                crate::paint::corner_radius(theme.radius)
             };
 
             let _ = painter.rect_filled(rect, cr, color);

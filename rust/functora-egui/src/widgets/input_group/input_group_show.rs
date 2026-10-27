@@ -10,7 +10,7 @@ impl super::widget::InputGroup {
         suffix: Option<impl FnOnce(&mut egui::Ui)>,
     ) -> egui::Response {
         let theme = crate::theme::shadcn_theme_ext::ShadcnThemeExt::shadcn_theme(ui.ctx());
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+        let cr = crate::paint::corner_radius(theme.radius);
         let height = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
 

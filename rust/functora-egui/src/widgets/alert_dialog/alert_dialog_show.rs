@@ -23,7 +23,6 @@ impl super::widget::AlertDialog {
         let mut result = AlertDialogResult::Open;
 
         // Backdrop
-        let screen = ctx.viewport_rect();
         let backdrop_response = crate::widgets::overlay_common::paint_backdrop(
             ctx,
             "alert_dialog_backdrop",
@@ -53,14 +52,14 @@ impl super::widget::AlertDialog {
         } else {
             (
                 egui::Align2::CENTER_CENTER,
-                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0)),
+                crate::paint::corner_radius(theme.radius + 2.0),
             )
         };
 
         // Frame = content + 2*24 inner margin + 2*1 stroke, so the content
         // width must leave room for the frame to stay inside the screen.
         // Clamp on desktop as well so narrow viewports never overflow.
-        let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
+        let max_panel_width = crate::widgets::overlay_common::max_panel_width(ctx, &spacing);
         let panel_width = if on_mobile {
             max_panel_width
         } else {

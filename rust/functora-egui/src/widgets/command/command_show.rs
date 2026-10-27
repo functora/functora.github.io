@@ -214,9 +214,7 @@ fn show_core<T: Clone>(
                                 if hovered {
                                     let _ = inner_ui4.painter().rect_filled(
                                         rect,
-                                        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                                            theme.radius,
-                                        )),
+                                        crate::paint::corner_radius(theme.radius),
                                         theme.accent,
                                     );
                                 }

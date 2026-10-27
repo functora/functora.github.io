@@ -118,7 +118,7 @@ impl super::widget::Pagination {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+            let cr = crate::paint::corner_radius(theme.radius);
 
             let bg = if response.is_pointer_button_down_on() && enabled {
                 crate::paint::interpolate_color::interpolate_color(
@@ -207,7 +207,7 @@ impl super::widget::Pagination {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+            let cr = crate::paint::corner_radius(theme.radius);
 
             let bg = if is_active {
                 theme.primary

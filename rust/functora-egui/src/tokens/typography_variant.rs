@@ -15,18 +15,28 @@ pub enum TypographyVariant {
 }
 
 impl TypographyVariant {
-    /// Returns (`font_size`, `line_height_factor`, `is_bold`).
+    /// Font size of this typography level, in points.
     #[must_use]
-    pub fn metrics(self) -> (f32, f32, bool) {
+    pub const fn font_size(self) -> f32 {
         match self {
-            Self::H1 => (36.0, 1.1, true),
-            Self::H2 => (30.0, 1.2, true),
-            Self::H3 => (24.0, 1.3, true),
-            Self::H4 => (20.0, 1.4, true),
-            Self::P | Self::Muted => (14.0, 1.5, false),
-            Self::Lead => (20.0, 1.5, false),
-            Self::Large => (18.0, 1.5, true),
-            Self::Small => (13.0, 1.5, false),
+            Self::H1 => 36.0,
+            Self::H2 => 30.0,
+            Self::H3 => 24.0,
+            Self::H4 | Self::Lead => 20.0,
+            Self::P | Self::Muted => 14.0,
+            Self::Large => 18.0,
+            Self::Small => 13.0,
+        }
+    }
+
+    /// Foreground color of this typography level.
+    #[must_use]
+    pub fn foreground(self, theme: &crate::theme::shadcn_theme::ShadcnTheme) -> egui::Color32 {
+        match self {
+            Self::Muted | Self::Lead => theme.muted_foreground,
+            Self::H1 | Self::H2 | Self::H3 | Self::H4 | Self::P | Self::Large | Self::Small => {
+                theme.foreground
+            }
         }
     }
 }

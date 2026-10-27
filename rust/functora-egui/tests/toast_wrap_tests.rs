@@ -2,27 +2,15 @@
 //! inside the toast card, breaking between characters as a last resort,
 //! instead of running past the card's rounded edge.
 
-use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+pub mod common;
+use common::all_texts;
+
+use egui::{Context, Pos2, RawInput, Rect, Vec2};
 use functora_egui::{ToastState, ToastVariant};
 
 const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
 const LONG_WORD: &str =
     "dGhpcyBpcyBhIGJhc2U2NCBzdHJpbmcgdGhhdCBuZXZlciBmaXRzIG9uIGEgbGluZSBvZiB0ZXh0";
-
-fn collect_texts(shape: &Shape, out: &mut Vec<(Rect, String)>) {
-    match shape {
-        Shape::Text(text) => out.push((
-            text.galley.rect.translate(text.pos.to_vec2()),
-            text.galley.text().to_owned(),
-        )),
-        Shape::Vec(shapes) => {
-            for inner in shapes {
-                collect_texts(inner, out);
-            }
-        }
-        _ => {}
-    }
-}
 
 fn render_toast(title: String, description: Option<String>) -> Vec<(Rect, String)> {
     let ctx = Context::default();
@@ -42,10 +30,7 @@ fn render_toast(title: String, description: Option<String>) -> Vec<(Rect, String
         };
         let mut out = ctx.run_ui(raw, |ui| toast.show(ui.ctx()));
         out.textures_delta.clear();
-        texts.clear();
-        for clipped in &out.shapes {
-            collect_texts(&clipped.shape, &mut texts);
-        }
+        texts = all_texts(&out);
     }
     texts
 }

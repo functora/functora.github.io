@@ -2,6 +2,13 @@
 use std::future::Future;
 
 use cryptonote_egui::app::CryptonoteApp;
+use functora_egui::i18n::I18N;
+
+/// The localized form of each message, in order.
+#[must_use]
+pub fn rendered_labels(msgs: &[cryptonote_egui::Msg], lang: functora_egui::i18n::Language) -> Vec<String> {
+    msgs.iter().map(|msg| msg.render(lang)).collect()
+}
 
 pub fn collect_shape(shape: &egui::Shape, rendered: &mut String) {
     match shape {

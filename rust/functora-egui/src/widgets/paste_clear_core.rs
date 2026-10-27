@@ -6,10 +6,11 @@
 
 use std::sync::{Arc, Mutex};
 
+use crate::cast::f32_to_u8_clamped;
 use crate::icons::lucide_icon::LucideIcon;
+use crate::paint::interpolate_color::with_alpha;
 use crate::poll::{PollOutcome, poll_channel};
 use crate::theme::shadcn_theme::ShadcnTheme;
-use crate::utils::{f32_to_u8_clamped, with_alpha};
 
 pub(crate) type PasteRx = std::sync::mpsc::Receiver<Result<String, crate::error::Error>>;
 pub(crate) type CopyRx = std::sync::mpsc::Receiver<Result<(), crate::error::Error>>;

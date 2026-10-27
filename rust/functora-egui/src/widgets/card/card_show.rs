@@ -15,9 +15,7 @@ impl super::widget::Card {
                 top: 16,
                 bottom: 16,
             })
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                cr,
-            )))
+            .corner_radius(crate::paint::corner_radius(cr))
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         let heading = self.heading;

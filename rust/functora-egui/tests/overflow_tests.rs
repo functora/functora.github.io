@@ -4,7 +4,10 @@
 //! painted letter-by-letter outside their tab buttons, plus the same class of
 //! bug in labels, fixed-width buttons and connected button groups.
 
-use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+pub mod common;
+use common::{Harness, all_texts, assert_inside, assert_inside_x, box_rects};
+
+use egui::{Pos2, Rect, Vec2};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Action {
@@ -13,77 +16,8 @@ enum Action {
     Scan,
 }
 
-struct Harness {
-    ctx: Context,
-    frame: u32,
-    screen: Vec2,
-}
-
-impl Harness {
-    fn new(screen: Vec2) -> Self {
-        Self {
-            ctx: Context::default(),
-            frame: 0,
-            screen,
-        }
-    }
-
-    fn step(&mut self, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
-        self.frame += 1;
-        let raw = RawInput {
-            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.screen)),
-            time: Some(f64::from(self.frame) / 60.0),
-            ..Default::default()
-        };
-        let mut out = self.ctx.run_ui(raw, |ui| {
-            let _ = egui::CentralPanel::default().show(ui, |inner| body(inner));
-        });
-        out.textures_delta.clear();
-        out
-    }
-}
-
 fn text_rects(out: &egui::FullOutput) -> Vec<(Rect, String)> {
-    out.shapes
-        .iter()
-        .filter_map(|clipped| match &clipped.shape {
-            Shape::Text(text) => Some((
-                text.galley.rect.translate(text.pos.to_vec2()),
-                text.galley.text().to_owned(),
-            )),
-            _ => None,
-        })
-        .collect()
-}
-
-fn box_rects(out: &egui::FullOutput) -> Vec<Rect> {
-    out.shapes
-        .iter()
-        .filter_map(|clipped| match &clipped.shape {
-            Shape::Rect(rect_shape)
-                if rect_shape.fill.a() == 255
-                    && (16.0..=64.0).contains(&rect_shape.rect.height())
-                    && rect_shape.rect.width() >= 8.0 =>
-            {
-                Some(rect_shape.rect)
-            }
-            _ => None,
-        })
-        .collect()
-}
-
-fn assert_inside(inner: Rect, outer: Rect, what: &str) {
-    assert!(
-        outer.contains(inner.min) && outer.contains(inner.max),
-        "{what} at {inner:?} escapes its container {outer:?}"
-    );
-}
-
-fn assert_inside_x(inner: Rect, outer: Rect, what: &str) {
-    assert!(
-        outer.min.x <= inner.min.x && inner.max.x <= outer.max.x,
-        "{what} at {inner:?} escapes its container horizontally {outer:?}"
-    );
+    all_texts(out)
 }
 
 #[test]

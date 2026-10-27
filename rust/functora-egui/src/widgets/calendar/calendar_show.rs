@@ -27,7 +27,7 @@ impl super::widget::Calendar {
             36.0
         };
         let font_size: f32 = 13.0;
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius));
+        let cr = crate::paint::corner_radius(theme.radius);
         let _ = spacing;
 
         let _ = ui.vertical(|inner_ui| {

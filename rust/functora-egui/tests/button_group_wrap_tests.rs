@@ -1,7 +1,10 @@
 //! A connected button group wraps onto several rows instead of pushing its
 //! titles off the screen.
 
-use egui::{Context, Pos2, RawInput, Rect, Shape, Vec2};
+pub mod common;
+use common::{Harness, all_texts};
+
+use egui::{Rect, Vec2};
 
 fn titles() -> Vec<String> {
     [
@@ -14,49 +17,6 @@ fn titles() -> Vec<String> {
     .iter()
     .map(ToString::to_string)
     .collect()
-}
-
-struct Harness {
-    ctx: Context,
-    frame: u32,
-    screen: Vec2,
-}
-
-impl Harness {
-    fn new(screen: Vec2) -> Self {
-        Self {
-            ctx: Context::default(),
-            frame: 0,
-            screen,
-        }
-    }
-
-    fn step(&mut self, body: &mut dyn FnMut(&mut egui::Ui)) -> egui::FullOutput {
-        self.frame += 1;
-        let raw = RawInput {
-            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, self.screen)),
-            time: Some(f64::from(self.frame) / 60.0),
-            ..Default::default()
-        };
-        let mut out = self.ctx.run_ui(raw, |ui| {
-            let _ = egui::CentralPanel::default().show(ui, |inner| body(inner));
-        });
-        out.textures_delta.clear();
-        out
-    }
-}
-
-fn text_rects(out: &egui::FullOutput) -> Vec<(Rect, String)> {
-    out.shapes
-        .iter()
-        .filter_map(|clipped| match &clipped.shape {
-            Shape::Text(text) => Some((
-                text.galley.rect.translate(text.pos.to_vec2()),
-                text.galley.text().to_owned(),
-            )),
-            _ => None,
-        })
-        .collect()
 }
 
 fn group_body(titles: &[String], ui: &mut egui::Ui) {
@@ -79,7 +39,7 @@ fn button_group_stays_on_screen_and_wraps_onto_several_rows() {
         let _ = app.step(&mut body);
         let out = app.step(&mut body);
 
-        let rendered = text_rects(&out);
+        let rendered = all_texts(&out);
         assert_eq!(
             rendered.len(),
             titles.len(),
@@ -114,8 +74,8 @@ fn wrapping_is_stable_across_frames() {
     let mut app = Harness::new(Vec2::new(360.0, 640.0));
     let mut body = |ui: &mut egui::Ui| group_body(&titles, ui);
     let _ = app.step(&mut body);
-    let first = text_rects(&app.step(&mut body));
-    let second = text_rects(&app.step(&mut body));
+    let first = all_texts(&app.step(&mut body));
+    let second = all_texts(&app.step(&mut body));
 
     let positions = |rendered: &[(Rect, String)]| {
         rendered

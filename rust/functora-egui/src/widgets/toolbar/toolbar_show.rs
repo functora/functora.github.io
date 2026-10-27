@@ -25,9 +25,7 @@ impl super::widget::Toolbar {
         let frame = egui::Frame::NONE
             .fill(theme.card)
             .inner_margin(margin)
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius,
-            )))
+            .corner_radius(crate::paint::corner_radius(theme.radius))
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         frame

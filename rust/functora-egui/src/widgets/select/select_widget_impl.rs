@@ -68,7 +68,7 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
 
         if ui.is_rect_visible(rect) {
             let painter = ui.painter();
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(style.corner_radius));
+            let cr = crate::paint::corner_radius(style.corner_radius);
             let pressed = response.is_pointer_button_down_on();
             let trigger_bg = if pressed {
                 crate::paint::interpolate_color::interpolate_color(
@@ -221,9 +221,7 @@ impl<T: Clone + PartialEq + 'static> super::widget::SelectLabeled<'_, T> {
                     popup_ui.allocate_exact_size(item_desired, egui::Sense::click());
 
                 if popup_ui.is_rect_visible(item_rect) {
-                    let item_cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                        (style.corner_radius - 2.0).max(4.0),
-                    ));
+                    let item_cr = crate::paint::corner_radius((style.corner_radius - 2.0).max(4.0));
                     if item_response.hovered() {
                         let _ =
                             popup_ui

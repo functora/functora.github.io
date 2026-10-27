@@ -107,33 +107,35 @@ impl super::widget::ButtonGroup {
 
         // Ring and dividers, per row of the strip
         let stroke = egui::Stroke::new(1.0, theme.border);
-        for (first, last) in rows {
-            let row_union = rects
-                .get(first..=last)
-                .and_then(|row| row.iter().copied().reduce(egui::Rect::union));
-            let Some(row_rect) = row_union else {
-                continue;
-            };
-            if !ui.is_rect_visible(row_rect) {
-                continue;
-            }
-            let _ = ui.painter().rect_stroke(
-                row_rect,
-                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(cr)),
-                stroke,
-                egui::epaint::StrokeKind::Inside,
-            );
-            if let Some(row) = rects.get(first..=last) {
-                for pair in row.windows(2) {
-                    let [left, _] = pair else {
-                        continue;
-                    };
-                    let _ = ui
-                        .painter()
-                        .vline(left.max.x, row_rect.min.y..=row_rect.max.y, stroke);
+        rows.into_iter()
+            .filter_map(|(first, last)| {
+                let row_rect = rects
+                    .get(first..=last)?
+                    .iter()
+                    .copied()
+                    .reduce(egui::Rect::union)?;
+                Some((first, last, row_rect))
+            })
+            .filter(|(_, _, row_rect)| ui.is_rect_visible(*row_rect))
+            .for_each(|(first, last, row_rect)| {
+                let _ = ui.painter().rect_stroke(
+                    row_rect,
+                    crate::paint::corner_radius(cr),
+                    stroke,
+                    egui::epaint::StrokeKind::Inside,
+                );
+                if let Some(row) = rects.get(first..=last) {
+                    row.windows(2).for_each(|pair| {
+                        if let [left, _] = pair {
+                            let _ = ui.painter().vline(
+                                left.max.x,
+                                row_rect.min.y..=row_rect.max.y,
+                                stroke,
+                            );
+                        }
+                    });
                 }
-            }
-        }
+            });
 
         egui::InnerResponse {
             inner: (),

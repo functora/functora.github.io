@@ -1,15 +1,14 @@
 //! Maps checkbox state to concrete style values.
 
-use crate::utils::with_alpha;
+use crate::paint::interpolate_color::with_alpha;
 /// Resolves checkbox colors based on checked state and interaction.
 #[must_use]
 pub fn resolve_checkbox_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     checked: bool,
-    hovered: bool,
-    disabled: bool,
+    interaction: &crate::widgets::interaction::Interaction,
 ) -> super::resolved_checkbox_style::ResolvedCheckboxStyle {
-    if disabled {
+    if interaction.disabled {
         return super::resolved_checkbox_style::ResolvedCheckboxStyle {
             box_bg: if checked {
                 with_alpha(theme.primary, 110)
@@ -23,7 +22,7 @@ pub fn resolve_checkbox_style(
     }
     let (box_bg, box_border, check_color) = if checked {
         (theme.primary, theme.primary, theme.primary_foreground)
-    } else if hovered {
+    } else if interaction.hovered {
         (
             egui::Color32::TRANSPARENT,
             theme.ring,

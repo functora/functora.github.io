@@ -25,9 +25,7 @@ impl super::widget::PropertyGrid {
                 top: 10,
                 bottom: 10,
             })
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius,
-            )))
+            .corner_radius(crate::paint::corner_radius(theme.radius))
             .stroke(egui::Stroke::new(1.0, theme.border));
 
         let response = frame

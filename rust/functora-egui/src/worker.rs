@@ -42,3 +42,39 @@ where
 {
     core_run(arg, progress, cancel, make).await
 }
+
+/// Spawns an async task and returns a receiver for the result.
+/// Works on both wasm32 (using `wasm_bindgen_futures::spawn_local`)
+/// and native (using `std::thread::spawn` with `pollster::block_on`).
+#[cfg(target_arch = "wasm32")]
+#[cfg(feature = "runtime")]
+pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
+where
+    F: std::future::Future<Output = T> + 'static,
+    T: 'static,
+{
+    let (tx, rx) = std::sync::mpsc::channel();
+    wasm_bindgen_futures::spawn_local(async move {
+        let res = future.await;
+        drop(tx.send(res));
+    });
+    rx
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[cfg(feature = "runtime")]
+pub fn spawn_async<F, T>(future: F) -> std::sync::mpsc::Receiver<T>
+where
+    F: std::future::Future<Output = T> + Send + 'static,
+    T: Send + 'static,
+{
+    use std::sync::OnceLock;
+    static POOL: OnceLock<threadpool::ThreadPool> = OnceLock::new();
+    let pool = POOL.get_or_init(|| threadpool::ThreadPool::new(2));
+    let (tx, rx) = std::sync::mpsc::channel();
+    pool.execute(move || {
+        let res = pollster::block_on(future);
+        drop(tx.send(res));
+    });
+    rx
+}

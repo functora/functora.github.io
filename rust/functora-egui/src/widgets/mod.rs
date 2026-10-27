@@ -23,6 +23,7 @@ pub mod color_swatch;
 pub mod combobox;
 pub mod command;
 pub mod context_menu;
+pub(crate) mod control_label;
 pub mod date_picker;
 pub mod dialog;
 pub mod dropdown_menu;
@@ -37,6 +38,7 @@ pub mod input_group;
 pub mod input_otp;
 #[cfg(feature = "clipboard")]
 pub mod input_paste_clear;
+pub mod interaction;
 pub mod item;
 pub mod kbd;
 pub mod label;

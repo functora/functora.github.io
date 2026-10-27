@@ -39,12 +39,12 @@ fn snippet_impl(ui: &mut egui::Ui, code: &str, break_long_words: bool) {
         .on_hover_text("Copy this pattern");
     let _ = ui.painter().rect_filled(
         response.rect,
-        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius)),
+        crate::paint::corner_radius(theme.radius),
         theme.muted,
     );
     let _ = ui.painter().rect_stroke(
         response.rect,
-        egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius)),
+        crate::paint::corner_radius(theme.radius),
         Stroke::new(1.0, theme.border),
         StrokeKind::Inside,
     );

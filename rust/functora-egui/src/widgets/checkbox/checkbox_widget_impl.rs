@@ -8,38 +8,26 @@ impl egui::Widget for super::widget::Checkbox<'_> {
         let corner_radius = 4.0;
         let spacing = 8.0;
 
-        // Layout: box + optional label (14pt to match Radio/Switch labels)
-        let label_font = egui::FontId::proportional(14.0);
-        let label_max_width = (ui.available_width() - box_size - spacing).max(0.0);
-        let label_galley = self.label.map(|l| {
-            crate::text::layout(
-                ui,
-                l.text().to_owned(),
-                label_font,
-                theme.foreground,
-                label_max_width,
-                None,
-            )
-        });
+        let label = super::super::control_label::ControlLabel::new(
+            ui,
+            self.label,
+            theme.foreground,
+            box_size,
+            spacing,
+        );
 
-        let label_width = label_galley.as_ref().map_or(0.0, |g| g.size().x + spacing);
-        let label_height = label_galley.as_ref().map_or(0.0, |g| g.size().y);
         let touch = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx())
             .touch_height;
         let row_height = touch.max(box_size);
         let desired = egui::vec2(
-            (box_size + label_width).min(ui.available_width()),
-            row_height.max(label_height),
+            (box_size + label.width()).min(ui.available_width()),
+            row_height.max(label.height()),
         );
 
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
-        let intrinsic_label_width = label_galley
-            .as_ref()
-            .map_or(0.0, |g| g.intrinsic_size().x + spacing);
-        let intrinsic_label_height = label_galley.as_ref().map_or(0.0, |g| g.intrinsic_size().y);
         response.set_intrinsic_size(egui::vec2(
-            box_size + intrinsic_label_width,
-            row_height.max(intrinsic_label_height).max(desired.y),
+            box_size + label.intrinsic_width(),
+            row_height.max(label.intrinsic_height()).max(desired.y),
         ));
 
         if response.clicked() {
@@ -54,8 +42,7 @@ impl egui::Widget for super::widget::Checkbox<'_> {
             let mut style = super::checkbox_style::resolve_checkbox_style(
                 &theme,
                 *self.checked,
-                response.hovered(),
-                !ui.is_enabled(),
+                &crate::widgets::interaction::Interaction::of(&response, ui.is_enabled()),
             );
             if response.is_pointer_button_down_on() {
                 style.box_border = theme.ring;
@@ -70,7 +57,7 @@ impl egui::Widget for super::widget::Checkbox<'_> {
                 egui::vec2(box_size, box_size),
             );
 
-            let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(corner_radius));
+            let cr = crate::paint::corner_radius(corner_radius);
             let _ = painter.rect_filled(box_rect, cr, style.box_bg);
             let _ = painter.rect_stroke(
                 box_rect,
@@ -82,14 +69,7 @@ impl egui::Widget for super::widget::Checkbox<'_> {
             // Checkmark
             super::paint_check_icon::paint_check_icon(painter, box_rect, style.check_color, anim_t);
 
-            // Label
-            if let Some(galley) = label_galley {
-                let text_pos = egui::pos2(
-                    box_rect.max.x + spacing,
-                    rect.center().y - galley.size().y / 2.0,
-                );
-                painter.galley(text_pos, galley, style.text_color);
-            }
+            label.paint(painter, box_rect.max.x, rect, style.text_color);
 
             // Focus ring
             if response.has_focus() {

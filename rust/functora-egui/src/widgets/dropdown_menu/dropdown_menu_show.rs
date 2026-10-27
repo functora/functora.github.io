@@ -123,7 +123,7 @@ impl super::widget::DropdownMenu {
             let screen_w = popup_ui.ctx().input(|i| i.viewport_rect().width());
             let trigger_w = trigger_response.rect.width();
             menu_width = menu_width.max(trigger_w);
-            menu_width = crate::utils::clamp_overlay_width(
+            menu_width = crate::widgets::overlay_common::clamp_overlay_width(
                 menu_width,
                 120.0,
                 screen_w - 2.0 * spacing.page_padding - 16.0,

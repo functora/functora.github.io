@@ -57,9 +57,7 @@ impl super::widget::Button<'_> {
             &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
             self.variant,
             self.size,
-            false,
-            false,
-            !ui.is_enabled(),
+            &crate::widgets::interaction::Interaction::measuring(ui.is_enabled()),
         );
 
         if self.full_width {
@@ -257,9 +255,7 @@ impl egui::Widget for super::widget::Button<'_> {
             &crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ui.ctx()),
             self.variant,
             self.size,
-            response.hovered(),
-            response.is_pointer_button_down_on(),
-            !ui.is_enabled(),
+            &crate::widgets::interaction::Interaction::of(&response, ui.is_enabled()),
         );
 
         if self.full_width {
@@ -493,7 +489,7 @@ fn group_corner_radius(group_info: Option<&GroupInfo>, default_cr: f32) -> egui:
                 se: if info.last { r } else { 0 },
             }
         }
-        None => egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(default_cr)),
+        None => crate::paint::corner_radius(default_cr),
     }
 }
 

@@ -22,6 +22,6 @@ impl SemanticColor {
     /// 10% alpha tint for soft backgrounds (shadcn convention).
     #[must_use]
     pub fn tint(self, theme: &crate::theme::shadcn_theme::ShadcnTheme) -> egui::Color32 {
-        crate::utils::with_alpha(self.color(theme), 26)
+        crate::paint::interpolate_color::with_alpha(self.color(theme), 26)
     }
 }

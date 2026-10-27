@@ -2,24 +2,20 @@
 //! is given, shrinking its cells on narrow screens instead of pushing the
 //! last boxes off the screen.
 
-use egui::{Context, Pos2, RawInput, Rect, Vec2};
+pub mod common;
+use common::Harness;
+
+use egui::{Rect, Vec2};
 
 fn otp_response_rect(screen: Vec2, length: usize) -> Rect {
-    let ctx = Context::default();
-    let raw = RawInput {
-        screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
-        ..Default::default()
-    };
     let mut value = String::new();
     let mut rect = Rect::NOTHING;
-    let mut out = ctx.run_ui(raw, |ui| {
-        let _ = egui::CentralPanel::default().show(ui, |inner| {
-            rect = functora_egui::InputOtp::new(length)
-                .show(inner, &mut value)
-                .rect;
-        });
+    let mut app = Harness::new(screen);
+    let _ = app.step(&mut |ui| {
+        rect = functora_egui::InputOtp::new(length)
+            .show(ui, &mut value)
+            .rect;
     });
-    out.textures_delta.clear();
     rect
 }
 

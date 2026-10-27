@@ -10,7 +10,7 @@ pub struct FrameData {
 
 impl FrameData {
     #[must_use]
-    pub fn upright(self, rotation: crate::utils::FrameRotation) -> Self {
+    pub fn upright(self, rotation: crate::frame::FrameRotation) -> Self {
         let Self {
             data,
             width,
@@ -18,9 +18,9 @@ impl FrameData {
             preview_rgba,
         } = self;
         let (upright_data, upright_width, upright_height) =
-            crate::utils::rotate_luma(&data, width, height, rotation);
+            crate::frame::rotate_luma(&data, width, height, rotation);
         let upright_preview =
-            preview_rgba.map(|rgba| crate::utils::rotate_rgba(&rgba, width, height, rotation).0);
+            preview_rgba.map(|rgba| crate::frame::rotate_rgba(&rgba, width, height, rotation).0);
         Self {
             data: upright_data,
             width: upright_width,

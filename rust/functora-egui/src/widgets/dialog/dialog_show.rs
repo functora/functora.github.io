@@ -11,7 +11,6 @@ impl super::widget::Dialog {
         let spacing = crate::responsive::responsive_ext::ResponsiveExt::responsive_spacing(ctx);
 
         // Backdrop
-        let screen = ctx.input(egui::InputState::viewport_rect);
         let backdrop_response = crate::widgets::overlay_common::paint_backdrop(
             ctx,
             "dialog_backdrop",
@@ -40,7 +39,7 @@ impl super::widget::Dialog {
         } else {
             (
                 egui::Align2::CENTER_CENTER,
-                egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0)),
+                crate::paint::corner_radius(theme.radius + 2.0),
             )
         };
 
@@ -48,7 +47,7 @@ impl super::widget::Dialog {
         // width must leave room for the frame to stay inside the screen.
         // Clamp on desktop as well so narrow viewports (e.g. mobile
         // emulation reporting desktop due to DPI) never overflow.
-        let max_panel_width = (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0);
+        let max_panel_width = crate::widgets::overlay_common::max_panel_width(ctx, &spacing);
         let panel_width = if on_mobile {
             max_panel_width
         } else {

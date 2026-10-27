@@ -1,15 +1,14 @@
 //! Maps radio state to concrete style values.
 
-use crate::utils::with_alpha;
+use crate::paint::interpolate_color::with_alpha;
 /// Resolves radio button colors based on selection state and interaction.
 #[must_use]
 pub fn resolve_radio_style(
     theme: &crate::theme::shadcn_theme::ShadcnTheme,
     selected: bool,
-    hovered: bool,
-    disabled: bool,
+    interaction: &crate::widgets::interaction::Interaction,
 ) -> super::resolved_radio_style::ResolvedRadioStyle {
-    if disabled {
+    if interaction.disabled {
         return super::resolved_radio_style::ResolvedRadioStyle {
             circle_border: with_alpha(theme.input, 110),
             dot_color: if selected {
@@ -22,7 +21,7 @@ pub fn resolve_radio_style(
     }
     let circle_border = if selected {
         theme.primary
-    } else if hovered {
+    } else if interaction.hovered {
         theme.ring
     } else {
         theme.input // Nova: border-input instead of border

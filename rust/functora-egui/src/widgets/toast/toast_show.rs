@@ -11,7 +11,7 @@ impl super::toast_state::ToastState {
             return;
         }
 
-        let cr = egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(theme.radius + 2.0));
+        let cr = crate::paint::corner_radius(theme.radius + 2.0);
         let viewport_width = ctx.viewport_rect().width();
         let is_narrow = viewport_width > 0.0 && viewport_width < 400.0;
         let side_margin: f32 = 16.0;
@@ -116,9 +116,9 @@ impl super::toast_state::ToastState {
                 }
             });
 
-        for idx in dismissed.into_iter().rev() {
+        dismissed.into_iter().rev().for_each(|idx| {
             let _ = self.toasts.remove(idx);
-        }
+        });
 
         ctx.request_repaint();
     }

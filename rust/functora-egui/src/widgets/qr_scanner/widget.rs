@@ -115,9 +115,7 @@ impl QrScanner {
         egui::Frame::new()
             .fill(theme.card)
             .stroke(egui::Stroke::new(1.0, theme.border))
-            .corner_radius(egui::CornerRadius::same(crate::utils::f32_to_u8_clamped(
-                theme.radius,
-            )))
+            .corner_radius(crate::paint::corner_radius(theme.radius))
             .inner_margin(egui::Margin::same(12))
             .show(ui, |inner| {
                 let desired_opt = self.desired_size;

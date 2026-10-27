@@ -44,7 +44,7 @@ pub(crate) fn trigger_width<'a>(
                     + h_padding * 2.0
                     + chevron_reserve
                     + TRIGGER_BREATHING;
-                crate::utils::clamp_overlay_width(measured, floor, avail)
+                crate::widgets::overlay_common::clamp_overlay_width(measured, floor, avail)
             }
         },
         |explicit| explicit.min(avail).max(0.0),
@@ -64,8 +64,16 @@ pub(crate) fn popup_width<'a>(
     let screen_w = ui.ctx().input(|i| i.viewport_rect().width());
     let screen_cap = (screen_w - 2.0 * spacing.page_padding - 16.0).max(0.0);
     if spacing.is_mobile() {
-        crate::utils::clamp_overlay_width(trigger.max(content_w), floor_mobile, screen_cap)
+        crate::widgets::overlay_common::clamp_overlay_width(
+            trigger.max(content_w),
+            floor_mobile,
+            screen_cap,
+        )
     } else {
-        crate::utils::clamp_overlay_width(content_w.max(trigger), floor_desktop, screen_cap)
+        crate::widgets::overlay_common::clamp_overlay_width(
+            content_w.max(trigger),
+            floor_desktop,
+            screen_cap,
+        )
     }
 }

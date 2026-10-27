@@ -5,6 +5,14 @@ pub(crate) const BACKDROP_ALPHA: u8 = 60;
 
 pub(crate) const OVERLAY_CLOSE_SIZE: f32 = 16.0;
 
+/// Widest panel a modal overlay may take: the viewport minus its page
+/// padding and breathing room for the frame to stay inside the screen.
+#[must_use]
+pub(crate) fn max_panel_width(ctx: &egui::Context, spacing: &crate::responsive::Spacing) -> f32 {
+    let screen = ctx.input(egui::InputState::viewport_rect);
+    (screen.width() - 2.0 * spacing.page_padding - 50.0).max(0.0)
+}
+
 /// Paints a dimmed backdrop over the whole viewport and returns the response
 /// of the full-screen click area behind the panel.
 pub(crate) fn paint_backdrop(ctx: &egui::Context, id_suffix: &str, alpha: u8) -> egui::Response {
@@ -55,4 +63,12 @@ pub(crate) fn close_button(
             ctx.request_repaint();
         }
     });
+}
+
+/// Clamps an overlay width to `floor..=screen_max`, where a viewport narrower
+/// than `floor` shrinks the floor instead of overflowing the screen.
+#[must_use]
+pub(crate) fn clamp_overlay_width(width: f32, floor: f32, screen_max: f32) -> f32 {
+    let cap = screen_max.max(0.0);
+    width.clamp(floor.min(cap), cap)
 }

@@ -1,4 +1,5 @@
 {pkgs ? import <nixpkgs> {}}: let
+  unst = import ./nixpkgs-unstable.nix;
   agentsMd = ../AGENTS.md;
   runtimeInputs = with pkgs; [
     (import ./../pub/vi/nix/default.nix {ai = true;})
@@ -17,6 +18,7 @@
     nix-direnv
     asciinema
     asciinema-agg
+    unst.opencode
     (writeShellApplication {
       name = "notify-user";
       text = ''
@@ -27,46 +29,6 @@
       '';
     })
   ];
-  codexToml = pkgs.writeTextFile {
-    name = "codex";
-    text = ''
-      profile = "free"
-      sandbox_mode = "danger-full-access"
-
-      [features]
-      unified_exec = true
-      streamable_shell = true
-      apply_patch_freeform = true
-      web_search_request = true
-      ghost_commit = true
-
-      [profiles.free]
-      model = "arcee-ai/trinity-large-preview:free"
-      model_provider = "openrouter"
-
-      [profiles.lite]
-      model = "gemini-2.5-flash-lite"
-      model_provider = "gemini"
-
-      [profiles.std]
-      model = "gemini-2.5-flash"
-      model_provider = "gemini"
-
-      [profiles.pro]
-      model = "gemini-2.5-pro"
-      model_provider = "gemini"
-
-      [model_providers.openrouter]
-      name = "openrouter"
-      base_url = "https://openrouter.ai/api/v1"
-      env_key = "OPENROUTER_API_KEY"
-
-      [model_providers.gemini]
-      name = "gemini"
-      base_url = "https://generativelanguage.googleapis.com/v1beta/openai"
-      env_key = "GEMINI_API_KEY"
-    '';
-  };
 in
   import ./bubble.nix {
     inherit pkgs;
@@ -118,10 +80,6 @@ in
             [
               (toString agentsMd)
               (sloth.concat' sloth.homeDir "/.claude/CLAUDE.md")
-            ]
-            [
-              (toString codexToml)
-              (sloth.concat' sloth.homeDir "/.codex/config.toml")
             ]
             [
               (toString ../cfg/opencode.json)

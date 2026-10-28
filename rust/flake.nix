@@ -22,9 +22,6 @@
           overlays = [rust-overlay.overlays.default];
           config.android_sdk.accept_license = true;
         };
-        unst = import unstable {
-          inherit system;
-        };
         mobile-targets = [
           "i686-linux-android"
           "x86_64-linux-android"
@@ -846,13 +843,11 @@
               (srFunctoraEguiDesktop "functora-egui-demo")
               (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
               # tools
-              gemini-cli
               pkgs.chromium
               pkgs.qutebrowser
               pkgs.cloudflared
               playwright
               playwright-test
-              unst.opencode
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''

@@ -760,7 +760,7 @@ in {
         (import ./libreoffice.nix {inherit pkgs;})
         (import ./bip39-wordlist.nix)
         (import ./doom.nix {
-          pkgs = unst;
+          inherit pkgs;
           user = config.services.functora.userName;
         })
         (import ./wine.nix {

@@ -16,7 +16,7 @@
     # haskell.nix provides access to the nixpkgs pins which are used by our CI,
     # hence you will be more likely to get cache hits when using these.
     # But you can also just use your own, e.g. '<nixpkgs>'.
-    haskellNix.sources.nixpkgs-unstable
+    haskellNix.sources.nixpkgs
     # These arguments passed to nixpkgs, include some patches and also
     # the haskell.nix functionality itself as an overlay.
     haskellNix.nixpkgsArgs;
@@ -26,7 +26,7 @@
     if crossSystem == null
     then pkgs
     else
-      import haskellNix.sources.nixpkgs-unstable (
+      import haskellNix.sources.nixpkgs (
         haskellNix.nixpkgsArgs
         // {
           crossSystem = pkgs.lib.systems.examples."${crossSystem}";

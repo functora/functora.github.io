@@ -458,7 +458,7 @@ in {
         "nebula"
         "netflix"
         "nintendo"
-        "nvidia"
+        # "nvidia"
         "ok"
         "olvid"
         "onlyfans"
@@ -506,7 +506,7 @@ in {
         "wizz"
         "xboxlive"
         "xiaohongshu"
-        "youtube"
+        # "youtube"
         "yy"
         "zhihu"
       ];

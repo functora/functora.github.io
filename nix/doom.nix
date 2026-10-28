@@ -2,12 +2,8 @@
   pkgs ? import <nixpkgs> {},
   user ? "doom",
 }: let
+  mkBubble = import ./bubble.nix;
   qz = pkgs.callPackage ./q-zandronum.nix {};
-  nixpak = import ./nixpak.nix;
-  mkNixPak = nixpak.lib.nixpak {
-    inherit (pkgs) lib;
-    inherit pkgs;
-  };
   duhd = ../bak/doom/duhd;
   free = pkgs.fetchzip {
     url = "https://github.com/freedoom/freedoom/releases/download/v0.13.0/freedoom-0.13.0.zip";
@@ -31,52 +27,11 @@
     name,
     text,
     network ? false,
-  }: let
-    app = pkgs.writeShellApplication {
-      inherit name text;
+  }:
+    mkBubble {
+      inherit pkgs name text user network;
+      home = "doom";
     };
-    passwd = pkgs.writeTextFile {
-      name = "passwd";
-      text = "${user}:x:1000:1000:${user}:/home/${user}:/bin/sh";
-    };
-    asound = pkgs.writeText "asound.conf" ''
-      pcm.!default {
-        type pulse
-      }
-      ctl.!default {
-        type pulse
-      }
-    '';
-    sandbox = mkNixPak {
-      config = {sloth, ...}: {
-        app.package = app;
-        gpu.enable = true;
-        fonts.enable = true;
-        locale.enable = true;
-        bubblewrap = {
-          inherit network;
-          dieWithParent = true;
-          sockets.pulse = true;
-          sockets.wayland = true;
-          env.ALSA_PLUGIN_DIR = "${pkgs.alsa-plugins}/lib/alsa-lib";
-          bind.ro = [
-            [(toString passwd) "/etc/passwd"]
-            [(toString asound) "/etc/asound.conf"]
-          ];
-          bind.rw = [
-            [
-              (sloth.mkdir (sloth.concat' sloth.homeDir "/doom"))
-              sloth.homeDir
-            ]
-          ];
-          tmpfs = [
-            "/tmp"
-          ];
-        };
-      };
-    };
-  in
-    sandbox.config.env;
   mkDoom = {
     tag,
     pkg ? "${pkgs.uzdoom}/bin/uzdoom",

@@ -49,7 +49,7 @@ impl super::widget::Resizable {
             }
         }
 
-        let handle_id = ui.id().with("resizable_handle");
+        let handle_id = ui.scope_id().with("resizable_handle");
         let handle_response = ui.interact(handle_rect, handle_id, egui::Sense::drag());
 
         if handle_response.dragged() {

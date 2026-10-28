@@ -2,7 +2,7 @@
 
 impl super::widget::Sheet {
     pub fn show(self, ctx: &egui::Context, open: &mut bool, content: impl FnOnce(&mut egui::Ui)) {
-        let anim_id = egui::Id::new("sheet_anim");
+        let anim_id = egui::Id::unique("sheet_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, *open, 0.2);
 
         if anim_t <= 0.0 {
@@ -34,7 +34,7 @@ impl super::widget::Sheet {
                 | crate::tokens::sheet_side::SheetSide::Right
         );
         let on_mobile_horizontal = on_mobile && is_horizontal;
-        let panel_id = egui::Id::new("sheet_panel");
+        let panel_id = egui::Id::unique("sheet_panel");
         let measured_panel_height = ctx.memory(|m| {
             m.area_rect(panel_id)
                 .map_or_else(|| screen.height(), |r| r.height())

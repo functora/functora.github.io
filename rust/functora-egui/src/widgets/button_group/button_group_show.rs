@@ -4,7 +4,7 @@ impl super::widget::ButtonGroup {
     /// The egui temp data key for the active button group context.
     #[must_use]
     pub fn context_key() -> egui::Id {
-        egui::Id::new("functora_egui_btn_group")
+        egui::Id::unique("functora_egui_btn_group")
     }
 
     /// Renders a connected button group. Pass buttons inside the closure.

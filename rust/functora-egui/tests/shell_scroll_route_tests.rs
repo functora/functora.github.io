@@ -54,6 +54,7 @@ fn scroll_down_events() -> Vec<egui::Event> {
         egui::Event::MouseWheel {
             unit: egui::MouseWheelUnit::Point,
             delta: egui::vec2(0.0, -5.0),
+            source: egui::MouseWheelSource::Wheel,
             phase: egui::TouchPhase::Move,
             modifiers: egui::Modifiers::NONE,
         },

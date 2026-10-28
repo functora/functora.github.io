@@ -111,6 +111,7 @@ fn control_plain_area_wheel_scrolls_page() {
     let wheel = |delta_y: f32| Event::MouseWheel {
         unit: egui::MouseWheelUnit::Point,
         delta: Vec2::new(0.0, delta_y),
+        source: egui::MouseWheelSource::Wheel,
         phase: egui::TouchPhase::Move,
         modifiers: egui::Modifiers::default(),
     };
@@ -216,6 +217,7 @@ fn textarea_wheel_reaches_page_when_content_fits() {
     let wheel = |delta_y: f32| Event::MouseWheel {
         unit: egui::MouseWheelUnit::Point,
         delta: Vec2::new(0.0, delta_y),
+        source: egui::MouseWheelSource::Wheel,
         phase: egui::TouchPhase::Move,
         modifiers: egui::Modifiers::default(),
     };

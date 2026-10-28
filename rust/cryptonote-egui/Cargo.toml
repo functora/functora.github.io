@@ -14,7 +14,7 @@ authors = ["Functora <functora@proton.me>"]
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { version = "0.36.1", default-features = false, features = [
+eframe = { version = "0.37.0", default-features = false, features = [
     "default_fonts",
     "glow",
     "links",
@@ -22,7 +22,7 @@ eframe = { version = "0.36.1", default-features = false, features = [
     "wayland",
     "android-game-activity",
 ] }
-egui = "0.36.1"
+egui = "0.37.0"
 functora-egui = { path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
 functora-core = { path = "../functora-core" }
 functora-tagged = { path = "../functora-tagged" }

@@ -67,7 +67,7 @@ impl super::widget::AlertDialog {
         };
 
         // Dialog panel
-        let _ = egui::Area::new(egui::Id::new("alert_dialog_panel"))
+        let _ = egui::Area::new(egui::Id::unique("alert_dialog_panel"))
             .order(egui::Order::Foreground)
             .anchor(anchor, egui::Vec2::ZERO)
             .show(ctx, |inner_ui| {

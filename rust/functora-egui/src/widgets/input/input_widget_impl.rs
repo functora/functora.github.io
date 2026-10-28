@@ -11,7 +11,7 @@ impl egui::Widget for super::widget::Input<'_> {
         let v_padding: f32 = 4.0; // py-1
         let width = self.desired_width.unwrap_or_else(|| ui.available_width());
         let reveal_size: f32 = 24.0;
-        let reveal_id = ui.id().with("password_reveal");
+        let reveal_id = ui.scope_id().with("password_reveal");
         let revealed = if self.password {
             ui.data(|d| d.get_temp::<bool>(reveal_id)).unwrap_or(false)
         } else {
@@ -85,7 +85,7 @@ impl egui::Widget for super::widget::Input<'_> {
             );
             let toggle_resp = ui.interact(
                 toggle_rect,
-                ui.id().with("reveal_toggle"),
+                ui.scope_id().with("reveal_toggle"),
                 egui::Sense::click(),
             );
             if ui.is_rect_visible(toggle_rect) {

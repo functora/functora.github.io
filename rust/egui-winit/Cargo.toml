@@ -1,6 +1,6 @@
 [package]
 name = "egui-winit"
-version = "0.36.2"
+version = "0.37.0"
 edition = "2024"
 description = "Internal patch shim that re-exports functora-egui-winit as egui-winit for eframe"
 license = "MIT OR Apache-2.0"
@@ -13,7 +13,7 @@ name = "egui_winit"
 path = "src/lib.rs"
 
 [dependencies]
-functora-egui-winit = { version = "0.36.2", path = "../functora-egui-winit" }
+functora-egui-winit = { version = "0.37.0", path = "../functora-egui-winit" }
 
 [features]
 default = ["functora-egui-winit/default"]

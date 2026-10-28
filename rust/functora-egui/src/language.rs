@@ -10,7 +10,7 @@ use crate::i18n::{I18N, Language};
 use crate::messages::Msg;
 
 fn language_id() -> egui::Id {
-    egui::Id::new("functora_language")
+    egui::Id::unique("functora_language")
 }
 
 /// Stores the active UI language for every widget to render in.

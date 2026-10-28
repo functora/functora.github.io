@@ -261,7 +261,7 @@ impl super::widget::Sidebar {
         let panel_width = self.width.min(max_allowed_width);
         let panel_height = screen.height();
 
-        let anim_id = egui::Id::new("sidebar_overlay_anim");
+        let anim_id = egui::Id::unique("sidebar_overlay_anim");
         let anim_t = ctx.animate_bool_with_time(anim_id, !*collapsed, 0.2);
 
         if anim_t <= 0.0 {
@@ -275,7 +275,7 @@ impl super::widget::Sidebar {
             f32::from(crate::widgets::overlay_common::BACKDROP_ALPHA) * ease_t,
         );
         let backdrop_layer =
-            egui::LayerId::new(egui::Order::Middle, egui::Id::new("sidebar_backdrop"));
+            egui::LayerId::new(egui::Order::Middle, egui::Id::unique("sidebar_backdrop"));
         let _ = ctx.layer_painter(backdrop_layer).rect_filled(
             screen,
             egui::CornerRadius::ZERO,
@@ -283,7 +283,7 @@ impl super::widget::Sidebar {
         );
 
         // Backdrop click to close
-        let backdrop_response = egui::Area::new(egui::Id::new("sidebar_backdrop_sense"))
+        let backdrop_response = egui::Area::new(egui::Id::unique("sidebar_backdrop_sense"))
             .order(egui::Order::Middle)
             .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
             .show(ctx, |inner_ui| {
@@ -299,7 +299,7 @@ impl super::widget::Sidebar {
 
         let slide_offset_x = (1.0 - ease_t) * panel_width;
 
-        let _ = egui::Area::new(egui::Id::new("sidebar_panel"))
+        let _ = egui::Area::new(egui::Id::unique("sidebar_panel"))
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::RIGHT_TOP, egui::vec2(slide_offset_x, 0.0))
             .show(ctx, |inner_ui| {

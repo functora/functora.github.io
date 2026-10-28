@@ -224,6 +224,7 @@ fn command_palette_list_scrolls_when_overflowing() {
             vec![Event::MouseWheel {
                 unit: egui::MouseWheelUnit::Point,
                 delta: Vec2::new(0.0, -100.0),
+                source: egui::MouseWheelSource::Wheel,
                 modifiers: egui::Modifiers::default(),
                 phase: egui::TouchPhase::Move,
             }],
@@ -274,6 +275,7 @@ fn scroll_area_wheel_scrolls_content() {
             vec![Event::MouseWheel {
                 unit: egui::MouseWheelUnit::Point,
                 delta: Vec2::new(0.0, -50.0),
+                source: egui::MouseWheelSource::Wheel,
                 modifiers: egui::Modifiers::default(),
                 phase: egui::TouchPhase::Move,
             }],

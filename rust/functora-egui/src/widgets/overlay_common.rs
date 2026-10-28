@@ -17,13 +17,13 @@ pub(crate) fn max_panel_width(ctx: &egui::Context, spacing: &crate::responsive::
 /// of the full-screen click area behind the panel.
 pub(crate) fn paint_backdrop(ctx: &egui::Context, id_suffix: &str, alpha: u8) -> egui::Response {
     let screen = ctx.input(egui::InputState::viewport_rect);
-    let layer = egui::LayerId::new(egui::Order::Middle, egui::Id::new(id_suffix));
+    let layer = egui::LayerId::new(egui::Order::Middle, egui::Id::unique(id_suffix));
     let _ = ctx.layer_painter(layer).rect_filled(
         screen,
         egui::CornerRadius::ZERO,
         egui::Color32::from_black_alpha(alpha),
     );
-    egui::Area::new(egui::Id::new(id_suffix).with("sense"))
+    egui::Area::new(egui::Id::unique(id_suffix).with("sense"))
         .order(egui::Order::Middle)
         .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
         .show(ctx, |inner_ui| {

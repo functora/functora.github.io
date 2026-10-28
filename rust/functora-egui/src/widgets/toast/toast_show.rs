@@ -26,7 +26,7 @@ impl super::toast_state::ToastState {
 
         let mut dismissed: Vec<usize> = Vec::new();
 
-        let _ = egui::Area::new(egui::Id::new("toast_stack"))
+        let _ = egui::Area::new(egui::Id::unique("toast_stack"))
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, -16.0))
             .fade_in(false)

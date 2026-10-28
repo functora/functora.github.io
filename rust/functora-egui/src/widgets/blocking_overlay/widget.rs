@@ -46,7 +46,7 @@ impl BlockingOverlay {
         );
         let max_panel_width = crate::widgets::overlay_common::max_panel_width(ctx, &spacing);
         let panel_width = 380.0_f32.clamp(0.0, max_panel_width);
-        let _ = egui::Area::new(egui::Id::new("blocking_panel"))
+        let _ = egui::Area::new(egui::Id::unique("blocking_panel"))
             .order(egui::Order::Foreground)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::ZERO)
             .show(ctx, |ui| {

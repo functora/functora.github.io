@@ -45,6 +45,21 @@ fn texts(output: &egui::FullOutput) -> Vec<String> {
         .collect()
 }
 
+fn shape_labels(output: &egui::FullOutput) -> Vec<String> {
+    output
+        .shapes
+        .iter()
+        .filter_map(|clipped| match &clipped.shape {
+            Shape::Text(text) => Some(text.galley.text().to_owned()),
+            Shape::Mesh(_) => Some(String::from("mesh")),
+            Shape::Rect(rect) if rect.fill_texture_id() != egui::TextureId::default() => {
+                Some(String::from("textured"))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 fn rendered(app: &mut App, cache: &mut CommonMarkCache, source: &str) -> Vec<String> {
     let mut body = |ui: &mut egui::Ui| {
         let _ = CommonMarkViewer::new().show(ui, cache, source);
@@ -151,20 +166,17 @@ fn embedded_image_renders() {
         );
     };
     let mut shapes = Vec::new();
-    for _ in 0..10 {
-        let out = app.step(&mut body);
-        shapes = out
-            .shapes
+    // Image decoding runs on a background thread, so poll frames until the
+    // embedded image paints (bounded wall-clock budget, then assert).
+    for _ in 0..200 {
+        shapes = shape_labels(&app.step(&mut body));
+        if shapes
             .iter()
-            .filter_map(|clipped| match &clipped.shape {
-                Shape::Text(text) => Some(text.galley.text().to_owned()),
-                Shape::Mesh(_) => Some(String::from("mesh")),
-                Shape::Rect(rect) if rect.fill_texture_id() != egui::TextureId::default() => {
-                    Some(String::from("textured"))
-                }
-                _ => None,
-            })
-            .collect();
+            .any(|shape| shape == "mesh" || shape == "textured")
+        {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
     assert!(
         shapes

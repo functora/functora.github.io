@@ -54,7 +54,7 @@ fn cached_texture(ctx: &egui::Context, content: &str) -> Option<egui::TextureHan
         None
     } else {
         let hash = egui::util::hash(content);
-        let key = egui::Id::new(("functora-qr", hash));
+        let key = egui::Id::unique(("functora-qr", hash));
         ctx.data(|data| data.get_temp::<egui::TextureHandle>(key))
             .or_else(|| {
                 qr_color_image(content).map(|image| {

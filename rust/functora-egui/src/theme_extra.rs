@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 fn theme_key() -> egui::Id {
-    egui::Id::new("functora_theme")
+    egui::Id::unique("functora_theme")
 }
 
 #[derive(Copy, Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

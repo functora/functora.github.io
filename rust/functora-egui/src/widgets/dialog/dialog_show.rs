@@ -54,7 +54,7 @@ impl super::widget::Dialog {
             self.width.clamp(0.0, max_panel_width)
         };
 
-        let _ = egui::Area::new(egui::Id::new("dialog_panel"))
+        let _ = egui::Area::new(egui::Id::unique("dialog_panel"))
             .order(egui::Order::Foreground)
             .anchor(anchor, egui::Vec2::ZERO)
             .show(ctx, |inner_ui| {

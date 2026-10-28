@@ -2,7 +2,7 @@
 
 use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 use egui::epaint::TextShape;
-use egui::{Align, FontId, Stroke, WidgetInfo, WidgetType};
+use egui::{Align, FontId, Role, Stroke, WidgetInfo};
 
 impl egui::Widget for super::widget::Hypertext {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
@@ -76,8 +76,7 @@ impl super::widget::Hypertext {
         let (rect, mut response) = ui.allocate_exact_size(desired, egui::Sense::click());
         let intrinsic = galley.intrinsic_size();
         response.set_intrinsic_size(egui::vec2(intrinsic.x, intrinsic.y.max(desired.y)));
-        response
-            .widget_info(|| WidgetInfo::labeled(WidgetType::Label, ui.is_enabled(), galley.text()));
+        response.widget_info(|| WidgetInfo::labeled(Role::Label, ui.is_enabled(), galley.text()));
         let galley_pos = match galley.job.halign {
             Align::LEFT => rect.left_top(),
             Align::Center => rect.center_top(),

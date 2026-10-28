@@ -43,8 +43,8 @@ fn sidebar_startup_width(ctx: &egui::Context) -> f32 {
 fn sync_sidebar_collapsed(ctx: &egui::Context, collapsed: bool) -> bool {
     let width = ctx.input(|i| i.viewport_rect().width());
     let is_mobile = ctx.on_mobile();
-    let init_id = egui::Id::new("shell_sidebar_init_done");
-    let prev_id = egui::Id::new("shell_prev_is_mobile");
+    let init_id = egui::Id::unique("shell_sidebar_init_done");
+    let prev_id = egui::Id::unique("shell_prev_is_mobile");
     let init_done = ctx.data(|d| d.get_temp::<bool>(init_id).unwrap_or(false));
     if !init_done {
         if width == 0.0 {
@@ -264,7 +264,7 @@ where
         if let Some(lang_cell) = language {
             crate::language::set_language(&ctx, lang_cell.get());
         }
-        let route_id = egui::Id::new("shell_prev_route");
+        let route_id = egui::Id::unique("shell_prev_route");
         let prev_route = ctx.data(|d| d.get_temp::<R>(route_id));
         let route_changed = breadcrumb.is_some_and(|(route, _)| prev_route.as_ref() != Some(route));
         if route_changed && let Some((route, _)) = breadcrumb {

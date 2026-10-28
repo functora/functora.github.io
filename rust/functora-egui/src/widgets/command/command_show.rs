@@ -34,7 +34,8 @@ fn show_core<T: Clone>(
 
     // Backdrop
     let screen = ctx.input(egui::InputState::viewport_rect);
-    let backdrop_layer = egui::LayerId::new(egui::Order::Middle, egui::Id::new("command_backdrop"));
+    let backdrop_layer =
+        egui::LayerId::new(egui::Order::Middle, egui::Id::unique("command_backdrop"));
     let _ = ctx.layer_painter(backdrop_layer).rect_filled(
         screen,
         egui::CornerRadius::ZERO,
@@ -42,7 +43,7 @@ fn show_core<T: Clone>(
     );
 
     // Backdrop click to close
-    let backdrop_resp = egui::Area::new(egui::Id::new("command_backdrop_sense"))
+    let backdrop_resp = egui::Area::new(egui::Id::unique("command_backdrop_sense"))
         .order(egui::Order::Middle)
         .anchor(egui::Align2::LEFT_TOP, egui::Vec2::ZERO)
         .show(ctx, |inner_ui| {
@@ -77,7 +78,7 @@ fn show_core<T: Clone>(
         (egui::Align2::CENTER_CENTER, egui::vec2(0.0, -60.0))
     };
 
-    let _ = egui::Area::new(egui::Id::new("command_palette"))
+    let _ = egui::Area::new(egui::Id::unique("command_palette"))
         .order(egui::Order::Foreground)
         .anchor(anchor, offset)
         .show(ctx, |inner_ui| {

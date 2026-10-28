@@ -128,8 +128,8 @@ in
               (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
             ]
             [
-              (toString ../cfg/opencode-notify.ts)
-              (sloth.concat' sloth.homeDir "/.config/opencode/notify.ts")
+              (toString ../cfg/opencode-notify)
+              (sloth.concat' sloth.homeDir "/.config/opencode/notify")
             ]
           ];
       }

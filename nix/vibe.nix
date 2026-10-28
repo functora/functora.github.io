@@ -11,7 +11,6 @@
     ripgrep
     alacritty
     xdg-utils
-    python3Minimal
     tmux
     nix
     direnv
@@ -28,6 +27,28 @@
         done
       '';
     })
+    #
+    # Web
+    #
+    chromium
+    playwright
+    playwright-test
+    cloudflared
+    #
+    # Scripting
+    #
+    nodejs
+    python3Minimal
+    #
+    # Formatter
+    #
+    stylua
+    sleek
+    prettier
+    html-tidy
+    alejandra
+    topiary
+    taplo
   ];
 in
   import ./bubble.nix {

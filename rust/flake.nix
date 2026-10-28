@@ -842,12 +842,6 @@
               (mkFunctoraEguiDesktop "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiDesktop "functora-egui-demo")
               (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
-              # tools
-              pkgs.chromium
-              pkgs.qutebrowser
-              pkgs.cloudflared
-              playwright
-              playwright-test
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''

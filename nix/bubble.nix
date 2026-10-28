@@ -39,7 +39,10 @@
       pkgs.lib.updateManyAttrsByPath (mkOverlay sloth) (
         {
           app.package = app;
-          gpu.enable = true;
+          gpu = {
+            enable = true;
+            provider = "bundle";
+          };
           fonts.enable = true;
           pasta.enable = pasta;
           locale.enable = true;

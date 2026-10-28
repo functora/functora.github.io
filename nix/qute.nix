@@ -1,16 +1,4 @@
 {pkgs ? import <nixpkgs> {}}: let
-  nixpak = import ./nixpak.nix;
-  mkNixPak = nixpak.lib.nixpak {
-    inherit (pkgs) lib;
-    inherit pkgs;
-  };
-  app = pkgs.writeShellApplication {
-    name = "qute";
-    text = ''
-      ${pkgs.qutebrowser}/bin/qutebrowser \
-        -C ${../cfg/qutebrowser.py} "$@"
-    '';
-  };
   ytb = pkgs.writeTextFile {
     name = "ytb.js";
     text = ''
@@ -49,39 +37,31 @@
       })();
     '';
   };
-  sandbox = mkNixPak {
-    config = {sloth, ...}: {
-      app.package = app;
-      gpu.enable = true;
-      gpu.provider = "bundle";
-      fonts.enable = true;
-      locale.enable = true;
-      etc.sslCertificates.enable = true;
-      bubblewrap = {
-        network = true;
-        sockets.pulse = true;
-        sockets.wayland = true;
-        bind.ro = [
-          [
-            (toString ytb)
-            (
-              sloth.concat'
-              sloth.homeDir
-              "/.config/qutebrowser/greasemonkey/ytb.js"
-            )
-          ]
-        ];
-        bind.rw = [
-          [
-            (sloth.mkdir (sloth.concat' sloth.homeDir "/qute"))
-            sloth.homeDir
-          ]
-        ];
-        tmpfs = [
-          "/tmp"
-        ];
-      };
-    };
-  };
 in
-  sandbox.config.env
+  import ./bubble.nix {
+    inherit pkgs;
+    name = "qute";
+    text = ''
+      ${pkgs.qutebrowser}/bin/qutebrowser \
+        -C ${../cfg/qutebrowser.py} "$@"
+    '';
+    network = true;
+    home = "qute";
+    mkOverlay = sloth: [
+      {
+        path = ["bubblewrap" "bind" "ro"];
+        update = prev:
+          prev
+          ++ [
+            [
+              (toString ytb)
+              (
+                sloth.concat'
+                sloth.homeDir
+                "/.config/qutebrowser/greasemonkey/ytb.js"
+              )
+            ]
+          ];
+      }
+    ];
+  }

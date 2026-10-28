@@ -251,7 +251,7 @@
       // mkDoomPB {
         tag = "hi";
         mod = ../bak/doom/HI.wad;
-        relite = ../bak/doom/relite_0.5a.pk3;
+        relite = "";
       }
       // mkDoom {
         tag = "qcde";
@@ -288,7 +288,7 @@
       // mkDoom {
         tag = "cats";
         mod = ''"${duhd}/10 HD_SFX.wad" "${duhd}/13 Tilt++.pk3"'';
-        total = ../bak/doom/Space_Cats_Saga_1.41.wad;
+        total = ../bak/doom/Space_Cats_Saga_1.42.wad;
         relite = ../bak/doom/relite_0.5a.pk3;
         liquid = ltp701;
         nashgore = ../bak/doom/nashgore.pk3;

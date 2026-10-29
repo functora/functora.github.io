@@ -763,6 +763,10 @@ in {
           inherit pkgs;
           user = config.services.functora.userName;
         })
+        (import ./quake.nix {
+          inherit pkgs;
+          user = config.services.functora.userName;
+        })
         (import ./wine.nix {
           inherit pkgs;
           user = config.services.functora.userName;

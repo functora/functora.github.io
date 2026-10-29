@@ -10,7 +10,13 @@
   olds = import ./oldpkgs.nix;
   unst = import ./nixpkgs-unstable.nix;
   rocm = olds.rocmPackages_5;
-  vibe = import ./vibe.nix {inherit pkgs;};
+  vibe-client = import ./vibe.nix {
+    inherit pkgs;
+  };
+  vibe-server = import ./vibe.nix {
+    inherit pkgs;
+    server = true;
+  };
   qute = import ./qute.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   mkBubble = import ./bubble.nix;
@@ -640,6 +646,10 @@ in {
         "lp"
       ];
       #
+      # vibe-server is a user service that must run without a login session
+      #
+      linger = true;
+      #
       # Web eID
       #
       packages = with pkgs; [
@@ -749,7 +759,6 @@ in {
         system-config-printer
         pulsemixer
         neovim
-        vibe
         qute
         fastfetch
         (import ./trimout.nix)
@@ -984,7 +993,7 @@ in {
             "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
           };
           cfgProgrKeys = {
-            "${mod}+Return" = "exec ${vibe}/bin/vibe";
+            "${mod}+Return" = "exec ${vibe-client}/bin/vibe-client";
             "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${pkgs.yewtube}/bin/yt";
             "${mod}+b" = "exec ${qute}/bin/qute";
           };
@@ -1117,6 +1126,21 @@ in {
     fonts.packages = builtins.filter lib.attrsets.isDerivation (
       builtins.attrValues pkgs.nerd-fonts
     );
+    #
+    # Sandboxed opencode server (see nix/vibe.nix, server = true)
+    #
+    systemd.user.services.vibe-server = {
+      wantedBy = ["default.target"];
+      serviceConfig = {
+        ExecStart = "${vibe-server}/bin/vibe-server";
+        Restart = "on-failure";
+        RestartSec = 3;
+        NoNewPrivileges = true;
+        RestrictSUIDSGID = true;
+        LockPersonality = true;
+        RestrictRealtime = true;
+      };
+    };
     #
     # Night
     #

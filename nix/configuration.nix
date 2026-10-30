@@ -1124,6 +1124,7 @@ in {
     # Sandboxed opencode server (see nix/vibe.nix)
     #
     services.functora.vibeServer.enable = lib.mkDefault true;
+    services.functora.vibeNtfy.enable = lib.mkDefault true;
     #
     # Night
     #

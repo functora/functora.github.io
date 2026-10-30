@@ -35,6 +35,7 @@
   serverAuthKeyFile = "${secretsDir}/TS_SERVER_AUTHKEY";
   clientAuthKeyFile = "${secretsDir}/TS_CLIENT_AUTHKEY";
   opencodePasswordFile = "${secretsDir}/OPENCODE_SERVER_PASSWORD";
+  ntfyTopicFile = "${secretsDir}/NTFY_TOPIC";
   tailscaledSocketName = "tailscaled.sock";
 
   requireSecretFile = secretPath: ''
@@ -46,6 +47,21 @@
 
   secretPreflight = authKeyFile:
     requireSecretFile authKeyFile + requireSecretFile opencodePasswordFile;
+
+  ntfyEnabled = config.services.functora.vibeServer.enable && config.services.functora.vibeNtfy.enable;
+
+  ntfyPreflight = lib.optionalString ntfyEnabled (requireSecretFile ntfyTopicFile);
+
+  ntfyNotificationJson = pkgs.writeText "notification-ntfy.json" (builtins.toJSON {
+    backend = {
+      server = "https://ntfy.sh";
+      topic = "{file:~/${secretsRelativePath}/NTFY_TOPIC}";
+    };
+  });
+
+  ntfyPluginConfigJson = pkgs.writeText "opencode-ntfy.json" (builtins.toJSON {
+    plugins = ["opencode-ntfy.sh"];
+  });
 
   opencodePasswordScript = ''
     ${requireSecretFile opencodePasswordFile}
@@ -165,8 +181,22 @@
     unset HTTP_PROXY HTTPS_PROXY ALL_PROXY http_proxy https_proxy all_proxy NO_PROXY no_proxy
   '';
 
+  proxyExports = ''
+    export HTTP_PROXY="${tailscaleProxyUrl}"
+    export ALL_PROXY="${tailscaleProxyUrl}"
+    export HTTPS_PROXY="${tailscaleProxyUrl}"
+    export http_proxy="${tailscaleProxyUrl}"
+    export all_proxy="${tailscaleProxyUrl}"
+    export https_proxy="${tailscaleProxyUrl}"
+    export NO_PROXY="${noProxyHosts}"
+    export no_proxy="${noProxyHosts}"
+  '';
+
+  ntfyEgress = lib.optionalString ntfyEnabled proxyExports;
+
   serverScript =
     secretPreflight serverAuthKeyFile
+    + ntfyPreflight
     + serverProxyEnvClear
     + mkTailscaledScript {
       authKeyFile = serverAuthKeyFile;
@@ -174,6 +204,7 @@
       hostname = serverHostname;
       upInBackground = false;
     }
+    + ntfyEgress
     + ''
 
       ${opencodePasswordScript}
@@ -188,6 +219,7 @@
 
   clientScript =
     secretPreflight clientAuthKeyFile
+    + ntfyPreflight
     + mkTailscaledScript {
       authKeyFile = clientAuthKeyFile;
       stateDir = clientStateDir;
@@ -220,15 +252,7 @@
         exit 1
       fi
 
-      export HTTP_PROXY="${tailscaleProxyUrl}"
-      export ALL_PROXY="${tailscaleProxyUrl}"
-      export HTTPS_PROXY="${tailscaleProxyUrl}"
-      export http_proxy="${tailscaleProxyUrl}"
-      export all_proxy="${tailscaleProxyUrl}"
-      export https_proxy="${tailscaleProxyUrl}"
-      export NO_PROXY="${noProxyHosts}"
-      export no_proxy="${noProxyHosts}"
-
+      ${proxyExports}
       exec ${unst.opencode}/bin/opencode --server "http://${serverHostname}:${toString opencodePort}" "$@"
     '';
   };
@@ -298,6 +322,12 @@
             (toString ../cfg/opencode-notify)
             (sloth.concat' sloth.homeDir "/.config/opencode/notify")
           ]
+        ]
+        ++ lib.optionals ntfyEnabled [
+          [
+            (toString ntfyNotificationJson)
+            (sloth.concat' sloth.homeDir "/.config/opencode/notification-ntfy.json")
+          ]
         ];
     }
     {
@@ -310,6 +340,9 @@
           NIXPKGS_ALLOW_UNFREE = "1";
           ANDROID_USER_HOME = "~/.android";
           GRADLE_USER_HOME = "~/.gradle";
+        }
+        // lib.optionalAttrs ntfyEnabled {
+          OPENCODE_CONFIG = toString ntfyPluginConfigJson;
         };
     }
   ];
@@ -379,6 +412,8 @@ in {
     '';
     example = ["/alpha/.git" "/beta.git" "/gamma/docs"];
   };
+
+  options.services.functora.vibeNtfy.enable = lib.mkEnableOption "ntfy.sh push notifications via the opencode-ntfy.sh plugin";
 
   config = lib.mkMerge [
     {

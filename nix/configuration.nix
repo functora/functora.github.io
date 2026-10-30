@@ -1124,6 +1124,10 @@ in {
     # Sandboxed opencode server (see nix/vibe.nix)
     #
     services.functora.vibeServer.enable = lib.mkDefault true;
+    services.functora.vibeRelativeRo = [
+      "functora.github.io/.git"
+      "rust/.git"
+    ];
     #
     # Night
     #

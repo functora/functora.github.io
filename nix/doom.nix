@@ -2,6 +2,7 @@
   pkgs ? import <nixpkgs> {},
   user ? "doom",
 }: let
+  unst = import ./nixpkgs-unstable.nix;
   mkBubble = import ./bubble.nix;
   qz = pkgs.callPackage ./q-zandronum.nix {};
   duhd = ../bak/doom/duhd;
@@ -10,8 +11,8 @@
     sha256 = "sha256-ieYfr4TYVRGUVriK/duN+iOlr8oAIAxz4IfnbG4hOis=";
   };
   pb = fetchTarball {
-    url = "https://github.com/pa1nki113r/Project_Brutality/archive/1b5fdfb8cfcb58929833e2bccafa3ff05212e617.tar.gz";
-    sha256 = "1d8r8sj5qlbg7i3j58r0n5jksdql70qk7lcaqq9cj443rz44bf7f";
+    url = "https://github.com/pa1nki113r/Project_Brutality/archive/aad8e0dc901627bfec1c9c9c58b38df48c587788.tar.gz";
+    sha256 = "0kzscjkzqqy37l598i8hr3g99iw0cfyykzyjcgpgc98w96m5daw2";
   };
   bd = ../bak/doom/brutal22test6.pk3;
   qcde27 = "${../bak/doom/qcde27/QCDEv2.7c.pk3} ${../bak/doom/qcde27/QCDEmus2.5.pk3} ${../bak/doom/qcde27/QCDEmaps2.7.pk3} ${../bak/doom/qcde27/QCDE--Voxels2.2.pk3} ${../bak/doom/qcde27/QCDE--HDFaces2.7.pk3} ${../bak/doom/qcde27/GeorgeExleyAnnouncer.pk3} ${../bak/doom/qcde27/AeonQCDE.pk3} ${../bak/doom/CodeFX_v2.55.pk3}";
@@ -34,7 +35,7 @@
     };
   mkDoom = {
     tag,
-    pkg ? "${pkgs.uzdoom}/bin/uzdoom",
+    pkg ? "${unst.uzdoom}/bin/uzdoom",
     cfg ? null,
     wad ? ../bak/doom/wads/doom2.wad,
     sky ? ../bak/doom/CryosUltDoomSkies.wad,

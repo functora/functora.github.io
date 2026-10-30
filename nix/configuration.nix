@@ -1125,6 +1125,10 @@ in {
     #
     services.functora.vibeServer.enable = lib.mkDefault true;
     services.functora.vibeNtfy.enable = lib.mkDefault true;
+    services.functora.vibeRelativeRo = [
+      "functora.github.io/.git"
+      "rust/.git"
+    ];
     #
     # Night
     #

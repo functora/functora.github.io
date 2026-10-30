@@ -332,31 +332,43 @@ in {
     enable = lib.mkEnableOption "sandboxed opencode vibe-server on the tailnet";
     package = lib.mkOption {
       type = lib.types.package;
-      default = serverSandbox;
-      description = "Sandbox derivation providing bin/vibe-server.";
+      readOnly = true;
+      description = ''
+        Sandbox derivation providing bin/vibe-server. Owned by this
+        module and immutable: any attempt to set it fails evaluation.
+      '';
     };
   };
 
   options.services.functora.vibeClient = {
     package = lib.mkOption {
       type = lib.types.package;
-      default = clientSandbox;
-      description = "Sandbox derivation providing bin/vibe-client.";
+      readOnly = true;
+      description = ''
+        Sandbox derivation providing bin/vibe-client. Owned by this
+        module and immutable: any attempt to set it fails evaluation.
+      '';
     };
   };
 
-  config = lib.mkIf config.services.functora.vibeServer.enable {
-    systemd.user.services.vibe-server = {
-      wantedBy = ["default.target"];
-      serviceConfig = {
-        ExecStart = "${config.services.functora.vibeServer.package}/bin/vibe-server";
-        Restart = "on-failure";
-        RestartSec = 3;
-        NoNewPrivileges = true;
-        RestrictSUIDSGID = true;
-        LockPersonality = true;
-        RestrictRealtime = true;
+  config = lib.mkMerge [
+    {
+      services.functora.vibeServer.package = serverSandbox;
+      services.functora.vibeClient.package = clientSandbox;
+    }
+    (lib.mkIf config.services.functora.vibeServer.enable {
+      systemd.user.services.vibe-server = {
+        wantedBy = ["default.target"];
+        serviceConfig = {
+          ExecStart = "${config.services.functora.vibeServer.package}/bin/vibe-server";
+          Restart = "on-failure";
+          RestartSec = 3;
+          NoNewPrivileges = true;
+          RestrictSUIDSGID = true;
+          LockPersonality = true;
+          RestrictRealtime = true;
+        };
       };
-    };
-  };
+    })
+  ];
 }

@@ -1,16 +1,20 @@
 # Sandboxed opencode environment with tailscale-only connectivity.
 #
-# server = false: interactive "vibe-client" sandbox (alacritty + tmux) whose
-#   `opencode` binary is a thin client attaching to the server node.
-# server = true: headless "vibe-server" sandbox running `opencode serve` as a
-#   systemd user service, also joining the tailnet as the server node.
+# services.functora.vibeServer: headless "vibe-server" sandbox running
+#   `opencode serve` as a systemd user service, also joining the tailnet as
+#   the server node.
+# services.functora.vibeClient: interactive "vibe-client" sandbox (alacritty +
+#   tmux) whose `opencode` binary is a thin client attaching to the server
+#   node.
 #
 # Both variants run their own tailscaled in userspace-networking mode inside
 # their own network namespace, so no port is forwarded into or out of the host
 # network and the sandbox restrictions (pasta isolate) stay unchanged.
 {
-  pkgs ? import <nixpkgs> {},
-  server ? false,
+  config,
+  lib,
+  pkgs,
+  ...
 }: let
   unst = import ./nixpkgs-unstable.nix;
   agentsMd = ../AGENTS.md;
@@ -98,64 +102,61 @@
     tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false${backgroundSuffix}
   '';
 
-  runtimeInputs = with pkgs; [
-    (import ./../pub/vi/nix/default.nix {ai = true;})
-    fontconfig
-    busybox
-    curl
-    wget
-    git
-    ripgrep
-    alacritty
-    xdg-utils
-    tmux
-    nix
-    direnv
-    nix-direnv
-    asciinema
-    asciinema-agg
-    tailscale
-    (
-      if server
-      then unst.opencode
-      else opencodeClient
-    )
-    (writeShellApplication {
-      name = "notify-user";
-      text = ''
-        for _ in 1 2 3; do
-          ${mpv}/bin/mpv \
-            "${sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga"
-        done
-      '';
-    })
-    #
-    # Web
-    #
-    chromium
-    playwright
-    playwright-test
-    cloudflared
-    #
-    # Scripting
-    #
-    nodejs
-    python3Minimal
-    #
-    # Formatter
-    #
-    stylua
-    sleek
-    prettier
-    html-tidy
-    alejandra
-    topiary
-    taplo
-  ];
-
-  #
-  # Server
-  #
+  mkRuntimeInputs = server:
+    with pkgs; [
+      (import ./../pub/vi/nix/default.nix {ai = true;})
+      fontconfig
+      busybox
+      curl
+      wget
+      git
+      ripgrep
+      alacritty
+      xdg-utils
+      tmux
+      nix
+      direnv
+      nix-direnv
+      asciinema
+      asciinema-agg
+      tailscale
+      (
+        if server
+        then unst.opencode
+        else opencodeClient
+      )
+      (writeShellApplication {
+        name = "notify-user";
+        text = ''
+          for _ in 1 2 3; do
+            ${mpv}/bin/mpv \
+              "${sound-theme-freedesktop}/share/sounds/freedesktop/stereo/complete.oga"
+          done
+        '';
+      })
+      #
+      # Web
+      #
+      chromium
+      playwright
+      playwright-test
+      cloudflared
+      #
+      # Scripting
+      #
+      nodejs
+      python3Minimal
+      #
+      # Formatter
+      #
+      stylua
+      sleek
+      prettier
+      html-tidy
+      alejandra
+      topiary
+      taplo
+    ];
 
   serverHostname = "vibe-server";
   serverStateDir = "$HOME/.local/state/tailscale/server";
@@ -179,10 +180,6 @@
 
       opencode serve --port ${toString opencodePort} --hostname ${loopbackAddress}
     '';
-
-  #
-  # Client
-  #
 
   clientHostname = "vibe-client";
   clientInstanceId = "\${VIBE_INSTANCE_ID:?vibe: VIBE_INSTANCE_ID is not set}";
@@ -235,86 +232,131 @@
       exec ${unst.opencode}/bin/opencode --server "http://${serverHostname}:${toString opencodePort}" "$@"
     '';
   };
-in
-  import ./bubble.nix {
-    inherit pkgs;
-    name =
-      if server
-      then serverHostname
-      else clientHostname;
-    text =
-      if server
-      then serverScript
-      else clientScript;
-    inherit runtimeInputs;
-    user = "vibe";
-    network = true;
-    home = "vibe";
-    mkOverlay = sloth: [
-      {
-        path = ["fonts" "fonts"];
-        update = _:
-          builtins.filter pkgs.lib.attrsets.isDerivation (
-            builtins.attrValues pkgs.nerd-fonts
-          )
-          ++ [
-            pkgs.dejavu_fonts
-            pkgs.noto-fonts-color-emoji
-          ];
-      }
-      {
-        path = ["bubblewrap" "bind" "ro"];
-        update = prev:
-          prev
-          ++ [
-            "/bin/sh"
-            "/usr/bin/env"
-            "/run/current-system/sw/bin/bash"
-            "/run/current-system/sw/bin/less"
-            ["${pkgs.bash}/bin/bash" "/bin/bash"]
-            (sloth.concat' sloth.homeDir "/.bashrc")
-            (sloth.concat' sloth.homeDir "/.bash_profile")
-            (sloth.concat' sloth.homeDir "/${secretsRelativePath}")
-            (sloth.concat' sloth.homeDir "/.config/tmux")
-            (sloth.concat' sloth.homeDir "/.config/alacritty")
-            (sloth.concat' sloth.homeDir "/.config/nvim/coc-settings.json")
-            [
-              (toString agentsMd)
-              (sloth.concat' sloth.homeDir "/.qwen/QWEN.md")
-            ]
-            [
-              (toString agentsMd)
-              (sloth.concat' sloth.homeDir "/.codex/AGENTS.md")
-            ]
-            [
-              (toString agentsMd)
-              (sloth.concat' sloth.homeDir "/.gemini/GEMINI.md")
-            ]
-            [
-              (toString agentsMd)
-              (sloth.concat' sloth.homeDir "/.claude/CLAUDE.md")
-            ]
-            [
-              (toString ../cfg/opencode.json)
-              (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
-            ]
-            [
-              (toString ../cfg/opencode-notify)
-              (sloth.concat' sloth.homeDir "/.config/opencode/notify")
-            ]
-          ];
-      }
-      {
-        path = ["bubblewrap" "env"];
-        update = prev:
-          prev
-          // {
-            VIBE_INSTANCE_ID = sloth.instanceId;
-            NIX_CONFIG = "experimental-features = nix-command flakes";
-            NIXPKGS_ALLOW_UNFREE = "1";
-            ANDROID_USER_HOME = "~/.android";
-            GRADLE_USER_HOME = "~/.gradle";
-          };
-      }
-    ];
-  }
+
+  mkOverlay = sloth: [
+    {
+      path = ["fonts" "fonts"];
+      update = _:
+        builtins.filter pkgs.lib.attrsets.isDerivation (
+          builtins.attrValues pkgs.nerd-fonts
+        )
+        ++ [
+          pkgs.dejavu_fonts
+          pkgs.noto-fonts-color-emoji
+        ];
+    }
+    {
+      path = ["bubblewrap" "bind" "ro"];
+      update = prev:
+        prev
+        ++ [
+          "/bin/sh"
+          "/usr/bin/env"
+          "/run/current-system/sw/bin/bash"
+          "/run/current-system/sw/bin/less"
+          ["${pkgs.bash}/bin/bash" "/bin/bash"]
+          (sloth.concat' sloth.homeDir "/.bashrc")
+          (sloth.concat' sloth.homeDir "/.bash_profile")
+          (sloth.concat' sloth.homeDir "/${secretsRelativePath}")
+          (sloth.concat' sloth.homeDir "/.config/tmux")
+          (sloth.concat' sloth.homeDir "/.config/alacritty")
+          (sloth.concat' sloth.homeDir "/.config/nvim/coc-settings.json")
+          [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.qwen/QWEN.md")
+          ]
+          [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.codex/AGENTS.md")
+          ]
+          [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.gemini/GEMINI.md")
+          ]
+          [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.claude/CLAUDE.md")
+          ]
+          [
+            (toString ../cfg/opencode.json)
+            (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
+          ]
+          [
+            (toString ../cfg/opencode-notify)
+            (sloth.concat' sloth.homeDir "/.config/opencode/notify")
+          ]
+        ];
+    }
+    {
+      path = ["bubblewrap" "env"];
+      update = prev:
+        prev
+        // {
+          VIBE_INSTANCE_ID = sloth.instanceId;
+          NIX_CONFIG = "experimental-features = nix-command flakes";
+          NIXPKGS_ALLOW_UNFREE = "1";
+          ANDROID_USER_HOME = "~/.android";
+          GRADLE_USER_HOME = "~/.gradle";
+        };
+    }
+  ];
+
+  mkVibeSandbox = {
+    name,
+    script,
+    server,
+  }:
+    import ./bubble.nix {
+      inherit pkgs name;
+      text = script;
+      runtimeInputs = mkRuntimeInputs server;
+      user = "vibe";
+      network = true;
+      home = "vibe";
+      inherit mkOverlay;
+    };
+
+  clientSandbox = mkVibeSandbox {
+    name = clientHostname;
+    script = clientScript;
+    server = false;
+  };
+
+  serverSandbox = mkVibeSandbox {
+    name = serverHostname;
+    script = serverScript;
+    server = true;
+  };
+in {
+  options.services.functora.vibeServer = {
+    enable = lib.mkEnableOption "sandboxed opencode vibe-server on the tailnet";
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = serverSandbox;
+      description = "Sandbox derivation providing bin/vibe-server.";
+    };
+  };
+
+  options.services.functora.vibeClient = {
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = clientSandbox;
+      description = "Sandbox derivation providing bin/vibe-client.";
+    };
+  };
+
+  config = lib.mkIf config.services.functora.vibeServer.enable {
+    systemd.user.services.vibe-server = {
+      wantedBy = ["default.target"];
+      serviceConfig = {
+        ExecStart = "${config.services.functora.vibeServer.package}/bin/vibe-server";
+        Restart = "on-failure";
+        RestartSec = 3;
+        NoNewPrivileges = true;
+        RestrictSUIDSGID = true;
+        LockPersonality = true;
+        RestrictRealtime = true;
+      };
+    };
+  };
+}

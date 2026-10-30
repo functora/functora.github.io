@@ -10,13 +10,6 @@
   olds = import ./oldpkgs.nix;
   unst = import ./nixpkgs-unstable.nix;
   rocm = olds.rocmPackages_5;
-  vibe-client = import ./vibe.nix {
-    inherit pkgs;
-  };
-  vibe-server = import ./vibe.nix {
-    inherit pkgs;
-    server = true;
-  };
   qute = import ./qute.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   mkBubble = import ./bubble.nix;
@@ -254,6 +247,7 @@ in {
       (import "${(import ./sources.nix {}).home-manager}/nixos")
       (import ./night-sleep.nix)
       (import ./rigtora.nix)
+      (import ./vibe.nix)
     ]
     ++ (
       if builtins.pathExists ./../prv/nix/configuration.nix
@@ -993,7 +987,7 @@ in {
             "${x}XF86AudioRaiseVolume" = newVolChange "+5%";
           };
           cfgProgrKeys = {
-            "${mod}+Return" = "exec ${vibe-client}/bin/vibe-client";
+            "${mod}+Return" = "exec ${config.services.functora.vibeClient.package}/bin/vibe-client";
             "${mod}+y" = "exec ${alacritty}/bin/alacritty -e ${pkgs.yewtube}/bin/yt";
             "${mod}+b" = "exec ${qute}/bin/qute";
           };
@@ -1127,20 +1121,9 @@ in {
       builtins.attrValues pkgs.nerd-fonts
     );
     #
-    # Sandboxed opencode server (see nix/vibe.nix, server = true)
+    # Sandboxed opencode server (see nix/vibe.nix)
     #
-    systemd.user.services.vibe-server = {
-      wantedBy = ["default.target"];
-      serviceConfig = {
-        ExecStart = "${vibe-server}/bin/vibe-server";
-        Restart = "on-failure";
-        RestartSec = 3;
-        NoNewPrivileges = true;
-        RestrictSUIDSGID = true;
-        LockPersonality = true;
-        RestrictRealtime = true;
-      };
-    };
+    services.functora.vibeServer.enable = lib.mkDefault true;
     #
     # Night
     #

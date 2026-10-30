@@ -233,6 +233,18 @@
     '';
   };
 
+  mkRoBinds = sloth:
+    map (rel: let
+      sub =
+        if lib.hasPrefix "/" rel
+        then rel
+        else "/${rel}";
+    in [
+      (sloth.concat' sloth.homeDir "/vibe${sub}")
+      (sloth.concat' sloth.homeDir sub)
+    ])
+    config.services.functora.vibeRelativeRo;
+
   mkOverlay = sloth: [
     {
       path = ["fonts" "fonts"];
@@ -249,6 +261,7 @@
       path = ["bubblewrap" "bind" "ro"];
       update = prev:
         prev
+        ++ mkRoBinds sloth
         ++ [
           "/bin/sh"
           "/usr/bin/env"
@@ -349,6 +362,22 @@ in {
         module and immutable: any attempt to set it fails evaluation.
       '';
     };
+  };
+
+  options.services.functora.vibeRelativeRo = lib.mkOption {
+    type = lib.types.listOf (lib.types.mkOptionType {
+      name = "vibeMountPath";
+      description = "path relative to ~/vibe without a \"..\" component";
+      check = rel: lib.isString rel && (! lib.elem ".." (lib.splitString "/" rel));
+    });
+    default = [];
+    description = ''
+      Paths (relative to ~/vibe on the host and mirrored at $HOME inside both
+      sandboxes) that are mounted read-only at launch. A leading slash is
+      optional, ".." path components are rejected, and missing paths are
+      silently skipped.
+    '';
+    example = ["/alpha/.git" "/beta.git" "/gamma/docs"];
   };
 
   config = lib.mkMerge [

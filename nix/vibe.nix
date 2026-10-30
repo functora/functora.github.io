@@ -28,7 +28,8 @@
 
   secretsRelativePath = ".config/vibe/secrets";
   secretsDir = "$HOME/${secretsRelativePath}";
-  tailscaleAuthKeyFile = "${secretsDir}/TS_AUTHKEY";
+  serverAuthKeyFile = "${secretsDir}/TS_SERVER_AUTHKEY";
+  clientAuthKeyFile = "${secretsDir}/TS_CLIENT_AUTHKEY";
   opencodePasswordFile = "${secretsDir}/OPENCODE_SERVER_PASSWORD";
   tailscaledSocketName = "tailscaled.sock";
 
@@ -39,7 +40,8 @@
     fi
   '';
 
-  secretPreflight = requireSecretFile tailscaleAuthKeyFile + requireSecretFile opencodePasswordFile;
+  secretPreflight = authKeyFile:
+    requireSecretFile authKeyFile + requireSecretFile opencodePasswordFile;
 
   opencodePasswordScript = ''
     ${requireSecretFile opencodePasswordFile}
@@ -53,15 +55,11 @@
   '';
 
   mkTailscaledScript = {
+    authKeyFile,
     stateDir,
     hostname,
-    ephemeral,
     upInBackground,
   }: let
-    ephemeralFlag =
-      if ephemeral
-      then "--ephemeral "
-      else "";
     backgroundSuffix =
       if upInBackground
       then " &"
@@ -92,12 +90,12 @@
       ${sleepBin} ${waitIntervalSeconds}
     done
 
-    tailscale_auth_key="$(<"${tailscaleAuthKeyFile}")"
+    tailscale_auth_key="$(<"${authKeyFile}")"
     if [ -z "$tailscale_auth_key" ]; then
-      echo "vibe: empty secret file: ${tailscaleAuthKeyFile}" >&2
+      echo "vibe: empty secret file: ${authKeyFile}" >&2
       exit 1
     fi
-    tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" ${ephemeralFlag}--hostname="${hostname}" --accept-dns=false${backgroundSuffix}
+    tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false${backgroundSuffix}
   '';
 
   runtimeInputs = with pkgs; [
@@ -167,12 +165,12 @@
   '';
 
   serverScript =
-    secretPreflight
+    secretPreflight serverAuthKeyFile
     + serverProxyEnvClear
     + mkTailscaledScript {
+      authKeyFile = serverAuthKeyFile;
       stateDir = serverStateDir;
       hostname = serverHostname;
-      ephemeral = false;
       upInBackground = false;
     }
     + ''
@@ -192,11 +190,11 @@
   clientSocketPath = "${clientStateDir}/${tailscaledSocketName}";
 
   clientScript =
-    secretPreflight
+    secretPreflight clientAuthKeyFile
     + mkTailscaledScript {
+      authKeyFile = clientAuthKeyFile;
       stateDir = clientStateDir;
       hostname = "${clientHostname}-${clientInstanceId}";
-      ephemeral = true;
       upInBackground = true;
     }
     + ''
@@ -220,7 +218,8 @@
       done
 
       if ! tailscale --socket="$tailscaled_socket" ip -4 >/dev/null 2>&1; then
-        echo "vibe: tailscale is not connected" >&2
+        echo "vibe: tailscale is not connected; tailscale status:" >&2
+        tailscale --socket="$tailscaled_socket" status >&2 || true
         exit 1
       fi
 

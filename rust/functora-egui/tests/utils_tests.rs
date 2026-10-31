@@ -6,7 +6,7 @@ use functora_egui::utils::{fps_to_interval_ms, nv21_luma, nv21_to_rgba, pixel_ar
 fn nv21_luma_copies_y_plane() {
     let nv21 = vec![1, 2, 3, 4, 200, 210];
     assert_eq!(nv21_luma(&nv21, 2, 2), vec![1, 2, 3, 4]);
-    assert!(nv21_luma(&nv21[..4], 4, 4).is_empty());
+    assert_eq!(nv21_luma(&nv21[..4], 4, 4), Vec::<u8>::new());
 }
 
 #[test]
@@ -70,5 +70,5 @@ fn pixel_area_len_multiplies_without_overflow() {
 
 #[test]
 fn nv21_luma_hostile_dimensions_return_empty() {
-    assert!(nv21_luma(&[1, 2, 3], u32::MAX, u32::MAX).is_empty());
+    assert_eq!(nv21_luma(&[1, 2, 3], u32::MAX, u32::MAX), Vec::<u8>::new());
 }

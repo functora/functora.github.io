@@ -58,7 +58,10 @@ fn empty_slot_is_noop() {
     let mut app = CryptonoteApp::default();
     let toasts_before = app.toast.next_id();
     drain_slot(&mut app);
-    assert!(app.temporary.attachments.is_empty());
+    assert_eq!(
+        app.temporary.attachments,
+        Vec::<functora_egui::files::Attachment>::new()
+    );
     assert_eq!(app.toast.next_id(), toasts_before);
 }
 

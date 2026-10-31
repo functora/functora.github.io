@@ -401,7 +401,9 @@ pub async fn capture_frame() -> Result<FrameData, Error> {
     let data = image_data.data();
     let rgba = data.to_vec();
     let luma: Vec<u8> = rgba
-        .chunks_exact(4)
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|px| {
             let r = u32::from(px[0]);
             let g = u32::from(px[1]);

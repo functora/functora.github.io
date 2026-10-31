@@ -44,7 +44,10 @@ fn reset_restores_temporary_defaults() {
     assert_eq!(app.temporary.note, "");
     assert_eq!(app.temporary.password, "");
     assert_eq!(app.temporary.url_input, "");
-    assert!(app.temporary.attachments.is_empty());
+    assert_eq!(
+        app.temporary.attachments,
+        Vec::<functora_egui::files::Attachment>::new()
+    );
     assert!(matches!(app.temporary.external, External::Nothing));
     assert_eq!(app.temporary.screen, Screen::Home);
 }

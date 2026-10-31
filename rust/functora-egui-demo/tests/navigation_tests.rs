@@ -53,7 +53,7 @@ fn every_component_navigates_and_reports_its_name() {
         state.navigate_to(Some(id));
         assert_eq!(state.selected, Some(id));
         assert_eq!(state.router.current().component(), Some(id));
-        assert!(!id.name().is_empty());
+        assert_ne!(id.name(), "");
         assert_eq!(ComponentId::from_slug(&id.slug()), Some(id));
         assert_eq!(ComponentId::from_slug(&id.name().to_lowercase()), Some(id));
     }

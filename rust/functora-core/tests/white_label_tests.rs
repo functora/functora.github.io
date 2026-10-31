@@ -43,30 +43,34 @@ fn content_overrides_are_preserved() {
     };
     assert_eq!(content.license_text, Some(Msg::Copyright));
     assert_eq!(content.donate_greeting, Some(Msg::Donate));
-    assert!(content.donate_blocks.is_empty());
+    assert!(
+        content.donate_blocks.is_empty(),
+        "donate_blocks must be empty: {:?}",
+        content.donate_blocks
+    );
 }
 
 #[test]
 fn merged_messages_render_in_all_languages() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
-        assert!(!Msg::Copyright.render(lang).is_empty());
-        assert!(!Msg::AllRightsReserved.render(lang).is_empty());
-        assert!(!Msg::ByContinuing.render(lang).is_empty());
-        assert!(!Msg::YouAgree.render(lang).is_empty());
-        assert!(!Msg::TermsOfService.render(lang).is_empty());
-        assert!(!Msg::TermsOfServiceTitle.render(lang).is_empty());
-        assert!(!Msg::PrivacyPolicyAnd.render(lang).is_empty());
-        assert!(!Msg::PrivacyPolicyTitle.render(lang).is_empty());
-        assert!(!Msg::VersionLabel.render(lang).is_empty());
-        assert!(!Msg::Application.render(lang).is_empty());
-        assert!(!Msg::Theme.render(lang).is_empty());
-        assert!(!Msg::Donate.render(lang).is_empty());
-        assert!(!Msg::DonateLink.render(lang).is_empty());
-        assert!(!Msg::And.render(lang).is_empty());
-        assert!(!Msg::FooterShareWord.render(lang).is_empty());
-        assert!(!Msg::FooterAppWord.render(lang).is_empty());
+        assert_ne!(Msg::Copyright.render(lang), "");
+        assert_ne!(Msg::AllRightsReserved.render(lang), "");
+        assert_ne!(Msg::ByContinuing.render(lang), "");
+        assert_ne!(Msg::YouAgree.render(lang), "");
+        assert_ne!(Msg::TermsOfService.render(lang), "");
+        assert_ne!(Msg::TermsOfServiceTitle.render(lang), "");
+        assert_ne!(Msg::PrivacyPolicyAnd.render(lang), "");
+        assert_ne!(Msg::PrivacyPolicyTitle.render(lang), "");
+        assert_ne!(Msg::VersionLabel.render(lang), "");
+        assert_ne!(Msg::Application.render(lang), "");
+        assert_ne!(Msg::Theme.render(lang), "");
+        assert_ne!(Msg::Donate.render(lang), "");
+        assert_ne!(Msg::DonateLink.render(lang), "");
+        assert_ne!(Msg::And.render(lang), "");
+        assert_ne!(Msg::FooterShareWord.render(lang), "");
+        assert_ne!(Msg::FooterAppWord.render(lang), "");
         assert!(Msg::LicenseText.render(lang).contains("Copyright"));
-        assert!(!Msg::PrivacyText.render(lang).is_empty());
+        assert_ne!(Msg::PrivacyText.render(lang), "");
     }
     assert!(
         Msg::PrivacyText
@@ -79,7 +83,7 @@ fn merged_messages_render_in_all_languages() {
 fn language_flags_and_names_render() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
         assert_ne!(Msg::LanguageFlag(lang).render(Language::Eng), "🌐");
-        assert!(!Msg::LanguageName(lang).render(Language::Eng).is_empty());
+        assert_ne!(Msg::LanguageName(lang).render(Language::Eng), "");
     }
     assert_eq!(Msg::LanguageFlag(Language::Fra).render(Language::Eng), "🌐");
     assert_eq!(

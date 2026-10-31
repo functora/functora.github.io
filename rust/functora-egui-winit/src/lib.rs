@@ -1096,9 +1096,8 @@ impl State {
             text,
 
             state,
-
-            location: _, // e.g. is it on the numpad?
-            repeat: _,   // egui will figure this out for us
+            // `location` (e.g. is it on the numpad?) and `repeat`
+            // (egui will figure this out for us) are not needed here.
             ..
         } = event;
 

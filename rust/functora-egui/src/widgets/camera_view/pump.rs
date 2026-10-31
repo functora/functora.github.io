@@ -43,8 +43,7 @@ fn session_alive(feed: &Arc<Mutex<FeedInner>>, epoch: u64) -> bool {
     camera_epoch() == epoch
         && feed
             .lock()
-            .ok()
-            .is_some_and(|guard| guard.running && guard.epoch == epoch)
+            .is_ok_and(|guard| guard.running && guard.epoch == epoch)
 }
 
 #[cfg(any(all(target_arch = "wasm32", feature = "web"), target_os = "android"))]

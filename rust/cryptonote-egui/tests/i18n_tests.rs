@@ -61,7 +61,7 @@ fn supported_languages_have_flags_and_names() {
     assert_eq!(SUPPORTED_LANGUAGES.len(), 3);
     for lang in SUPPORTED_LANGUAGES.iter().copied() {
         assert_ne!(BaseMsg::LanguageFlag(lang).render(lang), "\u{1f310}");
-        assert!(!BaseMsg::LanguageName(lang).render(lang).is_empty());
+        assert_ne!(BaseMsg::LanguageName(lang).render(lang), "");
     }
 }
 
@@ -101,9 +101,9 @@ fn note_url_errors_are_localized() {
         let eng = make_err.render(Language::Eng);
         let spa = make_err.render(Language::Spa);
         let rus = make_err.render(Language::Rus);
-        assert!(!eng.is_empty());
-        assert!(!spa.is_empty());
-        assert!(!rus.is_empty());
+        assert_ne!(eng, "");
+        assert_ne!(spa, "");
+        assert_ne!(rus, "");
         assert_ne!(eng, spa);
         assert_ne!(eng, rus);
     }

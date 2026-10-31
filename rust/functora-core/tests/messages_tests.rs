@@ -4,10 +4,10 @@ use functora_core::i18n::{I18N, Language};
 #[test]
 fn pick_feedback_renders_all_languages() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
-        assert!(!Msg::PickingFiles.render(lang).is_empty());
+        assert_ne!(Msg::PickingFiles.render(lang), "");
         let attached = Msg::FilesAttached(2).render(lang);
         assert!(attached.contains('2'), "count must render: {attached}");
-        assert!(!attached.is_empty());
+        assert_ne!(attached, "");
     }
 }
 

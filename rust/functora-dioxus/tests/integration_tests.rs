@@ -242,7 +242,7 @@ fn frame_data_serde_empty_data() {
     };
     let json = ok(serde_json::to_string(&f));
     let back: FrameData = ok(serde_json::from_str(&json));
-    assert!(back.data.is_empty());
+    assert_eq!(back.data, Vec::<u8>::new());
     assert_eq!(back.width, 0);
 }
 

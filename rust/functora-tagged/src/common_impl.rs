@@ -334,7 +334,7 @@ where
     where
         &'a <T as Deref>::Target: IntoIterator<Item = U>,
         <&'a <T as Deref>::Target as IntoIterator>::IntoIter: DoubleEndedIterator,
-    {
+{
         (**self).into_iter().next_back().pipe(total)
     }
 

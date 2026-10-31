@@ -55,7 +55,7 @@ fn error_messages_compare_by_instance_identity() {
 
 #[test]
 fn msg_derives_debug() {
-    assert!(!format!("{:?}", Msg::Sent).is_empty());
+    assert_ne!(format!("{:?}", Msg::Sent), "");
 }
 
 #[test]

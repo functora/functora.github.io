@@ -170,7 +170,7 @@ fn load_archive_opens_plain_package_from_stored_path() {
     .unwrap_or_else(|err| panic!("archive loaded: {err}"));
     assert!(matches!(opened.screen, Screen::View));
     assert_eq!(opened.note, "deep link note");
-    assert!(opened.attachments.is_empty());
+    assert_eq!(opened.attachments, Vec::<functora_egui::files::Attachment>::new());
     assert!(matches!(opened.external, External::Nothing));
     drop(std::fs::remove_file(path));
 }

@@ -23,13 +23,13 @@ fn defaults_derive_from_package() {
     assert_eq!(cfg.title, "My App");
     assert_eq!(cfg.comment, "My App");
     assert_eq!(cfg.categories, "Utility;");
-    assert!(cfg.mime_types.is_empty());
-    assert!(cfg.schemes.is_empty());
+    assert_eq!(cfg.mime_types, "");
+    assert_eq!(cfg.schemes, "");
     assert_eq!(cfg.version, "1.2.3");
     assert_eq!(cfg.exec_name, "my-app");
     assert_eq!(cfg.icon_name, cfg.app_id);
     assert_eq!(cfg.homepage, "https://functora.github.io/");
-    assert!(cfg.developer.is_empty());
+    assert_eq!(cfg.developer, "");
     assert_eq!(cfg.description, "My App");
     assert_eq!(cfg.developer_id, "io.functora.my_app");
 }

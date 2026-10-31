@@ -70,7 +70,7 @@ fn route_label() {
         Screen::File,
     ] {
         for lang in [Language::Eng, Language::Spa, Language::Rus] {
-            assert!(!screen.label(lang).is_empty());
+            assert_ne!(screen.label(lang), "");
         }
     }
 }
@@ -100,10 +100,10 @@ fn cipher_choice_roundtrip() {
 #[test]
 fn temporary_state_default() {
     let state = TemporaryState::default();
-    assert!(state.note.is_empty());
-    assert!(state.password.is_empty());
+    assert_eq!(state.note, "");
+    assert_eq!(state.password, "");
     assert_eq!(state.cipher, CipherChoice::Aes256Gcm);
-    assert!(state.attachments.is_empty());
+    assert_eq!(state.attachments, Vec::<functora_egui::files::Attachment>::new());
     assert_eq!(state.screen, Screen::Home);
 }
 

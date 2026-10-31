@@ -12,7 +12,7 @@ fn catalog_names() -> impl Iterator<Item = &'static str> {
 fn names_are_unique_and_non_empty() {
     let mut seen = std::collections::HashSet::new();
     for name in catalog_names() {
-        assert!(!name.is_empty());
+        assert_ne!(name, "");
         assert!(seen.insert(name), "duplicate component name: {name}");
     }
 }

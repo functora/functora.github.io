@@ -17,12 +17,6 @@ pub fn poll_deep_link() -> Option<String> {
 #[cfg(all(target_arch = "wasm32", feature = "platform"))]
 pub fn poll_deep_link_web() -> Option<String> {
     crate::platform::web::location_href()
-        .and_then(|href| {
-            if href.contains('?') || href.contains('#') {
-                Some(href)
-            } else {
-                None
-            }
-        })
+        .filter(|href| href.contains('?') || href.contains('#'))
         .or_else(take_url)
 }

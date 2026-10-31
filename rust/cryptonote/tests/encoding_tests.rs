@@ -31,7 +31,7 @@ fn test_encode_decode_plaintext_empty() {
     let encoded = encode_note(&note).expect("Encoding failed");
     let decoded = decode_note(&encoded).expect("Decoding failed");
     match decoded {
-        NoteData::PlainText(text) => assert!(text.is_empty()),
+        NoteData::PlainText(text) => assert_eq!(text, ""),
         NoteData::CipherText(_) => panic!("Expected a PlainText note"),
     }
 }

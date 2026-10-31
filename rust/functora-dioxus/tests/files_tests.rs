@@ -109,7 +109,7 @@ fn eval_abort_guard_sends_nothing_when_disarmed() {
     let (eval, _owner) = mock_owner(log.clone());
     let guard = EvalAbort::new(eval, serde_json::json!({ "t": "abort" }));
     guard.disarm();
-    assert!(log.borrow().is_empty());
+    assert_eq!(*log.borrow(), Vec::<serde_json::Value>::new());
 }
 
 #[test]

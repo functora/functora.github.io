@@ -20,7 +20,7 @@ fn donate_blocks_have_default_labels_and_addresses() {
 #[test]
 fn donate_messages_render_all_languages() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
-        assert!(!Msg::DonateGreeting.render(lang).is_empty());
+        assert_ne!(Msg::DonateGreeting.render(lang), "");
         assert!(Msg::DonateIntro.render(lang).contains("Functora"));
     }
 }

@@ -102,21 +102,21 @@ fn share_anchor_id_is_stable_and_app_specific() {
 #[test]
 fn about_messages_render_all_languages() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
-        assert!(!Msg::CopyAppLink.render(lang).is_empty());
-        assert!(!Msg::ShareAppLink.render(lang).is_empty());
-        assert!(!Msg::Sent.render(lang).is_empty());
-        assert!(!Msg::SourceCodeButton.render(lang).is_empty());
-        assert!(!Msg::AuthorButton.render(lang).is_empty());
-        assert!(!Msg::JoinTestingButton.render(lang).is_empty());
-        assert!(!Msg::GooglePlayButton.render(lang).is_empty());
-        assert!(!Msg::DownloadApkButton.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBeta1.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBetaLink1.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBeta2.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBetaLink2.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBeta3.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBetaLink3.render(lang).is_empty());
-        assert!(!Msg::AboutAndroidBeta4.render(lang).is_empty());
+        assert_ne!(Msg::CopyAppLink.render(lang), "");
+        assert_ne!(Msg::ShareAppLink.render(lang), "");
+        assert_ne!(Msg::Sent.render(lang), "");
+        assert_ne!(Msg::SourceCodeButton.render(lang), "");
+        assert_ne!(Msg::AuthorButton.render(lang), "");
+        assert_ne!(Msg::JoinTestingButton.render(lang), "");
+        assert_ne!(Msg::GooglePlayButton.render(lang), "");
+        assert_ne!(Msg::DownloadApkButton.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBeta1.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBetaLink1.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBeta2.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBetaLink2.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBeta3.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBetaLink3.render(lang), "");
+        assert_ne!(Msg::AboutAndroidBeta4.render(lang), "");
     }
     assert!(
         Msg::AboutAndroidBeta1

@@ -282,6 +282,6 @@ fn missing_note_entry_defaults_to_empty_text() {
     }
     #[cfg(target_arch = "wasm32")]
     {
-        assert!(!package.is_empty());
+        assert_ne!(package, Vec::<u8>::new());
     }
 }

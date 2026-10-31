@@ -11,7 +11,7 @@ description = "Lightweight, macro-free newtypes with refinement and derived trai
 
 [dependencies]
 derive_more = { version = "2.0.1", features = ["display"] }
-diesel = { version = "2.3.3", optional = true }
+diesel = { version = "2.3.14", optional = true }
 num-traits = "0.2.19"
 serde = { version = "1.0.228", optional = true }
 tap = "1.0.1"
@@ -22,7 +22,7 @@ diesel = ["dep:diesel"]
 serde = ["dep:serde"]
 
 [dev-dependencies]
-diesel = { version = "2.3.3", features = ["sqlite"] }
+diesel = { version = "2.3.14", features = ["sqlite"] }
 functora = { version = "0.2.0", path = "../functora" }
 libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
 num-traits = "0.2.19"

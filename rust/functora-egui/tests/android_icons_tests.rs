@@ -63,7 +63,7 @@ fn missing_favicon_dir_yields_empty_without_creating_tree() {
     let (android, favicon) = layout(root.path());
     let hits =
         copy_launcher_icons(&android, &favicon).unwrap_or_else(|err| panic!("copy icons: {err}"));
-    assert!(hits.is_empty());
+    assert_eq!(hits, Vec::<PathBuf>::new());
     assert!(
         !android.exists(),
         "empty sources must not create the android tree"

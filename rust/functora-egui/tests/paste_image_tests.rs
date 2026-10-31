@@ -103,7 +103,7 @@ fn rgba_to_png_rejects_mismatched_buffer() {
     let err = rgba_to_png(2, 2, &[0u8; 8])
         .err()
         .unwrap_or_else(|| panic!("short buffer must fail"));
-    assert!(!err.to_string().is_empty());
+    assert_ne!(err.to_string(), "");
 }
 
 #[cfg(all(

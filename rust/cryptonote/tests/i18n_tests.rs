@@ -14,7 +14,7 @@ fn supported_languages_contains_known() {
 fn supported_languages_have_flags_and_names() {
     SUPPORTED_LANGUAGES.iter().copied().for_each(|lang| {
         assert_ne!(BaseMsg::LanguageFlag(lang).render(Language::Eng), "🌐");
-        assert!(!BaseMsg::LanguageName(lang).render(Language::Eng).is_empty());
+        assert_ne!(BaseMsg::LanguageName(lang).render(Language::Eng), "");
     });
 }
 
@@ -309,9 +309,9 @@ fn language_flag_rus() {
 #[test]
 fn app_error_json_utf8_eng() {
     let json: AppError = serde_json::from_str::<serde_json::Value>("x").unwrap_err().into();
-    assert!(!json.render_eng().is_empty());
+    assert_ne!(json.render_eng(), "");
     let utf8: AppError = String::from_utf8(vec![0xff]).unwrap_err().into();
-    assert!(!utf8.render_eng().is_empty());
+    assert_ne!(utf8.render_eng(), "");
 }
 
 #[test]
@@ -319,7 +319,7 @@ fn app_error_fd_delegation_eng() {
     let err = AppError::FunctoraDioxus(functora_dioxus::Error::IO(
         std::io::Error::other("io".to_string()).into(),
     ));
-    assert!(!err.render_eng().is_empty());
+    assert_ne!(err.render_eng(), "");
     assert!(err.render_eng().contains("io"));
 }
 

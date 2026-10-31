@@ -6,8 +6,8 @@ use functora_core::files::{
 #[test]
 fn attachment_defaults() {
     let att = Attachment::default();
-    assert!(att.name.is_empty());
-    assert!(att.data.is_empty());
+    assert_eq!(att.name, "");
+    assert!(att.data.is_empty(), "data must be empty: {:?}", att.data);
 }
 
 #[test]

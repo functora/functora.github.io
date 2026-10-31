@@ -124,7 +124,7 @@ fn zip_progress_reaches_total() {
                 .unwrap_or_else(|| panic!("job present"));
             assert_eq!(job.done, job.total);
             assert!(job.total > 0);
-            assert!(!zip.is_empty());
+            assert_ne!(zip, Vec::<u8>::new());
         })
     });
 }
@@ -196,8 +196,8 @@ fn package_metadata_read() {
             .unwrap_or_else(|e| panic!("package: {e:?}"));
             let meta = read_metadata(&ArchiveSource::Bytes(pkg)).unwrap_or_else(|e| panic!("metadata: {e:?}"));
             assert_eq!(meta.cipher, Some(CipherType::ChaCha20Poly1305));
-            assert!(!meta.nonce.is_empty());
-            assert!(!meta.salt.is_empty());
+            assert_ne!(meta.nonce, Vec::<u8>::new());
+            assert_ne!(meta.salt, Vec::<u8>::new());
             let plain = package_async(
                 arc_entries(&[("note.txt".to_string(), b"x".to_vec())]),
                 "",

@@ -90,7 +90,7 @@ fn input_paste_clear_renders_without_panic() {
     let mut app = App::new();
     let _ = app.step(vec![], &mut body);
     let out = app.step(vec![], &mut body);
-    assert!(!find_rects(&out).is_empty());
+    assert_ne!(find_rects(&out), Vec::<egui::Rect>::new());
     assert_eq!(text, "hello");
 }
 
@@ -169,7 +169,7 @@ fn input_paste_clear_custom_icons() {
     };
     let mut app = App::new();
     let out = app.step(vec![], &mut body);
-    assert!(!find_rects(&out).is_empty());
+    assert_ne!(find_rects(&out), Vec::<egui::Rect>::new());
     assert_eq!(text, "hello");
 }
 
@@ -198,7 +198,7 @@ fn textarea_paste_clear_renders_without_panic() {
     let mut app = App::new();
     let _ = app.step(vec![], &mut body);
     let out = app.step(vec![], &mut body);
-    assert!(!find_rects(&out).is_empty());
+    assert_ne!(find_rects(&out), Vec::<egui::Rect>::new());
 }
 
 #[test]

@@ -20,7 +20,10 @@
         pkgs = import stable {
           inherit system;
           overlays = [rust-overlay.overlays.default];
-          config.android_sdk.accept_license = true;
+          config = {
+            android_sdk.accept_license = true;
+            allowUnfree = true;
+          };
         };
         mobile-targets = [
           "i686-linux-android"

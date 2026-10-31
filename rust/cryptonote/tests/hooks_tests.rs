@@ -36,7 +36,7 @@ fn build_external_plaintext_builds_url_and_qr() {
             assert!(matches!(n.data, NoteData::PlainText(_)));
             assert!(n.url.contains("note="));
             assert!(n.url.contains("screen=open"));
-            assert!(!n.qr.is_empty());
+            assert_ne!(n.qr, "");
         })
     });
 }
@@ -127,7 +127,7 @@ fn build_external_oversized_note_falls_back_to_archive() {
                 .await
                 .unwrap();
             assert_eq!(text, note);
-            assert!(files.is_empty());
+            assert_eq!(files, Vec::<Attachment>::new());
         })
     });
 }

@@ -365,8 +365,8 @@ fn test_tagged_eq_partial_eq_explicit() {
     let tagged2 = ok(TestTagged::new(30));
     let tagged3 = ok(TestTagged::new(40));
 
-    assert!(tagged1 == tagged2);
-    assert!(tagged1 != tagged3);
+    assert_eq!(tagged1, tagged2);
+    assert_ne!(tagged1, tagged3);
     assert!(tagged1.eq(&tagged2));
     assert!(!tagged1.eq(&tagged3));
 }

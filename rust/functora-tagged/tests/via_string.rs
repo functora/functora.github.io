@@ -415,8 +415,8 @@ fn test_via_string_eq_partial_eq_explicit() {
         "valid_neq_test",
     )));
 
-    assert!(vs1 == vs2);
-    assert!(vs1 != vs3);
+    assert_eq!(vs1, vs2);
+    assert_ne!(vs1, vs3);
     assert!(vs1.eq(&vs2));
     assert!(!vs1.eq(&vs3));
 }

@@ -75,7 +75,7 @@ fn test_archive_no_attachments() {
                 .await
                 .unwrap();
             assert_eq!(text, "Just a note");
-            assert!(files.is_empty());
+            assert_eq!(files, Vec::<Attachment>::new());
         })
     });
 }
@@ -139,7 +139,7 @@ fn archive_metadata_serde_roundtrip() {
 fn attachment_default() {
     let att = Attachment::default();
     assert_eq!(att.name, "");
-    assert!(att.data.is_empty());
+    assert!(att.data.is_empty(), "data must be empty: {:?}", att.data);
 }
 
 #[test]
@@ -176,7 +176,7 @@ fn extract_archive_ignores_extra_entries() {
                     .await
                     .expect("extract failed");
             assert_eq!(text, note);
-            assert!(files.is_empty());
+            assert_eq!(files, Vec::<Attachment>::new());
         })
     });
 }
@@ -187,7 +187,7 @@ fn test_archive_empty_note() {
         common::block_on(async {
             let (text, files) = roundtrip("", &[], "pw", Some(CipherType::Aes256Gcm)).await.unwrap();
             assert_eq!(text, "");
-            assert!(files.is_empty());
+            assert_eq!(files, Vec::<Attachment>::new());
         })
     });
 }
@@ -228,8 +228,8 @@ fn test_plaintext_archive_metadata_is_none() {
             let meta = read_archive_metadata(&ArchiveSource::Bytes(pkg)).expect("Metadata read failed");
             assert_eq!(meta.cipher, None);
             assert_eq!(meta.kdf, Kdf::Argon2id);
-            assert!(meta.nonce.is_empty());
-            assert!(meta.salt.is_empty());
+            assert_eq!(meta.nonce, Vec::<u8>::new());
+            assert_eq!(meta.salt, Vec::<u8>::new());
         })
     });
 }
@@ -340,7 +340,7 @@ fn v2_encryption_reports_completed_progress() {
                 create_archive_package_async("n", &attachments, "pw", Some(CipherType::ChaCha20Poly1305), progress)
                     .await
                     .expect("encrypt failed");
-            assert!(!pkg.is_empty());
+            assert_ne!(pkg, Vec::<u8>::new());
             let job = progress().expect("expected progress");
             assert_eq!(job.stage, Stage::Encrypt);
             assert_eq!(job.done, job.total);
@@ -497,7 +497,7 @@ fn archive_path_source_extracts_plaintext() {
                     .await
                     .expect("extract");
             assert_eq!(text, "plain path");
-            assert!(files.is_empty());
+            assert_eq!(files, Vec::<Attachment>::new());
             drop(std::fs::remove_file(path));
         })
     });

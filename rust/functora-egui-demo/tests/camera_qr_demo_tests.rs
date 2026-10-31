@@ -21,8 +21,8 @@ fn platform_state_has_camera_view_and_qr_image_defaults() {
     let state = ShowcaseApp::default();
     assert!(!state.platform.camera_view_state.is_running());
     assert!(state.platform.camera_view_state.error().is_none());
-    assert!(!state.platform.qr_image_input.is_empty());
-    assert!(state.platform.qr_last_scan.is_empty());
+    assert_ne!(state.platform.qr_image_input, "");
+    assert_eq!(state.platform.qr_last_scan, "");
     assert!(state.platform.qr_error_notified.is_none());
 }
 

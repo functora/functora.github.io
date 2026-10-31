@@ -73,7 +73,7 @@ fn missing_sources_yield_empty_without_creating_tree() {
     let (desktop, assets) = layout(root.path());
     let hits = copy_desktop_icons(&desktop, &assets, APP_ID)
         .unwrap_or_else(|err| panic!("copy icons: {err}"));
-    assert!(hits.is_empty());
+    assert_eq!(hits, Vec::<PathBuf>::new());
     assert!(!desktop.join("icons").exists());
 }
 

@@ -76,7 +76,7 @@ fn extra_intent_filters_are_indented_block() {
 #[test]
 fn missing_extra_key_yields_empty_block() {
     let cfg = config(None);
-    assert!(cfg.extra_intent_filters.is_empty());
+    assert_eq!(cfg.extra_intent_filters, "");
     let manifest = render(&cfg);
     assert!(!manifest.contains("\n\n        </activity>"));
     assert!(manifest.contains("\n        </activity>"));

@@ -93,7 +93,7 @@
       cp package.json $out/package.json
       cp notification-ntfy.schema.json $out/notification-ntfy.schema.json
       printf 'export { default } from "./dist/index.js"\n' > $out/index.js
-      cp -r node_modules $out/node_modules
+      cp -r node_modules/* $out/node_modules
     '';
   };
 

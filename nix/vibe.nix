@@ -89,7 +89,7 @@
 
     installPhase = ''
       mkdir -p $out/dist $out/node_modules
-      cp -r dist $out/dist
+      cp -r dist/* $out/dist
       cp package.json $out/package.json
       cp notification-ntfy.schema.json $out/notification-ntfy.schema.json
       printf 'export { default } from "./dist/index.js"\n' > $out/index.js

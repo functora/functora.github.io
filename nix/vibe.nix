@@ -19,6 +19,84 @@
   unst = import ./nixpkgs-unstable.nix;
   agentsMd = ../AGENTS.md;
 
+  #
+  # opencode-ntfy.sh plugin (OpenCode V2 API). Pinned to a GitHub main commit
+  # that was migrated to the V2 plugin API. The npm registry still serves the
+  # V1 plugin (opencode-ntfy.sh@1.1.0) which opencode v2 rejects, so we fetch
+  # and build the plugin deterministically with a pinned rev and hash.
+  #
+  ntfyPluginVersion = "1.2.3";
+  ntfyPluginRev = "01ace501a408bca5318453fa6cdf89dcbfd6a217";
+  ntfyPluginHash = "sha256-ES4uR9nLRCwyi46kZXklS3kBSxOaDMGPuGGGDHKNphM=";
+
+  ntfyPluginSrc = pkgs.fetchFromGitHub {
+    owner = "lannuttia";
+    repo = "opencode-ntfy.sh";
+    rev = ntfyPluginRev;
+    hash = ntfyPluginHash;
+    fetchSubmodules = false;
+  };
+
+  ntfySdkSrc = pkgs.fetchurl {
+    url = "https://registry.npmjs.org/opencode-notification-sdk/-/opencode-notification-sdk-2.0.1.tgz";
+    sha256 = "1g648rjngvk9f5wiiwxmhhzlq05j6p0297dq7na6k9bz15a2xwxm";
+  };
+
+  ntfyIsoSrc = pkgs.fetchurl {
+    url = "https://registry.npmjs.org/iso8601-duration/-/iso8601-duration-2.1.3.tgz";
+    sha256 = "116rxjqw3hh9xyw9gki7dis2i3v5gwm1621wg5khh22rvxlgb3fq";
+  };
+
+  ntfyNodeTypesSrc = pkgs.fetchurl {
+    url = "https://registry.npmjs.org/@types/node/-/node-25.2.3.tgz";
+    sha256 = "0h4vwj599h7fwivdj6icmwidbss0c240q37qhpj0z1lif2iqs2qq";
+  };
+
+  #
+  # Build the opencode-ntfy.sh plugin directory for opencode v2.
+  #
+  # Layout:
+  #   package.json        name + main (no "exports": Bun <1.2 can not
+  #                       self-resolve a named package, so we fall back to main)
+  #   index.js            shim re-exporting ./dist/index.js
+  #   dist/               compiled TypeScript
+  #   notification-ntfy.schema.json
+  #   node_modules/       runtime deps (opencode-notification-sdk,
+  #                       iso8601-duration). @opencode/plugin is provided by
+  #                       the opencode host runtime and must not be vendored.
+  #
+  ntfyPlugin = pkgs.stdenv.mkDerivation {
+    name = "opencode-ntfy.sh-${ntfyPluginVersion}";
+    src = ntfyPluginSrc;
+    nativeBuildInputs = [pkgs.typescript pkgs.nodejs];
+    doCheck = false;
+
+    buildPhase = ''
+      mkdir -p node_modules/@types/node
+      mkdir -p node_modules/opencode-notification-sdk
+      mkdir -p node_modules/iso8601-duration
+
+      ${pkgs.gnutar}/bin/tar -xzf ${ntfyNodeTypesSrc} --strip-components=1 \
+        -C node_modules/@types/node
+      ${pkgs.gnutar}/bin/tar -xzf ${ntfySdkSrc} --strip-components=1 \
+        -C node_modules/opencode-notification-sdk
+      ${pkgs.gnutar}/bin/tar -xzf ${ntfyIsoSrc} --strip-components=1 \
+        -C node_modules/iso8601-duration
+
+      ${pkgs.gnused}/bin/sed -i 's/"moduleResolution": "bundler"/"moduleResolution": "bundler", "types": ["node"]/' tsconfig.json
+      ${pkgs.typescript}/bin/tsc
+    '';
+
+    installPhase = ''
+      mkdir -p $out/dist $out/node_modules
+      cp -r dist $out/dist
+      cp package.json $out/package.json
+      cp notification-ntfy.schema.json $out/notification-ntfy.schema.json
+      printf 'export { default } from "./dist/index.js"\n' > $out/index.js
+      cp -r node_modules $out/node_modules
+    '';
+  };
+
   loopbackAddress = "127.0.0.1";
   opencodePort = 4096;
   tailscaleProxyPort = 1055;
@@ -60,7 +138,7 @@
   });
 
   ntfyPluginConfigJson = pkgs.writeText "opencode-ntfy.json" (builtins.toJSON {
-    plugins = ["opencode-ntfy.sh"];
+    plugins = [ntfyPlugin];
   });
 
   opencodePasswordScript = ''
@@ -141,6 +219,10 @@
         then unst.opencode
         else opencodeClient
       )
+      #
+      # Notifications
+      #
+      ntfyPlugin
       (writeShellApplication {
         name = "notify-user";
         text = ''

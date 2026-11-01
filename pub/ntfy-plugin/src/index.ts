@@ -153,7 +153,7 @@ export default Plugin.define({
       try {
         for await (const ev of ctx.event.subscribe({
           signal: controller.signal,
-          types: NOTIFICATION_EVENTS,
+          types: [...NOTIFICATION_EVENTS, "session.status"],
         })) {
           const type = ev.type;
           const data = (ev as { readonly data?: Record<string, unknown> }).data ?? {};

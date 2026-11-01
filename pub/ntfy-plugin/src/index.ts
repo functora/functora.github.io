@@ -1,6 +1,6 @@
 import { Plugin } from "@opencode/plugin";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, basename } from "node:path";
 import { homedir } from "node:os";
 
 interface ContentTemplate { readonly value?: string; readonly command?: string; }
@@ -14,22 +14,34 @@ const CONFIG_PATHS = [
 ];
 
 const EVENT_ICONS: Record<string, string> = {
-  "session.execution.succeeded": "✅",
-  "session.execution.failed": "❌",
-  "session.execution.interrupted": "⏹️",
-  "permission.asked": "❓",
-  "form.created": "📝",
+  "session.idle": "⌛",
+  "session.error": "⚠️",
+  "permission.asked": "🔒",
 };
 
-const TITLE = "{icon} {project}";
-
-const DESCRIPTIONS: Record<string, string> = {
-  "session.execution.succeeded": "Finished.",
-  "session.execution.failed": "{error}",
-  "session.execution.interrupted": "{reason}",
-  "permission.asked": "{permission_type}",
-  "form.created": "Form pending.",
+const DEFAULT_TITLES: Record<string, string> = {
+  "session.idle": "Agent Idle",
+  "session.error": "Agent Error",
+  "permission.asked": "Permission Asked",
 };
+
+const DEFAULT_MESSAGES: Record<string, string> = {
+  "session.idle": "The agent has finished and is waiting for input.",
+  "session.error": "An error has occurred. Check the session for details.",
+  "permission.asked": "The agent needs permission to continue. Review and respond.",
+};
+
+const DEFAULT_TAGS: Record<string, string> = {
+  "session.idle": "hourglass_done",
+  "session.error": "warning",
+  "permission.asked": "lock",
+};
+
+const NOTIFICATION_EVENTS = [
+  "session.idle",
+  "session.error",
+  "permission.asked",
+] as const;
 
 function loadConfig(): Config {
   let lastError: unknown;
@@ -70,13 +82,9 @@ function render(template: ContentTemplate | undefined, context: Record<string, s
   return out;
 }
 
-const NOTIFICATION_EVENTS = [
-  "session.execution.succeeded",
-  "session.execution.failed",
-  "session.execution.interrupted",
-  "permission.asked",
-  "form.created",
-] as const;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export default Plugin.define({
   id: "opencode-notification-ntfy",
@@ -93,19 +101,20 @@ export default Plugin.define({
     const enabledSet = new Set(
       NOTIFICATION_EVENTS.filter((e) => events[e]?.enabled !== false),
     );
-    const project = ctx.location.directory.split("/").pop() ?? "agent";
+    const project = basename(ctx.location.directory);
     const controller = new AbortController();
 
     const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
+    const tagOf = (event: string): string => DEFAULT_TAGS[event] ?? "";
     const contextOf = (event: string) => ({ project, icon: iconOf(event) });
 
     const titleOf = (event: string) => {
       const rule = events[event];
-      return render(rule?.title, contextOf(event), TITLE);
+      return render(rule?.title, contextOf(event), DEFAULT_TITLES[event] ?? "");
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
       const rule = events[event];
-      return render(rule?.message, { ...contextOf(event), ...meta }, DESCRIPTIONS[event] ?? "");
+      return render(rule?.message, { ...contextOf(event), ...meta }, DEFAULT_MESSAGES[event] ?? "");
     };
 
     const send = async (event: string, meta: Record<string, string>): Promise<void> => {
@@ -115,7 +124,11 @@ export default Plugin.define({
       }
       const title = titleOf(event);
       const message = messageOf(event, meta);
-      const headers: Record<string, string> = { Title: title, Priority: priority };
+      const headers: Record<string, string> = {
+        Title: title,
+        Priority: priority,
+        Tags: tagOf(event),
+      };
       if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await fetch(url, {
@@ -137,8 +150,7 @@ export default Plugin.define({
       try {
         const session = await ctx.session.get({ sessionID });
         return Boolean(session?.parentID);
-      } catch (error) {
-        console.error(`opencode-notification-ntfy: session.get(${sessionID}) failed:`, error);
+      } catch {
         return false;
       }
     };
@@ -147,33 +159,40 @@ export default Plugin.define({
       try {
         for await (const ev of ctx.event.subscribe({
           signal: controller.signal,
-          types: NOTIFICATION_EVENTS,
+          types: ["session.status", "session.execution.failed", "permission.asked"],
         })) {
           const type = ev.type;
-          const record = (ev as { readonly data?: Record<string, unknown> }).data ?? {};
-          const sessionID = typeof record.sessionID === "string" ? record.sessionID : "";
+          const data = (ev as { readonly data?: Record<string, unknown> }).data ?? {};
 
-          if (type === "session.execution.succeeded") {
-            await send(type, {});
+          if (type === "session.status") {
+            if (!isRecord(data) || !isRecord(data.status)) continue;
+            if (data.status.type !== "idle") continue;
+            const notificationEvent = "session.idle";
+            if (!enabledSet.has(notificationEvent)) continue;
+            const sessionID = typeof data.sessionID === "string" ? data.sessionID : "";
+            if (sessionID && await isSubagent(sessionID)) continue;
+            await send(notificationEvent, {});
             continue;
           }
           if (type === "session.execution.failed") {
+            const notificationEvent = "session.error";
+            if (!enabledSet.has(notificationEvent)) continue;
+            const sessionID = isRecord(data) && typeof data.sessionID === "string"
+              ? data.sessionID
+              : "";
             if (sessionID && await isSubagent(sessionID)) continue;
-            const error = record.error as { readonly message?: string } | undefined;
-            await send(type, { error: error?.message ?? "" });
-            continue;
-          }
-          if (type === "session.execution.interrupted") {
-            if (sessionID && await isSubagent(sessionID)) continue;
-            await send(type, { reason: typeof record.reason === "string" ? record.reason : "" });
+            const error = isRecord(data) ? data.error : undefined;
+            const errorMessage = isRecord(error) && typeof error.message === "string"
+              ? error.message
+              : "";
+            await send(notificationEvent, { error: errorMessage });
             continue;
           }
           if (type === "permission.asked") {
-            await send(type, { permission_type: typeof record.action === "string" ? record.action : "" });
-            continue;
-          }
-          if (type === "form.created") {
-            await send(type, {});
+            const notificationEvent = "permission.asked";
+            if (!enabledSet.has(notificationEvent)) continue;
+            const permissionType = typeof data.action === "string" ? data.action : "";
+            await send(notificationEvent, { permission_type: permissionType });
             continue;
           }
         }

@@ -103,12 +103,11 @@
   ntfyPreflight = lib.optionalString ntfyEnabled (requireSecretFile ntfyTopicFile);
 
   ntfyNotificationJson = pkgs.writeText "notification-ntfy.json" (builtins.toJSON {
+    enabled = true;
     events = {
-      "session.execution.succeeded" = {enabled = true;};
-      "session.execution.failed" = {enabled = true;};
-      "session.execution.interrupted" = {enabled = true;};
+      "session.idle" = {enabled = true;};
+      "session.error" = {enabled = true;};
       "permission.asked" = {enabled = true;};
-      "form.created" = {enabled = true;};
     };
     backend = {
       server = "https://ntfy.sh";

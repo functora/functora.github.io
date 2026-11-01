@@ -10,7 +10,7 @@ repository = "https://github.com/functora/functora.github.io/tree/master/rust/fu
 documentation = "https://docs.rs/functora-egui"
 
 [dependencies]
-egui = { version = "0.37.0", features = ["default_fonts"] }
+egui = { version = "0.37.0", features = ["default_fonts", "monochrome_emoji_fonts"] }
 egui_extras = { version = "0.37.0", default-features = false, optional = true }
 egui_flex = "0.9"
 log = "0.4"

@@ -113,20 +113,6 @@
     backend = {
       server = "https://ntfy.sh";
       topic = "{file:~/${secretsRelativePath}/NTFY_TOPIC}";
-      title = {
-        "session.execution.succeeded" = {value = "{project}: agent finished";};
-        "session.execution.failed" = {value = "{project}: agent error";};
-        "session.execution.interrupted" = {value = "{project}: agent interrupted";};
-        "permission.asked" = {value = "{project}: input required";};
-        "form.created" = {value = "{project}: form awaiting answers";};
-      };
-      message = {
-        "session.execution.succeeded" = {value = "The agent has finished and is waiting for input.";};
-        "session.execution.failed" = {value = "An error occurred: {error}";};
-        "session.execution.interrupted" = {value = "The agent was interrupted: {reason}";};
-        "permission.asked" = {value = "The agent needs your input: {permission_type}";};
-        "form.created" = {value = "A form is awaiting your answers.";};
-      };
     };
   });
 

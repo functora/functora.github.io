@@ -10,19 +10,22 @@ interface Config { readonly enabled?: boolean; readonly events?: Record<string, 
 
 const CONFIG_PATH = join(homedir(), ".config", "opencode", "notification-ntfy.json");
 
-const DEFAULT_TITLES: Record<string, string> = {
-  "session.execution.succeeded": "{project}: agent finished",
-  "session.execution.failed": "{project}: agent error",
-  "session.execution.interrupted": "{project}: agent interrupted",
-  "permission.asked": "{project}: input required",
-  "form.created": "{project}: form awaiting answers",
+const EVENT_ICONS: Record<string, string> = {
+  "session.execution.succeeded": "✅",
+  "session.execution.failed": "❌",
+  "session.execution.interrupted": "⏹️",
+  "permission.asked": "❓",
+  "form.created": "📝",
 };
-const DEFAULT_MESSAGES: Record<string, string> = {
-  "session.execution.succeeded": "The agent has finished and is waiting for input.",
-  "session.execution.failed": "An error occurred: {error}",
-  "session.execution.interrupted": "The agent was interrupted: {reason}",
-  "permission.asked": "The agent needs your input: {permission_type}",
-  "form.created": "A form is awaiting your answers.",
+
+const TITLE = "{icon} {project}";
+
+const DESCRIPTIONS: Record<string, string> = {
+  "session.execution.succeeded": "Finished.",
+  "session.execution.failed": "{error}",
+  "session.execution.interrupted": "{reason}",
+  "permission.asked": "{permission_type}",
+  "form.created": "Form pending.",
 };
 
 function loadConfig(): Config {
@@ -51,8 +54,7 @@ function substitute(value: string): string {
 }
 
 function render(template: ContentTemplate | undefined, context: Record<string, string>, def: string): string {
-  const raw = template?.value ?? def;
-  let out = substitute(raw).replace(/{project}/g, context.project);
+  let out = substitute(template?.value ?? def);
   for (const [key, val] of Object.entries(context)) {
     out = out.replace(new RegExp(`{${key}}`, "g"), val ?? "");
   }
@@ -85,13 +87,16 @@ export default Plugin.define({
     const project = ctx.location.directory.split("/").pop() ?? "agent";
     const controller = new AbortController();
 
+    const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
+    const contextOf = (event: string) => ({ project, icon: iconOf(event) });
+
     const titleOf = (event: string) => {
       const rule = events[event];
-      return render(rule?.title, { project }, DEFAULT_TITLES[event] ?? "");
+      return render(rule?.title, contextOf(event), TITLE);
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
       const rule = events[event];
-      return render(rule?.message, { project, ...meta }, DEFAULT_MESSAGES[event] ?? "");
+      return render(rule?.message, { ...contextOf(event), ...meta }, DESCRIPTIONS[event] ?? "");
     };
 
     const send = async (event: string, meta: Record<string, string>): Promise<void> => {
@@ -129,26 +134,26 @@ export default Plugin.define({
         const sessionID = typeof record.sessionID === "string" ? record.sessionID : "";
 
         if (type === "session.execution.succeeded") {
-          await send(type, { project });
+          await send(type, {});
           continue;
         }
         if (type === "session.execution.failed") {
           if (sessionID && await isSubagent(sessionID)) continue;
           const error = record.error as { readonly message?: string } | undefined;
-          await send(type, { project, error: error?.message ?? "" });
+          await send(type, { error: error?.message ?? "" });
           continue;
         }
         if (type === "session.execution.interrupted") {
           if (sessionID && await isSubagent(sessionID)) continue;
-          await send(type, { project, reason: typeof record.reason === "string" ? record.reason : "" });
+          await send(type, { reason: typeof record.reason === "string" ? record.reason : "" });
           continue;
         }
         if (type === "permission.asked") {
-          await send(type, { project, permission_type: typeof record.action === "string" ? record.action : "" });
+          await send(type, { permission_type: typeof record.action === "string" ? record.action : "" });
           continue;
         }
         if (type === "form.created") {
-          await send(type, { project });
+          await send(type, {});
           continue;
         }
       }

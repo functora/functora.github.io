@@ -348,6 +348,14 @@ nix develop
 
 **Never assume host tools.** The agent must never rely on `rustc`, `cargo`, `node`, `npm`, `python`, `gradle`, `javac`, `make`, `gcc`, or any other tool being installed on the host. If the project needs it, it belongs in `flake.nix`.
 
+**Use the flake's toolchain, not manually located store binaries.** Do not hunt for `rustc`, `cargo`, or other compilers under `/nix/store` directly. Binaries found there may be older than the flake's declared toolchain and lack features needed by dependencies (for example, `rustc 1.86` does not support `let_chains`, which some crates require). Always enter the dev shell via `nix develop` so the flake's pinned `rustToolchain` and `shell.packages` are on `PATH`.
+
+**Run build and test commands from the manifest directory.** Commands such as `cargo test`, `cargo clippy`, `npm test`, or `mix test` must be run inside the directory that contains the project manifest (`Cargo.toml`, `package.json`, `mix.exs`, etc.), not from the flake repository root. The root typically has no manifest of its own.
+
+**Declare frequently-run commands as flake shell applications.** Inline commands passed to `nix develop -c '...'` can fail because the dev shell environment is not fully applied to the inline invocation. For commands run regularly, define them as `pkgs.writeShellApplication` entries in `flake.nix` (like the `verify`, `profile`, and `coverage` helpers shown in this project's flake), so they are versioned, reusable, and invocable via `nix develop -c <name>` or `nix run .#<name>`.
+
+**System services might not be running.** `nix develop` provides client libraries and tools, but whether databases, caches, or other daemons are running depends on the project setup — some services may start automatically via process-compose or direnv hooks, others may not. Integration tests that need Postgres, Redis, or similar services should verify the service is reachable before running, and start it manually if needed.
+
 **Cross-compilation is declared, not improvised.** If the project compiles for WASM, Android, iOS, or other non-native targets, the target triplets and their linkers must be declared in the flake toolchain configuration. The agent should read the flake's toolchain section to discover available targets rather than installing SDKs manually.
 
 **If it builds in the flake, it ships from the flake.** `nix build` produces immutable store paths. Releases, deployments, and CI should consume these store paths directly, never ad-hoc host builds.

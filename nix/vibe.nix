@@ -131,9 +131,24 @@
   ntfyPreflight = lib.optionalString ntfyEnabled (requireSecretFile ntfyTopicFile);
 
   ntfyNotificationJson = pkgs.writeText "notification-ntfy.json" (builtins.toJSON {
+    events = {
+      "session.idle" = {enabled = true;};
+      "session.error" = {enabled = true;};
+      "permission.asked" = {enabled = true;};
+    };
     backend = {
       server = "https://ntfy.sh";
       topic = "{file:~/${secretsRelativePath}/NTFY_TOPIC}";
+      title = {
+        "session.idle" = {value = "{project}: agent finished";};
+        "session.error" = {value = "{project}: agent error";};
+        "permission.asked" = {value = "{project}: input required";};
+      };
+      message = {
+        "session.idle" = {value = "The agent has finished and is waiting for input.";};
+        "session.error" = {value = "An error occurred: {error}";};
+        "permission.asked" = {value = "The agent needs your input: {permission_type}";};
+      };
     };
   });
 

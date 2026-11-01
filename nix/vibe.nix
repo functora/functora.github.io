@@ -29,7 +29,7 @@
   #
   ntfyPluginVersion = "2.0.0";
 
-  ntfyPluginSrc = ./pub/ntfy-plugin;
+  ntfyPluginSrc = ../pub/ntfy-plugin;
 
   ntfyNodeTypesSrc = pkgs.fetchurl {
     url = "https://registry.npmjs.org/@types/node/-/node-25.2.3.tgz";

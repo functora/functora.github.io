@@ -306,7 +306,6 @@ semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 - Verify that no unintended public behavior, configuration, API, serialization format, module boundary, or project setting was modified.
 - The resulting code must be formatted, warning-free, panic-free, resource-safe, and fully tested.
 
-
 ---
 
 ## Nix / Flake Infrastructure (Code Infrastructure, Tooling, Build, Test, Deploy)
@@ -334,9 +333,11 @@ If a tool is needed, it must be added to the flake — never installed globally 
 ### How the Agent Should Work with Flakes
 
 **Enter the environment first.** Always start work inside the dev shell:
+
 ```bash
 nix develop
 ```
+
 (or via direnv if `.envrc` is present). Never run compilers, test runners, or linters outside `nix develop` — if a command works only outside the shell, the flake configuration is incomplete and must be fixed in `flake.nix`, not worked around.
 
 **Treat `flake.nix` as project infrastructure.** When adding a dependency (language package, system library, SDK, compiler toolchain, cross-compilation target), add it to `flake.nix` first. The flake is the project's `package.json` / `Cargo.toml` / `requirements.txt` for system-level tooling, and it must stay in sync with any language-level lock files.
@@ -359,11 +360,12 @@ nix develop
 4. **When adding a dependency, update both layers.** Add the system dependency to `flake.nix` and update the language-level lock file inside `nix develop`.
 5. **When adding a tool, add it to the dev shell.** Any compiler, linter, formatter, SDK, or system library needed for development must appear in `shell.packages` or as a flake output. Do not expect it on the host.
 6. **When adding a compilation target, add it to the toolchain.** Cross-compilation targets (WASM, Android, iOS, embedded) and their linkers are declared in the flake's toolchain configuration.
-7. **Use `nix develop -c <command>` for scripts and CI.** Never use `nix develop --impure` except in `.envrc` for automatic shell entry. For reproducible, scriptable execution, always use `nix develop -c`.
+7. **Use `nix develop -c <command>` for reproducible, scriptable execution.**
 
 ### Host System Assumptions
 
 The host system provides only:
+
 - The Nix package manager (single-user or multi-user)
 - Git (for reading the repository)
 

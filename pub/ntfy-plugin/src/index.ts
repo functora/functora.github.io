@@ -8,7 +8,10 @@ interface EventRule { readonly enabled?: boolean; readonly title?: ContentTempla
 interface BackendConfig { readonly server?: string; readonly topic?: string; readonly token?: string; readonly priority?: string; readonly title?: Record<string, ContentTemplate>; readonly message?: Record<string, ContentTemplate>; }
 interface Config { readonly enabled?: boolean; readonly events?: Record<string, EventRule>; readonly backend?: BackendConfig; }
 
-const CONFIG_PATH = join(homedir(), ".config", "opencode", "notification-ntfy.json");
+const CONFIG_PATHS = [
+  join(homedir(), ".config", "opencode", "notification-ntfy.json"),
+  join(process.env.HOME ?? "", ".config", "opencode", "notification-ntfy.json"),
+];
 
 const EVENT_ICONS: Record<string, string> = {
   "session.execution.succeeded": "✅",
@@ -29,11 +32,17 @@ const DESCRIPTIONS: Record<string, string> = {
 };
 
 function loadConfig(): Config {
-  try {
-    return JSON.parse(readFileSync(CONFIG_PATH, "utf-8")) as Config;
-  } catch {
-    return {};
+  let lastError: unknown;
+  for (const path of CONFIG_PATHS) {
+    if (!path) continue;
+    try {
+      return JSON.parse(readFileSync(path, "utf-8")) as Config;
+    } catch (error) {
+      lastError = error;
+    }
   }
+  console.error(`opencode-notification-ntfy: could not load config (tried ${CONFIG_PATHS.join(", ")}):`, lastError);
+  return {};
 }
 
 function substitute(value: string): string {
@@ -100,7 +109,10 @@ export default Plugin.define({
     };
 
     const send = async (event: string, meta: Record<string, string>): Promise<void> => {
-      if (!enabled || !enabledSet.has(event as typeof NOTIFICATION_EVENTS[number]) || !topic) return;
+      if (!enabled || !enabledSet.has(event as typeof NOTIFICATION_EVENTS[number]) || !topic) {
+        console.error(`opencode-notification-ntfy: skipping ${event} enabled=${enabled} topic=${Boolean(topic)}`);
+        return;
+      }
       const title = titleOf(event);
       const message = messageOf(event, meta);
       const headers: Record<string, string> = { Title: title, Priority: priority };
@@ -112,9 +124,12 @@ export default Plugin.define({
           body: message,
           signal: controller.signal,
         });
+        if (!response.ok) {
+          console.error(`opencode-notification-ntfy: ntfy ${event} HTTP ${response.status}`);
+        }
         void response;
-      } catch {
-        // Notifications never crash the host.
+      } catch (error) {
+        console.error(`opencode-notification-ntfy: ntfy ${event} fetch failed:`, error);
       }
     };
 
@@ -122,40 +137,48 @@ export default Plugin.define({
       try {
         const session = await ctx.session.get({ sessionID });
         return Boolean(session?.parentID);
-      } catch {
+      } catch (error) {
+        console.error(`opencode-notification-ntfy: session.get(${sessionID}) failed:`, error);
         return false;
       }
     };
 
     void (async () => {
-      for await (const ev of ctx.event.subscribe({ signal: controller.signal })) {
-        const type = ev.type;
-        const record = (ev as { readonly data?: Record<string, unknown> }).data ?? {};
-        const sessionID = typeof record.sessionID === "string" ? record.sessionID : "";
+      try {
+        for await (const ev of ctx.event.subscribe({
+          signal: controller.signal,
+          types: NOTIFICATION_EVENTS,
+        })) {
+          const type = ev.type;
+          const record = (ev as { readonly data?: Record<string, unknown> }).data ?? {};
+          const sessionID = typeof record.sessionID === "string" ? record.sessionID : "";
 
-        if (type === "session.execution.succeeded") {
-          await send(type, {});
-          continue;
+          if (type === "session.execution.succeeded") {
+            await send(type, {});
+            continue;
+          }
+          if (type === "session.execution.failed") {
+            if (sessionID && await isSubagent(sessionID)) continue;
+            const error = record.error as { readonly message?: string } | undefined;
+            await send(type, { error: error?.message ?? "" });
+            continue;
+          }
+          if (type === "session.execution.interrupted") {
+            if (sessionID && await isSubagent(sessionID)) continue;
+            await send(type, { reason: typeof record.reason === "string" ? record.reason : "" });
+            continue;
+          }
+          if (type === "permission.asked") {
+            await send(type, { permission_type: typeof record.action === "string" ? record.action : "" });
+            continue;
+          }
+          if (type === "form.created") {
+            await send(type, {});
+            continue;
+          }
         }
-        if (type === "session.execution.failed") {
-          if (sessionID && await isSubagent(sessionID)) continue;
-          const error = record.error as { readonly message?: string } | undefined;
-          await send(type, { error: error?.message ?? "" });
-          continue;
-        }
-        if (type === "session.execution.interrupted") {
-          if (sessionID && await isSubagent(sessionID)) continue;
-          await send(type, { reason: typeof record.reason === "string" ? record.reason : "" });
-          continue;
-        }
-        if (type === "permission.asked") {
-          await send(type, { permission_type: typeof record.action === "string" ? record.action : "" });
-          continue;
-        }
-        if (type === "form.created") {
-          await send(type, {});
-          continue;
-        }
+      } catch (error) {
+        console.error("opencode-notification-ntfy: event stream failed:", error);
       }
     })();
     return () => controller.abort();

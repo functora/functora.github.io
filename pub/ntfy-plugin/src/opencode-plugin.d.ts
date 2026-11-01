@@ -15,7 +15,10 @@ interface PluginContext {
     readonly get: (opts: { readonly sessionID: string }) => Promise<{ readonly parentID?: string } | null>;
   };
   readonly event: {
-    readonly subscribe: (opts?: { readonly signal?: AbortSignal }) => AsyncIterable<{
+    readonly subscribe: (opts?: {
+      readonly signal?: AbortSignal;
+      readonly types?: readonly string[];
+    }) => AsyncIterable<{
       readonly type: string;
       readonly data?: unknown;
     }>;

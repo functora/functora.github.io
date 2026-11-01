@@ -213,6 +213,7 @@
         tag = "snuffed";
         blur = "";
         total = ../bak/doom/SNUFFED_STANDARD.pk3;
+        relite = "";
         liquid = ltp701;
       }
       // mkDoom {

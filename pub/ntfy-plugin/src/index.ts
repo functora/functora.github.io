@@ -145,7 +145,7 @@ export default Plugin.define({
           ...meta,
           description: DESCRIPTIONS[event] ?? "",
         },
-        "{icon} {project}\n\n{description}",
+        "{icon} {description}",
       );
     };
 

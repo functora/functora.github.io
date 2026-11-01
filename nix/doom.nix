@@ -210,6 +210,12 @@
         relite = "";
       }
       // mkDoom {
+        tag = "snuffed";
+        blur = "";
+        total = ../bak/doom/SNUFFED_STANDARD.pk3;
+        liquid = ltp701;
+      }
+      // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";
         cfg = ../cfg/doom-qcde.cfg;

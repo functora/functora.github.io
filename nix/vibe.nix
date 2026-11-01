@@ -269,6 +269,9 @@
       upInBackground = false;
     }
     + ntfyEgress
+    + lib.optionalString ntfyEnabled ''
+      export OPENCODE_CONFIG="${toString ntfyPluginConfigJson}";
+    ''
     + ''
 
       ${opencodePasswordScript}
@@ -404,9 +407,6 @@
           NIXPKGS_ALLOW_UNFREE = "1";
           ANDROID_USER_HOME = "~/.android";
           GRADLE_USER_HOME = "~/.gradle";
-        }
-        // lib.optionalAttrs ntfyEnabled {
-          OPENCODE_CONFIG = toString ntfyPluginConfigJson;
         };
     }
   ];

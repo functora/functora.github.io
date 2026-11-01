@@ -7,6 +7,7 @@ use std::sync::Arc;
 struct Metrics {
     width: f32,
     height: f32,
+    wanted: f32,
     intrinsic: egui::Vec2,
     text_galley: Arc<egui::Galley>,
     shortcut_galley: Option<Arc<egui::Galley>>,
@@ -130,7 +131,9 @@ impl super::widget::Button<'_> {
             };
             natural.min(room_width)
         });
-        let height = crate::text::box_height(&text_galley, style.height).max(min_height);
+        let base_height = crate::text::box_height(&text_galley, style.height);
+        let wanted = base_height.max(self.min_height);
+        let height = base_height.max(min_height);
 
         let intrinsic_width = self.fixed_width.unwrap_or_else(|| {
             if is_icon_only {
@@ -146,6 +149,7 @@ impl super::widget::Button<'_> {
         Metrics {
             width,
             height,
+            wanted,
             intrinsic: egui::vec2(intrinsic_width, intrinsic_height),
             text_galley,
             shortcut_galley,
@@ -201,6 +205,7 @@ impl egui::Widget for super::widget::Button<'_> {
             width,
             height,
             intrinsic,
+            wanted,
             text_galley,
             shortcut_galley,
             icon_size,
@@ -221,12 +226,15 @@ impl egui::Widget for super::widget::Button<'_> {
         };
         response.set_intrinsic_size(intrinsic);
 
-        // Record the rect in the group so it can lay out its rows
+        // Record the rect and the button's own height in the group so it can
+        // lay out its rows and derive the shared row height from the buttons'
+        // current heights
         if in_group {
             ui.ctx().data_mut(|d| {
                 if let Some(mut ctx) = d.get_temp::<crate::widgets::button_group::button_group_context::ButtonGroupContext>(group_key)
                     && ctx.active {
                         ctx.rects.push(rect);
+                        ctx.wanted_max_height = ctx.wanted_max_height.max(wanted);
                         let _ = d.insert_temp(group_key, ctx);
                     }
             });

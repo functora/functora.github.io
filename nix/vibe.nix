@@ -20,32 +20,16 @@
   agentsMd = ../AGENTS.md;
 
   #
-  # opencode-ntfy.sh plugin (OpenCode V2 API). Pinned to a GitHub main commit
-  # that was migrated to the V2 plugin API. The npm registry still serves the
-  # V1 plugin (opencode-ntfy.sh@1.1.0) which opencode v2 rejects, so we fetch
-  # and build the plugin deterministically with a pinned rev and hash.
+  # opencode-ntfy plugin (OpenCode V2 API). A maintained wrapper plugin that
+  # matches on session.execution.succeeded|failed|interrupted +
+  # permission.asked + form.created, filters subagents, and delivers via ntfy.sh.
+  # Built deterministically from local source with a pinned @types/node for the
+  # TypeScript build. @opencode/plugin is provided by the OpenCode host runtime
+  # and must not be vendored.
   #
-  ntfyPluginVersion = "1.2.3";
-  ntfyPluginRev = "01ace501a408bca5318453fa6cdf89dcbfd6a217";
-  ntfyPluginHash = "sha256-ES4uR9nLRCwyi46kZXklS3kBSxOaDMGPuGGGDHKNphM=";
+  ntfyPluginVersion = "2.0.0";
 
-  ntfyPluginSrc = pkgs.fetchFromGitHub {
-    owner = "lannuttia";
-    repo = "opencode-ntfy.sh";
-    rev = ntfyPluginRev;
-    hash = ntfyPluginHash;
-    fetchSubmodules = false;
-  };
-
-  ntfySdkSrc = pkgs.fetchurl {
-    url = "https://registry.npmjs.org/opencode-notification-sdk/-/opencode-notification-sdk-2.0.1.tgz";
-    sha256 = "1g648rjngvk9f5wiiwxmhhzlq05j6p0297dq7na6k9bz15a2xwxm";
-  };
-
-  ntfyIsoSrc = pkgs.fetchurl {
-    url = "https://registry.npmjs.org/iso8601-duration/-/iso8601-duration-2.1.3.tgz";
-    sha256 = "116rxjqw3hh9xyw9gki7dis2i3v5gwm1621wg5khh22rvxlgb3fq";
-  };
+  ntfyPluginSrc = ./pub/ntfy-plugin;
 
   ntfyNodeTypesSrc = pkgs.fetchurl {
     url = "https://registry.npmjs.org/@types/node/-/node-25.2.3.tgz";
@@ -53,47 +37,35 @@
   };
 
   #
-  # Build the opencode-ntfy.sh plugin directory for opencode v2.
+  # Build the opencode-ntfy plugin directory for opencode v2.
   #
   # Layout:
-  #   package.json        name + main (no "exports": Bun <1.2 can not
+  #   package.json        name + main (no "exports": Bun can not
   #                       self-resolve a named package, so we fall back to main)
   #   index.js            shim re-exporting ./dist/index.js
   #   dist/               compiled TypeScript
-  #   notification-ntfy.schema.json
-  #   node_modules/       runtime deps (opencode-notification-sdk,
-  #                       iso8601-duration). @opencode/plugin is provided by
-  #                       the opencode host runtime and must not be vendored.
+  #   node_modules/@types/node   types only, for the tsc build
+  #   @opencode/plugin is provided by the opencode host runtime and
+  #                       must not be vendored.
   #
   ntfyPlugin = pkgs.stdenv.mkDerivation {
-    name = "opencode-ntfy.sh-${ntfyPluginVersion}";
+    name = "opencode-notification-ntfy-${ntfyPluginVersion}";
     src = ntfyPluginSrc;
     nativeBuildInputs = [pkgs.typescript pkgs.nodejs];
     doCheck = false;
 
     buildPhase = ''
       mkdir -p node_modules/@types/node
-      mkdir -p node_modules/opencode-notification-sdk
-      mkdir -p node_modules/iso8601-duration
-
       ${pkgs.gnutar}/bin/tar -xzf ${ntfyNodeTypesSrc} --strip-components=1 \
         -C node_modules/@types/node
-      ${pkgs.gnutar}/bin/tar -xzf ${ntfySdkSrc} --strip-components=1 \
-        -C node_modules/opencode-notification-sdk
-      ${pkgs.gnutar}/bin/tar -xzf ${ntfyIsoSrc} --strip-components=1 \
-        -C node_modules/iso8601-duration
-
-      ${pkgs.gnused}/bin/sed -i 's/"moduleResolution": "bundler"/"moduleResolution": "bundler", "types": ["node"]/' tsconfig.json
       ${pkgs.typescript}/bin/tsc
     '';
 
     installPhase = ''
-      mkdir -p $out/dist $out/node_modules
+      mkdir -p $out/dist
       cp -r dist/* $out/dist
       cp package.json $out/package.json
-      cp notification-ntfy.schema.json $out/notification-ntfy.schema.json
       printf 'export { default } from "./dist/index.js"\n' > $out/index.js
-      cp -r node_modules/* $out/node_modules
     '';
   };
 
@@ -132,22 +104,28 @@
 
   ntfyNotificationJson = pkgs.writeText "notification-ntfy.json" (builtins.toJSON {
     events = {
-      "session.idle" = {enabled = true;};
-      "session.error" = {enabled = true;};
+      "session.execution.succeeded" = {enabled = true;};
+      "session.execution.failed" = {enabled = true;};
+      "session.execution.interrupted" = {enabled = true;};
       "permission.asked" = {enabled = true;};
+      "form.created" = {enabled = true;};
     };
     backend = {
       server = "https://ntfy.sh";
       topic = "{file:~/${secretsRelativePath}/NTFY_TOPIC}";
       title = {
-        "session.idle" = {value = "{project}: agent finished";};
-        "session.error" = {value = "{project}: agent error";};
+        "session.execution.succeeded" = {value = "{project}: agent finished";};
+        "session.execution.failed" = {value = "{project}: agent error";};
+        "session.execution.interrupted" = {value = "{project}: agent interrupted";};
         "permission.asked" = {value = "{project}: input required";};
+        "form.created" = {value = "{project}: form awaiting answers";};
       };
       message = {
-        "session.idle" = {value = "The agent has finished and is waiting for input.";};
-        "session.error" = {value = "An error occurred: {error}";};
+        "session.execution.succeeded" = {value = "The agent has finished and is waiting for input.";};
+        "session.execution.failed" = {value = "An error occurred: {error}";};
+        "session.execution.interrupted" = {value = "The agent was interrupted: {reason}";};
         "permission.asked" = {value = "The agent needs your input: {permission_type}";};
+        "form.created" = {value = "A form is awaiting your answers.";};
       };
     };
   });

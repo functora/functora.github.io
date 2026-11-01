@@ -17,7 +17,12 @@ pub struct ButtonGroupContext {
     /// First/last button index of each row of buttons, from last frame.
     /// Empty until the group has rendered once.
     pub cached_rows: Vec<(usize, usize)>,
-    /// Tallest button of the group last frame, so every button of a wrapping
-    /// strip can share one row height.
+    /// Tallest height any button of the group wanted last frame — the button's
+    /// own height before group-wide sharing is applied, so sharing never keeps
+    /// a height the current layout no longer needs.
     pub cached_max_height: f32,
+    /// Tallest height any button of the group wanted this frame, collected
+    /// while the buttons render and written back as the next frame's
+    /// [`Self::cached_max_height`].
+    pub wanted_max_height: f32,
 }

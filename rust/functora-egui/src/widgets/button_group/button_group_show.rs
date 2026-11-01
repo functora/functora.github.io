@@ -42,6 +42,7 @@ impl super::widget::ButtonGroup {
                 super::button_group_context::ButtonGroupContext {
                     active: true,
                     rects: Vec::new(),
+                    wanted_max_height: 0.0,
                     cached_count,
                     current_index: 0,
                     corner_radius: cr,
@@ -67,8 +68,9 @@ impl super::widget::ButtonGroup {
             });
         }
 
-        // Read the rects, final count, and deactivate
-        let (rects, final_count) = ui.ctx().data_mut(|d| {
+        // Read the rects, final count, and the buttons' current heights, then
+        // deactivate
+        let (rects, final_count, wanted_max_height) = ui.ctx().data_mut(|d| {
             let ctx = d.get_temp::<super::button_group_context::ButtonGroupContext>(key);
             let _ = d.insert_temp(
                 key,
@@ -77,17 +79,20 @@ impl super::widget::ButtonGroup {
                     ..Default::default()
                 },
             );
-            ctx.map(|c| (c.rects, c.current_index)).unwrap_or_default()
+            ctx.map(|c| (c.rects, c.current_index, c.wanted_max_height))
+                .unwrap_or_default()
         });
 
         let rows = rows_of(&rects);
-        let max_height = rects.iter().map(egui::Rect::height).fold(0.0, f32::max);
 
-        // Cache this group's shape for the next frame
+        // Cache this group's shape for the next frame. The height cache keeps
+        // what the buttons wanted this frame, so a strip that shrinks when the
+        // layout changes loses the stale shared height instead of overwriting
+        // it with the enlarged rects the old height itself produced.
         ui.ctx().data_mut(|d| {
             let _ = d.insert_temp(count_key, final_count);
             let _ = d.insert_temp(rows_key, rows.clone());
-            let _ = d.insert_temp(height_key, max_height);
+            let _ = d.insert_temp(height_key, wanted_max_height);
         });
 
         let group_rect = rects.iter().copied().reduce(egui::Rect::union);

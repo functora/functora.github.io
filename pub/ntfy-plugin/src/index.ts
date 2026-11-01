@@ -34,10 +34,10 @@ const CONFIG_PATHS = [
 const EVENT_ICONS: Record<string, string> = {
   "session.execution.succeeded": "✅",
   "session.execution.failed": "❌",
-  "session.execution.interrupted": "⏹️",
+  "session.execution.interrupted": "🛑",
   "permission.asked": "❓",
   "form.created": "📝",
-  "session.idle": "⌛",
+  "session.idle": "⏳",
 };
 
 const TITLE = "{project}";

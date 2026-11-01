@@ -360,6 +360,8 @@ nix develop
 
 **If it builds in the flake, it ships from the flake.** `nix build` produces immutable store paths. Releases, deployments, and CI should consume these store paths directly, never ad-hoc host builds.
 
+**Keep the project directory free of temporary files.** When writing, testing, or debugging code, any temporary files, scratch work, experiment outputs, or leftovers must be located in a `/tmp` subdirectory (e.g. `/tmp/opencode/...`), never inside the project repository. The project directory must not be polluted with temporary files or artifacts from agent work, testing, or experimentation. If a tool writes outputs by default into the project tree (coverage reports, flamegraphs, build artifacts, etc.), either redirect them to `/tmp` or add them to `.gitignore` and clean them up before finishing.
+
 ### Reproducibility Rules
 
 1. **All dependencies are declared in the flake.** No system packages, no language-version managers (`rustup`, `nvm`, `pyenv`, `asdf`), no global package installs. Every tool needed for build, test, or deploy is in `flake.nix`.

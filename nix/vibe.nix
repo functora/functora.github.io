@@ -180,6 +180,7 @@
       (import ./../pub/vi/nix/default.nix {ai = true;})
       fontconfig
       busybox
+      bash
       curl
       wget
       git

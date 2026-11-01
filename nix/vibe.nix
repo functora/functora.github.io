@@ -105,9 +105,12 @@
   ntfyNotificationJson = pkgs.writeText "notification-ntfy.json" (builtins.toJSON {
     enabled = true;
     events = {
-      "session.idle" = {enabled = true;};
-      "session.error" = {enabled = true;};
+      "session.execution.succeeded" = {enabled = true;};
+      "session.execution.failed" = {enabled = true;};
+      "session.execution.interrupted" = {enabled = true;};
       "permission.asked" = {enabled = true;};
+      "form.created" = {enabled = true;};
+      "session.idle" = {enabled = true;};
     };
     backend = {
       server = "https://ntfy.sh";

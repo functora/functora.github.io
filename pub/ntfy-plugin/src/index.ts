@@ -1,6 +1,6 @@
 import { Plugin } from "@opencode/plugin";
 import { readFileSync } from "node:fs";
-import { join, basename } from "node:path";
+import { join } from "node:path";
 import { homedir } from "node:os";
 
 interface ContentTemplate { readonly value?: string; readonly command?: string; }
@@ -14,33 +14,32 @@ const CONFIG_PATHS = [
 ];
 
 const EVENT_ICONS: Record<string, string> = {
+  "session.execution.succeeded": "✅",
+  "session.execution.failed": "❌",
+  "session.execution.interrupted": "⏹️",
+  "permission.asked": "❓",
+  "form.created": "📝",
   "session.idle": "⌛",
-  "session.error": "⚠️",
-  "permission.asked": "🔒",
 };
 
-const DEFAULT_TITLES: Record<string, string> = {
-  "session.idle": "Agent Idle",
-  "session.error": "Agent Error",
-  "permission.asked": "Permission Asked",
-};
+const TITLE = "{icon} {project}";
 
-const DEFAULT_MESSAGES: Record<string, string> = {
+const DESCRIPTIONS: Record<string, string> = {
+  "session.execution.succeeded": "Finished.",
+  "session.execution.failed": "{error}",
+  "session.execution.interrupted": "{reason}",
+  "permission.asked": "{permission_type}",
+  "form.created": "Form pending.",
   "session.idle": "The agent has finished and is waiting for input.",
-  "session.error": "An error has occurred. Check the session for details.",
-  "permission.asked": "The agent needs permission to continue. Review and respond.",
-};
-
-const DEFAULT_TAGS: Record<string, string> = {
-  "session.idle": "hourglass_done",
-  "session.error": "warning",
-  "permission.asked": "lock",
 };
 
 const NOTIFICATION_EVENTS = [
-  "session.idle",
-  "session.error",
+  "session.execution.succeeded",
+  "session.execution.failed",
+  "session.execution.interrupted",
   "permission.asked",
+  "form.created",
+  "session.idle",
 ] as const;
 
 function loadConfig(): Config {
@@ -101,20 +100,19 @@ export default Plugin.define({
     const enabledSet = new Set(
       NOTIFICATION_EVENTS.filter((e) => events[e]?.enabled !== false),
     );
-    const project = basename(ctx.location.directory);
+    const project = ctx.location.directory.split("/").pop() ?? "agent";
     const controller = new AbortController();
 
     const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
-    const tagOf = (event: string): string => DEFAULT_TAGS[event] ?? "";
     const contextOf = (event: string) => ({ project, icon: iconOf(event) });
 
     const titleOf = (event: string) => {
       const rule = events[event];
-      return render(rule?.title, contextOf(event), DEFAULT_TITLES[event] ?? "");
+      return render(rule?.title, contextOf(event), TITLE);
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
       const rule = events[event];
-      return render(rule?.message, { ...contextOf(event), ...meta }, DEFAULT_MESSAGES[event] ?? "");
+      return render(rule?.message, { ...contextOf(event), ...meta }, DESCRIPTIONS[event] ?? "");
     };
 
     const send = async (event: string, meta: Record<string, string>): Promise<void> => {
@@ -124,11 +122,7 @@ export default Plugin.define({
       }
       const title = titleOf(event);
       const message = messageOf(event, meta);
-      const headers: Record<string, string> = {
-        Title: title,
-        Priority: priority,
-        Tags: tagOf(event),
-      };
+      const headers: Record<string, string> = { Title: title, Priority: priority };
       if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await fetch(url, {
@@ -159,40 +153,45 @@ export default Plugin.define({
       try {
         for await (const ev of ctx.event.subscribe({
           signal: controller.signal,
-          types: ["session.status", "session.execution.failed", "permission.asked"],
+          types: NOTIFICATION_EVENTS,
         })) {
           const type = ev.type;
           const data = (ev as { readonly data?: Record<string, unknown> }).data ?? {};
+          const sessionID = typeof data.sessionID === "string" ? data.sessionID : "";
 
           if (type === "session.status") {
             if (!isRecord(data) || !isRecord(data.status)) continue;
             if (data.status.type !== "idle") continue;
             const notificationEvent = "session.idle";
             if (!enabledSet.has(notificationEvent)) continue;
-            const sessionID = typeof data.sessionID === "string" ? data.sessionID : "";
             if (sessionID && await isSubagent(sessionID)) continue;
             await send(notificationEvent, {});
             continue;
           }
+          if (type === "session.execution.succeeded") {
+            await send(type, {});
+            continue;
+          }
           if (type === "session.execution.failed") {
-            const notificationEvent = "session.error";
-            if (!enabledSet.has(notificationEvent)) continue;
-            const sessionID = isRecord(data) && typeof data.sessionID === "string"
-              ? data.sessionID
-              : "";
             if (sessionID && await isSubagent(sessionID)) continue;
             const error = isRecord(data) ? data.error : undefined;
             const errorMessage = isRecord(error) && typeof error.message === "string"
               ? error.message
               : "";
-            await send(notificationEvent, { error: errorMessage });
+            await send(type, { error: errorMessage });
+            continue;
+          }
+          if (type === "session.execution.interrupted") {
+            if (sessionID && await isSubagent(sessionID)) continue;
+            await send(type, { reason: typeof data.reason === "string" ? data.reason : "" });
             continue;
           }
           if (type === "permission.asked") {
-            const notificationEvent = "permission.asked";
-            if (!enabledSet.has(notificationEvent)) continue;
-            const permissionType = typeof data.action === "string" ? data.action : "";
-            await send(notificationEvent, { permission_type: permissionType });
+            await send(type, { permission_type: typeof data.action === "string" ? data.action : "" });
+            continue;
+          }
+          if (type === "form.created") {
+            await send(type, {});
             continue;
           }
         }

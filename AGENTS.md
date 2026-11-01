@@ -305,3 +305,66 @@ semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 - Before finishing, verify that only files relevant to the task were changed.
 - Verify that no unintended public behavior, configuration, API, serialization format, module boundary, or project setting was modified.
 - The resulting code must be formatted, warning-free, panic-free, resource-safe, and fully tested.
+
+
+---
+
+## Nix / Flake Infrastructure (Code Infrastructure, Tooling, Build, Test, Deploy)
+
+### Core Principle
+
+**Nix is the single source of truth for the entire development environment.** Every tool, compiler, SDK, library, and dependency required to build, test, run, and deploy the project must be declared and pinned in the flake (`flake.nix` / `flake.lock`). Nothing lives outside the flake. The host system is treated as bare hardware: it provides only the Nix package manager itself. All compilers, interpreters, build tools, system libraries, SDKs, and runtime dependencies are provided by the dev shell or flake outputs, never by global system installations.
+
+If a tool is needed, it must be added to the flake — never installed globally via `cargo install`, `apt`, `brew`, `npm -g`, `rustup`, `pip`, or any other package manager outside Nix.
+
+### Why Nix Flakes for an Agent
+
+1. **Reproducible environments.** `flake.lock` pins every input commit. `nix develop` produces the exact same compiler versions, toolchain, and dependencies on every machine, every time. There is no "works on my machine" problem.
+
+2. **No host pollution.** Nothing is installed globally. The dev shell is a pure, isolated environment that exists only for the duration of the session. This eliminates dependency conflicts between projects and keeps the host clean.
+
+3. **Declarative tooling.** Every compiler, SDK, linker, and system library is declared explicitly in `flake.nix`. An agent can read `flake.nix` and know exactly what tools are available and what versions they are — no guessing, no `which` or `where` hunting.
+
+4. **Cross-compilation without complexity.** Rust targets, WASM targets, Android NDK toolchains, and cross-linkers are declared in the flake. The agent never needs to install NDKs, SDKs, or cross-compilers manually; they appear automatically in the dev shell environment variables (`CARGO_TARGET_*_LINKER`, `CC_*`, `AR_*`, etc.).
+
+5. **Verifiable builds.** `nix build` produces store paths that are content-addressed and immutable. If it builds in the flake, it builds identically everywhere.
+
+6. **Self-documenting.** The flake IS the documentation. `flake.nix` lists every input, every system dependency, every Rust target, every build input. `flake.lock` pins every transitive dependency. No separate README "installation instructions" section can drift out of date because the flake is executable.
+
+### How the Agent Should Work with Flakes
+
+**Enter the environment first.** Always start work inside the dev shell:
+```bash
+nix develop
+```
+(or via direnv if `.envrc` is present). Never run compilers, test runners, or linters outside `nix develop` — if a command works only outside the shell, the flake configuration is incomplete and must be fixed in `flake.nix`, not worked around.
+
+**Treat `flake.nix` as project infrastructure.** When adding a dependency (language package, system library, SDK, compiler toolchain, cross-compilation target), add it to `flake.nix` first. The flake is the project's `package.json` / `Cargo.toml` / `requirements.txt` for system-level tooling, and it must stay in sync with any language-level lock files.
+
+**Pin everything.** `flake.lock` must be committed. Do not regenerate it without understanding what changed and updating all dependent lock files. Language-level lock files (e.g. `Cargo.lock`, `package-lock.json`, `poetry.lock`) must be pinned and kept in sync with the flake's `cargoLock` / `npmLock` / equivalent declarations.
+
+**Use flake outputs for reusable commands.** Common operations (build, test, format, lint, serve, release) should be exposed as flake apps (`apps.` outputs) or dev shell helper scripts so they can be invoked via `nix develop -c <command>` or `nix run .#<command>`. This makes the project's operational interface explicit and versioned.
+
+**Never assume host tools.** The agent must never rely on `rustc`, `cargo`, `node`, `npm`, `python`, `gradle`, `javac`, `make`, `gcc`, or any other tool being installed on the host. If the project needs it, it belongs in `flake.nix`.
+
+**Cross-compilation is declared, not improvised.** If the project compiles for WASM, Android, iOS, or other non-native targets, the target triplets and their linkers must be declared in the flake toolchain configuration. The agent should read the flake's toolchain section to discover available targets rather than installing SDKs manually.
+
+**If it builds in the flake, it ships from the flake.** `nix build` produces immutable store paths. Releases, deployments, and CI should consume these store paths directly, never ad-hoc host builds.
+
+### Reproducibility Rules
+
+1. **All dependencies are declared in the flake.** No system packages, no language-version managers (`rustup`, `nvm`, `pyenv`, `asdf`), no global package installs. Every tool needed for build, test, or deploy is in `flake.nix`.
+2. **`flake.lock` is committed and pinned.** It records exact input commits. Do not regenerate it without reviewing the diff and updating all dependent language-level lock files.
+3. **Language-level lock files are pinned.** `Cargo.lock`, `package-lock.json`, `poetry.lock`, `Gemfile.lock`, etc. are committed and kept in sync with the flake's lock declarations.
+4. **When adding a dependency, update both layers.** Add the system dependency to `flake.nix` and update the language-level lock file inside `nix develop`.
+5. **When adding a tool, add it to the dev shell.** Any compiler, linter, formatter, SDK, or system library needed for development must appear in `shell.packages` or as a flake output. Do not expect it on the host.
+6. **When adding a compilation target, add it to the toolchain.** Cross-compilation targets (WASM, Android, iOS, embedded) and their linkers are declared in the flake's toolchain configuration.
+7. **Use `nix develop -c <command>` for scripts and CI.** Never use `nix develop --impure` except in `.envrc` for automatic shell entry. For reproducible, scriptable execution, always use `nix develop -c`.
+
+### Host System Assumptions
+
+The host system provides only:
+- The Nix package manager (single-user or multi-user)
+- Git (for reading the repository)
+
+Everything else — compilers, interpreters, build tools, SDKs, system libraries, fonts, runtimes — is provided by the flake. If a command fails because a tool is missing, the fix is to add that tool to `flake.nix`, not to install it on the host.

@@ -127,6 +127,23 @@ export default Plugin.define({
       NOTIFICATION_EVENTS.filter((e) => events[e]?.enabled !== false),
     );
     const project = ctx.location.directory.split("/").pop() ?? "agent";
+    const sameLocation = (location?: LocationRef): boolean =>
+      location !== undefined &&
+      location.directory === ctx.location.directory &&
+      location.workspaceID === ctx.location.workspaceID;
+    const sessionGet = async (sessionID: string): Promise<SessionInfo | undefined> => {
+      try {
+        return (await ctx.session.get({ sessionID })) ?? undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const sessionIDOf = (data: Record<string, unknown>): string =>
+      typeof data.sessionID === "string"
+        ? data.sessionID
+        : isRecord(data.form) && typeof data.form.sessionID === "string"
+          ? data.form.sessionID
+          : "";
     const controller = new AbortController();
 
     const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
@@ -191,15 +208,6 @@ export default Plugin.define({
       }
     };
 
-    const isSubagent = async (sessionID: string): Promise<boolean> => {
-      try {
-        const session = await ctx.session.get({ sessionID });
-        return Boolean(session?.parentID);
-      } catch {
-        return false;
-      }
-    };
-
     void (async () => {
       try {
         for await (const ev of ctx.event.subscribe({
@@ -209,15 +217,19 @@ export default Plugin.define({
           const type = ev.type;
           const data =
             (ev as { readonly data?: Record<string, unknown> }).data ?? {};
-          const sessionID =
-            typeof data.sessionID === "string" ? data.sessionID : "";
+          const sessionID = sessionIDOf(data);
+          const session = sessionID ? await sessionGet(sessionID) : undefined;
+          const owned = ev.location?.directory
+            ? sameLocation(ev.location)
+            : !session?.location || sameLocation(session.location);
+          if (!owned) continue;
 
           if (type === "session.status") {
             if (!isRecord(data) || !isRecord(data.status)) continue;
             if (data.status.type !== "idle") continue;
             const notificationEvent = "session.idle";
             if (!enabledSet.has(notificationEvent)) continue;
-            if (sessionID && (await isSubagent(sessionID))) continue;
+            if (session?.parentID) continue;
             await send(notificationEvent, {});
             continue;
           }
@@ -226,7 +238,7 @@ export default Plugin.define({
             continue;
           }
           if (type === "session.execution.failed") {
-            if (sessionID && (await isSubagent(sessionID))) continue;
+            if (session?.parentID) continue;
             const error = isRecord(data) ? data.error : undefined;
             const errorMessage =
               isRecord(error) && typeof error.message === "string"
@@ -236,7 +248,7 @@ export default Plugin.define({
             continue;
           }
           if (type === "session.execution.interrupted") {
-            if (sessionID && (await isSubagent(sessionID))) continue;
+            if (session?.parentID) continue;
             await send(type, {
               reason: typeof data.reason === "string" ? data.reason : "",
             });

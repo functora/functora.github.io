@@ -9,10 +9,20 @@ declare module "@opencode/plugin" {
   export const Plugin: Plugin;
 }
 
+interface LocationRef {
+  readonly directory: string;
+  readonly workspaceID?: string;
+}
+
+interface SessionInfo {
+  readonly parentID?: string;
+  readonly location?: LocationRef;
+}
+
 interface PluginContext {
-  readonly location: { readonly directory: string };
+  readonly location: LocationRef;
   readonly session: {
-    readonly get: (opts: { readonly sessionID: string }) => Promise<{ readonly parentID?: string } | null>;
+    readonly get: (opts: { readonly sessionID: string }) => Promise<SessionInfo | null>;
   };
   readonly event: {
     readonly subscribe: (opts?: {
@@ -21,6 +31,7 @@ interface PluginContext {
     }) => AsyncIterable<{
       readonly type: string;
       readonly data?: unknown;
+      readonly location?: LocationRef;
     }>;
   };
 }

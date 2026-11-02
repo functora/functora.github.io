@@ -17,6 +17,7 @@ interface BackendConfig {
   readonly topic?: string;
   readonly token?: string;
   readonly priority?: string;
+  readonly deeplink?: string;
   readonly title?: Record<string, ContentTemplate>;
   readonly message?: Record<string, ContentTemplate>;
 }
@@ -130,12 +131,17 @@ export default Plugin.define({
     const token = typeof backend.token === "string" ? backend.token : undefined;
     const priority =
       typeof backend.priority === "string" ? backend.priority : "default";
+    const deeplink =
+      typeof backend.deeplink === "string"
+        ? backend.deeplink
+        : "opencodemobile://session/{sessionID}?project={projectPath}";
     const enabled = config.enabled !== false;
     const events = config.events ?? {};
     const enabledSet = new Set(
       NOTIFICATION_EVENTS.filter((e) => events[e]?.enabled !== false),
     );
     const project = ctx.location.directory.split("/").pop() ?? "agent";
+    const projectPath = encodeURIComponent(ctx.location.directory);
     const sameLocation = (location?: LocationRef): boolean =>
       location !== undefined &&
       location.directory === ctx.location.directory &&
@@ -182,15 +188,27 @@ export default Plugin.define({
       if (sessionName) return sessionName;
       return render(rule?.title, contextOf(event), TITLE);
     };
-    const messageOf = (event: string, meta: Record<string, string>) => {
+    const messageOf = (
+      event: string,
+      meta: Record<string, string>,
+    ): string => {
       const rule = events[event];
       const sessionName = meta.sessionName ?? "";
+      const sessionID = meta.sessionID ?? "";
       const description = render(
         { value: DESCRIPTIONS[event] ?? "" },
         { ...contextOf(event), ...meta },
         "",
       );
-      const defaultBody = [description].filter(Boolean).join(" ");
+      const deeplinkURL = deeplink
+        .replace("{sessionID}", sessionID)
+        .replace("{projectPath}", projectPath);
+      const deeplinkText = sessionID && deeplink
+        ? `[${sessionName || sessionID}](${deeplinkURL})`
+        : "";
+      const defaultBody = [deeplinkText, description]
+        .filter(Boolean)
+        .join(" ");
       return render(
         rule?.message,
         {
@@ -269,11 +287,11 @@ export default Plugin.define({
             const notificationEvent = "session.idle";
             if (!enabledSet.has(notificationEvent)) continue;
             if (session?.parentID) continue;
-            await send(notificationEvent, { sessionName });
+            await send(notificationEvent, { sessionName, sessionID });
             continue;
           }
           if (type === "session.execution.succeeded") {
-            await send(type, { sessionName });
+            await send(type, { sessionName, sessionID });
             continue;
           }
           if (type === "session.execution.failed") {
@@ -283,7 +301,7 @@ export default Plugin.define({
               isRecord(error) && typeof error.message === "string"
                 ? error.message
                 : "";
-            await send(type, { error: errorMessage, sessionName });
+            await send(type, { error: errorMessage, sessionName, sessionID });
             continue;
           }
           if (type === "session.execution.interrupted") {
@@ -291,6 +309,7 @@ export default Plugin.define({
             await send(type, {
               reason: typeof data.reason === "string" ? data.reason : "",
               sessionName,
+              sessionID,
             });
             continue;
           }
@@ -299,11 +318,12 @@ export default Plugin.define({
               permission_type:
                 typeof data.action === "string" ? data.action : "",
               sessionName,
+              sessionID,
             });
             continue;
           }
           if (type === "form.created") {
-            await send(type, { sessionName });
+            await send(type, { sessionName, sessionID });
             continue;
           }
         }

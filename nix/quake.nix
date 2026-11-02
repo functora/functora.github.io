@@ -12,6 +12,11 @@
     url = "https://us.22061996.xyz/qbj3/qbj3_1.3.zip";
     hash = "sha256-Gp3vOnTWsLS1wS/0L+MhAgfFlZR9d/ZS1doOlNvEe/0=";
   };
+  adMod = pkgs.fetchzip {
+    url = "https://www.quaddicted.com/filebase/ad_v1_80p1final.zip";
+    hash = "sha256-4Iq1Huh2qUDzXv2prx9yF/w548vta2XhBKFiqYXoL8s=";
+    stripRoot = false;
+  };
   quakeRoot = pkgs.linkFarm "quake-root" [
     {
       name = "id1";
@@ -20,6 +25,10 @@
     {
       name = "qbj3";
       path = "${qbj3Mod}";
+    }
+    {
+      name = "ad";
+      path = "${adMod}";
     }
     {
       name = "ironwail.pak";
@@ -66,6 +75,10 @@
     // mkQuake {
       tag = "qbj3";
       game = "qbj3";
+    }
+    // mkQuake {
+      tag = "arcane-dimensions";
+      game = "ad";
     };
 in
   pkgs.symlinkJoin {

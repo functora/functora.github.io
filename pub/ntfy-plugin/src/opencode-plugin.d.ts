@@ -17,6 +17,8 @@ interface LocationRef {
 interface SessionInfo {
   readonly parentID?: string;
   readonly location?: LocationRef;
+  readonly name?: string;
+  readonly title?: string;
 }
 
 interface PluginContext {

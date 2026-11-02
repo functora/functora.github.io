@@ -144,6 +144,23 @@ export default Plugin.define({
         : isRecord(data.form) && typeof data.form.sessionID === "string"
           ? data.form.sessionID
           : "";
+    const sessionNameOf = (
+      data: Record<string, unknown>,
+      session: SessionInfo | undefined,
+    ): string =>
+      typeof data.sessionName === "string"
+        ? data.sessionName
+        : typeof data.session_name === "string"
+          ? data.session_name
+          : typeof data.name === "string"
+            ? data.name
+            : typeof data.title === "string"
+              ? data.title
+              : typeof session?.name === "string"
+                ? session.name
+                : typeof session?.title === "string"
+                  ? session.title
+                  : "";
     const controller = new AbortController();
 
     const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
@@ -155,11 +172,19 @@ export default Plugin.define({
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
       const rule = events[event];
+      const sessionName = meta.sessionName ?? "";
       const description = render(
         { value: DESCRIPTIONS[event] ?? "" },
         { ...contextOf(event), ...meta },
         "",
       );
+      const defaultBody = [
+        iconOf(event),
+        sessionName ? `**${sessionName}**` : "",
+        description,
+      ]
+        .filter(Boolean)
+        .join(" ");
       return render(
         rule?.message,
         {
@@ -167,7 +192,7 @@ export default Plugin.define({
           ...meta,
           description,
         },
-        "{icon} {description}",
+        defaultBody,
       );
     };
 
@@ -188,9 +213,10 @@ export default Plugin.define({
       const title = titleOf(event);
       const message = messageOf(event, meta);
       const headers: Record<string, string> = {
-        Title: title,
         Priority: priority,
+        Markdown: "yes",
       };
+      if (title) headers["Title"] = title;
       if (token) headers["Authorization"] = `Bearer ${token}`;
       try {
         const response = await fetch(url, {
@@ -224,6 +250,7 @@ export default Plugin.define({
             (ev as { readonly data?: Record<string, unknown> }).data ?? {};
           const sessionID = sessionIDOf(data);
           const session = sessionID ? await sessionGet(sessionID) : undefined;
+          const sessionName = sessionNameOf(data, session);
           const owned = ev.location?.directory
             ? sameLocation(ev.location)
             : !session?.location || sameLocation(session.location);
@@ -235,11 +262,11 @@ export default Plugin.define({
             const notificationEvent = "session.idle";
             if (!enabledSet.has(notificationEvent)) continue;
             if (session?.parentID) continue;
-            await send(notificationEvent, {});
+            await send(notificationEvent, { sessionName });
             continue;
           }
           if (type === "session.execution.succeeded") {
-            await send(type, {});
+            await send(type, { sessionName });
             continue;
           }
           if (type === "session.execution.failed") {
@@ -249,13 +276,14 @@ export default Plugin.define({
               isRecord(error) && typeof error.message === "string"
                 ? error.message
                 : "";
-            await send(type, { error: errorMessage });
+            await send(type, { error: errorMessage, sessionName });
             continue;
           }
           if (type === "session.execution.interrupted") {
             if (session?.parentID) continue;
             await send(type, {
               reason: typeof data.reason === "string" ? data.reason : "",
+              sessionName,
             });
             continue;
           }
@@ -263,11 +291,12 @@ export default Plugin.define({
             await send(type, {
               permission_type:
                 typeof data.action === "string" ? data.action : "",
+              sessionName,
             });
             continue;
           }
           if (type === "form.created") {
-            await send(type, {});
+            await send(type, { sessionName });
             continue;
           }
         }

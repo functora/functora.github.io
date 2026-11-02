@@ -131,7 +131,9 @@ export default Plugin.define({
       location !== undefined &&
       location.directory === ctx.location.directory &&
       location.workspaceID === ctx.location.workspaceID;
-    const sessionGet = async (sessionID: string): Promise<SessionInfo | undefined> => {
+    const sessionGet = async (
+      sessionID: string,
+    ): Promise<SessionInfo | undefined> => {
       try {
         return (await ctx.session.get({ sessionID })) ?? undefined;
       } catch {

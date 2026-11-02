@@ -177,8 +177,9 @@ export default Plugin.define({
     const iconOf = (event: string): string => EVENT_ICONS[event] ?? "";
     const contextOf = (event: string) => ({ project, icon: iconOf(event) });
 
-    const titleOf = (event: string) => {
+    const titleOf = (event: string, sessionName?: string) => {
       const rule = events[event];
+      if (sessionName) return sessionName;
       return render(rule?.title, contextOf(event), TITLE);
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
@@ -189,12 +190,7 @@ export default Plugin.define({
         { ...contextOf(event), ...meta },
         "",
       );
-      const defaultBody = [
-        sessionName ? `**${sessionName}**` : "",
-        description,
-      ]
-        .filter(Boolean)
-        .join(" ");
+      const defaultBody = [description].filter(Boolean).join(" ");
       return render(
         rule?.message,
         {
@@ -220,7 +216,7 @@ export default Plugin.define({
         );
         return;
       }
-      const title = titleOf(event);
+      const title = titleOf(event, meta.sessionName);
       const message = messageOf(event, meta);
       const headers: Record<string, string> = {
         Priority: priority,

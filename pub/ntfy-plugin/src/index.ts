@@ -40,6 +40,15 @@ const EVENT_ICONS: Record<string, string> = {
   "session.idle": "⏳",
 };
 
+const EVENT_TAGS: Record<string, string> = {
+  "session.execution.succeeded": "white_check_mark",
+  "session.execution.failed": "x",
+  "session.execution.interrupted": "stop_sign",
+  "permission.asked": "question",
+  "form.created": "memo",
+  "session.idle": "hourglass_flowing_sand",
+};
+
 const TITLE = "{project}";
 
 const DESCRIPTIONS: Record<string, string> = {
@@ -181,7 +190,6 @@ export default Plugin.define({
         "",
       );
       const defaultBody = [
-        iconOf(event),
         sessionName ? `**${sessionName}**` : "",
         description,
       ]
@@ -217,6 +225,7 @@ export default Plugin.define({
       const headers: Record<string, string> = {
         Priority: priority,
         Markdown: "yes",
+        Tags: EVENT_TAGS[event] ?? "",
       };
       if (title) headers["Title"] = title;
       if (token) headers["Authorization"] = `Bearer ${token}`;

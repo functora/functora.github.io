@@ -155,12 +155,17 @@ export default Plugin.define({
     };
     const messageOf = (event: string, meta: Record<string, string>) => {
       const rule = events[event];
+      const description = render(
+        { value: DESCRIPTIONS[event] ?? "" },
+        { ...contextOf(event), ...meta },
+        "",
+      );
       return render(
         rule?.message,
         {
           ...contextOf(event),
           ...meta,
-          description: DESCRIPTIONS[event] ?? "",
+          description,
         },
         "{icon} {description}",
       );

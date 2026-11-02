@@ -187,6 +187,30 @@ fn write_android(android_cfg: &AndroidConfig) -> Result<(), Error> {
         remove_dir_all_if_exists(Path::new("android/app/src/main/java/functora"))?;
     }
     let _icons = copy_launcher_icons(Path::new("android"), Path::new("assets/favicon"))?;
+    ensure_android_gitignore()?;
+    Ok(())
+}
+
+fn ensure_android_gitignore() -> Result<(), Error> {
+    let path = Path::new(".gitignore");
+    let line = "android/";
+    let contents = if path.exists() {
+        let existing = std::fs::read_to_string(path).map_err(|source| Error::Io {
+            context: "read existing gitignore",
+            source,
+        })?;
+        if existing.lines().any(|entry| entry.trim() == line) {
+            return Ok(());
+        }
+        if existing.ends_with('\n') {
+            format!("{existing}{line}\n")
+        } else {
+            format!("{existing}\n{line}\n")
+        }
+    } else {
+        format!("{line}\n")
+    };
+    write_file(path, &contents)?;
     Ok(())
 }
 

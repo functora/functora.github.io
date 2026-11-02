@@ -675,13 +675,14 @@
             echo "Wrote $DIR/.well-known/assetlinks.json"
           '';
         };
-        mkApk = app: aabDir:
+        mkApk = app: aabDir: aabDrv:
           pkgs.writeShellApplication {
             name = "release-apk-${app}";
             runtimeInputs = with pkgs; [coreutils gnugrep gnused findutils jdk unzip bundletool];
             text = ''
-              DIR="''${1:-${aabDir}}"
+              "${aabDrv}/bin/release-aab-${app}"
               VSN="$(cd "${app}" && grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
+              DIR="''${1:-${aabDir}}"
 
               export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
@@ -734,6 +735,10 @@
             '';
           };
         shell = rec {
+          releaseAabCryptonoteList = mkAab "cryptonote";
+          releaseAabCryptonote = builtins.elemAt releaseAabCryptonoteList (builtins.length releaseAabCryptonoteList - 1);
+          releaseAabCryptonoteEgui = mkFunctoraEguiAab "cryptonote-egui" "../cryptonote/assets/favicon";
+          releaseAabFunctoraEguiDemo = mkFunctoraEguiAab "functora-egui-demo" "assets/favicon";
           PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
           ANDROID_SDK_ROOT = ANDROID_HOME;
@@ -834,17 +839,17 @@
               # apps
               (mkWeb "cryptonote")
               (srWeb "cryptonote")
-              (mkApk "cryptonote" "./target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release")
+              (mkApk "cryptonote" "./target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release" releaseAabCryptonote)
               (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
               (mkFunctoraEguiDesktop "cryptonote-egui" "../cryptonote/assets/favicon")
               (srFunctoraEguiDesktop "cryptonote-egui")
-              (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release")
+              (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release" releaseAabCryptonoteEgui)
               (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (mkFunctoraEguiDesktop "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiDesktop "functora-egui-demo")
-              (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release")
+              (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release" releaseAabFunctoraEguiDemo)
               (pkgs.writeShellApplication {
                 name = "verify";
                 text = ''
@@ -927,9 +932,9 @@
                 '';
               })
             ]
-            ++ (mkAab "cryptonote")
-            ++ [(mkFunctoraEguiAab "cryptonote-egui" "../cryptonote/assets/favicon")]
-            ++ [(mkFunctoraEguiAab "functora-egui-demo" "assets/favicon")];
+            ++ releaseAabCryptonoteList
+            ++ [releaseAabCryptonoteEgui]
+            ++ [releaseAabFunctoraEguiDemo];
         };
       in {
         devShells.default = pkgs.mkShell shell;

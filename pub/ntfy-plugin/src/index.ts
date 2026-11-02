@@ -188,27 +188,24 @@ export default Plugin.define({
       if (sessionName) return sessionName;
       return render(rule?.title, contextOf(event), TITLE);
     };
-    const messageOf = (
-      event: string,
-      meta: Record<string, string>,
-    ): string => {
+    const messageOf = (event: string, meta: Record<string, string>): string => {
       const rule = events[event];
-      const sessionName = meta.sessionName ?? "";
       const sessionID = meta.sessionID ?? "";
       const description = render(
         { value: DESCRIPTIONS[event] ?? "" },
         { ...contextOf(event), ...meta },
         "",
       );
-      const deeplinkURL = deeplink
-        .replace("{sessionID}", sessionID)
-        .replace("{projectPath}", projectPath);
-      const deeplinkText = sessionID && deeplink
-        ? `[${sessionName || sessionID}](${deeplinkURL})`
+      const deeplinkURL = sessionID && deeplink
+        ? deeplink
+            .replace("{sessionID}", sessionID)
+            .replace("{projectPath}", projectPath)
         : "";
-      const defaultBody = [deeplinkText, description]
-        .filter(Boolean)
-        .join(" ");
+      const defaultBody = deeplinkURL && description
+        ? `[${description}](${deeplinkURL})`
+        : [deeplinkURL, description]
+            .filter(Boolean)
+            .join(" ");
       return render(
         rule?.message,
         {

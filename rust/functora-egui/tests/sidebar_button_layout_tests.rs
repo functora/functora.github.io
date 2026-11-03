@@ -109,10 +109,11 @@ fn sidebar_items_match_toggle_height_without_overlap_on_desktop() {
             "sidebar item height must match the toggle height, got {item:?}",
         );
     }
-    // Same height line: the toggle starts at the same top as the first item.
+    // Toggle starts at same top as first item (no top inset).
     assert!(
         (toggle.min.y - items[0].min.y).abs() < 1.0,
-        "toggle must be on the same height as the first sidebar button, got toggle {toggle:?} and item {first_item:?}",
+        "toggle top must align with first sidebar button top, got toggle {toggle:?} and item {first_item:?}",
+        toggle = toggle,
         first_item = items[0]
     );
     // Items are aligned by the left border of the sidebar.
@@ -183,7 +184,8 @@ fn sidebar_items_match_close_height_without_overlap_on_mobile_overlay() {
     }
     assert!(
         (toggle.min.y - items[0].min.y).abs() < 1.0,
-        "toggle must be on the same height as the first sidebar button, got toggle {toggle:?} and item {first_item:?}",
+        "toggle top must align with first sidebar button top on mobile, got toggle {toggle:?} and item {first_item:?}",
+        toggle = toggle,
         first_item = items[0]
     );
     for item in &items {

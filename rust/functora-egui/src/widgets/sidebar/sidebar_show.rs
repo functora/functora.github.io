@@ -182,7 +182,8 @@ impl super::widget::Sidebar {
                 let button_size = crate::tokens::component_size::ComponentSize::Sm
                     .metrics_for(&spacing)
                     .0;
-                let content_max_width = (available.width() - button_size - spacing.gap).max(0.0);
+                let content_max_width =
+                    (available.width() - button_size - spacing.gap).max(0.0);
                 let button_rect = egui::Rect::from_min_size(
                     egui::pos2(available.max.x - button_size, available.min.y),
                     egui::vec2(button_size, button_size),

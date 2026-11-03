@@ -8,9 +8,9 @@ use crate::state::ShowcaseApp;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::state::PersistentState;
 use functora_egui::{
-    AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, Dialog, FieldDescription,
-    Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Sheet, Shell, ToastVariant,
-    Typography,
+    AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, ComponentSize, Dialog,
+    FieldDescription, Flex, Footer, Hypertext, Item, Label, LucideIcon, ResponsiveExt, Sheet,
+    Shell, ToastVariant, Typography,
 };
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -371,7 +371,11 @@ impl eframe::App for ShowcaseApp {
                             ),
                         };
                         if side_ui
-                            .add(section_button(def, is_selected).full_width())
+                            .add(
+                                section_button(def, is_selected)
+                                    .size(ComponentSize::Sm)
+                                    .full_width(),
+                            )
                             .clicked()
                         {
                             pending_ref.set(Some(pending));

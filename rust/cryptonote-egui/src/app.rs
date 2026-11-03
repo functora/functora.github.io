@@ -3,7 +3,7 @@ use std::str::FromStr;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
 use functora_egui::route::RouteMetadata;
-use functora_egui::{Button, ButtonVariant, ResponsiveExt, Shell, ToastState, ToastVariant};
+use functora_egui::{Button, ButtonVariant, ComponentSize, ResponsiveExt, Shell, ToastState, ToastVariant};
 
 use crate::error::AppError;
 use crate::hooks::handle_open_url;
@@ -584,6 +584,7 @@ impl eframe::App for CryptonoteApp {
                         *screen == selected_snapshot && pending_ref.get().is_none_or(|next| next == *screen);
                     let btn = Button::new(label)
                         .icon(*icon)
+                        .size(ComponentSize::Sm)
                         .variant(if is_selected {
                             ButtonVariant::Default
                         } else {
@@ -601,6 +602,7 @@ impl eframe::App for CryptonoteApp {
                     .add(
                         Button::new(Msg::Reset.render(lang_ref.get()))
                             .icon(functora_egui::LucideIcon::RotateCcw)
+                            .size(ComponentSize::Sm)
                             .variant(ButtonVariant::Ghost)
                             .full_width(),
                     )

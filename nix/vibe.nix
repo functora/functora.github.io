@@ -382,6 +382,10 @@
             (sloth.concat' sloth.homeDir "/.claude/CLAUDE.md")
           ]
           [
+            (toString agentsMd)
+            (sloth.concat' sloth.homeDir "/.config/opencode/AGENTS.md")
+          ]
+          [
             (toString ../cfg/opencode.json)
             (sloth.concat' sloth.homeDir "/.config/opencode/opencode.jsonc")
           ]

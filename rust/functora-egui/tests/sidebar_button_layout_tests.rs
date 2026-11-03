@@ -63,6 +63,7 @@ fn sidebar_items_match_toggle_height_without_overlap_on_desktop() {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);
     let item_height = ComponentSize::Sm.metrics_for(&Spacing::desktop()).0;
+    let gap = Spacing::desktop().gap;
     let mut collapsed = false;
     let out = run_frames(&ctx, DESKTOP, 1, |ui| {
         _ = egui::Panel::right("sidebar_panel")
@@ -121,6 +122,17 @@ fn sidebar_items_match_toggle_height_without_overlap_on_desktop() {
             "sidebar items must be aligned by the left border of the sidebar"
         );
     }
+    // Calculated right gap: items never overlap the toggle.
+    for item in &items {
+        assert!(
+            !item.intersects(toggle),
+            "sidebar item must not overlap the toggle, item {item:?} vs toggle {toggle:?}",
+        );
+        assert!(
+            toggle.min.x - item.max.x >= gap - 1.0,
+            "sidebar items must keep a right gap to the toggle, got item {item:?} vs toggle {toggle:?}",
+        );
+    }
 }
 
 #[test]
@@ -128,6 +140,7 @@ fn sidebar_items_match_close_height_without_overlap_on_mobile_overlay() {
     let ctx = Context::default();
     functora_egui::setup_fonts(&ctx);
     let item_height = ComponentSize::Sm.metrics_for(&Spacing::mobile()).0;
+    let gap = Spacing::mobile().gap;
     let mut collapsed = false;
     let out = run_frames(&ctx, MOBILE, 20, |ui| {
         _ = Sidebar::new()
@@ -177,6 +190,14 @@ fn sidebar_items_match_close_height_without_overlap_on_mobile_overlay() {
         assert!(
             (item.min.x - items[0].min.x).abs() < 1.0,
             "sidebar items must be aligned by the left border of the sidebar"
+        );
+        assert!(
+            !item.intersects(toggle),
+            "sidebar item must not overlap the toggle, item {item:?} vs toggle {toggle:?}",
+        );
+        assert!(
+            toggle.min.x - item.max.x >= gap - 1.0,
+            "sidebar items must keep a right gap to the toggle, got item {item:?} vs toggle {toggle:?}",
         );
     }
 }

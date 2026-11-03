@@ -182,6 +182,7 @@ impl super::widget::Sidebar {
                 let button_size = crate::tokens::component_size::ComponentSize::Sm
                     .metrics_for(&spacing)
                     .0;
+                let content_max_width = (available.width() - button_size - spacing.gap).max(0.0);
                 let button_rect = egui::Rect::from_min_size(
                     egui::pos2(available.max.x - button_size, available.min.y),
                     egui::vec2(button_size, button_size),
@@ -190,6 +191,7 @@ impl super::widget::Sidebar {
                     .auto_shrink([false; 2])
                     .max_height(available.height())
                     .show(inner_ui, |content_ui| {
+                        content_ui.set_max_width(content_max_width);
                         content(content_ui);
                     });
                 let response = inner_ui.allocate_rect(button_rect, egui::Sense::click());
@@ -327,6 +329,8 @@ impl super::widget::Sidebar {
                     let button_size = crate::tokens::component_size::ComponentSize::Sm
                         .metrics_for(&spacing)
                         .0;
+                    let content_max_width =
+                        (available.width() - button_size - spacing.gap).max(0.0);
                     let button_rect = egui::Rect::from_min_size(
                         egui::pos2(available.max.x - button_size, available.min.y),
                         egui::vec2(button_size, button_size),
@@ -335,6 +339,7 @@ impl super::widget::Sidebar {
                         .auto_shrink([false; 2])
                         .max_height(available.height())
                         .show(content_ui, |inner_ui3| {
+                            inner_ui3.set_max_width(content_max_width);
                             content(inner_ui3);
                         });
                     let response = content_ui.allocate_rect(button_rect, egui::Sense::click());

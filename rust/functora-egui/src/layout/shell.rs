@@ -81,7 +81,10 @@ pub fn sidebar_effective_width(ctx: &egui::Context, labels: &[&str]) -> f32 {
         })
         .fold(0.0, f32::max);
     let icon = spacing.touch_height * 0.5;
-    max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap
+    let toggle_size = crate::tokens::component_size::ComponentSize::Sm
+        .metrics_for(&spacing)
+        .0;
+    max_text + icon + spacing.gap + spacing.touch_padding * 2.0 + spacing.gap + toggle_size
 }
 
 /// Clamps the sidebar width to the viewport: full label width where it fits,

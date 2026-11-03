@@ -1,5 +1,9 @@
 use functora_core::i18n::{I18N, Language};
-use functora_core::{AppAttrs, Msg, WhiteLabelContent, donate_blocks};
+use functora_core::{
+    AppAttrs, FUNCTORA_EMAIL, FUNCTORA_ORG, Msg, WhiteLabelContent, default_about_text,
+    default_donate_blocks, default_donate_greeting, default_donate_intro, default_license_text,
+    default_privacy_text, donate_blocks, functora_attrs,
+};
 
 const ATTRS: AppAttrs = AppAttrs {
     app: "cryptonote-egui",
@@ -89,5 +93,118 @@ fn language_flags_and_names_render() {
     assert_eq!(
         Msg::LanguageName(Language::Fra).render(Language::Eng),
         "Unknown"
+    );
+}
+
+#[test]
+fn functora_attrs_uses_functora_preset() {
+    let attrs = functora_attrs("cryptonote-egui", "0.1.10", "A cross-platform app.");
+    assert_eq!(attrs.app, "cryptonote-egui");
+    assert_eq!(attrs.vsn, "0.1.10");
+    assert_eq!(attrs.org, FUNCTORA_ORG);
+    assert_eq!(attrs.src, Some("rust"));
+    assert_eq!(attrs.dst, "apps");
+    assert_eq!(attrs.description, "A cross-platform app.");
+    assert_eq!(attrs.app_name(), "Cryptonote-egui");
+}
+
+#[test]
+fn default_license_text_is_mit_and_i18n() {
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        let text = default_license_text(&ATTRS, lang);
+        assert!(!text.is_empty(), "license text empty for {lang:?}");
+        assert!(text.contains("MIT"), "missing MIT header for {lang:?}");
+        assert!(text.contains("Copyright"), "missing copyright for {lang:?}");
+        assert!(text.contains(FUNCTORA_ORG), "missing org for {lang:?}");
+    }
+    assert!(default_license_text(&ATTRS, Language::Eng).contains("AS IS"));
+}
+
+#[test]
+fn default_privacy_text_derives_from_attrs() {
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        let text = default_privacy_text(&ATTRS, lang);
+        assert!(!text.is_empty(), "privacy text empty for {lang:?}");
+        assert!(
+            text.contains("Privacy Policy")
+                || text.contains("Política de Privacidad")
+                || text.contains("Политика конфиденциальности"),
+            "missing title for {lang:?}"
+        );
+        assert!(text.contains(FUNCTORA_ORG), "missing provider for {lang:?}");
+        assert!(
+            text.contains(FUNCTORA_EMAIL),
+            "missing contact for {lang:?}"
+        );
+    }
+}
+
+#[test]
+fn default_donate_text_derives_from_attrs() {
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        let greeting = default_donate_greeting(&ATTRS, lang);
+        let intro = default_donate_intro(&ATTRS, lang);
+        assert!(!greeting.is_empty(), "donate greeting empty for {lang:?}");
+        assert!(!intro.is_empty(), "donate intro empty for {lang:?}");
+        assert!(
+            greeting.contains(FUNCTORA_ORG),
+            "missing org in greeting for {lang:?}"
+        );
+        assert!(
+            intro.contains(FUNCTORA_ORG),
+            "missing org in intro for {lang:?}"
+        );
+    }
+    assert!(default_donate_greeting(&ATTRS, Language::Eng).starts_with("Hello"));
+}
+
+#[test]
+fn default_about_text_contains_links() {
+    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+        let text = default_about_text(&ATTRS, lang);
+        assert!(!text.is_empty(), "about text empty for {lang:?}");
+        assert!(
+            text.contains(ATTRS.app_name().as_str()),
+            "missing app name for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.description),
+            "missing description for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.source_url().as_str()),
+            "missing source link for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.author_url().as_str()),
+            "missing author link for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.beta_url().as_str()),
+            "missing beta link for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.google_play_url().as_str()),
+            "missing play link for {lang:?}"
+        );
+        assert!(
+            text.contains(ATTRS.apk_url().as_str()),
+            "missing apk link for {lang:?}"
+        );
+    }
+}
+
+#[test]
+fn default_donate_blocks_contain_btc_and_xmr() {
+    let blocks = default_donate_blocks();
+    assert_eq!(blocks.len(), 2);
+    assert!(
+        blocks.iter().any(|b| b.label.contains("BTC")
+            && b.address == "bc1qa3qk8d4mxl6qkpvahl5xvg6c5k33kmuwvt9v8q")
+    );
+    assert!(
+        blocks
+            .iter()
+            .any(|b| b.label.contains("XMR") && b.address.starts_with("48sTw"))
     );
 }

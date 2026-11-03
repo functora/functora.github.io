@@ -141,11 +141,9 @@ pub mod messages {
 pub mod thumbnail {
     pub use functora_core::thumbnail::*;
 }
-pub mod white_label {
-    pub use functora_core::white_label::*;
-}
 #[cfg(feature = "package")]
 pub mod package;
+pub mod white_label;
 #[cfg(feature = "zip")]
 pub mod zip;
 #[cfg(feature = "qr")]

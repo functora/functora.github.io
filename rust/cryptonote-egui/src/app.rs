@@ -1,8 +1,7 @@
 use std::str::FromStr;
 
-use functora_egui::i18n::{I18N, Language};
+use functora_egui::i18n::Language;
 use functora_egui::route::AppRouter;
-use functora_egui::route::RouteMetadata;
 use functora_egui::{Button, ButtonVariant, ComponentSize, ResponsiveExt, Shell, ToastState, ToastVariant};
 
 use crate::error::AppError;
@@ -16,6 +15,11 @@ use functora_egui::messages::Msg as BaseMsg;
 
 const PERSISTENT_KEY: &str = "cryptonote_persistent";
 pub(crate) const BYTES_URI_PREFIX: &str = "bytes://";
+
+/// Render an `I18N` message in the given language.
+fn render_msg(msg: &dyn functora_egui::i18n::I18N, lang: Language) -> String {
+    msg.render(lang)
+}
 
 type PickResult = Result<Vec<(String, Vec<u8>)>, AppError>;
 type DecryptResult = Result<(String, Vec<crate::archive::Attachment>), AppError>;
@@ -140,7 +144,8 @@ impl CryptonoteApp {
         self.temporary.reset();
         self.toast = ToastState::new();
         let lang = self.persistent.language;
-        self.toast.add(Msg::ResetDone.render(lang), ToastVariant::Success, now);
+        self.toast
+            .add(render_msg(&Msg::ResetDone, lang), ToastVariant::Success, now);
         self.qr_error_notified = None;
         self.qr_state = functora_egui::QrScannerState::new();
         self.md_cache = functora_egui::CommonMarkCache::default();
@@ -168,16 +173,18 @@ impl CryptonoteApp {
     pub(crate) fn paste_clear_feedback(&mut self, resp: functora_egui::InputPasteClearResponse, now: f64) {
         let lang = self.lang();
         if resp.pasted {
-            self.toast.add(BaseMsg::Pasted.render(lang), ToastVariant::Success, now);
+            self.toast
+                .add(render_msg(&BaseMsg::Pasted, lang), ToastVariant::Success, now);
         }
         if resp.copied {
-            self.toast.add(BaseMsg::Copied.render(lang), ToastVariant::Success, now);
+            self.toast
+                .add(render_msg(&BaseMsg::Copied, lang), ToastVariant::Success, now);
         }
         if let Some(clipboard_error) = resp.clipboard_error {
             let app_error = AppError::from(clipboard_error);
             if !Self::is_cancelled(&app_error) {
                 self.toast.add(
-                    Msg::Error(crate::error::MsgError::from(app_error)).render(lang),
+                    render_msg(&Msg::Error(crate::error::MsgError::from(app_error)), lang),
                     ToastVariant::Error,
                     now,
                 );
@@ -193,7 +200,7 @@ impl CryptonoteApp {
     fn toast_error(&mut self, error: AppError, lang: Language, time: f64) {
         if !Self::is_cancelled(&error) {
             self.toast.add(
-                Msg::Error(crate::error::MsgError::from(error)).render(lang),
+                render_msg(&Msg::Error(crate::error::MsgError::from(error)), lang),
                 ToastVariant::Error,
                 time,
             );
@@ -301,7 +308,7 @@ impl CryptonoteApp {
         };
         crate::hooks::add_attachment(&mut self.temporary.attachments, attachment);
         self.toast.add(
-            BaseMsg::FilesAttached(1).render(self.lang()),
+            render_msg(&BaseMsg::FilesAttached(1), self.lang()),
             ToastVariant::Success,
             time,
         );
@@ -316,14 +323,15 @@ impl CryptonoteApp {
             None | Some(functora_egui::PollOutcome::Disconnected) => {}
             Some(functora_egui::PollOutcome::Ready(Ok(()))) => {
                 self.toast
-                    .add(BaseMsg::Copied.render(lang), ToastVariant::Success, time)
+                    .add(render_msg(&BaseMsg::Copied, lang), ToastVariant::Success, time)
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
         match functora_egui::poll_channel(&mut self.share_rx) {
             None | Some(functora_egui::PollOutcome::Disconnected) => {}
             Some(functora_egui::PollOutcome::Ready(Ok(()))) => {
-                self.toast.add(Msg::Shared.render(lang), ToastVariant::Success, time);
+                self.toast
+                    .add(render_msg(&Msg::Shared, lang), ToastVariant::Success, time);
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
@@ -333,7 +341,7 @@ impl CryptonoteApp {
                 functora_egui::PollOutcome::Disconnected => {}
                 functora_egui::PollOutcome::Ready(Ok(name)) => {
                     self.toast
-                        .add(Msg::Saved(name).render(lang), ToastVariant::Success, time);
+                        .add(render_msg(&Msg::Saved(name), lang), ToastVariant::Success, time);
                 }
                 functora_egui::PollOutcome::Ready(Err(e)) => self.toast_error(e, lang, time),
             }
@@ -352,15 +360,23 @@ impl CryptonoteApp {
                         crate::hooks::add_attachment(&mut self.temporary.attachments, att);
                     }
                     let added = self.temporary.attachments.len() - before;
-                    self.toast
-                        .add(BaseMsg::FilesAttached(added).render(lang), ToastVariant::Success, time);
+                    self.toast.add(
+                        render_msg(&BaseMsg::FilesAttached(added), lang),
+                        ToastVariant::Success,
+                        time,
+                    );
                 }
                 functora_egui::PollOutcome::Ready(Err(e)) => {
-                    if Self::is_cancelled(&e) {
-                        self.toast.add(e.render(lang), ToastVariant::Default, time);
+                    let cancelled = Self::is_cancelled(&e);
+                    if cancelled {
+                        self.toast.add(
+                            render_msg(&Msg::Error(crate::error::MsgError::from(e)), lang),
+                            ToastVariant::Default,
+                            time,
+                        );
                     } else {
                         self.toast.add(
-                            Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                            render_msg(&Msg::Error(crate::error::MsgError::from(e)), lang),
                             ToastVariant::Error,
                             time,
                         );
@@ -375,7 +391,7 @@ impl CryptonoteApp {
             None | Some(functora_egui::PollOutcome::Disconnected | functora_egui::PollOutcome::Ready(Ok(None))) => {}
             Some(functora_egui::PollOutcome::Ready(Err(e))) => {
                 self.toast.add(
-                    Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                    render_msg(&Msg::Error(crate::error::MsgError::from(e)), lang),
                     ToastVariant::Error,
                     time,
                 );
@@ -429,7 +445,7 @@ impl CryptonoteApp {
                 } else {
                     ToastVariant::Default
                 };
-                self.toast.add(Msg::Base(msg).render(lang), variant, time);
+                self.toast.add(render_msg(&Msg::Base(msg), lang), variant, time);
             }
             Some(functora_egui::PollOutcome::Ready(Err(e))) => self.toast_error(e, lang, time),
         }
@@ -469,7 +485,7 @@ impl CryptonoteApp {
                     let lang = self.lang();
                     let time = ctx.input(|i| i.time);
                     self.toast.add(
-                        Msg::Error(crate::error::MsgError::from(e)).render(lang),
+                        render_msg(&Msg::Error(crate::error::MsgError::from(e)), lang),
                         ToastVariant::Error,
                         time,
                     );
@@ -491,23 +507,30 @@ impl CryptonoteApp {
         // baseline for plain text, the author link and the navigation
         // actions, on every screen width.
         let (_, clicked) = functora_egui::Hypertext::new()
-            .text(BaseMsg::Copyright.render(lang))
+            .text(render_msg(&BaseMsg::Copyright, lang))
             .text(format!("{} ", functora_egui::FUNCTORA_CORE_YEAR))
             .link("Functora", APP_ATTRS.author_url())
-            .text(format!(". {} ", BaseMsg::AllRightsReserved.render(lang)))
-            .text(format!("{} ", BaseMsg::ByContinuing.render(lang)))
-            .action(BaseMsg::TermsOfService.render(lang), Screen::License.to_string())
-            .text(format!(" {} ", BaseMsg::YouAgree.render(lang)))
-            .action(BaseMsg::PrivacyPolicyAnd.render(lang), Screen::Privacy.to_string())
+            .text(format!(". {} ", render_msg(&BaseMsg::AllRightsReserved, lang)))
+            .text(format!("{} ", render_msg(&BaseMsg::ByContinuing, lang)))
+            .action(render_msg(&BaseMsg::TermsOfService, lang), Screen::License.to_string())
+            .text(format!(" {} ", render_msg(&BaseMsg::YouAgree, lang)))
+            .action(
+                render_msg(&BaseMsg::PrivacyPolicyAnd, lang),
+                Screen::Privacy.to_string(),
+            )
             .text(". ")
-            .action(BaseMsg::FooterShareWord.render(lang), Screen::About.to_string())
+            .action(render_msg(&BaseMsg::FooterShareWord, lang), Screen::About.to_string())
             .text(format!(
                 " {} {} ",
-                BaseMsg::FooterAppWord.render(lang),
-                BaseMsg::And.render(lang)
+                render_msg(&BaseMsg::FooterAppWord, lang),
+                render_msg(&BaseMsg::And, lang)
             ))
-            .action(BaseMsg::DonateLink.render(lang), Screen::Donate.to_string())
-            .text(format!(". {} {}.", BaseMsg::VersionLabel.render(lang), APP_ATTRS.vsn))
+            .action(render_msg(&BaseMsg::DonateLink, lang), Screen::Donate.to_string())
+            .text(format!(
+                ". {} {}.",
+                render_msg(&BaseMsg::VersionLabel, lang),
+                APP_ATTRS.vsn
+            ))
             .size(11.0)
             .centered()
             .show_action(ui);
@@ -532,8 +555,8 @@ impl CryptonoteApp {
         if let Some(cancel) = self.progress_cancel.clone() {
             let mut open = self.progress_overlay_open;
             let title = self.temporary.progress.as_ref().map_or_else(
-                || BaseMsg::Preparing.render(self.lang()),
-                |job| BaseMsg::Stage(job.stage).render(self.lang()),
+                || render_msg(&BaseMsg::Preparing, self.lang()),
+                |job| render_msg(&BaseMsg::Stage(job.stage), self.lang()),
             );
             functora_egui::BlockingOverlay::new(title).show(
                 ctx,
@@ -572,18 +595,20 @@ impl eframe::App for CryptonoteApp {
         let pending_reset = std::cell::Cell::new(false);
         let selected_snapshot = self.temporary.screen;
         let lang_cell = std::cell::Cell::new(self.persistent.language);
-        let (nav_items, sidebar_names) = Self::sidebar_entries(lang_cell.get());
+        let labels = functora_egui::white_label::default_sidebar_labels(lang_cell.get());
+        let icons = functora_egui::white_label::DEFAULT_SIDEBAR_ICONS;
+        let sidebar_labels = labels.clone();
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, {
             let pending_ref = &pending_nav;
             let reset_ref = &pending_reset;
-            let lang_ref = &lang_cell;
+            let screens = [Screen::Home, Screen::About, Screen::Donate];
             move |side_ui| {
                 let mut close = false;
-                for (screen, label, icon) in &nav_items {
+                for (idx, screen) in screens.iter().enumerate() {
                     let is_selected =
                         *screen == selected_snapshot && pending_ref.get().is_none_or(|next| next == *screen);
-                    let btn = Button::new(label)
-                        .icon(*icon)
+                    let btn = Button::new(sidebar_labels[idx].clone())
+                        .icon(icons[idx])
                         .size(ComponentSize::Sm)
                         .variant(if is_selected {
                             ButtonVariant::Default
@@ -600,8 +625,8 @@ impl eframe::App for CryptonoteApp {
                 }
                 if side_ui
                     .add(
-                        Button::new(Msg::Reset.render(lang_ref.get()))
-                            .icon(functora_egui::LucideIcon::RotateCcw)
+                        Button::new(sidebar_labels[3].clone())
+                            .icon(icons[3])
                             .size(ComponentSize::Sm)
                             .variant(ButtonVariant::Ghost)
                             .full_width(),
@@ -619,7 +644,7 @@ impl eframe::App for CryptonoteApp {
         .theme(&mut theme)
         .language(&lang_cell)
         .on_brand(|| needs_reset.set(true))
-        .sidebar_labels(sidebar_names.iter().map(String::as_str))
+        .sidebar_labels(labels.iter().map(String::as_str))
         .breadcrumb(&route, &history)
         .show(ui, |content_ui| {
             let content_lang = lang_cell.get();
@@ -667,25 +692,5 @@ impl eframe::App for CryptonoteApp {
             }
         }
         self.toast.show(&ctx);
-    }
-}
-
-impl CryptonoteApp {
-    /// Sidebar entries for `lang`: the navigable screens with their labels
-    /// and icons, plus the label list the shell sizes itself against.
-    fn sidebar_entries(
-        lang: functora_egui::i18n::Language,
-    ) -> (Vec<(Screen, String, functora_egui::LucideIcon)>, Vec<String>) {
-        let nav_items: Vec<(Screen, String, functora_egui::LucideIcon)> = [
-            (Screen::Home, functora_egui::LucideIcon::House),
-            (Screen::About, functora_egui::LucideIcon::Info),
-            (Screen::Donate, functora_egui::LucideIcon::Heart),
-        ]
-        .iter()
-        .map(|(screen, icon)| (*screen, screen.label(lang).into_owned(), *icon))
-        .collect();
-        let mut sidebar_names: Vec<String> = nav_items.iter().map(|(_, label, _)| label.clone()).collect();
-        sidebar_names.push(Msg::Reset.render(lang));
-        (nav_items, sidebar_names)
     }
 }

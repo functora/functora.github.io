@@ -39,12 +39,9 @@ impl crate::state::ShowcaseApp {
     /// White-label branding for this demo crate, the same way an app
     /// declares `AppAttrs` for URLs, store links and footer text.
     pub const DEMO_ATTRS: functora_egui::white_label::AppAttrs =
-        functora_egui::white_label::AppAttrs {
-            app: "functora-egui-demo",
-            vsn: env!("CARGO_PKG_VERSION"),
-            org: "functora",
-            src: Some("rust"),
-            dst: "apps",
-            description: env!("CARGO_PKG_DESCRIPTION"),
-        };
+        functora_egui::white_label::functora_attrs(
+            "functora-egui-demo",
+            env!("CARGO_PKG_VERSION"),
+            env!("CARGO_PKG_DESCRIPTION"),
+        );
 }

@@ -86,11 +86,17 @@ pub fn screen_donate(
     now: f64,
     toast: &mut crate::ToastState,
 ) {
-    use crate::widgets::input_paste_clear::widget::InputPasteClear;
     use crate::widgets::qr_image::widget::QrImage;
+    use crate::widgets::textarea_paste_clear::widget::TextareaPasteClear;
 
-    let greeting = default_donate_greeting(attrs, lang);
-    let intro = default_donate_intro(attrs, lang);
+    let greeting = content
+        .donate_greeting
+        .as_ref()
+        .map_or_else(|| default_donate_greeting(attrs, lang), |m| m.render(lang));
+    let intro = content
+        .donate_intro
+        .as_ref()
+        .map_or_else(|| default_donate_intro(attrs, lang), |m| m.render(lang));
     let blocks = if content.donate_blocks.is_empty() {
         default_donate_blocks()
     } else {
@@ -110,7 +116,10 @@ pub fn screen_donate(
         let _ = QrImage::new(&block.address).show(ui);
         ui.add_space(4.0);
         let mut address = block.address.clone();
-        let resp = InputPasteClear::new(&mut address).readonly().show(ui);
+        let resp = TextareaPasteClear::new(&mut address)
+            .readonly()
+            .min_height(80.0)
+            .show(ui);
         if resp.pasted {
             toast.add(
                 BaseMsg::Pasted.render(lang),
@@ -212,6 +221,7 @@ where
     attrs: AppAttrs,
     content: WhiteLabelContent<crate::messages::Msg>,
     nav_entries: Vec<(R, LucideIcon)>,
+    sidebar_labels: Vec<String>,
 }
 
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
@@ -234,12 +244,21 @@ where
             attrs,
             content: WhiteLabelContent::default(),
             nav_entries: Vec::new(),
+            sidebar_labels: Vec::new(),
         }
     }
 
     #[must_use]
     pub fn with_nav_entries(mut self, entries: impl IntoIterator<Item = (R, LucideIcon)>) -> Self {
         self.nav_entries = entries.into_iter().collect();
+        self
+    }
+
+    /// Override the default sidebar labels ([`default_sidebar_labels`]) with
+    /// custom labels, e.g. category names for a demo or catalog app.
+    #[must_use]
+    pub fn with_sidebar_labels(mut self, labels: impl IntoIterator<Item = String>) -> Self {
+        self.sidebar_labels = labels.into_iter().collect();
         self
     }
 
@@ -337,7 +356,11 @@ where
         let attrs = self.attrs;
         let entries = self.nav_entries.clone();
         let extra = self.persistent.extra.clone();
-        let labels = default_sidebar_labels(lang_cell.get());
+        let labels = if self.sidebar_labels.is_empty() {
+            default_sidebar_labels(lang_cell.get())
+        } else {
+            self.sidebar_labels.clone()
+        };
         let reset_label = labels.last().cloned().unwrap_or_else(|| "Reset".into());
 
         let pending_ref = &pending_nav;

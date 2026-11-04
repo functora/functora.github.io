@@ -206,7 +206,11 @@ impl AppAttrs {
 /// Supply the app name, version and description; org, repo layout and contacts
 /// come from the Functora preset. Other users construct their own `AppAttrs`.
 #[must_use]
-pub fn functora_attrs(app: &'static str, vsn: &'static str, description: &'static str) -> AppAttrs {
+pub const fn functora_attrs(
+    app: &'static str,
+    vsn: &'static str,
+    description: &'static str,
+) -> AppAttrs {
     AppAttrs {
         app,
         vsn,

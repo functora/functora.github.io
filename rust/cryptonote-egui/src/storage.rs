@@ -3,13 +3,10 @@ pub use functora_egui::storage::{Persistent, Storage};
 
 pub(crate) const APP_SCOPE: &str = "cryptonote-egui";
 
-use functora_egui::white_label::AppAttrs;
+use functora_egui::white_label::{AppAttrs, functora_attrs};
 
-pub const APP_ATTRS: AppAttrs = AppAttrs {
-    app: env!("CARGO_PKG_NAME"),
-    vsn: env!("CARGO_PKG_VERSION"),
-    org: "functora",
-    src: Some("rust"),
-    dst: "apps",
-    description: "Cryptonote is a cross-platform, serverless app for encrypted offline notes.",
-};
+pub const APP_ATTRS: AppAttrs = functora_attrs(
+    env!("CARGO_PKG_NAME"),
+    env!("CARGO_PKG_VERSION"),
+    "Cryptonote is a cross-platform, serverless app for encrypted offline notes.",
+);

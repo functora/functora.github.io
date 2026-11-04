@@ -28,8 +28,7 @@ fn collect_text(shape: &egui::Shape, clip: Rect, out: &mut Vec<(Rect, String)>) 
     }
 }
 
-fn run_app(app: &mut ShowcaseApp, screen: Vec2) -> Vec<(Rect, String)> {
-    let ctx = egui::Context::default();
+fn run_app(app: &mut ShowcaseApp, ctx: &egui::Context, screen: Vec2) -> Vec<(Rect, String)> {
     let raw = RawInput {
         screen_rect: Some(Rect::from_min_size(Pos2::ZERO, screen)),
         ..Default::default()
@@ -48,11 +47,12 @@ fn run_app(app: &mut ShowcaseApp, screen: Vec2) -> Vec<(Rect, String)> {
 
 #[test]
 fn catalog_text_stays_inside_the_viewport() {
-    for width in WIDTHS {
-        for id in ComponentId::ALL {
-            let mut app = ShowcaseApp::default();
-            app.navigate_to(Some(id));
-            let rendered = run_app(&mut app, Vec2::new(width, HEIGHT));
+    let ctx = egui::Context::default();
+    for id in ComponentId::ALL {
+        let mut app = ShowcaseApp::default();
+        app.navigate_to(Some(id));
+        for width in WIDTHS {
+            let rendered = run_app(&mut app, &ctx, Vec2::new(width, HEIGHT));
             assert!(!rendered.is_empty(), "{id:?} must render text at {width}px");
             for (rect, text) in rendered {
                 assert!(

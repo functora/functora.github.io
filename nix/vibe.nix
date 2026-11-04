@@ -137,13 +137,7 @@
     authKeyFile,
     stateDir,
     hostname,
-    upInBackground,
-  }: let
-    backgroundSuffix =
-      if upInBackground
-      then " &"
-      else "";
-  in ''
+  }: ''
     tailscale_state_dir="${stateDir}"
     ${pkgs.coreutils}/bin/mkdir -p "$tailscale_state_dir"
     tailscaled_socket="$tailscale_state_dir/${tailscaledSocketName}"
@@ -174,7 +168,16 @@
       echo "vibe: empty secret file: ${authKeyFile}" >&2
       exit 1
     fi
-    tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false${backgroundSuffix}
+
+    until tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false; do
+      echo "vibe: tailscale up failed, retrying..." >&2
+      ${sleepBin} 1
+    done
+
+    until tailscale --socket="$tailscaled_socket" ip -4 >/dev/null 2>&1; do
+      echo "vibe: waiting for tailscale IPv4 address..." >&2
+      ${sleepBin} 1
+    done
   '';
 
   mkRuntimeInputs = server:
@@ -266,7 +269,6 @@
       authKeyFile = serverAuthKeyFile;
       stateDir = serverStateDir;
       hostname = serverHostname;
-      upInBackground = false;
     }
     + ntfyEgress
     + lib.optionalString ntfyEnabled ''
@@ -291,7 +293,6 @@
       authKeyFile = clientAuthKeyFile;
       stateDir = clientStateDir;
       hostname = "${clientHostname}-${clientInstanceId}";
-      upInBackground = true;
     }
     + ''
 

@@ -137,6 +137,7 @@
     authKeyFile,
     stateDir,
     hostname,
+    block ? true,
   }: ''
     tailscale_state_dir="${stateDir}"
     ${pkgs.coreutils}/bin/mkdir -p "$tailscale_state_dir"
@@ -169,15 +170,19 @@
       exit 1
     fi
 
-    until tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false; do
-      echo "vibe: tailscale up failed, retrying..." >&2
-      ${sleepBin} 1
-    done
+    if [ "${block}" = "true" ]; then
+      until tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false; do
+        echo "vibe: tailscale up failed, retrying..." >&2
+        ${sleepBin} 1
+      done
 
-    until tailscale --socket="$tailscaled_socket" ip -4 >/dev/null 2>&1; do
-      echo "vibe: waiting for tailscale IPv4 address..." >&2
-      ${sleepBin} 1
-    done
+      until tailscale --socket="$tailscaled_socket" ip -4 >/dev/null 2>&1; do
+        echo "vibe: waiting for tailscale IPv4 address..." >&2
+        ${sleepBin} 1
+      done
+    else
+      tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false &
+    fi
   '';
 
   mkRuntimeInputs = server:
@@ -293,6 +298,7 @@
       authKeyFile = clientAuthKeyFile;
       stateDir = clientStateDir;
       hostname = "${clientHostname}-${clientInstanceId}";
+      block = false;
     }
     + ''
 

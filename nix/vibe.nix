@@ -133,6 +133,8 @@
     export OPENCODE_SERVER_PASSWORD="$opencode_password"
   '';
 
+  mkTailscaleUpCommand = hostname: ''tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false'';
+
   mkTailscaledScript = {
     authKeyFile,
     stateDir,
@@ -142,23 +144,25 @@
     upCommand =
       if block
       then ''
-        until tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false; do
-          echo "vibe: tailscale up failed, retrying..." >&2
-          ${sleepBin} 1
-        done
-
-        until tailscale --socket="$tailscaled_socket" ip -4 >/dev/null 2>&1; do
-          echo "vibe: waiting for tailscale IPv4 address..." >&2
-          ${sleepBin} 1
-        done
+        if ! ${mkTailscaleUpCommand hostname}; then
+          echo "vibe: tailscale up failed" >&2
+          exit 1
+        fi
       ''
       else ''
-        tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false &
+        ${mkTailscaleUpCommand hostname} &
       '';
   in ''
     tailscale_state_dir="${stateDir}"
     ${pkgs.coreutils}/bin/mkdir -p "$tailscale_state_dir"
     tailscaled_socket="$tailscale_state_dir/${tailscaledSocketName}"
+
+    ${lib.optionalString block ''
+      if [ -S "$tailscaled_socket" ] && ! tailscale --socket="$tailscaled_socket" status >/dev/null 2>&1; then
+        echo "vibe: removing stale tailscaled socket: $tailscaled_socket" >&2
+        ${pkgs.coreutils}/bin/rm -f "$tailscaled_socket"
+      fi
+    ''}
 
     tailscaled \
       --tun=userspace-networking \
@@ -505,8 +509,8 @@ in {
         wantedBy = ["default.target"];
         serviceConfig = {
           ExecStart = "${config.services.functora.vibeServer.package}/bin/vibe-server";
-          Restart = "on-failure";
-          RestartSec = 3;
+          Restart = "always";
+          RestartSec = 5;
           NoNewPrivileges = true;
           RestrictSUIDSGID = true;
           LockPersonality = true;

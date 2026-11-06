@@ -3,8 +3,8 @@
   user ? "quake",
 }: let
   mkBubble = import ./bubble.nix;
-  darkplaces = pkgs.darkplaces;
   ironwail = pkgs.ironwail;
+  zircon = pkgs.callPackage ./zircon.nix {};
   unzip = pkgs.unzip;
 
   # Base Quake game data options: pak0.pak + pak1.pak (deterministic, pinned)
@@ -129,7 +129,7 @@
     }
     // mkQuake {
       tag = "combat";
-      engine = darkplaces;
+      engine = zircon;
       mods = [
         {
           name = "quake15";

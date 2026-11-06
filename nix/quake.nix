@@ -5,79 +5,94 @@
   mkBubble = import ./bubble.nix;
   darkplaces = pkgs.darkplaces;
   ironwail = pkgs.ironwail;
-  p7zip = pkgs.p7zip;
-  librequake = pkgs.fetchzip {
+  unzip = pkgs.unzip;
+
+  # Base Quake game data options: pak0.pak + pak1.pak (deterministic, pinned)
+  quakeSrc = pkgs.fetchzip {
+    url = "https://archive.org/download/quake_pak_202306/quake_pak.zip";
+    hash = "sha256-fBfERuldsDCqy3Bfgby64ZYs9B4iQ07xVNvVIFldCps=";
+    stripRoot = false;
+  };
+  # id1 directory holding the base game paks (default base)
+  quakeDer = pkgs.stdenv.mkDerivation {
+    name = "quake-id1";
+    src = null;
+    dontUnpack = true;
+    buildInputs = [pkgs.coreutils];
+    installPhase = ''
+      mkdir -p $out
+      cp ${quakeSrc}/pak0.pak $out/
+      cp ${quakeSrc}/pak1.pak $out/
+    '';
+  };
+  # Alternative base: libre quake (id1/ subdirectory)
+  librequakeSrc = pkgs.fetchzip {
     url = "https://github.com/lavenderdotpet/LibreQuake/releases/download/v0.09-beta/full.zip";
     hash = "sha256-i2FAFiZZejcg09zBLfDFZRAHNgNVUn1cSoIZ3+4AmP0=";
   };
-  qbj3Mod = pkgs.fetchzip {
+
+  qbj3Src = pkgs.fetchzip {
     url = "https://us.22061996.xyz/qbj3/qbj3_1.3.zip";
     hash = "sha256-Gp3vOnTWsLS1wS/0L+MhAgfFlZR9d/ZS1doOlNvEe/0=";
   };
-  adMod = pkgs.fetchzip {
+  adSrc = pkgs.fetchzip {
     url = "https://www.quaddicted.com/filebase/ad_v1_80p1final.zip";
     hash = "sha256-4Iq1Huh2qUDzXv2prx9yF/w548vta2XhBKFiqYXoL8s=";
     stripRoot = false;
   };
-  q15Source = pkgs.fetchurl {
-    url = "https://archive.org/download/quake15-mirror/Q15_PublicBeta1.7z";
-    hash = "sha256-huvBJdBRyxOQf7dufG4JQ+V/0uXdf/PuLmw95OrDuXs=";
+  combatSrc = pkgs.fetchurl {
+    url = "https://archive.org/download/combat-v-5.7.9/Combat_v5.7.9.zip";
+    hash = "sha256-ai7yg57Djz+AU1Vbl/Yx6M23TCQqH4owz9yYhKGUgS4=";
   };
-  q15Mod = pkgs.stdenv.mkDerivation {
-    name = "quake-1-5";
-    src = q15Source;
+  combatDer = pkgs.stdenv.mkDerivation {
+    name = "combat-mod";
+    src = combatSrc;
     dontUnpack = true;
-    buildInputs = [p7zip];
+    buildInputs = [unzip];
     installPhase = ''
       mkdir -p $out
       cd $out
-      ${p7zip}/bin/7z x -y $src
+      unzip $src
     '';
   };
-  quakeRoot = pkgs.linkFarm "quake-root" [
-    {
-      name = "id1";
-      path = "${librequake}/id1";
-    }
-    {
-      name = "qbj3";
-      path = "${qbj3Mod}";
-    }
-    {
-      name = "ad";
-      path = "${adMod}";
-    }
-    {
-      name = "ironwail.pak";
-      path = "${ironwail}/share/quake/ironwail.pak";
-    }
-    {
-      name = "quake15";
-      path = "${q15Mod}/quake15";
-    }
-  ];
+
   mkQuakeSand = {
     name,
     text,
-  }:
+    base ? quakeDer,
+    mods ? [],
+  }: let
+    root = pkgs.linkFarm "${name}-root" (
+      mods
+      ++ [
+        {
+          name = "id1";
+          path = base;
+        }
+      ]
+    );
+  in
     mkBubble {
       inherit pkgs name text user;
       home = "quake";
       mkOverlay = _: [
         {
           path = ["bubblewrap" "bind" "ro"];
-          update = prev: prev ++ [[(toString quakeRoot) "/quake"]];
+          update = prev: prev ++ [[(toString root) "/quake"]];
         }
       ];
     };
   mkQuake = {
     tag,
     engine ? ironwail,
+    base ? quakeDer,
+    mods ? [],
     game ? null,
     args ? "",
   }: {
     "quake-${tag}" = mkQuakeSand {
       name = "quake-${tag}";
+      inherit base mods;
       text = ''
         cd /quake
         ${engine}/bin/${engine.pname} -basedir /quake ${
@@ -90,19 +105,37 @@
   };
   games =
     mkQuake {
-      tag = "librequake";
+      tag = "base";
     }
     // mkQuake {
       tag = "qbj3";
       game = "qbj3";
+      mods = [
+        {
+          name = "qbj3";
+          path = qbj3Src;
+        }
+      ];
     }
     // mkQuake {
       tag = "arcane-dimensions";
       game = "ad";
+      mods = [
+        {
+          name = "ad";
+          path = adSrc;
+        }
+      ];
     }
     // mkQuake {
-      tag = "quake-1-5";
+      tag = "combat";
       engine = darkplaces;
+      mods = [
+        {
+          name = "quake15";
+          path = "${combatDer}/quake15";
+        }
+      ];
       game = "quake15";
     };
 in

@@ -1,0 +1,43 @@
+{{/* Quake 1 keybinding config (modeled on cfg/q3.cfg, Q1-native commands only) */}}
+// Weapons (impulse): 1=axe 2=shotgun 3=super shotgun 4=nailgun 5=super nailgun
+//                    6=grenade launcher 7=rocket launcher 8=thunderbolt
+// `+zoom` is an engine extension supported by ironwail / zircon.
+// `q`: Half-Life style last-weapon toggle via alias rebinding.
+
+{{ $keyMap := dict "1" 1 "2" 2 "3" 3 "4" 4 "5" 5 "6" 6 "7" 7 "8" 8 "z" 1 "g" 2 "t" 3 "f" 4 "c" 5 "x" 6 "r" 7 "v" 8 }}
+{{ $weapons := dict "1" 1 "2" 2 "3" 3 "4" 4 "5" 5 "6" 6 "7" 7 "8" 8 }}
+
+{{ range $w := $weapons }}
+alias impulse{{ $w }} "impulse {{ $w }}"
+{{ end }}
+
+{{/* q_X_W: select W (previous), alias q -> pair_X_W, rebind all weapon keys */}}
+{{ range $x := $weapons }}
+{{ range $w := $weapons }}
+{{ if ne $x $w }}
+alias q_{{ $x }}_{{ $w }} "impulse {{ $w }}; alias q pair_{{ $x }}_{{ $w }}; {{ range $k, $wpn := $keyMap }}{{ if eq $wpn $w }}bind {{ $k }} impulse{{ $w }}{{ else }}bind {{ $k }} pair_{{ $wpn }}_{{ $w }}{{ end }}; {{ end }}"
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{/* pair_X_W: select X, alias q -> q_X_W, rebind all weapon keys */}}
+{{ range $x := $weapons }}
+{{ range $w := $weapons }}
+{{ if ne $x $w }}
+alias pair_{{ $x }}_{{ $w }} "impulse {{ $x }}; alias q q_{{ $x }}_{{ $w }}; {{ range $k, $wpn := $keyMap }}{{ if eq $wpn $x }}bind {{ $k }} impulse{{ $x }}{{ else }}bind {{ $k }} pair_{{ $wpn }}_{{ $x }}{{ end }} {{ end }}"
+{{ end }}
+{{ end }}
+{{ end }}
+
+alias q pair_1_2
+bind q q
+
+{{ range $k, $wpn := $keyMap }}
+{{ if eq $wpn 1 }}
+bind {{ $k }} pair_1_2
+{{ else }}
+bind {{ $k }} pair_{{ $wpn }}_1
+{{ end }}
+{{ end }}
+
+bind MOUSE2 "+zoom"

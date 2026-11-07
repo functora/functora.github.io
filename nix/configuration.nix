@@ -506,7 +506,7 @@ in {
         "wizz"
         "xboxlive"
         "xiaohongshu"
-        # "youtube"
+        "youtube"
         "yy"
         "zhihu"
       ];

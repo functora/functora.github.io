@@ -24,7 +24,7 @@ alias q_{{ $x }}_{{ $w }} "impulse {{ $w }}; alias q pair_{{ $x }}_{{ $w }}; {{ 
 {{ range $x := $weapons }}
 {{ range $w := $weapons }}
 {{ if ne $x $w }}
-alias pair_{{ $x }}_{{ $w }} "impulse {{ $x }}; alias q q_{{ $x }}_{{ $w }}; {{ range $k, $wpn := $keyMap }}{{ if eq $wpn $x }}bind {{ $k }} impulse{{ $x }}{{ else }}bind {{ $k }} pair_{{ $wpn }}_{{ $x }}{{ end }} {{ end }}"
+alias pair_{{ $x }}_{{ $w }} "impulse {{ $x }}; alias q q_{{ $x }}_{{ $w }}; {{ range $k, $wpn := $keyMap }}{{ if eq $wpn $x }}bind {{ $k }} impulse{{ $x }}{{ else }}bind {{ $k }} pair_{{ $wpn }}_{{ $x }}{{ end }}; {{ end }}"
 {{ end }}
 {{ end }}
 {{ end }}

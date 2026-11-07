@@ -6,6 +6,7 @@
   ironwail = pkgs.ironwail;
   zircon = pkgs.callPackage ./zircon.nix {};
   unzip = pkgs.unzip;
+  q1Cfg = ../cfg/q1.cfg;
 
   # Base Quake game data options: pak0.pak + pak1.pak (deterministic, pinned)
   quakeSrc = pkgs.fetchzip {
@@ -23,6 +24,7 @@
       mkdir -p $out
       cp ${quakeSrc}/pak0.pak $out/
       cp ${quakeSrc}/pak1.pak $out/
+      cp ${q1Cfg} $out/q1.cfg
     '';
   };
   # Alternative base: libre quake (id1/ subdirectory)
@@ -35,10 +37,32 @@
     url = "https://us.22061996.xyz/qbj3/qbj3_1.3.zip";
     hash = "sha256-Gp3vOnTWsLS1wS/0L+MhAgfFlZR9d/ZS1doOlNvEe/0=";
   };
+  qbj3Cfg = pkgs.stdenv.mkDerivation {
+    name = "qbj3-with-q1cfg";
+    src = qbj3Src;
+    dontUnpack = true;
+    buildInputs = [pkgs.coreutils];
+    installPhase = ''
+      mkdir -p $out
+      cp -r $src/* $out/
+      cp ${q1Cfg} $out/q1.cfg
+    '';
+  };
   adSrc = pkgs.fetchzip {
     url = "https://www.quaddicted.com/filebase/ad_v1_80p1final.zip";
     hash = "sha256-4Iq1Huh2qUDzXv2prx9yF/w548vta2XhBKFiqYXoL8s=";
     stripRoot = false;
+  };
+  adCfg = pkgs.stdenv.mkDerivation {
+    name = "ad-with-q1cfg";
+    src = adSrc;
+    dontUnpack = true;
+    buildInputs = [pkgs.coreutils];
+    installPhase = ''
+      mkdir -p $out
+      cp -r $src/* $out/
+      cp ${q1Cfg} $out/q1.cfg
+    '';
   };
   combatSrc = pkgs.fetchurl {
     url = "https://archive.org/download/combat-v-5.7.9/Combat_v5.7.9.zip";
@@ -53,6 +77,7 @@
       mkdir -p $out
       cd $out
       unzip $src
+      cp ${q1Cfg} quake15/q1.cfg
     '';
   };
 
@@ -99,7 +124,7 @@
           if game == null
           then ""
           else "-game ${game}"
-        } ${args} "$@"
+        } ${args} +exec q1.cfg "$@"
       '';
     };
   };
@@ -113,7 +138,7 @@
       mods = [
         {
           name = "qbj3";
-          path = qbj3Src;
+          path = qbj3Cfg;
         }
       ];
     }
@@ -123,7 +148,7 @@
       mods = [
         {
           name = "ad";
-          path = adSrc;
+          path = adCfg;
         }
       ];
     }

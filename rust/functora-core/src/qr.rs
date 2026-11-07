@@ -85,6 +85,15 @@ pub fn decode_qr_luma_fast(_luma: &[u8], _w: u32, _h: u32) -> Option<String> {
 }
 
 #[cfg(feature = "qr")]
+/// Budget for rxing's internal square matrix, which is allocated in full up
+/// front for the requested dimensions; larger requests must not reach it.
+const MATRIX_BYTE_BUDGET: u64 = 16 << 20;
+
+#[cfg(feature = "qr")]
+/// Budget for the RGBA output buffer produced from the matrix.
+const RGBA_BYTE_BUDGET: usize = 64 << 20;
+
+#[cfg(feature = "qr")]
 #[must_use]
 pub fn qr_rgba(url: &str, size: u32) -> Option<(u32, u32, Vec<u8>)> {
     use rxing::qrcode::QRCodeWriter;
@@ -93,6 +102,7 @@ pub fn qr_rgba(url: &str, size: u32) -> Option<(u32, u32, Vec<u8>)> {
         Margin: Some("2".to_string()),
         ..Default::default()
     };
+    (u64::from(size) * u64::from(size) <= MATRIX_BYTE_BUDGET * 8).then_some(())?;
     let side = i32::try_from(size).ok()?;
     let matrix = QRCodeWriter
         .encode_with_hints(url, &BarcodeFormat::QR_CODE, side, side, &hints)
@@ -100,17 +110,24 @@ pub fn qr_rgba(url: &str, size: u32) -> Option<(u32, u32, Vec<u8>)> {
     let w = matrix.getWidth();
     let h = matrix.getHeight();
     let scale = size.div_ceil(w.max(h));
-    let out_w = w * scale;
-    let out_h = h * scale;
-    let mut rgba = vec![0xFF; usize::try_from(out_w * out_h * 4).ok()?];
+    let out_w = w.checked_mul(scale)?;
+    let out_h = h.checked_mul(scale)?;
+    let len = (u64::from(out_w) * u64::from(out_h))
+        .checked_mul(4)
+        .and_then(|bytes| usize::try_from(bytes).ok())?;
+    (len <= RGBA_BYTE_BUDGET).then_some(())?;
+    let mut rgba = vec![0xFF; len];
     for y in 0..h {
         for x in 0..w {
             if matrix.get(x, y) {
-                let row_start = usize::try_from(y * out_w * 4 * scale).ok()?;
                 for sy in 0..scale {
-                    let row = row_start + usize::try_from(sy * out_w * 4).ok()?;
+                    let row =
+                        (u64::from(y) * u64::from(scale) + u64::from(sy)) * u64::from(out_w) * 4;
                     for sx in 0..scale {
-                        let idx = row + usize::try_from((x * scale + sx) * 4).ok()?;
+                        let idx = usize::try_from(
+                            row + (u64::from(x) * u64::from(scale) + u64::from(sx)) * 4,
+                        )
+                        .ok()?;
                         rgba[idx] = 0;
                         rgba[idx + 1] = 0;
                         rgba[idx + 2] = 0;

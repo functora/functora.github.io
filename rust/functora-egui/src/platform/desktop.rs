@@ -72,15 +72,30 @@ fn open_url_wait(url: &str) -> Result<(), Error> {
 #[cfg(feature = "clipboard")]
 pub async fn share(data: ShareData) -> Result<(), Error> {
     let full = format!("{}\n{}\n{}", data.title, data.text, data.url);
-    if let Err(write_error) = clipboard_write(full).await {
-        tracing::warn!("Share fallback clipboard failed: {write_error}");
+    match clipboard_write(full).await {
+        Ok(()) => {
+            if data.url.starts_with("http")
+                && let Err(open_error) = open_url(data.url).await
+            {
+                tracing::warn!("Share open_url failed: {open_error}");
+            }
+            Ok(())
+        }
+        Err(clipboard_error) => {
+            tracing::warn!("Share fallback clipboard failed: {clipboard_error}");
+            if data.url.starts_with("http") {
+                match open_url(data.url).await {
+                    Ok(()) => Ok(()),
+                    Err(open_error) => {
+                        tracing::warn!("Share open_url failed: {open_error}");
+                        Err(Error::ShareFailed(Box::new(clipboard_error)))
+                    }
+                }
+            } else {
+                Err(Error::ShareFailed(Box::new(clipboard_error)))
+            }
+        }
     }
-    if data.url.starts_with("http")
-        && let Err(open_error) = open_url(data.url).await
-    {
-        tracing::warn!("Share open_url failed: {open_error}");
-    }
-    Ok(())
 }
 
 #[cfg(feature = "files")]

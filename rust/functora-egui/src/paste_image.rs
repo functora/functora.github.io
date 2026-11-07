@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use std::sync::{Mutex, PoisonError};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PasteImage {
@@ -9,14 +9,12 @@ pub struct PasteImage {
 static SLOT: Mutex<Option<PasteImage>> = Mutex::new(None);
 
 pub fn store(image: PasteImage) {
-    if let Ok(mut guard) = SLOT.lock() {
-        *guard = Some(image);
-    }
+    *SLOT.lock().unwrap_or_else(PoisonError::into_inner) = Some(image);
 }
 
 #[must_use]
 pub fn take() -> Option<PasteImage> {
-    SLOT.lock().ok().and_then(|mut guard| guard.take())
+    SLOT.lock().unwrap_or_else(PoisonError::into_inner).take()
 }
 
 #[must_use]

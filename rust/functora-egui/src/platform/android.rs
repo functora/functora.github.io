@@ -254,15 +254,22 @@ pub fn save_to_downloads(
                 &[(&uri).into()],
             )?
             .l()?;
-        let mut done = 0u64;
-        for chunk in data.chunks(CHUNK) {
+        let write_result = data.chunks(CHUNK).try_fold(0u64, |done, chunk| {
             let ba = env.byte_array_from_slice(chunk)?;
             let _ = env.call_method(&os, "write", "([B)V", &[(&ba).into()])?;
-            done += chunk.len() as u64;
-            report(done, total);
+            let written = done + chunk.len() as u64;
+            report(written, total);
+            Ok(written)
+        });
+        let close_result = env.call_method(&os, "close", "()V", &[]).map(|_| ());
+        match (write_result, close_result) {
+            (Ok(_written), close_result) => close_result,
+            (Err(write_error), Err(close_error)) => {
+                tracing::warn!("Failed to close Downloads output stream: {close_error}");
+                Err(write_error)
+            }
+            (Err(write_error), Ok(())) => Err(write_error),
         }
-        let _ = env.call_method(&os, "close", "()V", &[])?;
-        Ok(())
     })
 }
 

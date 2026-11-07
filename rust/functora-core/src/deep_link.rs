@@ -1,33 +1,34 @@
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, PoisonError};
 
 static PENDING_URL: Mutex<Option<String>> = Mutex::new(None);
 static SCHEDULE_UPDATE: Mutex<Option<Arc<dyn Fn() + Send + Sync>>> = Mutex::new(None);
 
 pub fn store_url(url: String) {
-    if let Ok(mut guard) = PENDING_URL.lock() {
-        *guard = Some(url);
-    }
+    *PENDING_URL.lock().unwrap_or_else(PoisonError::into_inner) = Some(url);
     trigger_update();
 }
 
 pub fn set_schedule_update(f: Arc<dyn Fn() + Send + Sync>) {
-    if let Ok(mut guard) = SCHEDULE_UPDATE.lock() {
-        *guard = Some(f);
-    }
+    *SCHEDULE_UPDATE
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner) = Some(f);
 }
 
 pub fn trigger_update() {
-    if let Some(update) = SCHEDULE_UPDATE
+    SCHEDULE_UPDATE
         .lock()
-        .ok()
-        .and_then(|guard| guard.as_ref().cloned())
-    {
-        update();
-    }
+        .unwrap_or_else(PoisonError::into_inner)
+        .as_ref()
+        .cloned()
+        .into_iter()
+        .for_each(|update| update());
 }
 
 pub fn take_url() -> Option<String> {
-    PENDING_URL.lock().ok().and_then(|mut guard| guard.take())
+    PENDING_URL
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .take()
 }
 
 #[must_use]

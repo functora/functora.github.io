@@ -1,12 +1,13 @@
 use crate::Error;
-use crate::crypto::{ChunkKind, CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts};
+use crate::crypto::{CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts, stream_spans};
 use crate::progress::{Job, yield_to_paint};
 use crate::worker::Reporter;
-use crate::zip::{CancelToken, check_cancel, zip_entries};
+use crate::zip::{CancelToken, ZIP_CHUNK, check_cancel, zip_entries};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
 use std::sync::Arc;
+use tap::prelude::*;
 use zip::CompressionMethod;
 
 pub const METADATA_ENTRY: &str = "metadata.json";
@@ -35,18 +36,7 @@ pub enum ArchiveSource {
     Path(PathBuf),
 }
 
-trait SeekableRead: Read + Seek {}
-
-impl<T: Read + Seek> SeekableRead for T {}
-
 impl ArchiveSource {
-    fn open(&self) -> Result<Box<dyn SeekableRead + '_>, Error> {
-        match self {
-            Self::Bytes(bytes) => Ok(Box::new(std::io::Cursor::new(bytes.as_slice()))),
-            Self::Path(path) => Ok(Box::new(std::fs::File::open(path)?)),
-        }
-    }
-
     pub fn into_bytes(self) -> Result<Vec<u8>, Error> {
         match self {
             Self::Bytes(bytes) => Ok(bytes),
@@ -141,23 +131,13 @@ where
     {
         let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut pkg));
         write_package_entries(&mut zip, &meta)?;
-        let mut offset = 0usize;
-        let mut position = 0u32;
-        while offset < inner.len() {
+        for span in stream_spans(inner.len(), STREAM_CHUNK) {
             check_cancel(cancel)?;
-            let end = (offset + STREAM_CHUNK).min(inner.len());
-            let kind = if end == inner.len() {
-                ChunkKind::Last
-            } else {
-                ChunkKind::NonLast
-            };
-            let ct = parts.encrypt_chunk(position, kind, &inner[offset..end])?;
-            zip.write_all(&ct)?;
-            offset = end;
-            position += 1;
+            let (position, kind, offset, end) = span?;
+            zip.write_all(&parts.encrypt_chunk(position, kind, &inner[offset..end])?)?;
             report(Job {
                 stage: stages.encrypt,
-                done: offset as u64,
+                done: end as u64,
                 total: inner.len() as u64,
                 name: None,
             });
@@ -188,7 +168,7 @@ where
         let mut zip = zip::ZipWriter::new(std::io::Cursor::new(&mut pkg));
         write_package_entries(&mut zip, &meta)?;
         let mut done = 0u64;
-        for chunk in inner.chunks(2 * 1024 * 1024) {
+        for chunk in inner.chunks(ZIP_CHUNK) {
             check_cancel(cancel)?;
             zip.write_all(chunk)?;
             done += chunk.len() as u64;
@@ -219,17 +199,31 @@ fn read_entry<R: Read + Seek>(
     Ok(data)
 }
 
+fn metadata_from_reader<R: Read + Seek>(reader: R) -> Result<ArchiveMetadata, Error> {
+    let mut archive = zip::ZipArchive::new(reader)?;
+    let json = read_entry(&mut archive, METADATA_ENTRY)?;
+    serde_json::from_slice::<ArchiveMetadata>(&json)?.pipe(Ok)
+}
+
 pub fn read_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, Error> {
-    let mut archive = zip::ZipArchive::new(source.open()?)?;
-    let meta_json = read_entry(&mut archive, METADATA_ENTRY)?;
-    Ok(serde_json::from_slice::<ArchiveMetadata>(&meta_json)?)
+    match source {
+        ArchiveSource::Bytes(bytes) => metadata_from_reader(std::io::Cursor::new(bytes.as_slice())),
+        ArchiveSource::Path(path) => metadata_from_reader(std::fs::File::open(path)?),
+    }
+}
+
+fn package_from_reader<R: Read + Seek>(reader: R) -> Result<(ArchiveMetadata, Vec<u8>), Error> {
+    let mut archive = zip::ZipArchive::new(reader)?;
+    let meta: ArchiveMetadata = serde_json::from_slice(&read_entry(&mut archive, METADATA_ENTRY)?)?;
+    let payload = read_entry(&mut archive, PAYLOAD_ENTRY)?;
+    (meta, payload).pipe(Ok)
 }
 
 fn read_package(source: &ArchiveSource) -> Result<(ArchiveMetadata, Vec<u8>), Error> {
-    let mut archive = zip::ZipArchive::new(source.open()?)?;
-    let meta: ArchiveMetadata = serde_json::from_slice(&read_entry(&mut archive, METADATA_ENTRY)?)?;
-    let payload = read_entry(&mut archive, PAYLOAD_ENTRY)?;
-    Ok((meta, payload))
+    match source {
+        ArchiveSource::Bytes(bytes) => package_from_reader(std::io::Cursor::new(bytes.as_slice())),
+        ArchiveSource::Path(path) => package_from_reader(std::fs::File::open(path)?),
+    }
 }
 
 struct UnsealParams<'a> {
@@ -258,23 +252,13 @@ where
     )?;
     let total = payload.len();
     let mut out = Vec::with_capacity(payload.len());
-    let mut offset = 0usize;
-    let mut position = 0u32;
-    while offset < total {
+    for span in stream_spans(total, STREAM_CHUNK + STREAM_TAG) {
         check_cancel(cancel)?;
-        let end = (offset + STREAM_CHUNK + STREAM_TAG).min(total);
-        let kind = if end == total {
-            ChunkKind::Last
-        } else {
-            ChunkKind::NonLast
-        };
-        let plain = parts.decrypt_chunk(position, kind, &payload[offset..end])?;
-        out.extend_from_slice(&plain);
-        offset = end;
-        position += 1;
+        let (position, kind, offset, end) = span?;
+        out.extend_from_slice(&parts.decrypt_chunk(position, kind, &payload[offset..end])?);
         report(Job {
             stage: stages.decrypt,
-            done: offset as u64,
+            done: end as u64,
             total: total as u64,
             name: None,
         });

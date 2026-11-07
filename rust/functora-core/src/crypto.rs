@@ -195,6 +195,27 @@ fn crypto_fn(
     }
 }
 
+fn chunk_kind(final_chunk: bool) -> ChunkKind {
+    if final_chunk {
+        ChunkKind::Last
+    } else {
+        ChunkKind::NonLast
+    }
+}
+
+pub(crate) fn stream_spans(
+    len: usize,
+    step: usize,
+) -> impl Iterator<Item = Result<(u32, ChunkKind, usize, usize), Error>> {
+    (0..len)
+        .step_by(step)
+        .enumerate()
+        .map(move |(position, offset)| {
+            let end = (offset + step).min(len);
+            chunk_position(position).map(|index| (index, chunk_kind(end == len), offset, end))
+        })
+}
+
 pub fn stream_encrypt_symmetric(
     plaintext: &[u8],
     password: &str,
@@ -202,29 +223,24 @@ pub fn stream_encrypt_symmetric(
     aad: &[u8],
 ) -> Result<EncryptedNote, Error> {
     let parts = StreamParts::derive(password, cipher, aad)?;
-    let ciphertext = (0..plaintext.len())
-        .step_by(STREAM_CHUNK)
-        .enumerate()
-        .map(|(position, offset)| {
-            let end = (offset + STREAM_CHUNK).min(plaintext.len());
-            let kind = if end == plaintext.len() {
-                ChunkKind::Last
-            } else {
-                ChunkKind::NonLast
-            };
-            parts.encrypt_chunk(chunk_position(position)?, kind, &plaintext[offset..end])
+    stream_spans(plaintext.len(), STREAM_CHUNK)
+        .map(|span| {
+            let (position, kind, offset, end) = span?;
+            parts.encrypt_chunk(position, kind, &plaintext[offset..end])
         })
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()
         .flatten()
-        .collect();
-    Ok(EncryptedNote {
-        cipher,
-        nonce: parts.nonce().to_vec(),
-        ciphertext,
-        salt: parts.salt().to_vec(),
-        kdf: Kdf::Argon2id,
-    })
+        .collect::<Vec<u8>>()
+        .pipe(|ciphertext| {
+            Ok(EncryptedNote {
+                cipher,
+                nonce: parts.nonce().to_vec(),
+                ciphertext,
+                salt: parts.salt().to_vec(),
+                kdf: Kdf::Argon2id,
+            })
+        })
 }
 
 pub fn stream_decrypt_symmetric(
@@ -233,21 +249,10 @@ pub fn stream_decrypt_symmetric(
     aad: &[u8],
 ) -> Result<Vec<u8>, Error> {
     let parts = StreamParts::recover(password, data.cipher, &data.salt, &data.nonce, aad)?;
-    (0..data.ciphertext.len())
-        .step_by(STREAM_CHUNK + STREAM_TAG)
-        .enumerate()
-        .map(|(position, offset)| {
-            let end = (offset + STREAM_CHUNK + STREAM_TAG).min(data.ciphertext.len());
-            let kind = if end == data.ciphertext.len() {
-                ChunkKind::Last
-            } else {
-                ChunkKind::NonLast
-            };
-            parts.decrypt_chunk(
-                chunk_position(position)?,
-                kind,
-                &data.ciphertext[offset..end],
-            )
+    stream_spans(data.ciphertext.len(), STREAM_CHUNK + STREAM_TAG)
+        .map(|span| {
+            let (position, kind, offset, end) = span?;
+            parts.decrypt_chunk(position, kind, &data.ciphertext[offset..end])
         })
         .collect::<Result<Vec<_>, _>>()
         .map(|chunks| chunks.into_iter().flatten().collect())

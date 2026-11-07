@@ -7,10 +7,10 @@ use std::sync::{Arc, Mutex};
 use tap::prelude::*;
 
 pub use functora_core::package::{ArchiveMetadata, ArchiveSource, PackageStages};
+pub use functora_core::zip::ATTACHMENTS_PREFIX;
 pub use functora_egui::files::Attachment;
 
 pub const NOTE_ENTRY: &str = "note.txt";
-pub const ATTACHMENTS_PREFIX: &str = "attachments/";
 
 fn stages() -> PackageStages<Stage> {
     PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt)

@@ -159,6 +159,8 @@ pub enum Error {
     OpenUrlFailed { url: String },
     #[error("xdg-open timed out for {url}")]
     OpenUrlTimedOut { url: String },
+    #[error("Share failed: {0}")]
+    ShareFailed(Box<Error>),
 }
 
 /// A browser object, platform handle, or storage location the operation
@@ -351,6 +353,7 @@ impl I18N for Error {
             Self::OpenUrlTimedOut { url } => format!("xdg-open timed out for {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("JNI error: {e}"),
+            Self::ShareFailed(e) => format!("Share failed: {e}"),
         }
     }
 
@@ -409,6 +412,7 @@ impl I18N for Error {
             Self::OpenUrlTimedOut { url } => format!("xdg-open agotó el tiempo para {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
+            Self::ShareFailed(e) => format!("Falló al compartir: {e}"),
         }
     }
 
@@ -461,6 +465,7 @@ impl I18N for Error {
             Self::OpenUrlTimedOut { url } => format!("xdg-open превысил время ожидания для {url}"),
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Ошибка JNI: {e}"),
+            Self::ShareFailed(e) => format!("Не удалось поделиться: {e}"),
         }
     }
 }

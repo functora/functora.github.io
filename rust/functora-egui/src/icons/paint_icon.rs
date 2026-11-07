@@ -1,5 +1,27 @@
 //! Paints a Lucide icon using the egui `Painter`.
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, PoisonError};
+
+use super::icon_element::IconElement;
+use super::lucide_icon::LucideIcon;
+
+/// Parsed geometry per icon, shared across frames so each glyph is parsed once.
+fn icon_elements(icon: LucideIcon) -> Arc<[IconElement]> {
+    icon_cache()
+        .entry(icon)
+        .or_insert_with(|| super::parse_svg::parse_svg(icon.svg_data()).into())
+        .clone()
+}
+
+fn icon_cache() -> MutexGuard<'static, HashMap<LucideIcon, Arc<[IconElement]>>> {
+    static CACHE: OnceLock<Mutex<HashMap<LucideIcon, Arc<[IconElement]>>>> = OnceLock::new();
+    CACHE
+        .get_or_init(Default::default)
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+}
+
 /// Paint a Lucide icon into `rect` with the given `color`.
 ///
 /// The icon is rendered as vector strokes (not rasterised), matching the
@@ -7,10 +29,10 @@
 pub fn paint_icon(
     painter: &egui::Painter,
     rect: egui::Rect,
-    icon: &super::lucide_icon::LucideIcon,
+    icon: &LucideIcon,
     color: egui::Color32,
 ) {
-    paint_icon_svg(painter, rect, icon.svg_data(), color);
+    paint_elements(painter, rect, icon_elements(*icon).as_ref(), color);
 }
 
 /// Paint a raw Lucide-style SVG body (the inner `<path>`/`<circle>`/… elements,
@@ -25,11 +47,19 @@ pub fn paint_icon_svg(
     color: egui::Color32,
 ) {
     let elements = super::parse_svg::parse_svg(svg_body);
+    paint_elements(painter, rect, &elements, color);
+}
+
+fn paint_elements(
+    painter: &egui::Painter,
+    rect: egui::Rect,
+    elements: &[IconElement],
+    color: egui::Color32,
+) {
     let scale = rect.width().min(rect.height()) / 24.0;
     let offset = rect.min;
     let stroke = egui::Stroke::new(2.0 * scale, color);
-
-    for element in &elements {
+    for element in elements {
         paint_element(painter, element, scale, offset, stroke);
     }
 }

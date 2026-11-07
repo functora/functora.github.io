@@ -1,6 +1,6 @@
 #![allow(clippy::shadow_reuse)]
 pub use functora_core::white_label::{
-    AppAttrs, CryptoBlock, ManifestIcon, WhiteLabelContent, donate_blocks, manifest_json,
+    AppAttrs, CryptoBlock, ManifestIcon, WhiteLabelContent, default_donate_blocks, manifest_json,
 };
 
 use crate::ffi::Theme;

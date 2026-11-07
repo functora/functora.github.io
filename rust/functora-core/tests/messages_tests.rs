@@ -66,11 +66,15 @@ fn privacy_subheadings_render_as_headings() {
 
 #[test]
 fn license_text_starts_with_mit_title() {
-    for lang in [Language::Eng, Language::Spa, Language::Rus] {
+    for (lang, title) in [
+        (Language::Eng, "The MIT License (MIT)"),
+        (Language::Spa, "La Licencia MIT (MIT)"),
+        (Language::Rus, "The MIT License (MIT)"),
+    ] {
         let text = Msg::LicenseText.render(lang);
         assert!(
-            text.starts_with("The MIT License (MIT)"),
-            "license must open with the MIT title for {lang:?}, got: {}",
+            text.starts_with(title),
+            "license must open with {title:?} for {lang:?}, got: {}",
             text.chars().take(60).collect::<String>(),
         );
     }

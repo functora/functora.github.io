@@ -34,6 +34,21 @@ fn qr_rgba_has_black_modules_and_white_quiet_zone() {
 }
 
 #[test]
+#[cfg(feature = "qr")]
+fn qr_rgba_rejects_output_beyond_byte_budget() {
+    // Regression: the RGBA length was multiplied in u32, so a large requested
+    // size overflowed (panicking in debug builds, wrapping in release).
+    // The output budget must turn such requests into None instead.
+    assert!(qr_rgba("https://functora.github.io/apps/cryptonote/", 2_000_000).is_none());
+}
+
+#[test]
+#[cfg(feature = "qr")]
+fn qr_rgba_scales_small_requests_within_budget() {
+    assert!(qr_rgba("https://functora.github.io/apps/cryptonote/", 2000).is_some());
+}
+
+#[test]
 fn qr_rgba_fails_on_empty_url() {
     assert!(qr_rgba("", 64).is_none());
 }

@@ -1,9 +1,9 @@
 use functora_core::i18n::{I18N, Language};
-use functora_core::{Msg, donate_blocks};
+use functora_core::{Msg, default_donate_blocks};
 
 #[test]
 fn donate_blocks_have_default_labels_and_addresses() {
-    let blocks = donate_blocks();
+    let blocks = default_donate_blocks();
     assert_eq!(blocks.len(), 2);
     assert_eq!(blocks[0].label, "BTC - Bitcoin");
     assert_eq!(

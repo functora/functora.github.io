@@ -2,7 +2,7 @@ use functora_core::i18n::{I18N, Language};
 use functora_core::{
     AppAttrs, FUNCTORA_EMAIL, FUNCTORA_ORG, Msg, WhiteLabelContent, default_about_text,
     default_donate_blocks, default_donate_greeting, default_donate_intro, default_license_text,
-    default_privacy_text, donate_blocks, functora_attrs,
+    default_privacy_text, functora_attrs,
 };
 
 const ATTRS: AppAttrs = AppAttrs {
@@ -33,7 +33,7 @@ fn default_content_uses_functora_defaults() {
     assert_eq!(content.privacy_text, None);
     assert_eq!(content.donate_greeting, None);
     assert_eq!(content.donate_intro, None);
-    assert_eq!(content.donate_blocks, donate_blocks());
+    assert_eq!(content.donate_blocks, default_donate_blocks());
 }
 
 #[test]

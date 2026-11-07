@@ -6,7 +6,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use zip::CompressionMethod;
 
-const ZIP_CHUNK: usize = 2 * 1024 * 1024;
+pub const ATTACHMENTS_PREFIX: &str = "attachments/";
+pub(crate) const ZIP_CHUNK: usize = 2 * 1024 * 1024;
 
 pub type CancelToken = Arc<AtomicBool>;
 
@@ -37,7 +38,7 @@ where
 {
     for (name, data) in entries {
         zip.start_file(name, opts())?;
-        let display = name.strip_prefix("attachments/").unwrap_or(name);
+        let display = name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(name);
         for chunk in data.chunks(ZIP_CHUNK) {
             check_cancel(cancel)?;
             zip.write_all(chunk)?;

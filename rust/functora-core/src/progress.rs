@@ -23,8 +23,9 @@ pub struct Job<S> {
 }
 
 impl<S> Job<S> {
+    #[must_use]
     pub fn percent(&self) -> u8 {
-        (self.done * 100 / self.total.max(1)).min(100) as u8
+        (u128::from(self.done) * 100 / u128::from(self.total.max(1))).min(100) as u8
     }
 }
 

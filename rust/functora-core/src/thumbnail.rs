@@ -86,7 +86,7 @@ pub fn video_thumbnail(data: &[u8]) -> Option<Vec<u8>> {
     if frame.width == 0 || frame.height == 0 {
         return None;
     }
-    let rgb = RgbImage::from_raw(frame.width, frame.height, yuv_to_rgb(&frame))?;
+    let rgb = RgbImage::from_raw(frame.width, frame.height, yuv_to_rgb(&frame)?)?;
     let (thumb_w, thumb_h) = fit(frame.width, frame.height, MAX_W, MAX_H);
     let thumb = thumbnail(&rgb, thumb_w, thumb_h);
     let mut jpeg = Vec::new();
@@ -109,28 +109,47 @@ pub fn jpeg_data_url(jpeg: Vec<u8>) -> String {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn yuv_to_rgb(frame: &rust_h264::decoder::Frame) -> Vec<u8> {
-    let (width, height) = (
-        usize::try_from(frame.width).unwrap_or(0),
-        usize::try_from(frame.height).unwrap_or(0),
-    );
-    let mut rgb = vec![0u8; width * height * 3];
-    for y in 0..height {
-        for x in 0..width {
-            let yy = i64::from(frame.y[y * width + x]) << 10;
-            let uu = i64::from(frame.u[(y / 2) * (width / 2) + (x / 2)]) - 128;
-            let vv = i64::from(frame.v[(y / 2) * (width / 2) + (x / 2)]) - 128;
-            let r = u8::try_from(((yy + 1436 * vv + 0x200) >> 10).clamp(0, 255)).unwrap_or(u8::MAX);
-            let g = u8::try_from(((yy - 352 * uu - 731 * vv + 0x200) >> 10).clamp(0, 255))
+#[must_use]
+pub fn planar_yuv_to_rgb(
+    width: u32,
+    height: u32,
+    y_plane: &[u8],
+    u_plane: &[u8],
+    v_plane: &[u8],
+) -> Option<Vec<u8>> {
+    (width != 0 && height != 0).then_some(())?;
+    let (width_px, height_px) = (usize::try_from(width).ok()?, usize::try_from(height).ok()?);
+    ((width_px % 2 == 0) && (height_px % 2 == 0)).then_some(())?;
+    let luma = width_px.checked_mul(height_px)?;
+    (y_plane.len() >= luma).then_some(())?;
+    let chroma = (width_px / 2).checked_mul(height_px / 2)?;
+    (u_plane.len() >= chroma).then_some(())?;
+    (v_plane.len() >= chroma).then_some(())?;
+    let rgb_len = usize::try_from(u64::try_from(luma).ok()?.checked_mul(3)?).ok()?;
+    let mut rgb = vec![0u8; rgb_len];
+    for y_row in 0..height_px {
+        for x_col in 0..width_px {
+            let yy = i64::from(y_plane[y_row * width_px + x_col]) << 10;
+            let uu = i64::from(u_plane[(y_row / 2) * (width_px / 2) + (x_col / 2)]) - 128;
+            let vv = i64::from(v_plane[(y_row / 2) * (width_px / 2) + (x_col / 2)]) - 128;
+            let red =
+                u8::try_from(((yy + 1436 * vv + 0x200) >> 10).clamp(0, 255)).unwrap_or(u8::MAX);
+            let green = u8::try_from(((yy - 352 * uu - 731 * vv + 0x200) >> 10).clamp(0, 255))
                 .unwrap_or(u8::MAX);
-            let b = u8::try_from(((yy + 1814 * uu + 0x200) >> 10).clamp(0, 255)).unwrap_or(u8::MAX);
-            let i = (y * width + x) * 3;
-            rgb[i] = r;
-            rgb[i + 1] = g;
-            rgb[i + 2] = b;
+            let blue =
+                u8::try_from(((yy + 1814 * uu + 0x200) >> 10).clamp(0, 255)).unwrap_or(u8::MAX);
+            let index = (y_row * width_px + x_col) * 3;
+            rgb[index] = red;
+            rgb[index + 1] = green;
+            rgb[index + 2] = blue;
         }
     }
-    rgb
+    Some(rgb)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn yuv_to_rgb(frame: &rust_h264::decoder::Frame) -> Option<Vec<u8>> {
+    planar_yuv_to_rgb(frame.width, frame.height, &frame.y, &frame.u, &frame.v)
 }
 
 use crate::files::FifoMemo;

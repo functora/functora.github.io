@@ -248,6 +248,7 @@ in {
       (import ./night-sleep.nix)
       (import ./rigtora.nix)
       (import ./vibe.nix)
+      (import ./suntimes.nix)
     ]
     ++ (
       if builtins.pathExists ./../prv/nix/configuration.nix
@@ -726,7 +727,6 @@ in {
         swaylock
         swayidle
         wl-clipboard
-        mako
         wofi
         waybar
         dbus-sway-environment
@@ -882,6 +882,26 @@ in {
         enable = true;
         inactiveInterval = 5;
         inherit lockCmd;
+      };
+      services.mako = {
+        enable = true;
+        settings = {
+          anchor = "center";
+          layer = "overlay";
+          output = "";
+          font = "Sans 16";
+          width = 700;
+          padding = 20;
+          border-size = 3;
+          border-color = "#ffffff";
+          background-color = "#222222";
+          text-color = "#ffffff";
+          "urgency=critical" = {
+            background-color = "#ff4444";
+            text-color = "#ffffff";
+            default-timeout = 0;
+          };
+        };
       };
       services.kanshi = {
         enable = true;
@@ -1135,5 +1155,10 @@ in {
     services.night-sleep.enable = false;
     services.night-sleep.sleepAt = "23:00";
     services.night-sleep.wakeAt = "08:00";
+
+    #
+    # Suntimes
+    #
+    services.functora.suntimes.enable = true;
   };
 }

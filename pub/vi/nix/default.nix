@@ -79,7 +79,6 @@ in
                 vim-fugitive
                 vim-gitgutter
                 lightline-vim
-                vim-togglelist
                 papercolor-theme
                 vim-better-whitespace
                 catppuccin-nvim
@@ -89,7 +88,6 @@ in
                 # Programming
                 #
                 haskell-vim
-                hlint-refactor-vim
                 vim-nix
                 psc-ide-vim
                 purescript-vim

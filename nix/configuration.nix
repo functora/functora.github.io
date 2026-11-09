@@ -312,10 +312,6 @@ in {
       "nix-command"
       "flakes"
     ];
-    # nix.extraOptions = ''
-    #   keep-outputs = true
-    #   keep-derivations = true
-    # '';
     security.polkit.enable = true;
     security.pam.services.swaylock = {};
     #
@@ -686,14 +682,6 @@ in {
       // fj.mkFirejailOffline {
         pkg = "vi";
         exe = "${vi}/bin/vi";
-      }
-      // fj.mkFirejailOffline {
-        pkg = "piper";
-        exe = "${import ./piper.nix}/bin/piper";
-      }
-      // fj.mkFirejailOffline {
-        pkg = "hoogle-w3m";
-        exe = "${import ./hoogle-w3m.nix}/bin/hoogle-w3m";
       };
     #
     # Home
@@ -702,9 +690,7 @@ in {
       home.stateVersion = "22.11";
       home.packages = with pkgs; [
         tree
-        s-tui
-        qutebrowser
-        xorg.xev
+        xev
         pkgs.yewtube
         niv
         zip

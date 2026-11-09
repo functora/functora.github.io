@@ -790,25 +790,3 @@ let g:neoformat_toml_prettier = {
       \ 'args': ['--stdin-filepath', '"%:p"'],
       \ 'stdin': 1,
       \ }
-
-"
-" => Hoogle
-"
-
-function! HoogleW3m(str)
-    tabnew
-    execute "terminal hoogle-w3m '" . a:str . "'"
-endfunction
-
-function! HoogleW3mVisual() range
-    let l:saved_reg = @"
-    execute "normal! vgvy"
-    let l:pattern = @"
-    call CmdLine("H " . l:pattern)
-    let @/ = l:pattern
-    let @" = l:saved_reg
-endfunction
-
-command! -nargs=* H call HoogleW3m(<q-args>)
-nnoremap <silent> H :call HoogleW3m(expand("<cword>"))<CR>
-vnoremap <silent> H :call HoogleW3mVisual()<CR>

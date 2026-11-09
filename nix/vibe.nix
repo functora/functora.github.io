@@ -79,6 +79,7 @@
   sleepBin = "${pkgs.coreutils}/bin/sleep";
   waitAttempts = 100;
   waitIntervalSeconds = "0.1";
+  tailscaleUpTimeout = "60s";
 
   secretsRelativePath = ".config/vibe/secrets";
   secretsDir = "$HOME/${secretsRelativePath}";
@@ -133,7 +134,12 @@
     export OPENCODE_SERVER_PASSWORD="$opencode_password"
   '';
 
-  mkTailscaleUpCommand = hostname: ''tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false'';
+  mkTailscaleUpCommand = {
+    hostname,
+    timeout ? null,
+  }: let
+    timeoutArg = lib.optionalString (timeout != null) " --timeout=${timeout}";
+  in ''tailscale --socket="$tailscaled_socket" up --auth-key="$tailscale_auth_key" --hostname="${hostname}" --accept-dns=false${timeoutArg}'';
 
   mkTailscaledScript = {
     authKeyFile,
@@ -144,13 +150,16 @@
     upCommand =
       if block
       then ''
-        if ! ${mkTailscaleUpCommand hostname}; then
+        if ! ${mkTailscaleUpCommand {
+          inherit hostname;
+          timeout = tailscaleUpTimeout;
+        }}; then
           echo "vibe: tailscale up failed" >&2
           exit 1
         fi
       ''
       else ''
-        ${mkTailscaleUpCommand hostname} &
+        ${mkTailscaleUpCommand {inherit hostname;}} &
       '';
   in ''
     tailscale_state_dir="${stateDir}"

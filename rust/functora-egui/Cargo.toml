@@ -1,6 +1,6 @@
 [package]
 name = "functora-egui"
-version = "0.3.0"
+version = "0.3.1"
 edition = "2024"
 description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 70+ more components with light/dark theming"
 license = "MIT"

@@ -245,7 +245,6 @@ in {
   imports =
     [
       (import "${(import ./sources.nix {}).home-manager}/nixos")
-      (import ./night-sleep.nix)
       (import ./rigtora.nix)
       (import ./vibe.nix)
       (import ./suntimes.nix)
@@ -1149,13 +1148,6 @@ in {
       "functora.github.io/.git"
       "rust/.git"
     ];
-    #
-    # Night
-    #
-    services.night-sleep.enable = false;
-    services.night-sleep.sleepAt = "23:00";
-    services.night-sleep.wakeAt = "08:00";
-
     #
     # Suntimes
     #

@@ -60,9 +60,46 @@ pub struct AppAttrs {
     pub description: &'static str,
 }
 
+/// A text split around the first mention of the author organization.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AuthorMention<'a> {
+    /// Text before the mention.
+    pub before: &'a str,
+    /// The mention as written in the text.
+    pub name: &'a str,
+    /// Text after the mention.
+    pub after: &'a str,
+}
+
 pub(crate) fn capitalize_first(s: &str) -> String {
     let end = s.chars().next().map_or(0, char::len_utf8);
     format!("{}{}", s[..end].to_uppercase(), &s[end..])
+}
+
+fn is_word_bounded(text: &str, start: usize, end: usize) -> bool {
+    let before = text[..start].chars().next_back();
+    let after = text[end..].chars().next();
+    before.is_none_or(|c| !c.is_alphanumeric()) && after.is_none_or(|c| !c.is_alphanumeric())
+}
+
+fn find_author_mention<'a>(text: &'a str, name: &str) -> Option<AuthorMention<'a>> {
+    if name.is_empty() {
+        return None;
+    }
+    text.char_indices()
+        .find_map(|(start, _)| {
+            let end = start + name.len();
+            let candidate = text.get(start..end)?;
+            candidate
+                .eq_ignore_ascii_case(name)
+                .then_some((start, end))
+                .filter(|_| is_word_bounded(text, start, end))
+        })
+        .map(|(start, end)| AuthorMention {
+            before: &text[..start],
+            name: &text[start..end],
+            after: &text[end..],
+        })
 }
 
 impl AppAttrs {
@@ -127,6 +164,15 @@ impl AppAttrs {
     #[must_use]
     pub fn author_url(self) -> String {
         format!("{}/", self.pages_url())
+    }
+
+    /// Split `text` around the first case-insensitive, word-bounded mention of
+    /// the author organization, so renderers can link it to
+    /// [`AppAttrs::author_url`]. The mention keeps the spelling used in
+    /// `text`; `None` means the organization is not mentioned.
+    #[must_use]
+    pub fn split_author_mention<'a>(&self, text: &'a str) -> Option<AuthorMention<'a>> {
+        find_author_mention(text, self.org)
     }
 
     #[must_use]

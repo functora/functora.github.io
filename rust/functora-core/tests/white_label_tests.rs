@@ -159,6 +159,71 @@ fn default_donate_text_derives_from_attrs() {
 }
 
 #[test]
+fn author_mention_splits_the_first_occurrence() {
+    let mention = ATTRS
+        .split_author_mention("I'm Functora, the creator. Sincerely yours, Functora.")
+        .unwrap_or_else(|| panic!("author mention must be found"));
+    assert_eq!(mention.before, "I'm ");
+    assert_eq!(mention.name, "Functora");
+    assert_eq!(mention.after, ", the creator. Sincerely yours, Functora.");
+}
+
+#[test]
+fn author_mention_keeps_the_spelling_of_the_text() {
+    let mention = ATTRS
+        .split_author_mention("I'm functora, the creator.")
+        .unwrap_or_else(|| panic!("author mention must be found"));
+    assert_eq!(mention.before, "I'm ");
+    assert_eq!(mention.name, "functora");
+    assert_eq!(mention.after, ", the creator.");
+}
+
+#[test]
+fn author_mention_requires_word_boundaries() {
+    assert!(
+        ATTRS
+            .split_author_mention("I am myfunctora today.")
+            .is_none(),
+        "a mention inside a word must not be linked"
+    );
+    let mention = ATTRS
+        .split_author_mention("Sincerely, Functora.")
+        .unwrap_or_else(|| panic!("author mention must be found"));
+    assert_eq!(mention.before, "Sincerely, ");
+    assert_eq!(mention.name, "Functora");
+    assert_eq!(mention.after, ".");
+}
+
+#[test]
+fn author_mention_is_absent_without_the_organization() {
+    assert!(ATTRS.split_author_mention("No name here.").is_none());
+    let nameless = AppAttrs { org: "", ..ATTRS };
+    assert!(nameless.split_author_mention("I'm Functora.").is_none());
+}
+
+#[test]
+fn default_donate_texts_expose_the_author_mention() {
+    let greeting = default_donate_greeting(&ATTRS, Language::Eng);
+    let greeting_mention = ATTRS
+        .split_author_mention(&greeting)
+        .unwrap_or_else(|| panic!("greeting must mention the author"));
+    assert_eq!(greeting_mention.before, "Hello, User! I'm ");
+    assert_eq!(greeting_mention.name, FUNCTORA_ORG);
+    assert_eq!(greeting_mention.after, ", the creator of this software.");
+
+    let intro = Msg::DonateIntro.render(Language::Eng);
+    let intro_mention = ATTRS
+        .split_author_mention(&intro)
+        .unwrap_or_else(|| panic!("intro must mention the author"));
+    assert_eq!(intro_mention.before, "I'm ");
+    assert_eq!(intro_mention.name, "Functora");
+    assert!(
+        intro_mention.after.contains("Sincerely yours, Functora."),
+        "the closing mention must stay plain text: {intro_mention:?}"
+    );
+}
+
+#[test]
 fn default_about_text_contains_links() {
     for lang in [Language::Eng, Language::Spa, Language::Rus] {
         let text = default_about_text(&ATTRS, lang);

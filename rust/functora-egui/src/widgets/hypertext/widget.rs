@@ -21,6 +21,7 @@ pub struct Hypertext {
     pub(crate) segments: Vec<Segment>,
     pub(crate) centered: bool,
     pub(crate) size: f32,
+    pub(crate) text_color: Option<egui::Color32>,
 }
 
 impl Default for Hypertext {
@@ -35,6 +36,7 @@ impl Hypertext {
             segments: Vec::new(),
             centered: false,
             size: 12.0,
+            text_color: None,
         }
     }
 
@@ -71,6 +73,12 @@ impl Hypertext {
     /// size so mixed paragraphs stay uniform.
     pub fn size(mut self, size: f32) -> Self {
         self.size = size;
+        self
+    }
+
+    /// Color of the plain text segments. Links keep the theme's primary color.
+    pub fn text_color(mut self, color: impl Into<egui::Color32>) -> Self {
+        self.text_color = Some(color.into());
         self
     }
 

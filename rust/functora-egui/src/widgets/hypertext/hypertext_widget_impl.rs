@@ -33,7 +33,7 @@ impl super::widget::Hypertext {
                         0.0,
                         egui::text::TextFormat {
                             font_id: font_id.clone(),
-                            color: theme.muted_foreground,
+                            color: self.text_color.unwrap_or(theme.muted_foreground),
                             ..Default::default()
                         },
                     );

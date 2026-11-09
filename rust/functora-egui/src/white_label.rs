@@ -22,6 +22,8 @@ use crate::default_theme;
 use crate::i18n::detect_browser_language;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
 use crate::route::RouteMetadata;
+#[cfg(all(feature = "qr", feature = "clipboard"))]
+use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
 use crate::theme_extra::set_theme;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
@@ -103,11 +105,42 @@ pub fn screen_donate(
         content.donate_blocks.clone()
     };
 
-    let _ = ui.label(egui::RichText::new(&greeting).size(16.0).weak());
+    let author_url = attrs.author_url();
+    let (greeting_mention, intro_mention) = match attrs.split_author_mention(&greeting) {
+        Some(mention) => (Some(mention), None),
+        None => (None, attrs.split_author_mention(&intro)),
+    };
+
+    match greeting_mention {
+        Some(mention) => {
+            let _ = Hypertext::new()
+                .text(mention.before)
+                .link(mention.name, author_url.clone())
+                .text(mention.after)
+                .size(16.0)
+                .show(ui);
+        }
+        None => {
+            let _ = ui.label(egui::RichText::new(&greeting).size(16.0).weak());
+        }
+    }
     ui.add_space(4.0);
     let _ = Card::new().show(ui, |inner| {
         inner.expand_to_include_x(inner.max_rect().right());
-        let _ = inner.label(egui::RichText::new(&intro).size(13.0));
+        match intro_mention {
+            Some(mention) => {
+                let _ = Hypertext::new()
+                    .text(mention.before)
+                    .link(mention.name, author_url.clone())
+                    .text(mention.after)
+                    .text_color(ShadcnThemeExt::shadcn_theme(inner.ctx()).foreground)
+                    .size(13.0)
+                    .show(inner);
+            }
+            None => {
+                let _ = inner.label(egui::RichText::new(&intro).size(13.0));
+            }
+        }
     });
     ui.add_space(8.0);
     for block in blocks {

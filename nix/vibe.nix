@@ -244,6 +244,7 @@
       # Web
       #
       chromium
+      qutebrowser
       playwright
       playwright-test
       cloudflared

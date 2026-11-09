@@ -1570,7 +1570,7 @@ dependencies = [
 
 [[package]]
 name = "functora-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "aead",
  "aes-gcm",
@@ -1603,7 +1603,7 @@ dependencies = [
 
 [[package]]
 name = "functora-egui"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "android-activity",
  "arboard",

@@ -1595,7 +1595,7 @@ dependencies = [
 
 [[package]]
 name = "functora-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "aead",
  "aes-gcm",
@@ -1628,7 +1628,7 @@ dependencies = [
 
 [[package]]
 name = "functora-egui"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "android-activity",
  "arboard",
@@ -1688,7 +1688,7 @@ dependencies = [
 
 [[package]]
 name = "functora-tagged"
-version = "0.2.9"
+version = "0.2.10"
 dependencies = [
  "derive_more",
  "num-traits",

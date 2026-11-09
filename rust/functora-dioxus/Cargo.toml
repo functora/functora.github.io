@@ -10,7 +10,7 @@ documentation = "https://docs.rs/functora-dioxus"
 description = "Reusable Dioxus components, JS interop, storage, and utilities."
 
 [dependencies]
-functora-core = { version = "0.2.0", path = "../functora-core" }
+functora-core = { version = "0.3.0", path = "../functora-core" }
 dioxus = { version = "=0.8.0-alpha.1", default-features = false, features = [
   "html",
   "router",
@@ -25,7 +25,7 @@ derive_more = { version = "2.1.0", features = ["display"] }
 either = { version = "1.15.0", features = ["serde"] }
 tracing = "0.1.43"
 functora = { version = "0.2.1", path = "../functora" }
-functora-tagged = { version = "0.2.9", path = "../functora-tagged" }
+functora-tagged = { version = "0.2.10", path = "../functora-tagged" }
 tap = "1.0.1"
 zeroize = "1"
 dioxus-free-icons = { version = "0.10.0", path = "../dioxus-free-icons", features = [

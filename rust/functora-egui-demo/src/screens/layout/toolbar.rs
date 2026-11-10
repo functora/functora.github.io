@@ -55,9 +55,20 @@ impl crate::state::ShowcaseApp {
                 .show(ui67);
         });
 
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Custom spacing");
+        _ = Toolbar::new().spacing(16.0).show(ui, |ui68| {
+            _ = Button::new("Save")
+                .variant(ButtonVariant::Outline)
+                .show(ui68);
+            _ = Button::new("Cancel")
+                .variant(ButtonVariant::Ghost)
+                .show(ui68);
+        });
+
         snippet(
             ui,
-            "// Toolbar: tool selection bound to an enum\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum Tool { Select, Pen, Spline, Frame, Text }\n\nlet tools = [(Tool::Select, LucideIcon::MousePointer2), (Tool::Pen, LucideIcon::PenTool), (Tool::Spline, LucideIcon::Spline), (Tool::Frame, LucideIcon::Frame), (Tool::Text, LucideIcon::Type)];\nlet mut tool = Tool::Select;\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (value, icon) in tools {\n            if Button::icon_only(icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool == value)\n                .show(bg)\n                .clicked()\n            {\n                tool = value;\n            }\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).shortcut_text(\"S\").show(bar);\n    Button::new(\"Preview\").icon(LucideIcon::Play).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});",
+            "// Toolbar: tool selection bound to an enum\nuse functora_egui::{Toolbar, ButtonGroup, Button, ButtonVariant, LucideIcon, Badge, BadgeVariant, ComponentSize};\n\n#[derive(Clone, Copy, PartialEq)]\nenum Tool { Select, Pen, Spline, Frame, Text }\n\nlet tools = [(Tool::Select, LucideIcon::MousePointer2), (Tool::Pen, LucideIcon::PenTool), (Tool::Spline, LucideIcon::Spline), (Tool::Frame, LucideIcon::Frame), (Tool::Text, LucideIcon::Type)];\nlet mut tool = Tool::Select;\n\nToolbar::new().show(ui, |bar| {\n    ButtonGroup::show(bar, |bg| {\n        for (value, icon) in tools {\n            if Button::icon_only(icon)\n                .variant(ButtonVariant::Ghost)\n                .selected(tool == value)\n                .show(bg)\n                .clicked()\n            {\n                tool = value;\n            }\n        }\n    });\n    ButtonGroup::show(bar, |bg| {\n        Button::icon_only(LucideIcon::Undo2).variant(ButtonVariant::Ghost).show(bg);\n        Button::icon_only(LucideIcon::Redo2).variant(ButtonVariant::Ghost).show(bg);\n    });\n    Button::new(\"Snap\").variant(ButtonVariant::Outline).selected(snap).shortcut_text(\"S\").show(bar);\n    Button::new(\"Preview\").icon(LucideIcon::Play).show(bar);\n});\n\n// Dense toolbar\nToolbar::new().dense().wrap(false).show(ui, |bar| {\n    Button::icon_only(LucideIcon::ZoomOut).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n    Badge::new(\"100%\").variant(BadgeVariant::Secondary).show(bar);\n    Button::icon_only(LucideIcon::ZoomIn).variant(ButtonVariant::Ghost).size(ComponentSize::Sm).show(bar);\n});\n\n// Custom gap between the items\nToolbar::new().spacing(16.0).show(ui, |bar| {\n    Button::new(\"Save\").variant(ButtonVariant::Outline).show(bar);\n    Button::new(\"Cancel\").variant(ButtonVariant::Ghost).show(bar);\n});",
         );
     }
 }

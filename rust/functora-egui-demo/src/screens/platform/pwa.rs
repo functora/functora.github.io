@@ -52,10 +52,18 @@ impl crate::state::ShowcaseApp {
             "On desktop this will be NotAvailable - expected. On web with beforeinstallprompt it may be Accepted/Rejected.",
         )
         .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "PwaInstallOutcome: {:?}, {:?}, {:?}",
+            functora_egui::PwaInstallOutcome::Accepted,
+            functora_egui::PwaInstallOutcome::Rejected,
+            functora_egui::PwaInstallOutcome::NotAvailable
+        ))
+        .show(ui);
 
         snippet(
             ui,
-            "// PWA: install_hint + trigger_pwa_install\nuse functora_egui::{pwa::install_hint, pwa::trigger_pwa_install};\n\n// Check if install is available\nlet hint = install_hint().await?;\nmatch hint {\n    functora_egui::pwa::InstallHint::Ios => {\n        // Show install button\n    }\n    functora_egui::pwa::InstallHint::Mac => {\n        // Hide install button\n    }\n    functora_egui::pwa::InstallHint::Unavailable => {}\n}\n\n// Trigger install prompt\nlet res = trigger_pwa_install().await?;\n// res = Accepted | Rejected | NotAvailable",
+            "// PWA: install_hint + trigger_pwa_install\nuse functora_egui::{pwa::install_hint, pwa::trigger_pwa_install};\nuse functora_egui::PwaInstallOutcome;\n\n// Check if install is available\nlet hint = install_hint().await?;\nmatch hint {\n    functora_egui::pwa::InstallHint::Ios => {\n        // Show install button\n    }\n    functora_egui::pwa::InstallHint::Mac => {\n        // Hide install button\n    }\n    functora_egui::pwa::InstallHint::Unavailable => {}\n}\n\n// Trigger install prompt\nlet res = trigger_pwa_install().await?;\nmatch res {\n    PwaInstallOutcome::Accepted => {}\n    PwaInstallOutcome::Rejected => {}\n    PwaInstallOutcome::NotAvailable => {}\n}",
         );
     }
 }

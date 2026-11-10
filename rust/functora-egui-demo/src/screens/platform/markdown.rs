@@ -24,10 +24,31 @@ impl crate::state::ShowcaseApp {
                 &self.platform.md_source,
             );
         });
+        ui.add_space(8.0);
+        crate::screens::section(ui, "Core markdown (functora_core::markdown)");
+        _ = Typography::small(format!(
+            "render_markdown(source): {} chars",
+            functora_egui::markdown::render_markdown(&self.platform.md_source).len()
+        ))
+        .show(ui);
+        ui.add_space(8.0);
+        crate::screens::section(ui, "Data URL image loader (markdown_loader)");
+        let ctx = ui.ctx().clone();
+        functora_egui::markdown_loader::install_data_url_loader(&ctx);
+        _ = Typography::small(format!(
+            "WasmSafeDataUrlLoader::ID: {}",
+            functora_egui::markdown_loader::WasmSafeDataUrlLoader::ID
+        ))
+        .show(ui);
+        _ = Typography::small(format!(
+            "loader installed: {}",
+            ctx.is_loader_installed(functora_egui::markdown_loader::WasmSafeDataUrlLoader::ID)
+        ))
+        .show(ui);
 
         snippet(
             ui,
-            "// Markdown: theme-aware rendered CommonMark\nuse functora_egui::CommonMarkCache;\nuse functora_egui::markdown_view;\n\n// Cache (persist across frames)\nlet mut cache = CommonMarkCache::default();\n\n// Render every frame (maps shadcn theme onto egui visuals)\nmarkdown_view::show(ui, &mut cache, \"# Hello\\n\\nThis is **bold**.\");",
+            "// Markdown: theme-aware rendered CommonMark\nuse functora_egui::CommonMarkCache;\nuse functora_egui::markdown_view;\n\n// Cache (persist across frames)\nlet mut cache = CommonMarkCache::default();\n\n// Render every frame (maps shadcn theme onto egui visuals)\nmarkdown_view::show(ui, &mut cache, \"# Hello\\n\\nThis is **bold**.\");\n\n// Core renderer: markdown -> plain HTML string\nuse functora_egui::markdown::render_markdown;\n\nlet html = render_markdown(\"# Hello\\n\\nThis is **bold**.\");\nassert!(html.contains(\"<h1>\"));\n\n// Data URL images inside the markdown need the wasm-safe bytes loader\nuse functora_egui::markdown_loader::{WasmSafeDataUrlLoader, install_data_url_loader};\n\ninstall_data_url_loader(ctx);\nassert!(ctx.is_loader_installed(WasmSafeDataUrlLoader::ID));",
         );
     }
 }

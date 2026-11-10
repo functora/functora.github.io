@@ -4,7 +4,7 @@ use functora_egui::{Button, ButtonVariant, Card, Flex, Input, Typography};
 impl crate::state::ShowcaseApp {
     pub(crate) fn demo_encoding(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
-            "Encoding: encode_payload/decode_payload (base64url JSON), append/extract_query_param, generate_qr_code (svg). Crypto via functora_core.",
+            "Encoding: encode_payload/decode_payload (base64url JSON), append_query_param/extract_query_param, generate_qr_code (svg), download_script (JS). Crypto via functora_core.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -62,15 +62,22 @@ impl crate::state::ShowcaseApp {
             });
         }
         ui.add_space(12.0);
+        let appended = functora_egui::encoding::append_query_param("https://example.com", "k", "v");
+        _ = Typography::small(format!("append_query_param: {appended}")).show(ui);
         _ = Typography::small(format!(
-            "append_query_param: {}",
-            functora_egui::encoding::append_query_param("https://example.com", "k", "v")
+            "extract_query_param: {:?}",
+            functora_egui::encoding::extract_query_param(&appended, "k")
+        ))
+        .show(ui);
+        _ = Typography::small(format!(
+            "download_script: {} chars",
+            functora_egui::encoding::download_script("report.pdf").len()
         ))
         .show(ui);
 
         snippet(
             ui,
-            "// Encoding: base64url JSON + query params + QR SVG\nuse functora_egui::encoding::{encode_payload, decode_payload, generate_qr_code, append_query_param};\nuse serde::{Serialize, Deserialize};\n\n#[derive(Serialize, Deserialize)]\nstruct Payload { msg: String }\n\nlet payload = Payload { msg: \"hello\".to_owned() };\n\n// Encode to base64url JSON\nlet encoded = encode_payload(&payload)?;\n// \"eyJtc2ciOiJoZWxsbyJ9\"\n\n// Decode back\nlet decoded: Payload = decode_payload(&encoded)?;\nassert_eq!(decoded.msg, \"hello\");\n\n// Generate QR code SVG\nlet svg = generate_qr_code(\"https://example.com\")?;\n\n// Append query param\nlet url = append_query_param(\"https://example.com\", \"k\", \"v\");\n// \"https://example.com?k=v\"",
+            "// Encoding: base64url JSON + query params + QR SVG\nuse functora_egui::encoding::{encode_payload, decode_payload, generate_qr_code, append_query_param, extract_query_param, download_script};\nuse serde::{Serialize, Deserialize};\n\n#[derive(Serialize, Deserialize)]\nstruct Payload { msg: String }\n\nlet payload = Payload { msg: \"hello\".to_owned() };\n\n// Encode to base64url JSON\nlet encoded = encode_payload(&payload)?;\n// \"eyJtc2ciOiJoZWxsbyJ9\"\n\n// Decode back\nlet decoded: Payload = decode_payload(&encoded)?;\nassert_eq!(decoded.msg, \"hello\");\n\n// Generate QR code SVG\nlet svg = generate_qr_code(\"https://example.com\")?;\n\n// Append and read back a query param\nlet url = append_query_param(\"https://example.com\", \"k\", \"v\");\n// \"https://example.com?k=v\"\nassert_eq!(extract_query_param(&url, \"k\").as_deref(), Some(\"v\"));\n\n// Browser-side download helper (escapes the filename for JS)\nlet script = download_script(\"report.pdf\");",
         );
     }
 }

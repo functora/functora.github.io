@@ -6,9 +6,17 @@ use functora_egui_demo::ShowcaseApp;
 mod common;
 use common::rendered_text;
 
+fn rendered_app<F>(mut body: F) -> String
+where
+    F: FnMut(&mut ShowcaseApp, &mut egui::Ui),
+{
+    let mut app = ShowcaseApp::default();
+    rendered_text(|ui| body(&mut app, ui))
+}
+
 #[test]
 fn package_demo_shows_real_build_metadata() {
-    let text = rendered_text(ShowcaseApp::demo_package);
+    let text = rendered_app(ShowcaseApp::demo_package);
     assert!(
         text.contains(&format!(
             "crate: functora-egui-demo v{}",
@@ -40,7 +48,7 @@ fn package_demo_shows_real_build_metadata() {
 
 #[test]
 fn white_label_demo_shows_derived_branding() {
-    let text = rendered_text(ShowcaseApp::demo_white_label);
+    let text = rendered_app(ShowcaseApp::demo_white_label);
     assert!(
         text.contains(ShowcaseApp::DEMO_ATTRS.app_url().as_str()),
         "white-label demo must show the derived app_url: {text}"

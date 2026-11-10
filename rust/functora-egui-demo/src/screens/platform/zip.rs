@@ -43,9 +43,21 @@ impl crate::state::ShowcaseApp {
             }
         });
 
+        ui.add_space(8.0);
+        _ = Typography::small(format!(
+            "ATTACHMENTS_PREFIX: {}",
+            functora_egui::zip::ATTACHMENTS_PREFIX
+        ))
+        .show(ui);
+        _ = Typography::small(format!(
+            "CancelToken: Arc<AtomicBool> (cancel = {:?})",
+            std::mem::size_of::<functora_egui::zip::CancelToken>()
+        ))
+        .show(ui);
+
         snippet(
             ui,
-            "// Zip: create_zip_async + unzip_async + verify_zip_roundtrip\nuse functora_egui::zip::{create_zip_async, unzip_async};\nuse functora_egui::progress::Stage;\nuse functora_egui::files::Attachment;\n\nlet attachments = picked\n    .iter()\n    .map(|(name, data)| Attachment { name: name.clone(), data: data.clone().into() })\n    .collect::<Vec<_>>();\n\nlet zipped = create_zip_async(&attachments, |_| {}, Stage::Zip).await?;\nlet unzipped = unzip_async(zipped, |_| {}, Stage::Unzip).await?;\nlet summary = Self::verify_zip_roundtrip(&picked, unzipped)?;\n// \"Zip ok: 2 files, 42 bytes, round-trip verified\"",
+            "// Zip: create_zip_async + unzip_async + verify_zip_roundtrip\nuse functora_egui::zip::{create_zip_async, unzip_async};\nuse functora_egui::progress::Stage;\nuse functora_egui::files::Attachment;\nuse std::sync::Arc;\nuse std::sync::atomic::AtomicBool;\n\nlet attachments = picked\n    .iter()\n    .map(|(name, data)| Attachment { name: name.clone(), data: data.clone().into() })\n    .collect::<Vec<_>>();\n\n// The cancel token is an Arc<AtomicBool>: set it to true to abort the job.\nlet token = Arc::new(AtomicBool::new(false));\n\nlet zipped = create_zip_async(&attachments, |_| {}, Stage::Zip, token.clone()).await?;\nlet unzipped = unzip_async(zipped, |_| {}, Stage::Unzip, token).await?;\nlet summary = Self::verify_zip_roundtrip(&picked, unzipped)?;\n// \"Zip ok: 2 files, 42 bytes, round-trip verified\"\n\n// The lower-level report API drives the progress reporter directly\nuse functora_egui::zip::{ATTACHMENTS_PREFIX, CancelToken, create_zip_report, unzip_report};\n\nlet entries = vec![(format!(\"{ATTACHMENTS_PREFIX}a.txt\"), Arc::from(b\"hi\".as_slice()))];\nlet token: CancelToken = Arc::new(AtomicBool::new(false));\nlet mut report = |job: Job<Stage>| eprintln!(\"{job:?}\");\nlet archive = create_zip_report(entries, Stage::Zip, &mut report, Some(&token)).await?;\nlet listing = unzip_report(archive, Stage::Unzip, &mut report, Some(&token)).await?;",
         );
     }
 }

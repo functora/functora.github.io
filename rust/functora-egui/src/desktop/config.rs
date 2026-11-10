@@ -116,19 +116,49 @@ pub fn iso_date_from_days_since_epoch(days: u64) -> String {
     format!("{full_year:04}-{month:02}-{day:02}")
 }
 
+/// Seconds since the Unix epoch, or `None` when the platform has no clock.
+///
+/// The browser build has no `std` clock, so the wall clock is read from the
+/// JavaScript `Date` there. Every platform without a clock yields `None`
+/// instead of panicking.
+#[must_use]
+fn epoch_secs() -> Option<u64> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let millis = js_sys::Date::now();
+        millis
+            .is_finite()
+            .then(|| crate::cast::f64_to_u64_clamped(millis / 1000.0))
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()
+            .map(|elapsed| elapsed.as_secs())
+    }
+}
+
+/// The release date derived from a clock reading in epoch seconds.
+///
+/// `None` means the platform has no clock, and the Unix epoch is used.
+#[must_use]
+pub fn release_date_from(epoch_secs: Option<u64>) -> String {
+    epoch_secs.map_or_else(
+        || iso_date_from_days_since_epoch(0),
+        |secs| iso_date_from_days_since_epoch(secs / 86_400),
+    )
+}
+
 #[must_use]
 pub fn release_date() -> String {
     std::env::var("SOURCE_DATE_EPOCH")
         .ok()
         .and_then(|raw| raw.parse::<u64>().ok())
-        .map(|epoch| epoch / 86_400)
-        .or_else(|| {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .ok()
-                .map(|elapsed| elapsed.as_secs() / 86_400)
-        })
-        .map_or_else(|| "1970-01-01".to_owned(), iso_date_from_days_since_epoch)
+        .map_or_else(
+            || release_date_from(epoch_secs()),
+            |epoch| iso_date_from_days_since_epoch(epoch / 86_400),
+        )
 }
 
 #[must_use]

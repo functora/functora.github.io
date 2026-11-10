@@ -2,7 +2,6 @@ use functora_egui::snippet;
 use functora_egui::{
     Badge, Button, ButtonVariant, Flex, FlexAlign, FlexItem, Input, Label, Typography,
 };
-
 impl crate::state::ShowcaseApp {
     pub fn demo_flex(&mut self, ui: &mut egui::Ui) {
         _ = Typography::muted(
@@ -123,6 +122,80 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
+        crate::screens::section(ui, "Alignment: start, end and stretch");
+        _ = Flex::row().gap(8.0).align_end().w_full().show(ui, |f| {
+            _ = f.add(Badge::new("Short"));
+            _ = f.add(Badge::new("A much taller item that grows the row"));
+        });
+        _ = Flex::row().gap(8.0).align_stretch().w_full().show(ui, |f| {
+            _ = f.add(Badge::new("Stretched"));
+            _ = f.add(Badge::new("Stretched too"));
+        });
+
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Justify: start, around and evenly");
+        _ = Flex::row().justify_start().gap(8.0).w_full().show(ui, |f| {
+            _ = f.add(Badge::new("Start"));
+            _ = f.add(Badge::new("Start"));
+        });
+        _ = Flex::row()
+            .justify_around()
+            .gap(8.0)
+            .w_full()
+            .show(ui, |f| {
+                _ = f.add(Badge::new("Around"));
+                _ = f.add(Badge::new("Around"));
+            });
+        _ = Flex::row()
+            .justify_evenly()
+            .gap(8.0)
+            .w_full()
+            .show(ui, |f| {
+                _ = f.add(Badge::new("Evenly"));
+                _ = f.add(Badge::new("Evenly"));
+            });
+
+        ui.add_space(12.0);
+        crate::screens::section(ui, "No wrap, single-line items and grown children");
+        _ = Flex::row().no_wrap().gap(8.0).w_full().show(ui, |f| {
+            for tag in tags {
+                _ = f.add(Badge::new(tag));
+            }
+        });
+        _ = Flex::row()
+            .single_line_items()
+            .gap(8.0)
+            .w_full()
+            .show(ui, |f| {
+                _ = f.add(Badge::new(
+                    "A single line item that truncates instead of wrapping",
+                ));
+            });
+        _ = Flex::row().grow_items(1.0).gap(8.0).w_full().show(ui, |f| {
+            _ = f.add(Badge::new("Grown"));
+            _ = f.add(Badge::new("Grown"));
+        });
+        _ = Flex::column().h_full().gap(8.0).show(ui, |f| {
+            _ = f.add(Badge::new("Fills the available height"));
+        });
+
+        ui.add_space(12.0);
+        crate::screens::section(ui, "The FlexInst handle");
+        _ = Typography::small(
+            "The closure receives a FlexInst handle: add / grow / ui / grow_ui / spacer / nested / grow_nested / item / item_ui.",
+        )
+        .show(ui);
+        _ = Flex::row().gap(8.0).w_full().show(
+            ui,
+            |f: &mut functora_egui::layout::flex_instance::FlexInst| {
+                _ = f.item_ui(FlexItem::new().align_self(FlexAlign::Start), |ui2| {
+                    _ = Label::new("item_ui").show(ui2);
+                });
+                _ = f.item(FlexItem::new().grow(1.0), Badge::new("item"));
+            },
+        );
+
+        ui.add_space(12.0);
         crate::screens::section(ui, "Center utility");
         _ = egui::Frame::NONE
             .stroke(egui::Stroke::new(1.0, egui::Color32::from_gray(80)))
@@ -139,7 +212,7 @@ impl crate::state::ShowcaseApp {
 
         snippet(
             ui,
-            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n    f.add(Badge::new(\"Third\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type a message...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify end\nFlex::row().justify_end().gap(8.0).w_full().show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Confirm\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Next\"));\n});\n\n// Justify center\nFlex::row().justify_center().gap(8.0).w_full().show(ui, |f| {\n    f.add(Spinner::new().size(20.0));\n    f.ui(|ui| { ui.label(\"Loading...\"); });\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Nested flex: two-column form\nFlex::row().gap(16.0).w_full().show(ui, |f| {\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut first).placeholder(\"John\"));\n        col.add(Input::new(&mut last).placeholder(\"Doe\"));\n    });\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut email).placeholder(\"john@example.com\"));\n    });\n});\n\n// Center utility\ncenter(ui, |ui| {\n    ui.label(\"Centered content\");\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"shadcn\", \"flexbox\", \"layout\", \"widgets\", \"responsive\", \"wrap\", \"gap\", \"grow\", \"theming\", \"buttons\", \"inputs\", \"cards\", \"dialogs\", \"toasts\", \"badges\"] {\n        f.add(Badge::new(tag));\n    }\n});",
+            "// Flex: flexbox-like layout with gap, grow, justify, align, wrap\nuse functora_egui::Flex;\n\n// Row with gap\nFlex::row().gap(8.0).show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Save\"));\n});\n\n// Column with gap\nFlex::column().gap(8.0).align_start().show(ui, |f| {\n    f.add(Badge::new(\"First\"));\n    f.add(Badge::new(\"Second\"));\n    f.add(Badge::new(\"Third\"));\n});\n\n// Grow: input fills, button stays natural\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.grow(1.0, Input::new(&mut text).placeholder(\"Type a message...\"));\n    f.add(Button::new(\"Send\"));\n});\n\n// Justify end\nFlex::row().justify_end().gap(8.0).w_full().show(ui, |f| {\n    f.add(Button::new(\"Cancel\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Confirm\"));\n});\n\n// Justify between\nFlex::row().justify_between().w_full().show(ui, |f| {\n    f.add(Button::new(\"Previous\").variant(ButtonVariant::Outline));\n    f.add(Button::new(\"Next\"));\n});\n\n// Justify center\nFlex::row().justify_center().gap(8.0).w_full().show(ui, |f| {\n    f.add(Spinner::new().size(20.0));\n    f.ui(|ui| { ui.label(\"Loading...\"); });\n});\n\n// Spacer pushes items apart\nFlex::row().gap(8.0).w_full().show(ui, |f| {\n    f.add(Badge::new(\"Left\"));\n    f.spacer();\n    f.add(Badge::new(\"Right\"));\n});\n\n// Nested flex: two-column form\nFlex::row().gap(16.0).w_full().show(ui, |f| {\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut first).placeholder(\"John\"));\n        col.add(Input::new(&mut last).placeholder(\"Doe\"));\n    });\n    f.grow_nested(1.0, Flex::column().gap(8.0), |col| {\n        col.add(Input::new(&mut email).placeholder(\"john@example.com\"));\n    });\n});\n\n// Center utility\ncenter(ui, |ui| {\n    ui.label(\"Centered content\");\n});\n\n// Wrap\nFlex::row().gap(4.0).wrap().w_full().show(ui, |f| {\n    for tag in [\"Rust\", \"egui\", \"shadcn\", \"flexbox\", \"layout\", \"widgets\", \"responsive\", \"wrap\", \"gap\", \"grow\", \"theming\", \"buttons\", \"inputs\", \"cards\", \"dialogs\", \"toasts\", \"badges\"] {\n        f.add(Badge::new(tag));\n    }\n});\n\n// Cross-axis alignment: start, end, stretch\nFlex::row().align_end().show(ui, |f| { f.add(Badge::new(\"End\")); });\nFlex::row().align_stretch().show(ui, |f| { f.add(Badge::new(\"Stretch\")); });\n\n// Main-axis justification: start, around, evenly\nFlex::row().justify_start().show(ui, |f| { f.add(Badge::new(\"Start\")); });\nFlex::row().justify_around().show(ui, |f| { f.add(Badge::new(\"Around\")); });\nFlex::row().justify_evenly().show(ui, |f| { f.add(Badge::new(\"Evenly\")); });\n\n// Keep a row on one line, truncate long items, and grow every child\nFlex::row().no_wrap().show(ui, |f| { f.add(Badge::new(\"One line\")); });\nFlex::row().single_line_items().show(ui, |f| { f.add(Badge::new(\"Truncated\")); });\nFlex::row().grow_items(1.0).show(ui, |f| { f.add(Badge::new(\"Grown\")); });\n\n// Fill the available height\nFlex::column().h_full().show(ui, |f| { f.add(Badge::new(\"Full height\")); });",
         );
     }
 }

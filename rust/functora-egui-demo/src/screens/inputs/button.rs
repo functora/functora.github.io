@@ -107,6 +107,23 @@ impl crate::state::ShowcaseApp {
         });
 
         ui.add_space(12.0);
+        crate::screens::section(ui, "Sizing and wrapping");
+        _ = Flex::row().gap(8.0).align_center().show(ui, |f| {
+            _ = f.add(Button::new("Full width").full_width());
+            _ = f.add(Button::new("Fixed 120").fixed_width(120.0));
+            _ = f.add(
+                Button::new("A very long button label that wraps onto two lines")
+                    .wrap(functora_egui::Wrap::Word)
+                    .min_height(48.0),
+            );
+            _ = f.add(
+                Button::new("Single line truncates instead of wrapping")
+                    .single_line()
+                    .fixed_width(160.0),
+            );
+        });
+
+        ui.add_space(12.0);
         crate::screens::section(ui, "Button group");
         _ = ButtonGroup::show(ui, |ui46| {
             _ = Button::new("Left")
@@ -122,7 +139,7 @@ impl crate::state::ShowcaseApp {
 
         snippet(
             ui,
-            "// Button: variants + sizes + icons\nuse functora_egui::{Button, ButtonGroup, ButtonVariant, ComponentSize, LucideIcon};\n\n// Variants\nButton::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::new(\"Outline\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Ghost\").variant(ButtonVariant::Ghost).show(ui);\n\n// Sizes\nButton::new(\"XS\").size(ComponentSize::Xs).show(ui);\nButton::new(\"Small\").size(ComponentSize::Sm).show(ui);\nButton::new(\"Large\").size(ComponentSize::Lg).show(ui);\n\n// Icon + text\nButton::new(\"Save\").icon(LucideIcon::Save).show(ui);\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Open\").shortcut_text(\"Ctrl+O\").variant(ButtonVariant::Outline).show(ui);\n\n// Selected (toggle)\nButton::new(\"Toggle Me\").variant(ButtonVariant::Outline).selected(selected).show(ui);\n\n// Disabled\nButton::new(\"Disabled\").enabled(false).show(ui);\n\n// Button group\nButtonGroup::show(ui, |g| {\n    Button::new(\"Left\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Center\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Right\").variant(ButtonVariant::Outline).show(g);\n});",
+            "// Button: variants + sizes + icons\nuse functora_egui::{Button, ButtonGroup, ButtonVariant, ComponentSize, LucideIcon};\n\n// Variants\nButton::new(\"Default\").show(ui);\nButton::new(\"Destructive\").variant(ButtonVariant::Destructive).show(ui);\nButton::new(\"Outline\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Ghost\").variant(ButtonVariant::Ghost).show(ui);\n\n// Sizes\nButton::new(\"XS\").size(ComponentSize::Xs).show(ui);\nButton::new(\"Small\").size(ComponentSize::Sm).show(ui);\nButton::new(\"Large\").size(ComponentSize::Lg).show(ui);\n\n// Icon + text\nButton::new(\"Save\").icon(LucideIcon::Save).show(ui);\nButton::new(\"Save\").shortcut_text(\"Ctrl+S\").variant(ButtonVariant::Outline).show(ui);\nButton::new(\"Open\").shortcut_text(\"Ctrl+O\").variant(ButtonVariant::Outline).show(ui);\n\n// Selected (toggle)\nButton::new(\"Toggle Me\").variant(ButtonVariant::Outline).selected(selected).show(ui);\n\n// Disabled\nButton::new(\"Disabled\").enabled(false).show(ui);\n\n// Sizing and wrapping\nButton::new(\"Full width\").full_width().show(ui);\nButton::new(\"Fixed 120\").fixed_width(120.0).show(ui);\nButton::new(\"Wraps onto two lines\").wrap(functora_egui::Wrap::Word).min_height(48.0).show(ui);\nButton::new(\"Truncates instead of wrapping\").single_line().fixed_width(160.0).show(ui);\n\n// Button group\nButtonGroup::show(ui, |g| {\n    Button::new(\"Left\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Center\").variant(ButtonVariant::Outline).show(g);\n    Button::new(\"Right\").variant(ButtonVariant::Outline).show(g);\n});",
         );
     }
 }

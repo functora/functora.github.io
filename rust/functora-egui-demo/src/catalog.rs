@@ -161,6 +161,16 @@ impl RadioOption {
     ];
 }
 
+impl std::fmt::Display for RadioOption {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = Self::ALL
+            .iter()
+            .find_map(|(value, label)| (*value == *self).then_some(*label))
+            .unwrap_or("Unknown");
+        f.write_str(label)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ButtonGroupOption {
     #[default]
@@ -197,6 +207,16 @@ impl Fruit {
     ];
 }
 
+impl std::fmt::Display for Fruit {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = Self::ALL
+            .iter()
+            .find_map(|(value, label)| (*value == *self).then_some(*label))
+            .unwrap_or("Unknown");
+        f.write_str(label)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum BlendMode {
     #[default]
@@ -213,6 +233,16 @@ impl BlendMode {
         (Self::Screen, "Screen"),
         (Self::Overlay, "Overlay"),
     ];
+}
+
+impl std::fmt::Display for BlendMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let label = Self::ALL
+            .iter()
+            .find_map(|(value, label)| (*value == *self).then_some(*label))
+            .unwrap_or("Unknown");
+        f.write_str(label)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -403,10 +433,11 @@ pub enum ComponentId {
     Markdown,
     Package,
     WhiteLabel,
+    Utilities,
 }
 
 impl ComponentId {
-    pub const NAMES: [(Self, &'static str); 104] = [
+    pub const NAMES: [(Self, &'static str); 105] = [
         (Self::Button, "Button"),
         (Self::ButtonGroup, "ButtonGroup"),
         (Self::Checkbox, "Checkbox"),
@@ -511,12 +542,13 @@ impl ComponentId {
         (Self::Markdown, "Markdown"),
         (Self::Package, "Package"),
         (Self::WhiteLabel, "WhiteLabel"),
+        (Self::Utilities, "Utilities"),
     ];
 
-    pub const ALL: [Self; 104] = {
-        let mut ids = [Self::Button; 104];
+    pub const ALL: [Self; 105] = {
+        let mut ids = [Self::Button; 105];
         let mut i = 0;
-        while i < 104 {
+        while i < 105 {
             ids[i] = Self::NAMES[i].0;
             i += 1;
         }
@@ -1016,6 +1048,11 @@ pub const CATEGORIES: &[(CategoryId, LucideIcon, &[ComponentDef])] = &[
                 "WhiteLabel",
                 LucideIcon::Tags,
                 Some(ComponentId::WhiteLabel),
+            ),
+            ComponentDef::new(
+                "Utilities",
+                LucideIcon::Wrench,
+                Some(ComponentId::Utilities),
             ),
         ],
     ),

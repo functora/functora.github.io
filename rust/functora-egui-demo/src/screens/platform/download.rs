@@ -33,9 +33,29 @@ impl crate::state::ShowcaseApp {
                     .map_err(|e| e.to_string())
             }));
         }
+        ui.add_space(8.0);
+        if ui
+            .add_enabled(
+                saving,
+                Button::new("Save with progress")
+                    .icon(functora_egui::LucideIcon::Save)
+                    .variant(functora_egui::ButtonVariant::Outline),
+            )
+            .clicked()
+        {
+            let name = self.platform.download_name.clone();
+            let data = self.platform.download_text.clone().into_bytes();
+            self.platform.download_rx = Some(spawn_async(async move {
+                functora_egui::download::download_with_progress(data, &name, |done, total| {
+                    log::info!("download {done}/{total}");
+                })
+                .await
+                .map_err(|e| e.to_string())
+            }));
+        }
         snippet(
             ui,
-            "// Save: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;",
+            "// Save: Blob + anchor (web) / save dialog (desktop) / MediaStore (Android)\nuse functora_egui::download::download;\n\nlet data = b\"hello, world!\";\nlet filename = \"hello.txt\";\n\n// Simple one-liner\ndownload(data, filename).await?;\n\n// Or with bytes:\n// download(data.to_vec(), filename).await?;\n\n// With a progress callback\nuse functora_egui::download::download_with_progress;\n\ndownload_with_progress(data.to_vec(), filename, |done, total| {\n    eprintln!(\"{done}/{total}\");\n}).await?;",
         );
     }
 }

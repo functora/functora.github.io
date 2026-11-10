@@ -1,5 +1,7 @@
 use functora_egui::snippet;
-use functora_egui::{Card, Flex, ResponsiveExt, Typography, TypographyVariant};
+use functora_egui::{
+    Breakpoint, Card, Flex, ResponsiveExt, Spacing, Typography, TypographyVariant,
+};
 
 impl crate::state::ShowcaseApp {
     pub fn demo_spacing(ui: &mut egui::Ui) {
@@ -37,10 +39,18 @@ impl crate::state::ShowcaseApp {
         } else {
             _ = Typography::small("Desktop spacing is active.").show(ui);
         }
+        ui.add_space(4.0);
+        let mobile = Spacing::for_breakpoint(Breakpoint::Mobile);
+        let desktop = Spacing::for_breakpoint(Breakpoint::Desktop);
+        _ = Typography::small(format!(
+            "Spacing::for_breakpoint(Mobile): touch_height {:.1}, gap {:.1} - Desktop: touch_height {:.1}, gap {:.1}",
+            mobile.touch_height, mobile.gap, desktop.touch_height, desktop.gap
+        ))
+        .show(ui);
 
         snippet(
             ui,
-            "// Spacing: query responsive spacing and render it\nuse functora_egui::ResponsiveExt;\n\nlet spacing = ui.responsive_spacing();\n\neprintln!(\"touch_height: {:.1}px\", spacing.touch_height);\neprintln!(\"touch_padding: {:.1}px\", spacing.touch_padding);\neprintln!(\"gap: {:.1}px\", spacing.gap);\neprintln!(\"page_padding: {:.1}px\", spacing.page_padding);\neprintln!(\"content_max_width: {:.1}px\", spacing.content_max_width);",
+            "// Spacing: query responsive spacing and render it\nuse functora_egui::ResponsiveExt;\n\nlet spacing = ui.responsive_spacing();\n\neprintln!(\"touch_height: {:.1}px\", spacing.touch_height);\neprintln!(\"touch_padding: {:.1}px\", spacing.touch_padding);\neprintln!(\"gap: {:.1}px\", spacing.gap);\neprintln!(\"page_padding: {:.1}px\", spacing.page_padding);\neprintln!(\"content_max_width: {:.1}px\", spacing.content_max_width);\n\n// The scale matching a breakpoint, without touching the viewport\nuse functora_egui::{Breakpoint, Spacing};\n\nlet mobile = Spacing::for_breakpoint(Breakpoint::Mobile);\nlet desktop = Spacing::for_breakpoint(Breakpoint::Desktop);",
         );
     }
 }

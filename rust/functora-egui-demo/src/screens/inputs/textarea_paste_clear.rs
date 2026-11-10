@@ -90,9 +90,30 @@ impl crate::state::ShowcaseApp {
         ))
         .show(ui);
 
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Readonly with a max height");
+        let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_readonly)
+            .placeholder("Readonly area")
+            .readonly()
+            .max_height(120.0)
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Readonly textarea chars: {}",
+            self.textarea_paste_clear_readonly.len()
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Copy without the copy icon");
+        let _ = TextareaPasteClear::new(&mut self.textarea_paste_clear_copy)
+            .placeholder("Copy enabled...")
+            .copy()
+            .show(ui);
+
         snippet(
             ui,
-            "// TextareaPasteClear: multi-line with paste + clear toolbar\n// Copy button next to paste: [paste | copy | ... | clear] (on by default, paste stays leftmost)\nuse functora_egui::{TextareaPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = TextareaPasteClear::new(&mut text)\n    .placeholder(\"Paste a long text...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom icons - paste stays clipboard-like (Clipboard), clear is Trash2, distinct from copy's Copy/CopyPlus\nTextareaPasteClear::new(&mut text)\n    .paste_icon(LucideIcon::Clipboard)\n    .clear_icon(LucideIcon::Trash2)\n    .show(ui);\n\n// Taller override (default is 192px)\nTextareaPasteClear::new(&mut text)\n    .min_height(240.0)\n    .show(ui);\n\n// Copy button is on by default (paste stays leftmost); opt out explicitly\nTextareaPasteClear::new(&mut text)\n    .with_copy(false) // -> [paste | ... | clear]\n    .show(ui);\n\n// Copy with custom icon - copy uses CopyPlus, distinct from paste's Clipboard\nTextareaPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | ... | clear]\n    .show(ui);",
+            "// TextareaPasteClear: multi-line with paste + clear toolbar\n// Copy button next to paste: [paste | copy | ... | clear] (on by default, paste stays leftmost)\nuse functora_egui::{TextareaPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = TextareaPasteClear::new(&mut text)\n    .placeholder(\"Paste a long text...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom icons - paste stays clipboard-like (Clipboard), clear is Trash2, distinct from copy's Copy/CopyPlus\nTextareaPasteClear::new(&mut text)\n    .paste_icon(LucideIcon::Clipboard)\n    .clear_icon(LucideIcon::Trash2)\n    .show(ui);\n\n// Taller override (default is 192px)\nTextareaPasteClear::new(&mut text)\n    .min_height(240.0)\n    .show(ui);\n\n// Copy button is on by default (paste stays leftmost); opt out explicitly\nTextareaPasteClear::new(&mut text)\n    .with_copy(false) // -> [paste | ... | clear]\n    .show(ui);\n\n// Re-enable it explicitly\nTextareaPasteClear::new(&mut text)\n    .copy() // -> [paste | copy | ... | clear]\n    .show(ui);\n\n// Readonly: the area cannot be edited, and max_height caps the growth\nTextareaPasteClear::new(&mut text)\n    .readonly()\n    .max_height(120.0)\n    .show(ui);\n\n// Copy with custom icon - copy uses CopyPlus, distinct from paste's Clipboard\nTextareaPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | ... | clear]\n    .show(ui);",
         );
     }
 }

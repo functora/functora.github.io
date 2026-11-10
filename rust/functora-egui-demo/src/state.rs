@@ -18,14 +18,91 @@ pub type ThumbnailResult = Result<(String, Vec<u8>), String>;
 pub enum CryptoOp {
     Encrypt,
     Decrypt,
+    StreamEncrypt,
+    StreamDecrypt,
+    StreamParts,
 }
 
 pub(crate) const APP_SCOPE: &str = "functora-egui-demo";
+
+/// The manifest the demo derives its packaging metadata from.
+pub(crate) const MANIFEST_PATH: &str = "Cargo.toml";
+
+/// Manifest-derived packaging metadata.
+///
+/// The manifest is parsed when the demo asks for it, never while the app
+/// starts: the browser build has no filesystem and no `std` clock, so the
+/// startup path must stay free of I/O.
+pub struct PackagingMetadata {
+    /// The manifest the metadata was parsed from.
+    pub manifest_path: String,
+    pub web: functora_egui::web::WebConfig,
+    pub android: functora_egui::android::AndroidConfig,
+    pub desktop: functora_egui::desktop::DesktopConfig,
+    pub pkg_name: Option<String>,
+    pub lib_name: Option<String>,
+    pub app_name: String,
+    pub pkg_js: String,
+    pub derived_lib_name: String,
+    pub web_title: String,
+    pub web_theme_color: String,
+    pub release_date: String,
+}
+
+impl PackagingMetadata {
+    /// Parse the manifest and read the release date.
+    #[must_use]
+    pub fn parse(manifest_path: &str) -> Self {
+        let manifest = functora_egui::config::shared::parse_toml(manifest_path);
+        Self {
+            manifest_path: manifest_path.to_owned(),
+            web: functora_egui::web::load_config(manifest_path),
+            android: functora_egui::android::load_android_config(manifest_path),
+            desktop: functora_egui::desktop::load_desktop_config(manifest_path),
+            pkg_name: manifest
+                .as_ref()
+                .and_then(functora_egui::config::shared::pkg_name),
+            lib_name: manifest
+                .as_ref()
+                .and_then(functora_egui::config::shared::lib_name_from),
+            app_name: functora_egui::config::shared::app_name_from_manifest(manifest_path),
+            pkg_js: functora_egui::config::shared::derive_pkg_js(manifest_path),
+            derived_lib_name: functora_egui::config::shared::derive_lib_name(manifest_path),
+            web_title: functora_egui::web::derive_title(manifest_path),
+            web_theme_color: functora_egui::web::derive_theme_color(manifest_path),
+            release_date: functora_egui::desktop::config::release_date(),
+        }
+    }
+}
+
+/// The packaging metadata cache of the demo.
+///
+/// The manifest is parsed the first time the metadata is needed and cached
+/// afterwards, so the demo never re-parses `Cargo.toml` on a rendered frame.
+#[derive(Default)]
+pub struct PackagingState {
+    loaded: Option<PackagingMetadata>,
+}
+
+impl PackagingState {
+    /// The metadata, parsed on first use and cached afterwards.
+    pub fn metadata(&mut self) -> &PackagingMetadata {
+        self.loaded
+            .get_or_insert_with(|| PackagingMetadata::parse(MANIFEST_PATH))
+    }
+
+    /// Whether the metadata was already parsed.
+    #[must_use]
+    pub fn is_loaded(&self) -> bool {
+        self.loaded.is_some()
+    }
+}
 
 pub struct PlatformState {
     pub storage: functora_egui::Storage,
     pub storage_key: String,
     pub storage_value: String,
+    pub storage_output: String,
     pub storage_persistent_text: String,
     pub clipboard_write: String,
     pub clipboard_read: String,
@@ -73,10 +150,14 @@ pub struct PlatformState {
     pub crypto_output: String,
     pub crypto_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub crypto_op: Option<CryptoOp>,
+    pub package_password: String,
+    pub package_output: String,
+    pub package_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub worker_rx: Option<std::sync::mpsc::Receiver<Result<String, String>>>,
     pub platform_info: String,
     pub md_source: String,
     pub md_cache: functora_egui::CommonMarkCache,
+    pub packaging: PackagingState,
 }
 
 impl PlatformState {
@@ -91,6 +172,7 @@ impl PlatformState {
             || self.thumbnail_rx.is_some()
             || self.zip_rx.is_some()
             || self.crypto_rx.is_some()
+            || self.package_rx.is_some()
             || self.worker_rx.is_some()
     }
 }
@@ -102,6 +184,7 @@ impl Default for PlatformState {
             storage,
             storage_key: "demo_key".to_owned(),
             storage_value: "hello".to_owned(),
+            storage_output: String::new(),
             storage_persistent_text: storage
                 .load("demo_persistent")
                 .unwrap_or_else(|| "persistent hello".to_owned()),
@@ -147,11 +230,15 @@ impl Default for PlatformState {
             crypto_output: String::new(),
             crypto_rx: None,
             crypto_op: None,
+            package_password: "s3cret".to_owned(),
+            package_output: String::new(),
+            package_rx: None,
             worker_rx: None,
             platform_info: String::new(),
             md_source: "# Showcase\n\nCommonMark **rendering** with *emphasis*, ~~strikethrough~~, `inline code` and [links](https://example.com).\n\n## Lists\n\n- Unordered item one\n- Unordered item two\n\n1. Ordered item one\n2. Ordered item two\n\n- [x] Completed task\n- [ ] Open task\n\n> Blockquote with **nested** emphasis.\n\n```rust\nfn main() {\n    println!(\"Hello\");\n}\n```\n\n| Name | Value |\n| ---- | ----- |\n| Alpha | 1 |\n| Beta | 2 |\n\n![Red dot](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAFklEQVR4nGO4o6ZGEmIY1TCqYfhqAAATqigQ9JeO5gAAAABJRU5ErkJggg==)\n\nHere is a footnote[^1].\n\n---\n\n[^1]: Footnote text."
                 .to_owned(),
             md_cache: functora_egui::CommonMarkCache::default(),
+            packaging: PackagingState::default(),
         }
     }
 }
@@ -246,12 +333,21 @@ impl Default for FormState {
     }
 }
 
+/// State of the command palette overlay: whether it is open and what the
+/// user typed into its search field.
+#[derive(Default)]
+pub struct CommandPaletteState {
+    pub open: bool,
+    pub search: String,
+}
+
 #[derive(Default)]
 pub struct DemoState {
     pub button_selected: bool,
     pub button_group_selected: ButtonGroupOption,
     pub navbar_collapsed: bool,
     pub blocking_overlay_open: bool,
+    pub command_palette: CommandPaletteState,
 }
 
 /// All state for the showcase demos, one field per interactive demo.
@@ -260,6 +356,7 @@ pub struct ShowcaseApp {
     pub sidebar_collapsed: bool,
     pub selected: Option<ComponentId>,
     pub router: functora_egui::route::AppRouter<AppRoute>,
+    pub nav_history: functora_egui::nav::NavHistory<AppRoute>,
     pub dialogs: DialogState,
     pub command_search: String,
     pub toast: ToastState,
@@ -268,10 +365,12 @@ pub struct ShowcaseApp {
     pub checks: CheckState,
     pub radios: RadioState,
     pub radio_group_val: RadioOption,
+    pub radio_group_display: RadioOption,
     pub text_style: TextStyleState,
     pub toggle_group_align: Align,
     pub slider_val: f64,
     pub slider_price: f64,
+    pub slider_f32: f32,
     pub touch_slider_val: f64,
     pub input_text: String,
     pub number_f64: f64,
@@ -286,25 +385,34 @@ pub struct ShowcaseApp {
     pub input_paste_clear_custom_icons: String,
     pub input_paste_clear_copy: String,
     pub input_paste_clear_copy_custom: String,
+    pub input_paste_clear_readonly: String,
     pub textarea_text: String,
     pub textarea_compact: String,
     pub textarea_paste_clear_text: String,
     pub textarea_paste_clear_custom: String,
     pub textarea_paste_clear_copy: String,
     pub textarea_paste_clear_copy_custom: String,
+    pub textarea_paste_clear_readonly: String,
     pub select_val: Option<Fruit>,
+    pub select_display: Option<Fruit>,
     pub select_blend: BlendMode,
+    pub select_display_blend: BlendMode,
     pub property_blend: BlendMode,
     pub combobox_framework: Option<Framework>,
     pub combobox_search: String,
+    pub combobox_index: Option<usize>,
+    pub combobox_index_search: String,
     pub otp_value: String,
     pub date_picker: functora_egui::DatePickerState,
     pub color_swatch: Swatch,
     // layout
     pub accordion_open: Vec<usize>,
     pub settings_tab: SettingsTab,
+    pub settings_tab_index: usize,
     pub profile_tab: ProfileTab,
+    pub profile_tab_index: usize,
     pub nav_section: NavSection,
+    pub nav_menu_index: usize,
     pub input_password: String,
     pub pagination_page: usize,
     pub resizable_fraction: f32,
@@ -348,6 +456,7 @@ impl Default for ShowcaseApp {
             sidebar_collapsed: true,
             selected: None,
             router: functora_egui::route::AppRouter::new(&AppRoute::default()),
+            nav_history: functora_egui::nav::NavHistory::new(AppRoute::default()),
             dialogs: DialogState::default(),
             command_search: String::new(),
             toast: ToastState::new(),
@@ -355,10 +464,12 @@ impl Default for ShowcaseApp {
             checks: CheckState::default(),
             radios: RadioState::default(),
             radio_group_val: RadioOption::default(),
+            radio_group_display: RadioOption::default(),
             text_style: TextStyleState::default(),
             toggle_group_align: Align::default(),
             slider_val: 50.0,
             slider_price: 200.0,
+            slider_f32: 0.5,
             touch_slider_val: 50.0,
             input_text: String::new(),
             number_f64: 42.0,
@@ -373,24 +484,33 @@ impl Default for ShowcaseApp {
             input_paste_clear_custom_icons: String::new(),
             input_paste_clear_copy: String::new(),
             input_paste_clear_copy_custom: String::new(),
+            input_paste_clear_readonly: "Readonly field".to_owned(),
             textarea_text: String::new(),
             textarea_compact: String::new(),
             textarea_paste_clear_text: String::new(),
             textarea_paste_clear_custom: String::new(),
             textarea_paste_clear_copy: String::new(),
             textarea_paste_clear_copy_custom: String::new(),
+            textarea_paste_clear_readonly: "Readonly area".to_owned(),
             select_val: None,
+            select_display: None,
             select_blend: BlendMode::default(),
+            select_display_blend: BlendMode::default(),
             property_blend: BlendMode::default(),
             combobox_framework: None,
             combobox_search: String::new(),
+            combobox_index: None,
+            combobox_index_search: String::new(),
             otp_value: String::new(),
             date_picker: functora_egui::DatePickerState::default(),
             color_swatch: Swatch::default(),
             accordion_open: vec![0],
             settings_tab: SettingsTab::default(),
+            settings_tab_index: 0,
             profile_tab: ProfileTab::default(),
+            profile_tab_index: 0,
             nav_section: NavSection::default(),
+            nav_menu_index: 0,
             input_password: String::new(),
             pagination_page: 0,
             resizable_fraction: 0.5,

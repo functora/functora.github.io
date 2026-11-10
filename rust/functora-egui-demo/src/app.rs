@@ -157,6 +157,8 @@ impl ShowcaseApp {
                 "Are you absolutely sure?",
                 "This action cannot be undone. This will permanently delete your account.",
             )
+            .cancel_text("Keep my account")
+            .action_text("Delete forever")
             .destructive()
             .show(ctx, &mut self.dialogs.alert_dialog_open);
             if matches!(result, AlertDialogResult::Confirmed) {
@@ -311,10 +313,11 @@ impl ShowcaseApp {
             Some(ComponentId::Crypto) => self.demo_crypto(ui),
             Some(ComponentId::Worker) => self.demo_worker(ui),
             Some(ComponentId::PlatformInfo) => self.demo_platform_info(ui),
-            Some(ComponentId::Messages) => Self::demo_messages(ui),
+            Some(ComponentId::Messages) => self.demo_messages(ui),
             Some(ComponentId::Markdown) => self.demo_markdown(ui),
-            Some(ComponentId::Package) => Self::demo_package(ui),
-            Some(ComponentId::WhiteLabel) => Self::demo_white_label(ui),
+            Some(ComponentId::Package) => self.demo_package(ui),
+            Some(ComponentId::WhiteLabel) => self.demo_white_label(ui),
+            Some(ComponentId::Utilities) => self.demo_utilities(ui),
         }
     }
 }

@@ -1,6 +1,7 @@
 //! SVG path `d`-attribute commands.
 
 /// A single command from an SVG path `d` attribute.
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum PathCommand {
     // ── Move ────────────────────────────────────────────────────
     MoveToAbs(f32, f32),

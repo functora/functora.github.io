@@ -8,9 +8,10 @@ impl crate::state::ShowcaseApp {
         ui.add_space(12.0);
 
         crate::screens::section(ui, "Default empty string");
-        let resp = InputPasteClear::new(&mut self.input_paste_clear_text)
-            .placeholder("Paste something...")
-            .show(ui);
+        let resp: functora_egui::widgets::input_paste_clear::input_paste_clear_show::PasteClearResponse =
+            InputPasteClear::new(&mut self.input_paste_clear_text)
+                .placeholder("Paste something...")
+                .show(ui);
         if let Some(err) = &resp.clipboard_error {
             let msg = format!("Clipboard error: {err}");
             self.toast.add(
@@ -131,9 +132,29 @@ impl crate::state::ShowcaseApp {
         ))
         .show(ui);
 
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Readonly");
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_readonly)
+            .placeholder("Readonly field")
+            .readonly()
+            .show(ui);
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "Readonly value: \"{}\"",
+            self.input_paste_clear_readonly
+        ))
+        .show(ui);
+
+        ui.add_space(12.0);
+        crate::screens::section(ui, "Copy without the copy icon");
+        let _ = InputPasteClear::new(&mut self.input_paste_clear_copy)
+            .placeholder("Copy enabled...")
+            .copy()
+            .show(ui);
+
         snippet(
             ui,
-            "// InputPasteClear: single-line with paste (left) + clear (right)\n// Password adds eye toggle before clear: [paste | text | eye | clear]\n// Copy button next to paste: [paste | copy | text | eye | clear] (on by default, paste stays leftmost)\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password: eye (Eye/EyeOff) appears immediately left of X\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password() // -> [paste | •••• | eye | X ]\n    .show(ui);\n\n// Password + custom paste/clear icons (eye stays Eye/EyeOff) - paste stays clipboard-like, clear is trash\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Clipboard)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);\n\n// Copy button is on by default (paste stays leftmost); opt out explicitly\nInputPasteClear::new(&mut text)\n    .with_copy(false) // -> [paste | text | X ]\n    .show(ui);\n\n// Copy with custom icon - copy uses CopyPlus, distinct from paste's Clipboard\nInputPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | text | X ]\n    .show(ui);",
+            "// InputPasteClear: single-line with paste (left) + clear (right)\n// Password adds eye toggle before clear: [paste | text | eye | clear]\n// Copy button next to paste: [paste | copy | text | eye | clear] (on by default, paste stays leftmost)\nuse functora_egui::{InputPasteClear, LucideIcon};\n\nlet mut text = String::new();\nlet resp = InputPasteClear::new(&mut text)\n    .placeholder(\"Paste something...\")\n    .show(ui);\nif resp.pasted { eprintln!(\"pasted\"); }\nif resp.copied { eprintln!(\"copied\"); }\nif resp.cleared { eprintln!(\"cleared to default\"); }\nif let Some(err) = resp.clipboard_error { eprintln!(\"clipboard error: {err}\"); }\n\n// The response is a PasteClearResponse: the inner egui response plus the\n// paste / copy / clear flags and the optional clipboard error\nuse functora_egui::widgets::input_paste_clear::input_paste_clear_show::PasteClearResponse;\n\nlet resp: PasteClearResponse = InputPasteClear::new(&mut text).show(ui);\n\n// Custom default (clears to \"default value\" instead of \"\")\nlet mut with_default = \"default value\".to_owned();\nInputPasteClear::new(&mut with_default)\n    .default_value(\"default value\")\n    .show(ui);\n\n// Password: eye (Eye/EyeOff) appears immediately left of X\nlet mut secret = String::new();\nInputPasteClear::new(&mut secret)\n    .password() // -> [paste | •••• | eye | X ]\n    .show(ui);\n\n// Password + custom paste/clear icons (eye stays Eye/EyeOff) - paste stays clipboard-like, clear is trash\nInputPasteClear::new(&mut secret)\n    .password()\n    .paste_icon(LucideIcon::Clipboard)\n    .clear_icon(LucideIcon::Trash)\n    .show(ui);\n\n// Copy button is on by default (paste stays leftmost); opt out explicitly\nInputPasteClear::new(&mut text)\n    .with_copy(false) // -> [paste | text | X ]\n    .show(ui);\n\n// Re-enable it explicitly\nInputPasteClear::new(&mut text)\n    .copy() // -> [paste | copy | text | X ]\n    .show(ui);\n\n// Readonly: the field cannot be edited, but paste/clear still work\nInputPasteClear::new(&mut text)\n    .readonly()\n    .show(ui);\n\n// Copy with custom icon - copy uses CopyPlus, distinct from paste's Clipboard\nInputPasteClear::new(&mut text)\n    .copy_icon(LucideIcon::CopyPlus) // -> [paste | copy(CopyPlus) | text | X ]\n    .show(ui);",
         );
     }
 }

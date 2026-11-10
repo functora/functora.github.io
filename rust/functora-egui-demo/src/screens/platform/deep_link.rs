@@ -15,7 +15,7 @@ impl crate::state::ShowcaseApp {
             }
         }
         _ = Typography::muted(
-            "Deep linking: `store_url`/`take_url`/`poll_deep_link` + `url_to_route`. On Android via JNI intent, on web via location href.",
+            "Deep linking: `store_url`/`take_url`/`poll_deep_link` + `url_to_route` + `set_schedule_update`/`trigger_update`. On Android via JNI intent, on web via location href.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -74,6 +74,31 @@ impl crate::state::ShowcaseApp {
                     ctx.input(|i| i.time),
                 );
             }
+            if f.add(Button::new("Schedule update").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                let repaint = ctx.clone();
+                functora_egui::deep_link::set_schedule_update(std::sync::Arc::new(move || {
+                    repaint.request_repaint();
+                }));
+                self.toast.add(
+                    "Scheduled update registered",
+                    ToastVariant::Success,
+                    ctx.input(|i| i.time),
+                );
+            }
+            if f.add(Button::new("Trigger update").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                functora_egui::deep_link::trigger_update();
+                self.toast.add(
+                    "Update triggered",
+                    ToastVariant::Default,
+                    ctx.input(|i| i.time),
+                );
+            }
         });
         #[cfg(target_arch = "wasm32")]
         {
@@ -84,11 +109,16 @@ impl crate::state::ShowcaseApp {
             if let Some(href) = functora_egui::platform::web::location_href() {
                 _ = Typography::small(format!("location.href: {href}")).show(ui);
             }
+            _ = Typography::small(format!(
+                "poll_deep_link_web(): {:?}",
+                functora_egui::deep_link::poll_deep_link_web()
+            ))
+            .show(ui);
         }
 
         snippet(
             ui,
-            "// Deep links: store + take + route parsing\nuse functora_egui::deep_link::{store_url, take_url, url_to_route};\n\n// Store a URL (e.g. from push notification)\nlet url = \"https://myapp.com/?page=settings&tab=notifications\";\nstore_url(url);\n\n// Later, take and parse it\nlet url = take_url();\nlet route = url_to_route(&url);\n// route = Route { path: \"/settings\", query: {\"tab\": \"notifications\"} }",
+            "// Deep links: store + take + route parsing\nuse functora_egui::deep_link::{store_url, take_url, url_to_route, set_schedule_update, trigger_update};\nuse std::sync::Arc;\n\n// Store a URL (e.g. from push notification)\nlet url = \"https://myapp.com/?page=settings&tab=notifications\".to_owned();\nstore_url(url);\n\n// Later, take it back (returns None when nothing is pending)\nlet url = take_url();\n\n// Parse the query part into an in-app route\nlet route = url.as_deref().and_then(url_to_route);\n// route = Some(\"/?page=settings&tab=notifications\")\n\n// Ask the platform to schedule a repaint whenever a URL arrives\nlet ctx = ctx.clone();\nset_schedule_update(Arc::new(move || ctx.request_repaint()));\n\n// ...or trigger the scheduled callback right away\ntrigger_update();\n\n// Web only: read the deep link straight from the location bar\n#[cfg(target_arch = \"wasm32\")]\nlet web_link = functora_egui::deep_link::poll_deep_link_web();",
         );
     }
 }

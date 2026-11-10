@@ -21,7 +21,7 @@ impl crate::state::ShowcaseApp {
             self.platform.pick_overlay_open = open;
         }
         _ = Typography::muted(
-            "Files: `pick_files` via rfd (desktop) / Intent (Android) / input (web). Preview via `preview`/`preview_blob`, mime via `mime_for`.",
+            "Files: `pick_files` via rfd (desktop) / Intent (Android) / input (web). Preview via `preview`/`preview_cached`/`preview_blob`, mime via `mime_for`/`mime_for_name`.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -150,10 +150,100 @@ impl crate::state::ShowcaseApp {
                 ui.ctx().input(|i| i.time),
             );
         }
+        ui.add_space(4.0);
+        if ui
+            .add(Button::new("Revoke last blob").variant(ButtonVariant::Outline))
+            .clicked()
+        {
+            let mut memo = functora_egui::files::BlobMemo::default();
+            _ = memo.insert("hello.txt", 1, "blob:https://example.com/1".to_owned());
+            let removed = memo.forget("blob:https://example.com/1");
+            let revoked = functora_egui::files::revoke_blob_url("blob:https://example.com/1");
+            self.toast.add(
+                format!("BlobMemo::forget removed {removed}, revoke: {revoked:?}"),
+                ToastVariant::Default,
+                ui.ctx().input(|i| i.time),
+            );
+        }
+        ui.add_space(8.0);
+        crate::screens::section(ui, "Picker state and cancel token");
+        let cancel = functora_egui::files::new_cancel_token();
+        _ = Typography::small(format!(
+            "is_cancelled before: {}, after cancel: {}",
+            functora_egui::files::is_cancelled(&cancel),
+            {
+                functora_egui::files::cancel(&cancel);
+                functora_egui::files::is_cancelled(&cancel)
+            }
+        ))
+        .show(ui);
+        _ = Typography::small(format!(
+            "FilePickerState::from(0): {:?}, from(-1): {:?}, from(7): {:?}",
+            functora_egui::files::FilePickerState::from(0),
+            functora_egui::files::FilePickerState::from(-1),
+            functora_egui::files::FilePickerState::from(7)
+        ))
+        .show(ui);
+        _ = Typography::small(format!(
+            "data_url_mime(\"data:image/png;base64,AAA\"): {:?}",
+            functora_egui::files::data_url_mime("data:image/png;base64,AAA")
+        ))
+        .show(ui);
+        let _: Option<functora_egui::files::PickResult> = None;
+        ui.add_space(8.0);
+        crate::screens::section(ui, "Core mime + preview helpers");
+        let sample = b"key: value\n".as_slice();
+        _ = Flex::column().gap(4.0).align_start().show(ui, |f| {
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "mime_for(\"a.json\"): {:?}",
+                    functora_egui::files::mime_for("a.json")
+                ))
+                .show(ui2);
+            });
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "is_text(\"application/json\"): {}",
+                    functora_egui::files::is_text("application/json")
+                ))
+                .show(ui2);
+            });
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "preview_key(len {}): {}",
+                    sample.len(),
+                    functora_egui::files::preview_key(sample)
+                ))
+                .show(ui2);
+            });
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "preview_cached(\"a.txt\"): {:?}",
+                    functora_egui::files::preview_cached("a.txt", sample)
+                ))
+                .show(ui2);
+            });
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "preview_initial(\"a.txt\"): {:?}",
+                    functora_egui::files::preview_initial("a.txt", sample)
+                ))
+                .show(ui2);
+            });
+            _ = f.ui(|ui2| {
+                _ = Typography::small(format!(
+                    "preview_blob_url(text preview): {:?}",
+                    functora_egui::files::preview_blob_url(&functora_egui::files::preview(
+                        "a.txt", sample
+                    ))
+                ))
+                .show(ui2);
+            });
+        });
 
         snippet(
             ui,
-            "// Files: pick + preview + mime\nuse functora_egui::files::{pick_files_with_shared_progress, new_cancel_token, preview, preview_blob, mime_for_name, format_size};\nuse std::sync::{Arc, Mutex};\n\n// Pick files with shared progress + cancel token (overlay reads progress)\nlet cancel = new_cancel_token();\nlet progress = Arc::new(Mutex::new(None));\nlet rx = functora_egui::spawn_async(async move {\n    pick_files_with_shared_progress(true, Some(progress), Some(&cancel)).await\n});\n\n// Cancel from the overlay close button\n// functora_egui::files::cancel(&cancel);\n\nfor (name, data) in files {\n    // Get mime type\n    let mime = mime_for_name(&name).unwrap_or(\"application/octet-stream\");\n    \n    // Preview (text/image/pdf)\n    let preview = preview(&name, &data);\n    \n    // Or create a revocable blob URL (web)\n    let blob_url = preview_blob(&name, &data);\n    \n    let size = format_size(data.len() as u64);\n    eprintln!(\"picked: {name} ({mime}, {size})\");\n}",
+            "// Files: pick + preview + mime\nuse functora_egui::files::{pick_files_with_shared_progress, new_cancel_token, preview, preview_blob, mime_for_name, format_size};\nuse std::sync::{Arc, Mutex};\n\n// Pick files with shared progress + cancel token (overlay reads progress)\nlet cancel = new_cancel_token();\nlet progress = Arc::new(Mutex::new(None));\nlet rx = functora_egui::spawn_async(async move {\n    pick_files_with_shared_progress(true, Some(progress), Some(&cancel)).await\n});\n\n// Cancel from the overlay close button\n// functora_egui::files::cancel(&cancel);\n\nfor (name, data) in files {\n    // Get mime type (egui alias keeps the historical name)\n    let mime = mime_for_name(&name).unwrap_or(\"application/octet-stream\");\n    \n    // Preview (text/image/pdf)\n    let preview = preview(&name, &data);\n    \n    // Or create a revocable blob URL (web)\n    let blob_url = preview_blob(&name, &data);\n    \n    let size = format_size(data.len() as u64);\n    eprintln!(\"picked: {name} ({mime}, {size})\");\n}\n\n// Core helpers: mime lookup, text detection, memoized preview\nuse functora_egui::files::{is_text, mime_for, preview_cached, preview_initial, preview_key, preview_blob_url};\n\nassert_eq!(mime_for(\"a.json\"), Some(\"application/json\"));\nassert!(is_text(\"application/json\"));\nlet key = preview_key(&data);              // cheap buffer identity for the memo\nlet cached = preview_cached(&name, &data); // memoized preview (same buffer -> same result)\nlet initial = preview_initial(&name, &data); // Some(..) for text, None for streamed media\nlet blob = preview_blob_url(&cached);       // Some(..) only for blob-backed media previews\n\n// Pick variants: with progress, with a cancel token, and the shared-progress one\nuse functora_egui::files::{pick_files_with_cancel, pick_files_with_progress};\n\nlet rx = functora_egui::spawn_async(async move {\n    pick_files_with_progress(true, None).await\n});\n\nlet cancel = new_cancel_token();\nlet rx = functora_egui::spawn_async(async move {\n    pick_files_with_cancel(true, None, Some(&cancel)).await\n});\n\n// The picker state the platform reports back\nuse functora_egui::files::FilePickerState;\n\nassert_eq!(FilePickerState::from(0), FilePickerState::Pending);\nassert_eq!(FilePickerState::from(-1), FilePickerState::Cancelled);\n\n// Blob URLs can be revoked, and the memo forgets them\nuse functora_egui::files::{BlobMemo, revoke_blob_url};\n\nlet mut memo = BlobMemo::default();\nmemo.insert(\"a.txt\", 1, \"blob:https://example.com/1\".to_owned());\nassert_eq!(memo.forget(\"blob:https://example.com/1\"), 1);\nrevoke_blob_url(\"blob:https://example.com/1\")?;\n\n// Data URLs carry their mime in the prefix\nuse functora_egui::files::data_url_mime;\n\nassert_eq!(data_url_mime(\"data:image/png;base64,AAA\"), Some(\"image/png\"));\n\n// Web only: the picker needs a user gesture, so the sync variant returns a slot\n#[cfg(target_arch = \"wasm32\")]\n{\n    use functora_egui::files::pick_files_sync_web_with_cancel;\n\n    let slot = pick_files_sync_web_with_cancel(true, &cancel);\n    // poll slot each frame for the PickResult\n}",
         );
     }
 }

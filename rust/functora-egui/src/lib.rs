@@ -220,6 +220,7 @@ pub use widgets::blocking_overlay::widget::BlockingOverlay;
 pub use widgets::breadcrumb::{Breadcrumb, NavAction};
 pub use widgets::button::widget::Button;
 pub use widgets::button_group::widget::ButtonGroup;
+pub use widgets::button_group::widget::ButtonGroupPosition;
 pub use widgets::calendar::widget::Calendar;
 #[cfg(feature = "platform")]
 pub use widgets::camera_view::camera_view_state::CameraViewState;

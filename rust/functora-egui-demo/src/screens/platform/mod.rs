@@ -19,6 +19,7 @@ mod qr_scanner;
 mod share;
 mod storage;
 mod thumbnail;
+mod utilities;
 mod white_label;
 mod worker;
 mod zip;

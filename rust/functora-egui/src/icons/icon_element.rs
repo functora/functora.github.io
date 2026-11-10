@@ -1,6 +1,7 @@
 //! SVG icon elements parsed from Lucide icon data.
 
 /// A single SVG element within an icon.
+#[derive(Debug, Clone, PartialEq)]
 pub enum IconElement {
     /// `<path d="...">` — sequence of path commands.
     Path(Vec<super::path_command::PathCommand>),

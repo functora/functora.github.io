@@ -8,7 +8,7 @@ impl crate::state::ShowcaseApp {
     pub fn demo_qr_scanner(&mut self, ui: &mut egui::Ui) {
         let lang = self.persistent.language;
         _ = Typography::muted(
-            "QrScanner widget: stateful live preview (TextureHandle) + decode_qr_luma/rgba (rxing). Web live via canvas, Android Camera2, desktop file-picker fallback. Opt-in features `camera` + `qr`.",
+            "QrScanner widget: stateful live preview (TextureHandle) + decode_qr_rgba / decode_qr_luma_fast (rxing). Web live via canvas, Android Camera2, desktop file-picker fallback. Opt-in features `camera` + `qr`.",
         )
         .show(ui);
         ui.add_space(12.0);
@@ -60,8 +60,14 @@ impl crate::state::ShowcaseApp {
             }
             ui2.add_space(8.0);
             let _ = functora_egui::QrScanner::new()
+                .desired_size(egui::vec2(320.0, 320.0))
+                .fps(15.0)
+                .decode_fps(5.0)
+                .dedupe_ms(1500)
+                .auto_start(true)
                 .continuous(self.platform.qr_continuous)
                 .on_scan(|text| log::info!("QR scanned: {text}"))
+                .on_error(|err| log::warn!("QR scanner error: {err}"))
                 .show(ui2, &mut self.platform.qr_state, lang);
             if let Some(text) = self.platform.qr_state.take_decoded() {
                 self.platform.qr_last_scan.clone_from(&text);
@@ -100,10 +106,19 @@ impl crate::state::ShowcaseApp {
         });
         ui.add_space(8.0);
         _ = Typography::small("Tip: Use Pick Image inside the scanner for file fallback (desktop) or Start Camera for live (web/android).").show(ui);
+        ui.add_space(8.0);
+        _ = Typography::small(format!(
+            "is_scanning: {}, decoded: {:?}, preview_size: {:?}, preview_texture: {}",
+            self.platform.qr_state.is_scanning(),
+            self.platform.qr_state.decoded(),
+            self.platform.qr_state.preview_size(),
+            self.platform.qr_state.preview_texture().is_some()
+        ))
+        .show(ui);
 
         snippet(
             ui,
-            "// QrScanner: stateful live preview + auto-scan\nuse functora_egui::{QrImage, QrScanner, QrScannerState};\n\n// State (persist across frames)\nlet mut qr_state = QrScannerState::new();\nlet mut last_scan = String::new();\nlet mut error_notified: Option<String> = None;\n\n// Generated QR preview (call every frame)\nQrImage::new(&qr_input).show(ui);\n\n// Start scanner (call once or on button)\nqr_state.start(&ctx)?;\n\n// Render widget (call every frame)\nQrScanner::new()\n    .continuous(true)           // keep scanning after first decode\n    .on_scan(|text| {           // callback on decode\n        log::info!(\"QR: {}\", text);\n    })\n    .show(ui, &mut qr_state, lang);\n\n// Scan action: take + act once (cryptonote home_scan pattern)\nif let Some(text) = qr_state.take_decoded() {\n    last_scan = text.clone();\n}\n\n// Error toast once per distinct message\nif let Some(err) = qr_state.error() {\n    let msg = err.to_string();\n    if error_notified.as_ref() != Some(&msg) {\n        error_notified = Some(msg);\n    }\n} else {\n    error_notified = None;\n}\n\n// Stop when done\nqr_state.stop();",
+            "// QrScanner: stateful live preview + auto-scan\nuse functora_egui::{QrImage, QrScanner, QrScannerState};\n\n// State (persist across frames)\nlet mut qr_state = QrScannerState::new();\nlet mut last_scan = String::new();\nlet mut error_notified: Option<String> = None;\n\n// Generated QR preview (call every frame)\nQrImage::new(&qr_input).show(ui);\n\n// Start scanner (call once or on button)\nqr_state.start(&ctx)?;\n\n// Render widget (call every frame)\nQrScanner::new()\n    .desired_size(egui::vec2(320.0, 320.0)) // fixed preview box\n    .fps(15.0)                         // preview capture rate\n    .decode_fps(5.0)                   // decode attempts per second\n    .dedupe_ms(1500)                   // min delay before the same code fires again\n    .auto_start(true)                  // start on the first show\n    .continuous(true)           // keep scanning after first decode\n    .on_scan(|text| {           // callback on decode\n        log::info!(\"QR: {}\", text);\n    })\n    .on_error(|err| {           // callback on a scanner error\n        log::warn!(\"QR error: {err}\");\n    })\n    .show(ui, &mut qr_state, lang);\n\n// Scan action: take + act once (cryptonote home_scan pattern)\nif let Some(text) = qr_state.take_decoded() {\n    last_scan = text.clone();\n}\n\n// The state can also be inspected without consuming the result\nassert!(qr_state.decoded().map_or(true, |text| text == last_scan));\nassert!(!qr_state.is_scanning() || qr_state.preview_size().is_some());\n\n// Error toast once per distinct message\nif let Some(err) = qr_state.error() {\n    let msg = err.to_string();\n    if error_notified.as_ref() != Some(&msg) {\n        error_notified = Some(msg);\n    }\n} else {\n    error_notified = None;\n}\n\n// Stop when done\nqr_state.stop();",
         );
     }
 }

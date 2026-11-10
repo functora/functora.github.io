@@ -90,6 +90,9 @@ impl crate::state::ShowcaseApp {
             self.platform.camera_view_state.ensure_default_handler();
             let lang = self.persistent.language;
             let _ = functora_egui::CameraView::new()
+                .desired_size(egui::vec2(320.0, 240.0))
+                .fps(30.0)
+                .auto_start(true)
                 .controls(true)
                 .show(ui2, &mut self.platform.camera_view_state, lang);
             if self.platform.camera_view_state.is_running() {
@@ -104,11 +107,55 @@ impl crate::state::ShowcaseApp {
                         .size(12.0),
                 );
             }
+            ui2.add_space(8.0);
+            _ = Typography::small(format!(
+                "interval_ms: {}, preview_size: {:?}, camera_epoch: {}",
+                self.platform.camera_view_state.interval_ms(),
+                self.platform.camera_view_state.preview_size(),
+                functora_egui::widgets::camera_view::camera_view_state::camera_epoch()
+            ))
+            .show(ui2);
         });
+        ui.add_space(8.0);
+        _ = Flex::row().gap(8.0).wrap().show(ui, |f| {
+            if f.add(Button::new("Set 10 fps").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_view_state.set_fps(10.0);
+            }
+            if f.add(Button::new("Clear error").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                self.platform.camera_view_state.clear_error();
+            }
+            if f.add(Button::new("Stop capture worker").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                functora_egui::camera::stop_capture_worker();
+            }
+            if f.add(Button::new("Begin capture session").variant(ButtonVariant::Outline))
+                .inner
+                .clicked()
+            {
+                functora_egui::camera::begin_capture_session();
+            }
+        });
+        ui.add_space(4.0);
+        _ = Typography::small(format!(
+            "CameraStartStatus: {:?}, {:?}, {:?} (from code: {:?})",
+            functora_egui::camera::CameraStartStatus::Running,
+            functora_egui::camera::CameraStartStatus::Pending,
+            functora_egui::camera::CameraStartStatus::Failed,
+            functora_egui::camera::CameraStartStatus::from(-1)
+        ))
+        .show(ui);
 
         snippet(
             ui,
-            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: CameraFrame { width, height, data: Vec<u8> (RGBA) }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Stop camera\nstop_camera().await?;\n\n// Live preview: stateful CameraView (call every frame)\nuse functora_egui::{CameraView, CameraViewState};\n\nlet mut camera_view = CameraViewState::new();\ncamera_view.ensure_default_handler();\nCameraView::new().controls(true).show(ui, &mut camera_view, lang);",
+            "// Camera: check + start + capture + stop\nuse functora_egui::camera::{check_camera, start_camera, capture_frame, stop_camera};\n\n// Check if camera is available\ncheck_camera().await?;\n\n// Start camera session\nstart_camera().await?;\n\n// Capture a frame\nlet frame = capture_frame().await?;\n// frame: FrameData { width, height, data: Vec<u8> (luma), preview_rgba: Option<Vec<u8>> }\neprintln!(\"captured {}x{}\", frame.width, frame.height);\n\n// Rotate the frame upright (portrait phones capture rotated buffers)\nuse functora_egui::frame::FrameRotation;\nlet frame = frame.upright(FrameRotation::Cw90);\n\n// Stop camera\nstop_camera().await?;\n\n// The capture worker can be driven without the widget\nuse functora_egui::camera::{begin_capture_session, stop_capture_worker};\n\nbegin_capture_session();\n// ... capture frames ...\nstop_capture_worker();\n\n// The backend reports its start state as a code\nuse functora_egui::camera::CameraStartStatus;\n\nassert_eq!(CameraStartStatus::from(1), CameraStartStatus::Running);\n\n// Live preview: stateful CameraView (call every frame)\nuse functora_egui::{CameraView, CameraViewState};\n\nlet mut camera_view = CameraViewState::new();\ncamera_view.ensure_default_handler();\nCameraView::new()\n    .desired_size(egui::vec2(320.0, 240.0)) // fixed preview box\n    .fps(30.0)                       // preview capture rate\n    .auto_start(true)                // start on the first show\n    .controls(true)                  // Start/Stop buttons\n    .show(ui, &mut camera_view, lang);\n\n// The state exposes the capture interval and the last preview size\ncamera_view.set_fps(10.0);\neprintln!(\"interval: {} ms\", camera_view.interval_ms());\neprintln!(\"preview: {:?}\", camera_view.preview_size());\n\n// The feed state and its epoch are shared between the widget and the pump\nuse functora_egui::widgets::camera_view::camera_view_state::{CAMERA_EPOCH, FeedInner, FrameHandler};\n\neprintln!(\"epoch: {}\", CAMERA_EPOCH.load(std::sync::atomic::Ordering::SeqCst));\n\n// A custom frame handler replaces the default pass-through\ncamera_view.set_handler(Some(Box::new(|_ctx, _frame| {\n    std::ops::ControlFlow::Continue(())\n})));\n\n// with_fps sets the capture rate while building the state\nlet camera_view = CameraViewState::new().with_fps(15.0);",
         );
     }
 }

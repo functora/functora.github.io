@@ -1,5 +1,6 @@
 pub use functora_core::package::{
-    ArchiveSource, PackageStages, extract_package_report, package_report,
+    ArchiveMetadata, ArchiveSource, METADATA_ENTRY, PAYLOAD_ENTRY, PackageStages, aad,
+    extract_package_report, package_report, read_metadata,
 };
 
 use crate::error::Error;

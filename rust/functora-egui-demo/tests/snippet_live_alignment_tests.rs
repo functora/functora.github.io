@@ -117,8 +117,12 @@ fn files_snippet_matches_shared_progress_flow() {
         "files snippet must teach the live shared-progress flow: {text}"
     );
     assert!(
-        !text.contains("preview_cached"),
-        "files snippet must not advertise APIs the demo never calls: {text}"
+        text.contains("preview_cached"),
+        "files snippet must teach the memoized preview the live demo now calls: {text}"
+    );
+    assert!(
+        text.contains("mime_for("),
+        "files snippet must teach the core mime lookup the live demo now calls: {text}"
     );
 }
 
@@ -150,7 +154,7 @@ fn qr_scanner_labels_its_fixture() {
 
 #[test]
 fn package_snippet_uses_demo_env_names() {
-    let text = rendered_text(ShowcaseApp::demo_package);
+    let text = rendered_app(ShowcaseApp::demo_package);
     assert!(
         text.contains("crate: "),
         "live demo must render its package line: {text}"

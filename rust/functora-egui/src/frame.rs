@@ -139,6 +139,20 @@ pub const RESPONSIVE_PREVIEW_MAX_SIDE: f32 = 480.0;
 pub const RESPONSIVE_PREVIEW_FALLBACK_WIDTH: f32 = 320.0;
 pub const RESPONSIVE_PREVIEW_FALLBACK_ASPECT: f32 = 4.0 / 3.0;
 
+/// Scales a requested preview box down to the width available for it.
+///
+/// The box keeps its aspect ratio, so a preview asked for at a fixed size
+/// shrinks on a narrow screen instead of overflowing its container.
+#[must_use]
+pub(crate) fn cap_preview_size(desired: egui::Vec2, available_width: f32) -> egui::Vec2 {
+    let width = crate::cast::cap_to_available(desired.x, available_width);
+    if desired.x <= 0.0 || width >= desired.x {
+        desired
+    } else {
+        egui::vec2(width, desired.y * (width / desired.x))
+    }
+}
+
 #[must_use]
 pub fn responsive_preview_size(
     available_w: f32,

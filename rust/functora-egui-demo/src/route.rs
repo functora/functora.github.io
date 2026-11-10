@@ -2,7 +2,7 @@ use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::{RouteKind, RouteMetadata};
 use std::borrow::Cow;
 
-use crate::catalog::{CategoryId, ComponentId};
+use crate::catalog::{CATEGORIES, CategoryId, ComponentId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum AppRoute {
@@ -67,5 +67,30 @@ impl AppRoute {
             Self::Overview => None,
             Self::Component(id) => Some(*id),
         }
+    }
+
+    /// The screens before and after this one in catalog order.
+    ///
+    /// The order is the one the sidebar, the command palette and the overview
+    /// share: the overview first, then every component in category order. A
+    /// missing neighbour is `None`, so the first and the last screen have one
+    /// side only.
+    #[must_use]
+    pub fn neighbors(&self) -> (Option<Self>, Option<Self>) {
+        let routes = || {
+            CATEGORIES
+                .iter()
+                .flat_map(|(_, _, items)| items.iter())
+                .map(|def| def.id.map_or(Self::Overview, Self::Component))
+        };
+        let index = routes().position(|route| route == *self);
+        (
+            index
+                .and_then(|at| at.checked_sub(1))
+                .and_then(|at| routes().nth(at)),
+            index
+                .and_then(|at| at.checked_add(1))
+                .and_then(|at| routes().nth(at)),
+        )
     }
 }

@@ -137,8 +137,10 @@ impl QrScanner {
                         )
                     },
                     |desired| {
-                        state.preview_size().map_or(desired, |(frame_w, frame_h)| {
-                            crate::utils::fit_preview_size(desired, frame_w, frame_h)
+                        let capped =
+                            crate::frame::cap_preview_size(desired, inner.available_width());
+                        state.preview_size().map_or(capped, |(frame_w, frame_h)| {
+                            crate::frame::fit_preview_size(capped, frame_w, frame_h)
                         })
                     },
                 );

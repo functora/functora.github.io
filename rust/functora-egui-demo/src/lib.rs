@@ -2,6 +2,7 @@
 
 pub mod app;
 pub mod catalog;
+pub mod dock;
 pub mod route;
 pub mod screens;
 pub mod state;

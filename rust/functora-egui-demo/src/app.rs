@@ -2,6 +2,7 @@ use crate::catalog::{
     CATEGORIES, CategoryId, ComponentId, FooterSuffix, SearchCommandPlaceholder, SearchLabel,
     category_header, palette_entries, section_button,
 };
+use crate::dock::ScreenDock;
 use crate::route::AppRoute;
 use crate::state::APP_SCOPE;
 use crate::state::ShowcaseApp;
@@ -208,7 +209,7 @@ impl ShowcaseApp {
         }
     }
 
-    fn render_component(&mut self, ui: &mut egui::Ui, lang: Language) {
+    pub fn render_component(&mut self, ui: &mut egui::Ui, lang: Language) -> ScreenDock {
         _ = Typography::h3(self.selected.map_or("Overview", |id| id.name())).show(ui);
         ui.add_space(4.0);
         match self.selected {
@@ -319,6 +320,8 @@ impl ShowcaseApp {
             Some(ComponentId::WhiteLabel) => self.demo_white_label(ui),
             Some(ComponentId::Utilities) => self.demo_utilities(ui),
         }
+        ui.add_space(16.0);
+        self.show_screen_dock(ui, lang)
     }
 }
 
@@ -410,7 +413,7 @@ impl eframe::App for ShowcaseApp {
         })
         .show(ui, |content_ui| {
             let cur_lang = lang_cell.get();
-            self.render_component(content_ui, cur_lang);
+            let _ = self.render_component(content_ui, cur_lang);
         });
         if lang_cell.get() != prev_persistent.language {
             self.persistent.language = lang_cell.get();

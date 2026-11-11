@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
-use functora_egui::i18n::Language;
+use functora_egui::i18n::{I18N, Language};
 use functora_egui::route::AppRouter;
-use functora_egui::{Button, ButtonVariant, ComponentSize, ResponsiveExt, Shell, ToastState, ToastVariant};
+use functora_egui::white_label::SidebarAction;
+use functora_egui::{LucideIcon, ResponsiveExt, Shell, ToastState, ToastVariant};
 
 use crate::error::AppError;
 use crate::hooks::handle_open_url;
@@ -15,6 +16,13 @@ use functora_egui::messages::Msg as BaseMsg;
 
 const PERSISTENT_KEY: &str = "cryptonote_persistent";
 pub(crate) const BYTES_URI_PREFIX: &str = "bytes://";
+
+/// The navigation entries of the default sidebar.
+const SIDEBAR_ENTRIES: [(Screen, LucideIcon); 3] = [
+    (Screen::Home, LucideIcon::House),
+    (Screen::About, LucideIcon::Info),
+    (Screen::Donate, LucideIcon::Heart),
+];
 
 /// Render an `I18N` message in the given language.
 fn render_msg(msg: &dyn functora_egui::i18n::I18N, lang: Language) -> String {
@@ -596,46 +604,41 @@ impl eframe::App for CryptonoteApp {
         let selected_snapshot = self.temporary.screen;
         let lang_cell = std::cell::Cell::new(self.persistent.language);
         let labels = functora_egui::white_label::default_sidebar_labels(lang_cell.get());
-        let icons = functora_egui::white_label::DEFAULT_SIDEBAR_ICONS;
-        let sidebar_labels = labels.clone();
+        let reset_label = labels.last().cloned().unwrap_or_default();
+        let quit_label = functora_egui::white_label::QUIT_AVAILABLE.then(|| BaseMsg::Quit.render(lang_cell.get()));
+        let sidebar_labels = labels
+            .iter()
+            .map(String::as_str)
+            .chain(quit_label.as_deref())
+            .collect::<Vec<_>>();
         let breadcrumb_action = Shell::new("Cryptonote", &mut collapsed_val, {
             let pending_ref = &pending_nav;
             let reset_ref = &pending_reset;
-            let screens = [Screen::Home, Screen::About, Screen::Donate];
+            let reset_label_ref = &reset_label;
+            let lang_ref = &lang_cell;
             move |side_ui| {
                 let mut close = false;
-                for (idx, screen) in screens.iter().enumerate() {
-                    let is_selected =
-                        *screen == selected_snapshot && pending_ref.get().is_none_or(|next| next == *screen);
-                    let btn = Button::new(sidebar_labels[idx].clone())
-                        .icon(icons[idx])
-                        .size(ComponentSize::Sm)
-                        .variant(if is_selected {
-                            ButtonVariant::Default
-                        } else {
-                            ButtonVariant::Ghost
-                        })
-                        .selected(is_selected)
-                        .full_width();
-                    if side_ui.add(btn).clicked() {
-                        pending_ref.set(Some(*screen));
+                match functora_egui::white_label::default_sidebar(
+                    side_ui,
+                    &SIDEBAR_ENTRIES,
+                    reset_label_ref,
+                    &selected_snapshot,
+                    lang_ref.get(),
+                ) {
+                    Some(SidebarAction::Navigate(screen)) => {
+                        pending_ref.set(Some(screen));
                         close |= side_ui.on_mobile();
                         side_ui.ctx().request_repaint();
                     }
-                }
-                if side_ui
-                    .add(
-                        Button::new(sidebar_labels[3].clone())
-                            .icon(icons[3])
-                            .size(ComponentSize::Sm)
-                            .variant(ButtonVariant::Ghost)
-                            .full_width(),
-                    )
-                    .clicked()
-                {
-                    reset_ref.set(true);
-                    close |= side_ui.on_mobile();
-                    side_ui.ctx().request_repaint();
+                    Some(SidebarAction::Reset) => {
+                        reset_ref.set(true);
+                        close |= side_ui.on_mobile();
+                        side_ui.ctx().request_repaint();
+                    }
+                    Some(SidebarAction::Quit) => {
+                        functora_egui::platform::request_quit(side_ui.ctx());
+                    }
+                    None => {}
                 }
                 close
             }
@@ -644,7 +647,7 @@ impl eframe::App for CryptonoteApp {
         .theme(&mut theme)
         .language(&lang_cell)
         .on_brand(|| needs_reset.set(true))
-        .sidebar_labels(labels.iter().map(String::as_str))
+        .sidebar_labels(sidebar_labels)
         .breadcrumb(&route, &history)
         .show(ui, |content_ui| {
             let content_lang = lang_cell.get();

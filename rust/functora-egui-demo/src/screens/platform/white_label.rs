@@ -259,10 +259,9 @@ impl crate::state::ShowcaseApp {
         )])
         .with_sidebar_labels(labels);
         app.set_language(Language::Eng);
-        app.navigate(crate::route::AppRoute::Overview);
         app.content_mut().donate_greeting = Some(functora_egui::messages::Msg::DonateGreeting);
+        let route = app.router().current().clone();
         _ = app.toast_mut();
-        _ = app.router_mut();
         _ = Card::new().show(ui, |ui2| {
             _ = Typography::small(format!(
                 "WhiteLabelApp lang: {}, attrs.app: {}, content.greeting: {:?}",
@@ -271,6 +270,7 @@ impl crate::state::ShowcaseApp {
                 app.content().donate_greeting
             ))
             .show(ui2);
+            _ = Typography::small(format!("route: {route}")).show(ui2);
         });
 
         ui.add_space(12.0);

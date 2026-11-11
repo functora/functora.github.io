@@ -4,7 +4,7 @@
 use functora_egui_demo::ShowcaseApp;
 
 mod common;
-use common::rendered_text;
+use common::{rendered_text, rendered_text_sized};
 
 fn rendered_app<F>(mut body: F) -> String
 where
@@ -12,6 +12,14 @@ where
 {
     let mut app = ShowcaseApp::default();
     rendered_text(|ui| body(&mut app, ui))
+}
+
+fn rendered_app_sized<F>(mut body: F, height: f32) -> String
+where
+    F: FnMut(&mut ShowcaseApp, &mut egui::Ui),
+{
+    let mut app = ShowcaseApp::default();
+    rendered_text_sized(&mut |ui| body(&mut app, ui), height)
 }
 
 #[test]
@@ -64,6 +72,24 @@ fn white_label_demo_shows_derived_branding() {
     assert!(
         !text.contains("WhiteLabel::load"),
         "white-label demo must not advertise a nonexistent load API: {text}"
+    );
+}
+
+#[test]
+fn white_label_preview_does_not_drive_the_page_history() {
+    let source = include_str!("../src/screens/platform/white_label.rs");
+    let navigations = source
+        .lines()
+        .filter(|line| line.contains("app.navigate(") && !line.trim_start().starts_with('"'))
+        .collect::<Vec<_>>();
+    assert!(
+        navigations.is_empty(),
+        "the embedded WhiteLabelApp preview must stay read-only: on the web its router pushes the real browser history and reverts the URL: {navigations:?}"
+    );
+    let text = rendered_app_sized(ShowcaseApp::demo_white_label, 8000.0);
+    assert!(
+        text.contains("route: overview"),
+        "white-label demo must show the preview route without navigating: {text}"
     );
 }
 

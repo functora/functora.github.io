@@ -7,6 +7,7 @@ use crate::route::AppRoute;
 use crate::state::APP_SCOPE;
 use crate::state::ShowcaseApp;
 use functora_egui::i18n::{I18N, Language};
+use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::state::PersistentState;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, ComponentSize, Dialog,
@@ -345,6 +346,8 @@ impl eframe::App for ShowcaseApp {
         let pending_nav = std::cell::Cell::new(None::<PendingNav>);
         let selected_snapshot = self.selected;
         let lang_cell = std::cell::Cell::new(self.persistent.language);
+        let quit_label = functora_egui::white_label::QUIT_AVAILABLE
+            .then(|| BaseMsg::Quit.render(lang_cell.get()));
         let breadcrumb_action = Shell::new("functora-egui", &mut collapsed_val, {
             let lang_ref = &lang_cell;
             let pending_ref = &pending_nav;
@@ -391,6 +394,21 @@ impl eframe::App for ShowcaseApp {
                     }
                     side_ui.add_space(8.0);
                 }
+                if functora_egui::white_label::QUIT_AVAILABLE {
+                    side_ui.add_space(8.0);
+                    if side_ui
+                        .add(
+                            Button::new(BaseMsg::Quit.render(cur_lang))
+                                .icon(LucideIcon::Power)
+                                .size(ComponentSize::Sm)
+                                .variant(ButtonVariant::Ghost)
+                                .full_width(),
+                        )
+                        .clicked()
+                    {
+                        functora_egui::platform::request_quit(side_ui.ctx());
+                    }
+                }
                 close
             }
         })
@@ -402,7 +420,8 @@ impl eframe::App for ShowcaseApp {
         .sidebar_labels(
             CATEGORIES
                 .iter()
-                .flat_map(|(_, _, items)| items.iter().map(|d| d.name)),
+                .flat_map(|(_, _, items)| items.iter().map(|d| d.name))
+                .chain(quit_label.as_deref()),
         )
         .breadcrumb(&route, &history)
         .footer({

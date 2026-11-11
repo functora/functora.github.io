@@ -13,6 +13,10 @@ use crate::markdown_view::show as show_markdown;
 use crate::i18n::{I18N, Language};
 use crate::icons::lucide_icon::LucideIcon;
 use crate::messages::Msg as BaseMsg;
+use crate::route::RouteMetadata;
+use crate::tokens::button_variant::ButtonVariant;
+use crate::tokens::component_size::ComponentSize;
+use crate::widgets::button::widget::Button;
 use crate::widgets::card::widget::Card;
 use crate::widgets::hypertext::widget::Hypertext;
 
@@ -20,21 +24,14 @@ use crate::widgets::hypertext::widget::Hypertext;
 use crate::default_theme;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
 use crate::i18n::detect_browser_language;
-#[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
-use crate::route::RouteMetadata;
 #[cfg(all(feature = "qr", feature = "clipboard"))]
 use crate::theme::shadcn_theme_ext::ShadcnThemeExt;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
 use crate::theme_extra::set_theme;
 #[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
-use crate::tokens::button_variant::ButtonVariant;
-#[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
-use crate::tokens::component_size::ComponentSize;
-#[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
-use crate::widgets::button::widget::Button;
-#[cfg(any(feature = "desktop", feature = "web", feature = "android"))]
 use crate::{
     AppRouter, NavAction, PersistentState, ResponsiveExt, Shell, ToastState, ToastVariant,
+    platform::request_quit,
 };
 
 /// Render the default MIT license screen. Requires the `markdown` feature.
@@ -194,6 +191,92 @@ pub const DEFAULT_SIDEBAR_ICONS: [LucideIcon; 4] = [
     LucideIcon::Heart,
     LucideIcon::RotateCcw,
 ];
+
+/// True on the platforms where the app window can be closed from the UI.
+///
+/// The web build cannot close the browser tab and Android closes the app
+/// through the system, so the quit entry is a desktop-only affordance.
+pub const QUIT_AVAILABLE: bool = cfg!(not(any(target_arch = "wasm32", target_os = "android")));
+
+/// What a click on the default sidebar asks the app to do.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SidebarAction<R> {
+    /// Open another screen.
+    Navigate(R),
+    /// Reset the app to its initial state.
+    Reset,
+    /// Close the app window.
+    Quit,
+}
+
+/// The label of the quit entry of the default sidebar.
+fn quit_label(lang: Language) -> String {
+    BaseMsg::Quit.render(lang)
+}
+
+/// Renders the default white-label sidebar.
+///
+/// The navigation entries come first, the reset entry after them and, on
+/// desktop, the quit entry last. The returned action is the entry the user
+/// picked, if any.
+pub fn default_sidebar<R: RouteMetadata>(
+    ui: &mut egui::Ui,
+    entries: &[(R, LucideIcon)],
+    reset_label: &str,
+    selected: &R,
+    lang: Language,
+) -> Option<SidebarAction<R>> {
+    let nav_responses = entries
+        .iter()
+        .map(|(route, icon)| {
+            let is_selected = *route == *selected;
+            ui.add(
+                Button::new(route.label(lang).into_owned())
+                    .icon(*icon)
+                    .size(ComponentSize::Sm)
+                    .variant(if is_selected {
+                        ButtonVariant::Default
+                    } else {
+                        ButtonVariant::Ghost
+                    })
+                    .selected(is_selected)
+                    .full_width(),
+            )
+        })
+        .collect::<Vec<_>>();
+    let reset_response = ui.add(
+        Button::new(reset_label)
+            .icon(LucideIcon::RotateCcw)
+            .size(ComponentSize::Sm)
+            .variant(ButtonVariant::Ghost)
+            .full_width(),
+    );
+    let quit_response = if QUIT_AVAILABLE {
+        Some(
+            ui.add(
+                Button::new(quit_label(lang))
+                    .icon(LucideIcon::Power)
+                    .size(ComponentSize::Sm)
+                    .variant(ButtonVariant::Ghost)
+                    .full_width(),
+            ),
+        )
+    } else {
+        None
+    };
+
+    nav_responses
+        .iter()
+        .position(egui::Response::clicked)
+        .map(|index| SidebarAction::Navigate(entries[index].0.clone()))
+        .or_else(|| reset_response.clicked().then_some(SidebarAction::Reset))
+        .or_else(|| {
+            quit_response
+                .as_ref()
+                .is_some_and(egui::Response::clicked)
+                .then_some(SidebarAction::Quit)
+        })
+}
 
 /// Render the default white-label footer. Every link is derived from `attrs`.
 ///
@@ -395,6 +478,12 @@ where
             self.sidebar_labels.clone()
         };
         let reset_label = labels.last().cloned().unwrap_or_else(|| "Reset".into());
+        let quit_text = quit_label(lang_cell.get());
+        let sidebar_labels = labels
+            .iter()
+            .map(String::as_str)
+            .chain(QUIT_AVAILABLE.then_some(quit_text.as_str()))
+            .collect::<Vec<_>>();
 
         let pending_ref = &pending_nav;
         let lang_ref = &lang_cell;
@@ -402,37 +491,27 @@ where
         let breadcrumb_action = Shell::new(brand, &mut collapsed_val, {
             move |side_ui| {
                 let mut close = false;
-                for (entry_route, icon) in &entries {
-                    let is_selected = *entry_route == selected_snapshot;
-                    let btn = Button::new(entry_route.label(lang_ref.get()).into_owned())
-                        .icon(*icon)
-                        .size(ComponentSize::Sm)
-                        .variant(if is_selected {
-                            ButtonVariant::Default
-                        } else {
-                            ButtonVariant::Ghost
-                        })
-                        .selected(is_selected)
-                        .full_width();
-                    if side_ui.add(btn).clicked() {
-                        pending_ref.set(Some(entry_route.clone()));
+                match default_sidebar(
+                    side_ui,
+                    &entries,
+                    &reset_label,
+                    &selected_snapshot,
+                    lang_ref.get(),
+                ) {
+                    Some(SidebarAction::Navigate(target)) => {
+                        pending_ref.set(Some(target));
                         close |= side_ui.on_mobile();
                         side_ui.ctx().request_repaint();
                     }
-                }
-                if side_ui
-                    .add(
-                        Button::new(reset_label.clone())
-                            .icon(LucideIcon::RotateCcw)
-                            .size(ComponentSize::Sm)
-                            .variant(ButtonVariant::Ghost)
-                            .full_width(),
-                    )
-                    .clicked()
-                {
-                    needs_reset_ref.set(true);
-                    close |= side_ui.on_mobile();
-                    side_ui.ctx().request_repaint();
+                    Some(SidebarAction::Reset) => {
+                        needs_reset_ref.set(true);
+                        close |= side_ui.on_mobile();
+                        side_ui.ctx().request_repaint();
+                    }
+                    Some(SidebarAction::Quit) => {
+                        request_quit(side_ui.ctx());
+                    }
+                    None => {}
                 }
                 close
             }
@@ -445,7 +524,7 @@ where
         .footer(move |footer_ui| {
             let _ = default_footer(footer_ui, &attrs, lang_ref.get());
         })
-        .sidebar_labels(labels.iter().map(String::as_str))
+        .sidebar_labels(sidebar_labels)
         .breadcrumb(&route, &history)
         .show(ui, |content_ui| {
             route_content(content_ui, &route, &extra);

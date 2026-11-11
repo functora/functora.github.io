@@ -227,6 +227,7 @@ impl crate::state::ShowcaseApp {
             Msg::CameraPermissionDenied("denied".to_owned()),
             Msg::Back,
             Msg::Home,
+            Msg::Quit,
             Msg::DonateGreeting,
             Msg::DonateIntro,
             Msg::Stage(Stage::Attach),

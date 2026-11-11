@@ -81,6 +81,21 @@ fn license_text_starts_with_mit_title() {
 }
 
 #[test]
+fn the_quit_label_renders_all_languages() {
+    for (lang, expected) in [
+        (Language::Eng, "Quit"),
+        (Language::Spa, "Salir"),
+        (Language::Rus, "Выход"),
+    ] {
+        assert_eq!(
+            Msg::Quit.render(lang),
+            expected,
+            "wrong quit label for {lang:?}"
+        );
+    }
+}
+
+#[test]
 fn widget_chrome_renders_all_languages() {
     let variants = [
         Msg::Cancel,

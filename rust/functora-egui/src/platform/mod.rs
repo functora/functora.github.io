@@ -7,6 +7,15 @@ pub struct ShareData {
     pub url: String,
 }
 
+/// Closes the app window gracefully.
+///
+/// The integration turns this into an ordinary window close: the app saves
+/// its state, runs its exit hook and leaves the event loop. No process is
+/// killed, so nothing is lost on the way out.
+pub fn request_quit(ctx: &egui::Context) {
+    ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+}
+
 #[cfg(target_os = "android")]
 #[cfg(feature = "platform")]
 pub mod android;

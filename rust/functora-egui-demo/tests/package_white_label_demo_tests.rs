@@ -66,3 +66,27 @@ fn white_label_demo_shows_derived_branding() {
         "white-label demo must not advertise a nonexistent load API: {text}"
     );
 }
+
+#[test]
+fn white_label_demo_teaches_the_desktop_only_quit_entry() {
+    let text = rendered_app(ShowcaseApp::demo_white_label);
+    assert!(
+        text.contains("QUIT_AVAILABLE"),
+        "white-label demo must show where the quit entry is available: {text}"
+    );
+    for needle in [
+        "default_sidebar",
+        "SidebarAction",
+        "SidebarAction::Quit",
+        "functora_egui::platform::request_quit",
+    ] {
+        assert!(
+            text.contains(needle),
+            "white-label demo must teach the `{needle}` API: {text}"
+        );
+    }
+    assert!(
+        !text.contains("process::exit"),
+        "white-label demo must not teach a hard process exit: {text}"
+    );
+}

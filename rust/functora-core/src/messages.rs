@@ -30,6 +30,7 @@ pub enum Msg {
     CameraPermissionDenied(String),
     Back,
     Home,
+    Quit,
     DonateGreeting,
     DonateIntro,
     Stage(crate::progress::Stage),
@@ -118,6 +119,7 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => crate::Error::CameraPermissionDenied(e.clone()).render_eng(),
             Self::Back => "Back".into(),
             Self::Home => "Home".into(),
+            Self::Quit => "Quit".into(),
             Self::DonateGreeting => "Hello, User!".into(),
             Self::DonateIntro => {
                 "I'm Functora, the creator of this software. If you're enjoying it, a donation would be greatly appreciated. Sincerely yours, Functora.".into()
@@ -220,6 +222,7 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => crate::Error::CameraPermissionDenied(e.clone()).render_spa(),
             Self::Back => "Atrás".into(),
             Self::Home => "Inicio".into(),
+            Self::Quit => "Salir".into(),
             Self::DonateGreeting => "¡Hola, Usuario!".into(),
             Self::DonateIntro => {
                 "Soy Functora, el creador de este software. Si lo estás disfrutando, una donación sería muy apreciada. Atentamente, Functora.".into()
@@ -323,6 +326,7 @@ impl I18N for Msg {
             Self::CameraPermissionDenied(e) => crate::Error::CameraPermissionDenied(e.clone()).render_rus(),
             Self::Back => "Назад".into(),
             Self::Home => "Главная".into(),
+            Self::Quit => "Выход".into(),
             Self::DonateGreeting => "Здравствуйте, пользователь!".into(),
             Self::DonateIntro => {
                 "Я Functora, создатель этого программного обеспечения. Если оно вам нравится, я буду очень признателен за пожертвование. С уважением, Functora.".into()

@@ -1,6 +1,6 @@
 use functora_egui::i18n::Language;
 use functora_egui::route::RouteMetadata;
-use functora_egui::{Button, ButtonVariant, Card, Flex, LucideIcon, ResponsiveExt};
+use functora_egui::{Button, ButtonVariant, Flex, LucideIcon, ResponsiveExt};
 
 use crate::route::AppRoute;
 
@@ -30,29 +30,26 @@ impl crate::state::ShowcaseApp {
         let ctx = ui.ctx().clone();
         let mut dock = ScreenDock::default();
 
-        _ = Card::new().show(ui, |card_ui| {
-            let mobile = card_ui.on_mobile();
-            let flex = if mobile {
-                Flex::column().gap(8.0).w_full()
-            } else if next.is_some() && previous.is_some() {
-                Flex::row().no_wrap().justify_between().gap(8.0).w_full()
-            } else if next.is_some() {
-                Flex::row().no_wrap().justify_end().gap(8.0).w_full()
-            } else {
-                Flex::row().no_wrap().justify_start().gap(8.0).w_full()
-            };
-            _ = flex.show(card_ui, |f| {
-                dock.previous = previous.as_ref().map(|route| {
-                    f.add(dock_button(route, lang, DockSide::Previous, mobile))
-                        .inner
-                });
-                dock.next = next.as_ref().map(|route| {
-                    f.add(dock_button(route, lang, DockSide::Next, mobile))
-                        .inner
-                });
+        let mobile = ui.on_mobile();
+        let flex = if mobile {
+            Flex::column().gap(8.0).w_full()
+        } else if next.is_some() && previous.is_some() {
+            Flex::row().no_wrap().justify_between().gap(8.0).w_full()
+        } else if next.is_some() {
+            Flex::row().no_wrap().justify_end().gap(8.0).w_full()
+        } else {
+            Flex::row().no_wrap().justify_start().gap(8.0).w_full()
+        };
+        _ = flex.show(ui, |f| {
+            dock.previous = previous.as_ref().map(|route| {
+                f.add(dock_button(route, lang, DockSide::Previous, mobile))
+                    .inner
+            });
+            dock.next = next.as_ref().map(|route| {
+                f.add(dock_button(route, lang, DockSide::Next, mobile))
+                    .inner
             });
         });
-
         if dock.previous.as_ref().is_some_and(egui::Response::clicked) {
             self.navigate_to(previous.and_then(|route| route.component()));
             ctx.request_repaint();

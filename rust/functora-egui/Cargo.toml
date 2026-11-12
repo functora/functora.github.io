@@ -101,6 +101,14 @@ features = ["wayland-data-control"]
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android")))'.dependencies.rfd]
 version = "0.15"
 optional = true
+default-features = false
+features = ["gtk3"]
+
+[target.'cfg(all(target_os = "linux", not(target_os = "android")))'.dependencies.ashpd]
+version = "0.11"
+optional = true
+default-features = false
+features = ["async-std"]
 
 [target.'cfg(not(any(target_arch = "wasm32", target_os = "android")))'.dependencies.eframe]
 version = "0.37.0"
@@ -150,7 +158,7 @@ optional = true
 default = ["platform", "clipboard", "files", "runtime", "storage", "crypto", "zip", "package", "html-markdown", "thumbnail", "qr"]
 platform = ["dep:wasm-bindgen", "dep:wasm-bindgen-futures", "dep:web-sys", "dep:jni", "dep:android-activity"]
 clipboard = ["platform", "runtime", "dep:arboard"]
-files = ["platform", "dep:rfd"]
+files = ["platform", "dep:rfd", "dep:ashpd"]
 runtime = ["dep:pollster", "dep:threadpool", "dep:wasm-bindgen-futures"]
 storage = ["platform", "dep:directories"]
 crypto = ["functora-core/crypto"]

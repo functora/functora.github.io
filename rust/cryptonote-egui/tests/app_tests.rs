@@ -68,6 +68,24 @@ fn pick_cancel_toasts_silently() {
 }
 
 #[test]
+fn pick_empty_completion_is_not_reported_as_success() {
+    let mut app = CryptonoteApp::default();
+    let toasts_before = app.toast.next_id();
+    send_pick(&mut app, Ok(Vec::new()));
+    assert!(
+        app.temporary.attachments.is_empty(),
+        "an empty pick must not add attachments"
+    );
+    assert!(app.pick_rx.is_none());
+    assert!(!app.progress_overlay_open);
+    assert_eq!(
+        app.toast.next_id(),
+        toasts_before,
+        "an empty pick must not report a successful attachment"
+    );
+}
+
+#[test]
 fn pick_error_toasts() {
     let mut app = CryptonoteApp::default();
     let toasts_before = app.toast.next_id();

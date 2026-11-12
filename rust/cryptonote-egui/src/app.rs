@@ -358,6 +358,7 @@ impl CryptonoteApp {
             self.end_op();
             match outcome {
                 functora_egui::PollOutcome::Disconnected => {}
+                functora_egui::PollOutcome::Ready(Ok(files)) if files.is_empty() => {}
                 functora_egui::PollOutcome::Ready(Ok(files)) => {
                     let before = self.temporary.attachments.len();
                     for (name, data) in files {

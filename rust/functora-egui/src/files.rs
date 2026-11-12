@@ -11,6 +11,8 @@ use crate::progress::{Job, Stage};
 #[cfg(target_arch = "wasm32")]
 use base64::Engine as _;
 use std::collections::{HashMap, VecDeque};
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+use std::path::PathBuf;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -209,6 +211,39 @@ pub async fn pick_files(multiple: bool) -> Result<Vec<(String, Vec<u8>)>, Error>
     pick_files_with_progress(multiple, None).await
 }
 
+/// The backend that shows the desktop file picker.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PickerBackend {
+    /// The XDG desktop portal, which shows the desktop's own file chooser.
+    Portal,
+    /// The platform dialog (GTK 3 on Linux), used when the session has no portal.
+    Native,
+    /// No backend can run: the session has neither a portal nor a display.
+    Unavailable,
+}
+
+/// Chooses the backend that shows the desktop file picker.
+///
+/// The portal is preferred because it shows the desktop's own file chooser;
+/// the platform dialog is the fallback for sessions without a portal.
+#[must_use]
+pub fn picker_backend(portal_available: bool, display_available: bool) -> PickerBackend {
+    match (portal_available, display_available) {
+        (true, _) => PickerBackend::Portal,
+        (false, true) => PickerBackend::Native,
+        (false, false) => PickerBackend::Unavailable,
+    }
+}
+
+/// Reports whether a graphical display is reachable for the platform dialog.
+///
+/// The GTK 3 dialog blocks forever when GTK cannot open a display, so the
+/// desktop picker only uses it when a display is announced.
+#[must_use]
+pub fn desktop_display_available() -> bool {
+    std::env::var_os("WAYLAND_DISPLAY").is_some() || std::env::var_os("DISPLAY").is_some()
+}
+
 pub async fn pick_files_with_progress(
     multiple: bool,
     progress: Option<&mut Option<Job<Stage>>>,
@@ -239,7 +274,7 @@ pub async fn pick_files_with_cancel(
     }
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        let files = pick_via_rfd(multiple, progress, cancel).await?;
+        let files = pick_via_desktop(multiple, progress, cancel).await?;
         Ok(files)
     }
 }
@@ -267,7 +302,7 @@ pub async fn pick_files_with_shared_progress(
     }
     #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
     {
-        let files = pick_via_rfd_shared(multiple, progress, cancel).await?;
+        let files = pick_via_desktop_shared(multiple, progress, cancel).await?;
         Ok(files)
     }
 }
@@ -438,9 +473,9 @@ async fn android_pick_files(
         Ok(out)
     })?;
     clear_file_picker();
-    let mut out = Vec::with_capacity(names.len().min(datas.len()));
-    for (n, d) in names.into_iter().zip(datas) {
-        out.push((n, d));
+    let out: Vec<(String, Vec<u8>)> = names.into_iter().zip(datas).collect();
+    if out.is_empty() {
+        return Err(Error::Cancelled);
     }
     Ok(out)
 }
@@ -529,7 +564,7 @@ pub fn pick_files_sync_web_with_cancel(
                     Some(list) => collect_files_chunked_web(list, None, Some(&cancel_inner))
                         .await
                         .map_err(|e| e.to_string()),
-                    None => Ok(Vec::new()),
+                    None => Err("Cancelled".to_owned()),
                 };
                 if let Ok(mut guard) = result2.lock() {
                     *guard = Some(outcome);
@@ -545,16 +580,11 @@ pub fn pick_files_sync_web_with_cancel(
         let result_cancel = Arc::clone(&result);
         let input_cancel = input.clone();
         let document_cancel = document.clone();
-        let cancel_snapshot = Arc::clone(cancel);
         let closure_cancel = Closure::once(move |_event: web_sys::Event| {
             if let Ok(mut guard) = result_cancel.lock()
                 && guard.is_none()
             {
-                if cancel_snapshot.load(Ordering::Relaxed) {
-                    *guard = Some(Err("Cancelled".to_owned()));
-                } else {
-                    *guard = Some(Ok(Vec::new()));
-                }
+                *guard = Some(Err("Cancelled".to_owned()));
             }
             if let Some(body) = document_cancel.body() {
                 drop(body.remove_child(&input_cancel));
@@ -616,7 +646,7 @@ async fn pick_via_web(
 }
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
-async fn pick_via_rfd(
+async fn pick_via_desktop(
     multiple: bool,
     progress: Option<&mut Option<Job<Stage>>>,
     cancel: Option<&CancelToken>,
@@ -624,7 +654,7 @@ async fn pick_via_rfd(
     let shared = progress
         .as_ref()
         .map(|p| Arc::new(Mutex::new((*p).clone())));
-    let result = pick_via_rfd_shared(multiple, shared.clone(), cancel).await;
+    let result = pick_via_desktop_shared(multiple, shared.clone(), cancel).await;
     if let (Some(slot), Some(arc)) = (progress, shared)
         && let Ok(guard) = arc.lock()
     {
@@ -647,7 +677,7 @@ async fn collect_files_chunked_web_shared(
         {
             *guard = None;
         }
-        return Ok(Vec::new());
+        return Err(Error::Cancelled);
     }
     let mut total: u64 = 0;
     for i in 0..len {
@@ -839,77 +869,181 @@ async fn pick_via_web_shared(
         }
         return Err(Error::Cancelled);
     }
-    let Some(file_list) = input.files() else {
+    let Some(file_list) = input.files().filter(|files| files.length() > 0) else {
         if let Some(shared) = progress.as_ref()
             && let Ok(mut guard) = shared.lock()
         {
             *guard = None;
         }
-        return Ok(Vec::new());
+        return Err(Error::Cancelled);
     };
-    if file_list.length() == 0 {
-        if let Some(shared) = progress.as_ref()
-            && let Ok(mut guard) = shared.lock()
-        {
-            *guard = None;
-        }
-        return Ok(Vec::new());
-    }
     collect_files_chunked_web_shared(file_list, progress, cancel).await
 }
 
 #[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
-async fn pick_via_rfd_shared(
+async fn pick_via_desktop_shared(
     multiple: bool,
+    progress: Option<Arc<Mutex<Option<Job<Stage>>>>>,
+    cancel: Option<&CancelToken>,
+) -> Result<Vec<(String, Vec<u8>)>, Error> {
+    if let Some(token) = cancel
+        && token.load(Ordering::Relaxed)
+    {
+        return Err(Error::Cancelled);
+    }
+    let selected = pick_paths(multiple).await?;
+    read_selected_files(selected, progress, cancel).await
+}
+
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+async fn pick_paths(multiple: bool) -> Result<Vec<PathBuf>, Error> {
+    let display = platform_display_available();
+    #[cfg(target_os = "linux")]
+    {
+        match picker_backend(portal_available().await, display) {
+            PickerBackend::Portal => match pick_via_portal(multiple).await {
+                PortalOutcome::Selected(paths) => Ok(paths),
+                PortalOutcome::Cancelled => Err(Error::Cancelled),
+                PortalOutcome::Unavailable if display => pick_via_native(multiple).await,
+                PortalOutcome::Unavailable => Err(Error::FilePickerFailed),
+            },
+            PickerBackend::Native => pick_via_native(multiple).await,
+            PickerBackend::Unavailable => Err(Error::FilePickerFailed),
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        if !display {
+            return Err(Error::FilePickerFailed);
+        }
+        pick_via_native(multiple).await
+    }
+}
+
+/// Reports whether the platform dialog can open a window.
+///
+/// The GTK 3 dialog blocks forever when GTK cannot open a display, so the
+/// picker only uses it when a display is announced. The macOS and Windows
+/// dialogs open without one.
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+fn platform_display_available() -> bool {
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    ))]
+    {
+        desktop_display_available()
+    }
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    )))]
+    {
+        true
+    }
+}
+
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+async fn pick_via_native(multiple: bool) -> Result<Vec<PathBuf>, Error> {
+    let dialog = rfd::AsyncFileDialog::new();
+    let selected = if multiple {
+        dialog.pick_files().await
+    } else {
+        dialog.pick_file().await.map(|handle| vec![handle])
+    };
+    let Some(handles) = selected else {
+        return Err(Error::Cancelled);
+    };
+    let paths: Vec<PathBuf> = handles
+        .into_iter()
+        .map(|handle| handle.path().to_path_buf())
+        .collect();
+    if paths.is_empty() {
+        return Err(Error::Cancelled);
+    }
+    Ok(paths)
+}
+
+#[cfg(all(
+    not(any(target_os = "android", target_arch = "wasm32")),
+    target_os = "linux"
+))]
+enum PortalOutcome {
+    Selected(Vec<PathBuf>),
+    Cancelled,
+    Unavailable,
+}
+
+#[cfg(all(
+    not(any(target_os = "android", target_arch = "wasm32")),
+    target_os = "linux"
+))]
+async fn portal_available() -> bool {
+    const PORTAL_NAME: &str = "org.freedesktop.portal.Desktop";
+    let Ok(connection) = ashpd::zbus::Connection::session().await else {
+        return false;
+    };
+    let Ok(proxy) = ashpd::zbus::fdo::DBusProxy::new(&connection).await else {
+        return false;
+    };
+    let Ok(name) = ashpd::zbus::names::BusName::try_from(PORTAL_NAME) else {
+        return false;
+    };
+    proxy.name_has_owner(name).await.unwrap_or(false)
+}
+
+#[cfg(all(
+    not(any(target_os = "android", target_arch = "wasm32")),
+    target_os = "linux"
+))]
+async fn pick_via_portal(multiple: bool) -> PortalOutcome {
+    let request = ashpd::desktop::file_chooser::OpenFileRequest::default().multiple(multiple);
+    let Ok(sent) = request.send().await else {
+        return PortalOutcome::Unavailable;
+    };
+    match sent.response() {
+        Ok(selected) => {
+            let paths: Vec<PathBuf> = selected
+                .uris()
+                .iter()
+                .filter_map(|uri| uri.to_file_path().ok())
+                .collect();
+            if paths.is_empty() {
+                PortalOutcome::Cancelled
+            } else {
+                PortalOutcome::Selected(paths)
+            }
+        }
+        Err(ashpd::Error::Response(ashpd::desktop::ResponseError::Cancelled)) => {
+            PortalOutcome::Cancelled
+        }
+        Err(_) => PortalOutcome::Unavailable,
+    }
+}
+
+#[cfg(not(any(target_os = "android", target_arch = "wasm32")))]
+async fn read_selected_files(
+    selected: Vec<PathBuf>,
     progress: Option<Arc<Mutex<Option<Job<Stage>>>>>,
     cancel: Option<&CancelToken>,
 ) -> Result<Vec<(String, Vec<u8>)>, Error> {
     use std::io::Read;
 
-    if let Some(token) = cancel
-        && token.load(Ordering::Relaxed)
-    {
-        return Err(Error::Cancelled);
-    }
-    let dialog = rfd::AsyncFileDialog::new();
-    let handles = if multiple {
-        dialog.pick_files().await.unwrap_or_default()
-    } else {
-        dialog
-            .pick_file()
-            .await
-            .map(|h| vec![h])
-            .unwrap_or_default()
-    };
-    if handles.is_empty() {
-        if let Some(shared) = progress
-            && let Ok(mut guard) = shared.lock()
-        {
-            *guard = None;
-        }
-        return Ok(Vec::new());
-    }
-    if let Some(token) = cancel
-        && token.load(Ordering::Relaxed)
-    {
-        if let Some(shared) = progress
-            && let Ok(mut guard) = shared.lock()
-        {
-            *guard = None;
-        }
-        return Err(Error::Cancelled);
-    }
     let mut total: u64 = 0;
-    for handle in &handles {
+    for path in &selected {
         if let Some(token) = cancel
             && token.load(Ordering::Relaxed)
         {
             return Err(Error::Cancelled);
         }
-        let path = handle.path();
         let meta = std::fs::metadata(path).map_err(Error::from)?;
-        let size = meta.len();
-        total = total.saturating_add(size);
+        total = total.saturating_add(meta.len());
     }
     if let Some(shared) = progress.as_ref()
         && let Ok(mut guard) = shared.lock()
@@ -922,19 +1056,22 @@ async fn pick_via_rfd_shared(
         });
     }
     yield_to_paint().await;
-    let mut out: Vec<(String, Vec<u8>)> = Vec::with_capacity(handles.len());
+    let mut out: Vec<(String, Vec<u8>)> = Vec::with_capacity(selected.len());
     let mut done: u64 = 0;
     let mut chunk = vec![0u8; PICK_CHUNK];
-    for handle in handles {
+    for path in selected {
         if let Some(token) = cancel
             && token.load(Ordering::Relaxed)
         {
             return Err(Error::Cancelled);
         }
-        let name = handle.file_name();
-        let path = handle.path().to_path_buf();
+        let name = path
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default()
+            .to_string();
         let file_len =
-            std::fs::metadata(&path).map_or(0, |m| usize::try_from(m.len()).unwrap_or(0));
+            std::fs::metadata(&path).map_or(0, |meta| usize::try_from(meta.len()).unwrap_or(0));
         let mut data: Vec<u8> = Vec::with_capacity(file_len);
         let mut file = std::fs::File::open(&path).map_err(Error::from)?;
         loop {
@@ -943,12 +1080,12 @@ async fn pick_via_rfd_shared(
             {
                 return Err(Error::Cancelled);
             }
-            let n = file.read(&mut chunk).map_err(Error::from)?;
-            if n == 0 {
+            let read = file.read(&mut chunk).map_err(Error::from)?;
+            if read == 0 {
                 break;
             }
-            data.extend_from_slice(&chunk[..n]);
-            done = done.saturating_add(n as u64);
+            data.extend_from_slice(&chunk[..read]);
+            done = done.saturating_add(read as u64);
             if let Some(shared) = progress.as_ref()
                 && let Ok(mut guard) = shared.lock()
             {

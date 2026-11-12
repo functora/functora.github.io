@@ -77,6 +77,10 @@
           url = "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64";
           hash = "sha256-L8qLRDySUQ8Ug6iD9gBhrQm0a5eLJjHIB82HOkfsJg0=";
         };
+        gtk3-schemas = pkgs.runCommand "gtk3-schemas" { } ''
+          mkdir -p "$out/glib-2.0/schemas"
+          cp -r ${pkgs.gtk3}/share/gsettings-schemas/*/glib-2.0/schemas/. "$out/glib-2.0/schemas/"
+        '';
         android-sdk-args = {
           platformVersions = ["34" "35"];
           buildToolsVersions = ["34.0.0" "35.0.0"];
@@ -418,18 +422,30 @@
                 desktop-file-validate "$DESKTOP"
                 appstreamcli validate --no-net desktop/metainfo/*.metainfo.xml
                 rm -rf "$OUT/AppDir"
-                mkdir -p "$OUT/AppDir/usr/bin" "$OUT/AppDir/usr/share/metainfo"
+                mkdir -p "$OUT/AppDir/usr/bin" "$OUT/AppDir/usr/share/metainfo" \
+                  "$OUT/AppDir/usr/share/glib-2.0/schemas" "$OUT/AppDir/usr/share/icons"
                 cp "../target/release/${app}" "$OUT/AppDir/usr/bin/${app}"
                 cp "$DESKTOP" "$OUT/AppDir/$APPID.desktop"
                 cp "${icons}/android-chrome-512x512.png" "$OUT/AppDir/$APPID.png"
                 cp "$OUT/AppDir/$APPID.png" "$OUT/AppDir/.DirIcon"
                 cp desktop/metainfo/*.metainfo.xml "$OUT/AppDir/usr/share/metainfo/$APPID.metainfo.xml"
                 cp -R desktop/icons/hicolor "$OUT/AppDir/usr/share/icons/"
+                cp -r "${gtk3-schemas}/glib-2.0/schemas/." "$OUT/AppDir/usr/share/glib-2.0/schemas/"
+                cp -R "${pkgs.adwaita-icon-theme}/share/icons/Adwaita" "$OUT/AppDir/usr/share/icons/"
                 APPDIR="$PWD/$OUT/AppDir"
                 linuxdeploy --appdir "$APPDIR" \
                   -d "$APPDIR/$APPID.desktop" \
                   -i "$APPDIR/$APPID.png" \
                   -e "$APPDIR/usr/bin/${app}"
+                printf '%s\n' \
+                  "#!/bin/sh" \
+                  "HERE=\"\$(dirname \"\$(readlink -f \"\$0\")\")\"" \
+                  "export GSETTINGS_SCHEMA_DIR=\"\$HERE/usr/share/glib-2.0/schemas\"" \
+                  "export XDG_DATA_DIRS=\"\$HERE/usr/share:/usr/local/share:/usr/share\"" \
+                  "export LD_LIBRARY_PATH=\"\$HERE/usr/lib:\$LD_LIBRARY_PATH\"" \
+                  "exec \"\$HERE/usr/bin/${app}\" \"\$@\"" \
+                  > "$APPDIR/AppRun"
+                chmod +x "$APPDIR/AppRun"
                 mksquashfs "$OUT/AppDir" "$OUT/payload.squashfs" -root-owned -noappend -comp zstd
                 cat "${appimage-runtime-x86_64}" "$OUT/payload.squashfs" > "$IMG"
                 chmod +x "$IMG"
@@ -511,6 +527,8 @@
               libxrandr
               libxi
               libxext
+              gtk3
+              adwaita-icon-theme
             ];
             postInstall = ''
               desktop-file-validate ${app}/desktop/linux/*.desktop
@@ -531,9 +549,12 @@
                   libxrandr
                   libxi
                   libxext
+                  gtk3
                 ])
               }" \
-                --suffix PATH : "${pkgs.lib.makeBinPath [pkgs.xdg-utils]}"
+                --suffix PATH : "${pkgs.lib.makeBinPath [pkgs.xdg-utils]}" \
+                --set GSETTINGS_SCHEMA_DIR "${gtk3-schemas}/glib-2.0/schemas" \
+                --set XDG_DATA_DIRS "$out/share:${pkgs.adwaita-icon-theme}/share:/usr/local/share:/usr/share"
             '';
             meta = with pkgs.lib; {
               description = manifest.package.description;
@@ -774,7 +795,10 @@
             libxrandr
             libxi
             libxext
+            gtk3
           ]);
+          GSETTINGS_SCHEMA_DIR = "${gtk3-schemas}/glib-2.0/schemas";
+          XDG_DATA_DIRS = "${pkgs.adwaita-icon-theme}/share:${pkgs.gtk3}/share:/usr/local/share:/usr/share";
           packages = with pkgs;
             [
               bacon
@@ -807,6 +831,7 @@
               webkitgtk_4_1
               openssl
               xdotool
+              adwaita-icon-theme
               libayatana-appindicator
               librsvg
               gtk3

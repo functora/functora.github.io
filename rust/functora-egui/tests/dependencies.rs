@@ -22,7 +22,14 @@ const HEAVY_CORE: &[&str] = &[
     "rxing",
     "zip",
 ];
-const PLATFORM: &[&str] = &["arboard", "directories", "pollster", "rfd", "threadpool"];
+const PLATFORM: &[&str] = &[
+    "arboard",
+    "ashpd",
+    "directories",
+    "pollster",
+    "rfd",
+    "threadpool",
+];
 const CORE_CAPABILITIES: &[(&str, &[&str])] = &[
     ("crypto", &["aes-gcm", "argon2", "chacha20poly1305"]),
     ("markdown", &["ammonia", "pulldown-cmark"]),
@@ -34,7 +41,7 @@ const CORE_CAPABILITIES: &[(&str, &[&str])] = &[
 const WIDGET_CAPABILITIES: &[(&str, &[&str])] = &[
     ("clipboard", &["arboard", "image", "pollster", "threadpool"]),
     ("crypto", &["aes-gcm", "argon2", "chacha20poly1305"]),
-    ("files", &["pollster", "rfd"]),
+    ("files", &["ashpd", "rfd"]),
     ("html-markdown", &["ammonia", "pulldown-cmark"]),
     ("package", &["aes-gcm", "argon2", "chacha20poly1305", "zip"]),
     ("platform", &[]),

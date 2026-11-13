@@ -1,8 +1,8 @@
-use cryptonote_egui::encoding::{NoteData, build_url, decode_note, extract_note_param};
-use cryptonote_egui::error::AppError;
-use cryptonote_egui::hooks::handle_open_url;
-use cryptonote_egui::route::Screen;
-use cryptonote_egui::state::TemporaryState;
+use cryptonote::encoding::{NoteData, build_url, decode_note, extract_note_param};
+use cryptonote::error::AppError;
+use cryptonote::hooks::handle_open_url;
+use cryptonote::route::Screen;
+use cryptonote::state::TemporaryState;
 
 #[test]
 fn shared_url_with_screen_open_roundtrips() {

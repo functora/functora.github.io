@@ -4,12 +4,12 @@ use common::collect_shape;
 use common::run_async;
 
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::ArchiveSource;
-use cryptonote_egui::Attachment;
+use cryptonote::ArchiveSource;
+use cryptonote::Attachment;
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::crypto::CipherType;
+use cryptonote::crypto::CipherType;
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::{create_archive_package_async, extract_archive_package_async, load_archive_async};
+use cryptonote::{create_archive_package_async, extract_archive_package_async, load_archive_async};
 use std::io::Write;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
@@ -40,8 +40,8 @@ fn assert_files(files: &[Attachment]) {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn decrypt_encrypted_archive_without_note_preserves_attachments() {
-    use cryptonote_egui::app::CryptonoteApp;
-    use cryptonote_egui::route::Screen;
+    use cryptonote::app::CryptonoteApp;
+    use cryptonote::route::Screen;
 
     fn ctx() -> egui::Context {
         egui::Context::default()
@@ -114,7 +114,7 @@ fn encrypted_archive_without_note_roundtrip() {
 #[test]
 #[cfg(not(target_arch = "wasm32"))]
 fn plain_archive_without_note_opens_view_with_files() {
-    use cryptonote_egui::route::Screen;
+    use cryptonote::route::Screen;
 
     let package = run_async(async move {
         let attached = attachments();
@@ -148,7 +148,7 @@ fn count_rects(shape: &egui::Shape) -> usize {
     }
 }
 
-fn render_rects(app: &mut cryptonote_egui::app::CryptonoteApp) -> usize {
+fn render_rects(app: &mut cryptonote::app::CryptonoteApp) -> usize {
     use egui::{Pos2, RawInput, Rect, Vec2};
     let ctx = egui::Context::default();
     let raw = RawInput {
@@ -166,7 +166,7 @@ fn render_rects(app: &mut cryptonote_egui::app::CryptonoteApp) -> usize {
 
 #[test]
 fn view_hides_note_card_when_note_empty() {
-    use cryptonote_egui::app::CryptonoteApp;
+    use cryptonote::app::CryptonoteApp;
     use std::sync::Arc;
 
     let mut with_note = CryptonoteApp::default();
@@ -188,7 +188,7 @@ fn view_hides_note_card_when_note_empty() {
     );
 }
 
-fn render_text(app: &mut cryptonote_egui::app::CryptonoteApp) -> String {
+fn render_text(app: &mut cryptonote::app::CryptonoteApp) -> String {
     use egui::{Pos2, RawInput, Rect, Vec2};
     let ctx = egui::Context::default();
     let raw = RawInput {
@@ -210,7 +210,7 @@ fn render_text(app: &mut cryptonote_egui::app::CryptonoteApp) -> String {
 
 #[test]
 fn view_renders_attachments_without_note() {
-    use cryptonote_egui::app::CryptonoteApp;
+    use cryptonote::app::CryptonoteApp;
 
     let mut app = CryptonoteApp::default();
     app.temporary.note = String::new();
@@ -224,7 +224,7 @@ fn view_renders_attachments_without_note() {
 
 #[test]
 fn view_renders_empty_state_without_panic() {
-    use cryptonote_egui::app::CryptonoteApp;
+    use cryptonote::app::CryptonoteApp;
 
     let mut app = CryptonoteApp::default();
     app.temporary.note = String::new();

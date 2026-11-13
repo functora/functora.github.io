@@ -1,5 +1,5 @@
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::error::AppError;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::error::AppError;
 
 #[test]
 fn unseen_qr_error_dedups_repeats() {

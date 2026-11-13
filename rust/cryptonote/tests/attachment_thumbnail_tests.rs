@@ -1,7 +1,7 @@
 //! Image preview/thumbnail support for attachments: still images get a
 //! clickable thumbnail in attachment lists, other files keep label rows.
 
-use cryptonote_egui::screens::attachment_thumb::{attachment_uri, show_attachment_thumb};
+use cryptonote::screens::attachment_thumb::{attachment_uri, show_attachment_thumb};
 use functora_egui::files::{Attachment, Preview, preview_cached};
 
 pub mod common;

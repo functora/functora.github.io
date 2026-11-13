@@ -1,5 +1,5 @@
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 
@@ -40,7 +40,7 @@ fn donate_blocks_span_full_width_on_any_screen() {
     let mut app = CryptonoteApp::default();
     app.persistent.theme = functora_egui::theme_extra::Theme::Dark;
     let mut driver = UiDriver::new();
-    let lang = cryptonote_egui::detect_browser_language();
+    let lang = cryptonote::detect_browser_language();
     let out = driver.run_sized(&mut app, DESKTOP, vec![]);
     let mut texts = Vec::new();
     for clipped in &out.shapes {

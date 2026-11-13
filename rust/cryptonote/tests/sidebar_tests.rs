@@ -1,8 +1,8 @@
 //! The shared default sidebar drives the cryptonote navigation, the reset and
 //! the desktop-only quit entry.
 
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::route::RouteMetadata;

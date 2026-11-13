@@ -1,7 +1,7 @@
-use cryptonote_egui::crypto::{CipherType, decrypt_symmetric, encrypt_symmetric};
-use cryptonote_egui::encoding::{NoteData, decode_note, encode_note};
-use cryptonote_egui::route::Screen;
-use cryptonote_egui::state::{CipherChoice, TemporaryState};
+use cryptonote::crypto::{CipherType, decrypt_symmetric, encrypt_symmetric};
+use cryptonote::encoding::{NoteData, decode_note, encode_note};
+use cryptonote::route::Screen;
+use cryptonote::state::{CipherChoice, TemporaryState};
 use functora_egui::i18n::Language;
 use functora_egui::route::RouteMetadata;
 use std::str::FromStr;
@@ -157,7 +157,7 @@ fn encoding_cipher_roundtrip() {
 #[test]
 fn build_url_contains_note() {
     let note = NoteData::PlainText("test".to_string());
-    let url = cryptonote_egui::encoding::build_url("https://example.com/?screen=open", &note)
+    let url = cryptonote::encoding::build_url("https://example.com/?screen=open", &note)
         .unwrap_or_else(|err| panic!("build: {err}"));
     assert!(url.contains("note="));
 }
@@ -166,8 +166,8 @@ fn build_url_contains_note() {
 fn extract_note_param_roundtrip() {
     let note = NoteData::PlainText("extract test".to_string());
     let url =
-        cryptonote_egui::encoding::build_url("https://example.com", &note).unwrap_or_else(|err| panic!("build: {err}"));
-    let param = cryptonote_egui::encoding::extract_note_param(&url).unwrap_or_else(|err| panic!("extract: {err}"));
+        cryptonote::encoding::build_url("https://example.com", &note).unwrap_or_else(|err| panic!("build: {err}"));
+    let param = cryptonote::encoding::extract_note_param(&url).unwrap_or_else(|err| panic!("extract: {err}"));
     let decoded = decode_note(&param).unwrap_or_else(|err| panic!("decode: {err}"));
     match decoded {
         NoteData::PlainText(t) => assert_eq!(t, "extract test"),

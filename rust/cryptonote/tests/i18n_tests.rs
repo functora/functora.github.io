@@ -1,7 +1,7 @@
 //! Every `Msg` variant must carry non-empty EN/ES/RU translations.
 
-use cryptonote_egui::error::AppError;
-use cryptonote_egui::messages::Msg;
+use cryptonote::error::AppError;
+use cryptonote::messages::Msg;
 use functora_egui::i18n::{I18N, Language, SUPPORTED_LANGUAGES};
 use functora_egui::messages::Msg as BaseMsg;
 use strum::EnumCount;

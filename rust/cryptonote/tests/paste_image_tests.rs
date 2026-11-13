@@ -1,5 +1,5 @@
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::state::ActionMode;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::state::ActionMode;
 use functora_egui::paste_image::{self, PasteImage};
 
 const PIXEL_PNG: &[u8] = &[

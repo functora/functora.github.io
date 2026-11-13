@@ -6,7 +6,7 @@ use functora_core::{
 };
 
 const ATTRS: AppAttrs = AppAttrs {
-    app: "cryptonote-egui",
+    app: "cryptonote",
     vsn: "0.1.10",
     org: "functora",
     src: Some("rust"),
@@ -18,11 +18,11 @@ const ATTRS: AppAttrs = AppAttrs {
 fn versioned_urls_carry_app_version() {
     assert_eq!(
         ATTRS.app_version_url(),
-        "https://functora.github.io/apps/cryptonote-egui/0.1.10"
+        "https://functora.github.io/apps/cryptonote/0.1.10"
     );
     assert_eq!(
         ATTRS.origin(),
-        "https://functora.github.io/apps/cryptonote-egui/0.1.10"
+        "https://functora.github.io/apps/cryptonote/0.1.10"
     );
 }
 
@@ -98,14 +98,14 @@ fn language_flags_and_names_render() {
 
 #[test]
 fn functora_attrs_uses_functora_preset() {
-    let attrs = functora_attrs("cryptonote-egui", "0.1.10", "A cross-platform app.");
-    assert_eq!(attrs.app, "cryptonote-egui");
+    let attrs = functora_attrs("cryptonote", "0.1.10", "A cross-platform app.");
+    assert_eq!(attrs.app, "cryptonote");
     assert_eq!(attrs.vsn, "0.1.10");
     assert_eq!(attrs.org, FUNCTORA_ORG);
     assert_eq!(attrs.src, Some("rust"));
     assert_eq!(attrs.dst, "apps");
     assert_eq!(attrs.description, "A cross-platform app.");
-    assert_eq!(attrs.app_name(), "Cryptonote-egui");
+    assert_eq!(attrs.app_name(), "Cryptonote");
 }
 
 #[test]

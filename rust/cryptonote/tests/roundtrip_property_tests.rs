@@ -3,9 +3,9 @@
 //! arbitrary inputs.
 #![cfg(not(target_arch = "wasm32"))]
 
-use cryptonote_egui::encoding::{NoteData, decode_note, encode_note};
-use cryptonote_egui::route::Screen;
-use cryptonote_egui::state::CipherChoice;
+use cryptonote::encoding::{NoteData, decode_note, encode_note};
+use cryptonote::route::Screen;
+use cryptonote::state::CipherChoice;
 use proptest::prelude::*;
 use proptest::test_runner::RngSeed;
 use std::str::FromStr;
@@ -65,9 +65,9 @@ proptest! {
         text in ".*",
     ) {
         let note = NoteData::PlainText(text.clone());
-        let url = expect(cryptonote_egui::encoding::build_url(&base_url, &note), "url must build");
+        let url = expect(cryptonote::encoding::build_url(&base_url, &note), "url must build");
         let extracted = expect(
-            cryptonote_egui::encoding::extract_note_param(&url),
+            cryptonote::encoding::extract_note_param(&url),
             "note param must exist",
         );
         let decoded = expect(decode_note(&extracted), "extracted note must decode");
@@ -81,10 +81,10 @@ proptest! {
     ) {
         let note = NoteData::PlainText(text.clone());
         let url =
-            expect(cryptonote_egui::encoding::build_url("https://x.example/?", &note), "url must build");
+            expect(cryptonote::encoding::build_url("https://x.example/?", &note), "url must build");
         let with_extra = format!("{url}&{extra}");
         let extracted = expect(
-            cryptonote_egui::encoding::extract_note_param(&with_extra),
+            cryptonote::encoding::extract_note_param(&with_extra),
             "note param must survive an extra param",
         );
         let decoded = expect(decode_note(&extracted), "extracted note must decode");

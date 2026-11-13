@@ -1,5 +1,5 @@
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
 use functora_egui::i18n::I18N;
 use functora_egui::messages::Msg as BaseMsg;
 
@@ -7,7 +7,7 @@ pub mod common;
 use common::{UiDriver, all_texts};
 
 fn lang() -> functora_egui::i18n::Language {
-    cryptonote_egui::detect_browser_language()
+    cryptonote::detect_browser_language()
 }
 
 fn click_label(driver: &mut UiDriver, app: &mut CryptonoteApp, label: &str) {
@@ -24,7 +24,7 @@ fn click_label(driver: &mut UiDriver, app: &mut CryptonoteApp, label: &str) {
 fn dock_back_returns_to_previous_screen() {
     let mut app = CryptonoteApp::default();
     let mut driver = UiDriver::new();
-    click_label(&mut driver, &mut app, &cryptonote_egui::Msg::ViewButton.render(lang()));
+    click_label(&mut driver, &mut app, &cryptonote::Msg::ViewButton.render(lang()));
     assert_eq!(app.temporary.screen, Screen::View);
     click_label(&mut driver, &mut app, &BaseMsg::Back.render(lang()));
     assert_eq!(app.temporary.screen, Screen::Home);

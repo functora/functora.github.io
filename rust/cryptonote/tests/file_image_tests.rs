@@ -2,8 +2,8 @@
 //! list must paint a non-empty image rect on the File screen, not collapse
 //! to zero height inside the shell column.
 
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
 
 pub mod common;
 use common::{UiDriver, all_texts};

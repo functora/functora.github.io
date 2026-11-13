@@ -1,7 +1,7 @@
 //! Home action tabs: the fill-width Create/Open/Scan tabs must share one row
 //! whenever their labels fit the screen.
 
-use cryptonote_egui::app::CryptonoteApp;
+use cryptonote::app::CryptonoteApp;
 
 pub mod common;
 use common::{UiDriver, all_texts, rendered_labels};
@@ -10,15 +10,15 @@ const HEIGHT: f32 = 800.0;
 const WIDTHS: [f32; 5] = [320.0, 360.0, 400.0, 800.0, 1280.0];
 
 fn lang() -> functora_egui::i18n::Language {
-    cryptonote_egui::detect_browser_language()
+    cryptonote::detect_browser_language()
 }
 
 fn labels() -> Vec<String> {
     rendered_labels(
         &[
-            cryptonote_egui::Msg::ActionCreate,
-            cryptonote_egui::Msg::ActionOpen,
-            cryptonote_egui::Msg::ActionScan,
+            cryptonote::Msg::ActionCreate,
+            cryptonote::Msg::ActionOpen,
+            cryptonote::Msg::ActionScan,
         ],
         lang(),
     )

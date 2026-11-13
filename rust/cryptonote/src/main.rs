@@ -3,7 +3,7 @@
 #[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
 fn main() {
     functora_egui::desktop::run("Cryptonote", env!("CRYPTONOTE_DESKTOP_APP_ID"), |cc| {
-        Ok(Box::new(cryptonote_egui::CryptonoteApp::new(cc)) as Box<dyn eframe::App>)
+        Ok(Box::new(cryptonote::CryptonoteApp::new(cc)) as Box<dyn eframe::App>)
     });
 }
 

@@ -3,10 +3,10 @@ pub mod common;
 use common::run_async;
 
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::crypto::CipherType;
-use cryptonote_egui::{ArchiveSource, has_pending_archive, store_archive, take_archive};
+use cryptonote::crypto::CipherType;
+use cryptonote::{ArchiveSource, has_pending_archive, store_archive, take_archive};
 #[cfg(not(target_arch = "wasm32"))]
-use cryptonote_egui::{External, Screen, create_archive_package_async, load_archive_async, read_archive_metadata};
+use cryptonote::{External, Screen, create_archive_package_async, load_archive_async, read_archive_metadata};
 use std::sync::{Mutex, MutexGuard};
 
 static STATE_LOCK: Mutex<()> = Mutex::new(());
@@ -49,7 +49,7 @@ fn cryptonote_declares_extra_intent_filters_metadata() {
 #[test]
 fn generated_manifest_registers_cryptonote_view_filters() {
     let manifest = generated_manifest();
-    assert!(manifest.contains(r#"android:name="com.functora.cryptonote_egui.MainActivity""#));
+    assert!(manifest.contains(r#"android:name="com.functora.cryptonote.MainActivity""#));
     assert!(manifest.contains(r#"android:launchMode="singleInstance""#));
     assert!(manifest.contains(r#"android:pathPattern=".*\.cryptonote""#));
     assert!(manifest.contains(r#"android:scheme="content""#));
@@ -120,7 +120,7 @@ fn store_take_archive_roundtrip_tracks_pending_state() {
 #[test]
 fn store_and_take_archive_path_roundtrip() {
     let _guard = lock_state();
-    let path = std::env::temp_dir().join(format!("cryptonote-egui-path-{}.cryptonote", std::process::id()));
+    let path = std::env::temp_dir().join(format!("cryptonote-path-{}.cryptonote", std::process::id()));
     std::fs::write(&path, b"archive bytes").unwrap_or_else(|err| panic!("write archive: {err}"));
     store_archive(ArchiveSource::Path(path.clone()));
     assert!(has_pending_archive());
@@ -138,7 +138,7 @@ fn store_and_take_archive_path_roundtrip() {
 fn take_archive_path_missing_file_returns_error() {
     let _guard = lock_state();
     drop(take_archive());
-    let path = std::env::temp_dir().join("cryptonote-egui-missing.cryptonote");
+    let path = std::env::temp_dir().join("cryptonote-missing.cryptonote");
     store_archive(ArchiveSource::Path(path));
     let taken = take_archive().unwrap_or_else(|| panic!("archive present"));
     assert!(taken.into_bytes().is_err());
@@ -149,7 +149,7 @@ fn take_archive_path_missing_file_returns_error() {
 fn load_archive_opens_plain_package_from_stored_path() {
     let _guard = lock_state();
     drop(take_archive());
-    let path = std::env::temp_dir().join(format!("cryptonote-egui-plain-{}.cryptonote", std::process::id()));
+    let path = std::env::temp_dir().join(format!("cryptonote-plain-{}.cryptonote", std::process::id()));
     let package = run_async(create_archive_package_async(
         "deep link note",
         &[],
@@ -180,7 +180,7 @@ fn load_archive_opens_plain_package_from_stored_path() {
 fn load_archive_routes_encrypted_package_to_open_screen() {
     let _guard = lock_state();
     drop(take_archive());
-    let path = std::env::temp_dir().join(format!("cryptonote-egui-cipher-{}.cryptonote", std::process::id()));
+    let path = std::env::temp_dir().join(format!("cryptonote-cipher-{}.cryptonote", std::process::id()));
     let package = run_async(create_archive_package_async(
         "secret",
         &[],

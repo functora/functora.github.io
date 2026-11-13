@@ -2,7 +2,7 @@
 //! no take/restore churn and no spurious writes to the selected theme and
 //! language.
 
-use cryptonote_egui::app::CryptonoteApp;
+use cryptonote::app::CryptonoteApp;
 use functora_egui::i18n::Language;
 use functora_egui::theme_extra::Theme;
 

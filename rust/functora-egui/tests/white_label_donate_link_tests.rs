@@ -13,7 +13,7 @@ const SCREEN: Vec2 = Vec2::new(1280.0, 800.0);
 const AUTHOR_URL: &str = "https://functora.github.io/";
 
 const ATTRS: AppAttrs = AppAttrs {
-    app: "cryptonote-egui",
+    app: "cryptonote",
     vsn: "0.1.10",
     org: "functora",
     src: Some("rust"),

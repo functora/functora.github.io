@@ -10,6 +10,6 @@ lcov.info
 rust/functora-egui-demo/assets/index.html
 rust/functora-egui-demo/assets/manifest.webmanifest
 rust/functora-egui-demo/assets/egui.js
-rust/cryptonote-egui/assets/index.html
-rust/cryptonote-egui/assets/manifest.webmanifest
-rust/cryptonote-egui/assets/egui.js
+rust/cryptonote/assets/index.html
+rust/cryptonote/assets/manifest.webmanifest
+rust/cryptonote/assets/egui.js

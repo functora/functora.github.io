@@ -1,13 +1,13 @@
 [package]
-name = "cryptonote-egui"
-version = "0.1.10"
+name = "cryptonote"
+version = "0.2.0"
 edition = "2024"
-description = "Cryptonote is a cross-platform, serverless app for encrypted offline notes - egui edition."
+description = "Cryptonote is a cross-platform, serverless app for encrypted offline notes."
 license = "MIT"
 keywords = ["egui", "crypto", "notes", "encryption", "offline"]
 categories = ["cryptography", "gui"]
-repository = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote-egui"
-documentation = "https://docs.rs/cryptonote-egui"
+repository = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote"
+documentation = "https://docs.rs/cryptonote"
 authors = ["Functora <functora@proton.me>"]
 
 [lib]

@@ -1,7 +1,7 @@
 pub use functora_egui::state::PersistentState;
 pub use functora_egui::storage::{Persistent, Storage};
 
-pub(crate) const APP_SCOPE: &str = "cryptonote-egui";
+pub(crate) const APP_SCOPE: &str = "cryptonote";
 
 use functora_egui::white_label::{AppAttrs, functora_attrs};
 

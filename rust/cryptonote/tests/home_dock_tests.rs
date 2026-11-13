@@ -2,7 +2,7 @@
 //! wraps whole buttons onto extra rows when they do not fit, instead of
 //! wrapping the text inside a button.
 
-use cryptonote_egui::app::CryptonoteApp;
+use cryptonote::app::CryptonoteApp;
 use functora_core::i18n::Language;
 
 pub mod common;
@@ -14,9 +14,9 @@ const WIDTHS: [f32; 6] = [200.0, 240.0, 320.0, 360.0, 480.0, 1280.0];
 fn dock_labels() -> Vec<String> {
     common::rendered_labels(
         &[
-            cryptonote_egui::Msg::Share,
-            cryptonote_egui::Msg::AttachFiles,
-            cryptonote_egui::Msg::ViewButton,
+            cryptonote::Msg::Share,
+            cryptonote::Msg::AttachFiles,
+            cryptonote::Msg::ViewButton,
         ],
         functora_core::i18n::Language::Rus,
     )

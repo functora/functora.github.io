@@ -2,8 +2,8 @@
 //! file-picker-style modal) with the operation name, a progress bar and the
 //! percentage, without byte or entry-name details.
 
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::progress::{Job, Stage};
+use cryptonote::app::CryptonoteApp;
+use cryptonote::progress::{Job, Stage};
 use functora_egui::i18n::Language;
 
 pub mod common;

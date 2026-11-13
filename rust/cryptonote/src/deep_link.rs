@@ -34,7 +34,7 @@ pub fn has_pending_archive() -> bool {
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeepLink<'local>(
+pub extern "system" fn Java_com_functora_cryptonote_MainActivity_handleDeepLink<'local>(
     mut env: jni::JNIEnv<'local>,
     _class: jni::objects::JClass<'local>,
     url: jni::objects::JString<'local>,
@@ -46,7 +46,7 @@ pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeep
 
 #[cfg(target_os = "android")]
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_functora_cryptonote_egui_MainActivity_handleDeepLinkFile<'local>(
+pub extern "system" fn Java_com_functora_cryptonote_MainActivity_handleDeepLinkFile<'local>(
     mut env: jni::JNIEnv<'local>,
     _class: jni::objects::JClass<'local>,
     path: jni::objects::JString<'local>,

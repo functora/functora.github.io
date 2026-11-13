@@ -3,8 +3,8 @@
 //! dock actions via `ui.add` after `dock_back` split Back from its sibling
 //! buttons into separate rows.
 
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
 use functora_egui::i18n::I18N;
 
 pub mod common;
@@ -17,7 +17,7 @@ const PIXEL_PNG: &[u8] = &[
 ];
 
 fn lang() -> functora_egui::i18n::Language {
-    cryptonote_egui::detect_browser_language()
+    cryptonote::detect_browser_language()
 }
 
 fn find_text(output: &egui::FullOutput, label: &str) -> egui::Rect {
@@ -68,7 +68,7 @@ fn file_screen_dock_buttons_share_one_row() {
     assert_eq!(app.temporary.screen, Screen::File);
     let file_out = driver.run(&mut app, vec![]);
     let back = find_text(&file_out, &functora_egui::messages::Msg::Back.render(lang()));
-    let save = find_text(&file_out, &cryptonote_egui::Msg::Save.render(lang()));
+    let save = find_text(&file_out, &cryptonote::Msg::Save.render(lang()));
     assert_same_row(back, save, "file screen dock");
 }
 
@@ -96,6 +96,6 @@ fn view_screen_save_all_is_in_dock_row() {
     assert_eq!(app.temporary.screen, Screen::View);
     let view_out = driver.run(&mut app, vec![]);
     let back = find_text(&view_out, &functora_egui::messages::Msg::Back.render(lang()));
-    let save_all = find_text(&view_out, &cryptonote_egui::Msg::SaveAll.render(lang()));
+    let save_all = find_text(&view_out, &cryptonote::Msg::SaveAll.render(lang()));
     assert_same_row(back, save_all, "view screen dock");
 }

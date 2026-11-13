@@ -6,8 +6,8 @@ fn entry(mime: &str) -> String {
     LinuxDesktop {
         title: "Cryptonote",
         comment: "Encrypted notes",
-        exec_name: "cryptonote-egui",
-        icon_name: "io.functora.cryptonote_egui",
+        exec_name: "cryptonote",
+        icon_name: "io.functora.cryptonote",
         categories: "Utility;Security;",
         mime_types: mime,
         schemes: "",
@@ -22,8 +22,8 @@ fn entry_embeds_identity_and_exec() {
     for fragment in [
         "Name=Cryptonote",
         "Comment=Encrypted notes",
-        "Exec=cryptonote-egui %F",
-        "Icon=io.functora.cryptonote_egui",
+        "Exec=cryptonote %F",
+        "Icon=io.functora.cryptonote",
         "Categories=Utility;Security;",
         "MimeType=application/x-cryptonote;",
         "Type=Application",
@@ -44,7 +44,7 @@ fn entry_omits_mime_line_when_empty() {
 
 fn metainfo(developer: &str) -> String {
     Metainfo {
-        app_id: "io.functora.cryptonote_egui",
+        app_id: "io.functora.cryptonote",
         title: "Cryptonote",
         comment: "Encrypted notes",
         description: "Encrypted offline notes with Markdown support and QR sharing.",
@@ -52,7 +52,7 @@ fn metainfo(developer: &str) -> String {
         date: "2026-10-08",
         homepage: "https://functora.github.io/cryptonote",
         developer,
-        developer_id: "io.functora.cryptonote_egui",
+        developer_id: "io.functora.cryptonote",
     }
     .render()
     .unwrap_or_else(|err| panic!("render metainfo: {err}"))
@@ -62,13 +62,13 @@ fn metainfo(developer: &str) -> String {
 fn metainfo_embeds_app_id_and_version() {
     let rendered = metainfo("Functora");
     for fragment in [
-        "<id>io.functora.cryptonote_egui.desktop</id>",
+        "<id>io.functora.cryptonote.desktop</id>",
         "<name>Cryptonote</name>",
         "<summary>Encrypted notes</summary>",
         "<release version=\"0.1.10\" date=\"2026-10-08\" />",
-        "<launchable type=\"desktop-id\">io.functora.cryptonote_egui.desktop</launchable>",
+        "<launchable type=\"desktop-id\">io.functora.cryptonote.desktop</launchable>",
         "<url type=\"homepage\">https://functora.github.io/cryptonote</url>",
-        "<developer id=\"io.functora.cryptonote_egui\"><name>Functora</name></developer>",
+        "<developer id=\"io.functora.cryptonote\"><name>Functora</name></developer>",
         "<content_rating type=\"oars-1.1\">",
         "<p>Encrypted offline notes with Markdown support and QR sharing.</p>",
     ] {

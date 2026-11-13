@@ -2,7 +2,7 @@
 //! while it is held, no other op can claim the progress slot, and the picker's
 //! completion must release it for the next claim.
 
-use cryptonote_egui::app::CryptonoteApp;
+use cryptonote::app::CryptonoteApp;
 
 fn ctx() -> egui::Context {
     egui::Context::default()

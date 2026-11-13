@@ -1,7 +1,7 @@
-use cryptonote_egui::app::CryptonoteApp;
-use cryptonote_egui::route::Screen;
-use cryptonote_egui::state::CipherChoice;
-use cryptonote_egui::state::External;
+use cryptonote::app::CryptonoteApp;
+use cryptonote::route::Screen;
+use cryptonote::state::CipherChoice;
+use cryptonote::state::External;
 use functora_egui::i18n::Language;
 
 pub mod common;
@@ -24,16 +24,16 @@ fn dirty_app() -> CryptonoteApp {
     "pw".clone_into(&mut app.temporary.password);
     app.temporary.cipher = CipherChoice::Plain;
     "https://example.com/?screen=open&note=AAA".clone_into(&mut app.temporary.url_input);
-    app.temporary.external = External::Note(cryptonote_egui::state::ExternalNote {
-        data: cryptonote_egui::encoding::NoteData::PlainText("shared".to_owned()),
+    app.temporary.external = External::Note(cryptonote::state::ExternalNote {
+        data: cryptonote::encoding::NoteData::PlainText("shared".to_owned()),
         url: "https://example.com/?screen=open&note=AAA".to_owned(),
     });
     app.temporary.screen = Screen::View;
     app.set_language(Language::Rus);
     app.toast.add("stale", functora_egui::ToastVariant::Error, 0.0);
     assert!(app.unseen_qr_error("boom"));
-    cryptonote_egui::store_url("https://example.com/?screen=open&note=AAA".to_owned());
-    cryptonote_egui::store_archive(cryptonote_egui::ArchiveSource::Bytes(vec![1, 2, 3]));
+    cryptonote::store_url("https://example.com/?screen=open&note=AAA".to_owned());
+    cryptonote::store_archive(cryptonote::ArchiveSource::Bytes(vec![1, 2, 3]));
     app
 }
 
@@ -54,12 +54,12 @@ fn reset_restores_temporary_defaults() {
 
 #[test]
 fn sidebar_reset_button_clears_state() {
-    use cryptonote_egui::i18n::I18N;
+    use cryptonote::i18n::I18N;
     let mut app = CryptonoteApp::default();
     app.temporary.note = "secret".to_owned();
     let mut driver = UiDriver::new();
     let out = driver.run(&mut app, vec![]);
-    let label = cryptonote_egui::Msg::Reset.render(cryptonote_egui::detect_browser_language());
+    let label = cryptonote::Msg::Reset.render(cryptonote::detect_browser_language());
     let pos = find_label(&out, &label);
     driver.click(&mut app, pos);
     let _ = driver.run(&mut app, vec![]);
@@ -70,18 +70,15 @@ fn sidebar_reset_button_clears_state() {
 
 #[test]
 fn reset_preserves_persistent_state_and_drains_intents() {
-    use cryptonote_egui::i18n::I18N;
+    use cryptonote::i18n::I18N;
     let mut app = dirty_app();
     let persistent_before = app.persistent.clone();
     app.reset(1.0);
     assert_eq!(app.persistent, persistent_before);
     assert_eq!(app.persistent.language, Language::Rus);
     assert_eq!(app.toast.next_id(), 1);
-    assert_eq!(
-        cryptonote_egui::Msg::ResetDone.render(Language::Rus),
-        "Приложение сброшено"
-    );
+    assert_eq!(cryptonote::Msg::ResetDone.render(Language::Rus), "Приложение сброшено");
     assert!(app.unseen_qr_error("boom"));
-    assert!(cryptonote_egui::take_url().is_none());
-    assert!(cryptonote_egui::take_archive().is_none());
+    assert!(cryptonote::take_url().is_none());
+    assert!(cryptonote::take_archive().is_none());
 }

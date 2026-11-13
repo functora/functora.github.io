@@ -140,167 +140,6 @@
             }
           '';
         });
-        mkAab = app: let
-          mkCmd = target: ''
-            android-icons
-            RES="../target/dx/${app}/release/android/app/app/src/main/res"
-            rm -f "$RES"/mipmap-*/ic_launcher.webp \
-              "$RES"/mipmap-*/ic_launcher.png \
-              "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
-              "$RES"/drawable/ic_launcher_background.xml \
-              "$RES"/drawable/ic_launcher_background.png \
-              "$RES"/drawable-v24/ic_launcher_foreground.xml \
-              "$RES"/drawable-v24/ic_launcher_foreground.png
-            rm -f ../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
-            dx bundle --release --android --debug-symbols=false --target "${target}"
-            VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-            VC="$(echo "$VSN" | awk -F. '{print $1*10000 + $2*100 + $3}')"
-            GRADLE="../target/dx/${app}/release/android/app/app/build.gradle.kts"
-            sed -i "s/versionCode = 1/versionCode = $VC/" "$GRADLE"
-            KOTLIN="../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt"
-            if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt ]; then
-              cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/MainActivity.kt "$KOTLIN"
-            fi
-            if [ -f ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt ]; then
-              cp ./android-overlay/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt \
-                ../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/ProxyActivity.kt
-            fi
-            CHROME="../target/dx/${app}/release/android/app/app/src/main/kotlin/dev/dioxus/main/RustWebChromeClient.kt"
-            sed -i 's|val intent = fileChooserParams.createIntent()|val intent = fileChooserParams.createIntent().apply { action = Intent.ACTION_OPEN_DOCUMENT }|' "$CHROME"
-            rm -f "$RES"/mipmap-*/ic_launcher.webp \
-              "$RES"/mipmap-anydpi-v26/ic_launcher.xml \
-              "$RES"/drawable/ic_launcher_background.xml \
-              "$RES"/drawable-v24/ic_launcher_foreground.xml
-            cp assets/favicon/mipmap-mdpi.png "$RES/mipmap-mdpi/ic_launcher.png"
-            cp assets/favicon/mipmap-hdpi.png "$RES/mipmap-hdpi/ic_launcher.png"
-            cp assets/favicon/mipmap-xhdpi.png "$RES/mipmap-xhdpi/ic_launcher.png"
-            cp assets/favicon/mipmap-xxhdpi.png "$RES/mipmap-xxhdpi/ic_launcher.png"
-            cp assets/favicon/mipmap-xxxhdpi.png "$RES/mipmap-xxxhdpi/ic_launcher.png"
-            MANIFEST="../target/dx/${app}/release/android/app/app/src/main/AndroidManifest.xml"
-            sed -i 's|</activity>|  <intent-filter android:autoVerify="true">\n    <action android:name="android.intent.action.VIEW" />\n    <category android:name="android.intent.category.DEFAULT" />\n    <category android:name="android.intent.category.BROWSABLE" />\n    <data android:scheme="https" android:host="functora.github.io" android:pathPrefix="/apps/${app}/" />\n  </intent-filter>\n</activity>|' "$MANIFEST"
-            sed -i 's| android:launchMode="[^"]*"||g' "$MANIFEST"
-            sed -i 's|android:name="dev.dioxus.main.MainActivity"|android:name="dev.dioxus.main.MainActivity" android:launchMode="singleInstance"|' "$MANIFEST"
-            sed -i 's|</activity>|</activity>\n    <activity android:name="dev.dioxus.main.ProxyActivity" android:exported="true" android:noHistory="true" android:excludeFromRecents="true" android:taskAffinity="" android:theme="@android:style/Theme.Translucent.NoTitleBar">\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="application/octet-stream" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.VIEW" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:scheme="content" />\n        <data android:scheme="file" />\n        <data android:mimeType="*/*" />\n        <data android:pathPattern=".*\\.cryptonote" />\n      </intent-filter>\n      <intent-filter>\n        <action android:name="android.intent.action.SEND" />\n        <category android:name="android.intent.category.DEFAULT" />\n        <data android:mimeType="application/octet-stream" />\n      </intent-filter>\n    </activity>|' "$MANIFEST"
-            export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
-            export GRADLE_OPTS="-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
-            (cd "../target/dx/${app}/release/android/app" && ./gradlew bundleRelease)
-            OUT="../target/dx/${app}/release/android/app/app/build/outputs/bundle/release"
-            cp "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN-${target}.aab"
-            mv "$OUT/app-release.aab" "$OUT/cryptonote-v$VSN.aab"
-            echo "Aab ${app} release success for ${target}!"
-          '';
-        in
-          (
-            map (
-              target:
-                pkgs.writeShellApplication {
-                  name = "release-aab-${app}-${target}";
-                  runtimeInputs = with pkgs; [coreutils gnugrep gnused jdk];
-                  text = ''
-                    (
-                      cd "${app}"
-                      ${mkCmd target}
-                    )
-                  '';
-                }
-            )
-            mobile-targets
-          )
-          ++ [
-            (
-              pkgs.writeShellApplication {
-                name = "release-aab-${app}-all";
-                runtimeInputs = with pkgs; [coreutils gnugrep gnused jdk];
-                text = ''
-                  (
-                    cd "${app}"
-                    ${builtins.concatStringsSep "\n" (map mkCmd mobile-targets)}
-                  )
-                '';
-              }
-            )
-          ];
-        mkWeb = app:
-          pkgs.writeShellApplication rec {
-            name = "release-web-${app}";
-            runtimeInputs = with pkgs; [coreutils gnugrep gnused];
-            text = ''
-              (
-                cd "${app}"
-                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                REL="../../apps/${app}/$VSN"
-                if [ -d "$REL" ]
-                then
-                  echo "$REL does already exist!"
-                  exit 1
-                else
-                  mkdir -p "$REL"
-                fi
-                dx bundle --release --web --debug-symbols=false
-                cp ../functora-dioxus/assets/sw.js ../target/dx/${app}/release/web/public/sw.js
-                cp -R ../target/dx/${app}/release/web/public/* "$REL"
-                echo "<!doctype html><html><head><meta http-equiv=\"Refresh\" content=\"0; url=$VSN\"></head><body></body></html>" > ../../apps/${app}/index.html
-                echo "$REL web release success!"
-              )
-            '';
-          };
-        srWeb = app:
-          pkgs.writeShellApplication {
-            name = "serve-web-${app}";
-            runtimeInputs = with pkgs; [coreutils psmisc gzip python3];
-            text = ''
-                  cd "${app}"
-                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                  dx bundle --release --web --debug-symbols=false
-                    cp ../functora-dioxus/assets/sw.js ../target/dx/${app}/release/web/public/sw.js
-                    for W in ../target/dx/${app}/release/web/public/*.wasm ../target/dx/${app}/release/web/public/*/*.wasm
-                    do
-                      if [ -f "$W" ]
-                      then
-                        gzip -9 -c "$W" > "$W.gz"
-                      fi
-                    done
-                    fuser -k -TERM 8000/tcp 2>/dev/null || true
-                    sleep 0.5
-                    exec python3 <<PYEOF
-              import http.server, os
-              PORT = 8000
-              BASE = "/apps/${app}/$VSN"
-              ROOT = os.path.abspath("../target/dx/${app}/release/web/public")
-
-              class Handler(http.server.SimpleHTTPRequestHandler):
-                  precompressed = False
-                  def __init__(self, *a, **k):
-                      super().__init__(*a, directory=ROOT, **k)
-                  def do_GET(self):
-                      if self.path.startswith(BASE):
-                          self.path = self.path[len(BASE):] or "/"
-                      else:
-                          self.send_error(404)
-                          return
-                      super().do_GET()
-                  def send_head(self):
-                      head, sep, query = self.path.partition("?")
-                      gz = head + ".gz"
-                      self.precompressed = (
-                          head.endswith(".wasm")
-                          and "gzip" in self.headers.get("Accept-Encoding", "")
-                          and os.path.isfile(self.translate_path(gz))
-                      )
-                      if self.precompressed:
-                          self.path = gz + sep + query
-                      return super().send_head()
-                  def guess_type(self, path):
-                      return super().guess_type(path[:-3] if self.precompressed else path)
-                  def end_headers(self):
-                      if self.precompressed:
-                          self.send_header("Content-Encoding", "gzip")
-                      super().end_headers()
-
-              http.server.ThreadingHTTPServer(("", PORT), Handler).serve_forever()
-              PYEOF
-            '';
-          };
         mkFunctoraEguiWeb = app: icons:
           pkgs.writeShellApplication rec {
             name = "release-web-${app}";
@@ -318,7 +157,7 @@
                   mkdir -p "$REL"
                 fi
                 LIBNAME="$(echo "${app}" | tr - _)"
-                ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
+                ${rustToolchain}/bin/cargo build --release --lib --target wasm32-unknown-unknown
                 ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
                   --target web \
                   --no-typescript \
@@ -346,7 +185,7 @@
             text = ''
                   cd "${app}"
                   LIBNAME="$(echo "${app}" | tr - _)"
-                    ${rustToolchain}/bin/cargo build --release --target wasm32-unknown-unknown
+                    ${rustToolchain}/bin/cargo build --release --lib --target wasm32-unknown-unknown
                     ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
                       --target web \
                       --no-typescript \
@@ -484,11 +323,8 @@
                 (./. + "/${app}/src")
                 (./. + "/${app}/tests")
                 (./. + "/${app}/assets")
-                (./. + "/${app}/android/.gitignore")
                 (./. + "/${app}/desktop/.gitignore")
-                ./cryptonote-egui/android/.gitignore
-                ./cryptonote-egui/desktop/.gitignore
-                ./functora-egui-demo/android/.gitignore
+                ./cryptonote/desktop/.gitignore
                 ./functora-egui-demo/desktop/.gitignore
                 ./functora-egui/Cargo.toml
                 ./functora-egui/src
@@ -670,7 +506,7 @@
 
             APPS=("$@")
             if [ ''${#APPS[@]} -eq 0 ]; then
-              APPS=(cryptonote cryptonote-egui)
+              APPS=(cryptonote)
             fi
 
             if [ ! -f "$KEYSTORE" ]; then
@@ -756,9 +592,7 @@
             '';
           };
         shell = rec {
-          releaseAabCryptonoteList = mkAab "cryptonote";
-          releaseAabCryptonote = builtins.elemAt releaseAabCryptonoteList (builtins.length releaseAabCryptonoteList - 1);
-          releaseAabCryptonoteEgui = mkFunctoraEguiAab "cryptonote-egui" "../cryptonote/assets/favicon";
+          releaseAabCryptonote = mkFunctoraEguiAab "cryptonote" "assets/favicon";
           releaseAabFunctoraEguiDemo = mkFunctoraEguiAab "functora-egui-demo" "assets/favicon";
           PLAYWRIGHT_BROWSERS_PATH = "${pkgs.playwright-driver.browsers}";
           ANDROID_HOME = "${android-sdk}/libexec/android-sdk";
@@ -862,14 +696,11 @@
               liberation_ttf
               dejavu_fonts
               # apps
-              (mkWeb "cryptonote")
-              (srWeb "cryptonote")
-              (mkApk "cryptonote" "./target/dx/cryptonote/release/android/app/app/build/outputs/bundle/release" releaseAabCryptonote)
-              (mkFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
-              (srFunctoraEguiWeb "cryptonote-egui" "../cryptonote/assets/favicon")
-              (mkFunctoraEguiDesktop "cryptonote-egui" "../cryptonote/assets/favicon")
-              (srFunctoraEguiDesktop "cryptonote-egui")
-              (mkApk "cryptonote-egui" "./cryptonote-egui/android/app/build/outputs/bundle/release" releaseAabCryptonoteEgui)
+              (mkFunctoraEguiWeb "cryptonote" "assets/favicon")
+              (srFunctoraEguiWeb "cryptonote" "assets/favicon")
+              (mkFunctoraEguiDesktop "cryptonote" "assets/favicon")
+              (srFunctoraEguiDesktop "cryptonote")
+              (mkApk "cryptonote" "./cryptonote/android/app/build/outputs/bundle/release" releaseAabCryptonote)
               (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (mkFunctoraEguiDesktop "functora-egui-demo" "assets/favicon")
@@ -957,17 +788,16 @@
                 '';
               })
             ]
-            ++ releaseAabCryptonoteList
-            ++ [releaseAabCryptonoteEgui]
+            ++ [releaseAabCryptonote]
             ++ [releaseAabFunctoraEguiDemo];
         };
       in {
         devShells.default = pkgs.mkShell shell;
         packages = {
           dioxus-cli-08 = dioxusCli08;
-          cryptonote-egui = mkEguiDesktop "cryptonote-egui";
+          cryptonote = mkEguiDesktop "cryptonote";
           functora-egui-demo = mkEguiDesktop "functora-egui-demo";
-          default = self.packages.${system}.cryptonote-egui;
+          default = self.packages.${system}.cryptonote;
         };
       }
     );

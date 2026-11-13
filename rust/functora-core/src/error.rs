@@ -99,7 +99,7 @@ pub enum Error {
     JS(String),
     #[error("No QR found in image")]
     QrNotFound,
-    #[error("Eval channel died before completion (dioxus internal GC/drop race)")]
+    #[error("Eval channel closed before completion")]
     EvalFinished,
     #[cfg(feature = "crypto")]
     #[error("Cipher initialization error: {0}")]

@@ -81,19 +81,6 @@ fn extract_query_param_empty_value() {
     );
 }
 
-#[test]
-fn download_script_escapes_special_characters() {
-    let script = functora_core::encoding::download_script("a\"</script>");
-    assert!(!script.contains("</script>"));
-    assert!(script.contains("a.download="));
-}
-
-#[test]
-fn download_script_aborts_on_abort_message() {
-    let script = functora_core::encoding::download_script("file.bin");
-    assert!(script.contains("m.t==='abort'"));
-}
-
 #[cfg(feature = "qr")]
 #[test]
 fn generate_qr_code_produces_svg() {

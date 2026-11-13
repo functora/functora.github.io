@@ -1,4 +1,4 @@
-//! Content parity with `cryptonote` (dioxus): no hardcoded English UI text
+//! Content parity for `cryptonote`: no hardcoded English UI text
 //! in `screens`/shell, full `WhiteLabel` footer sentence, complete
 //! About/Donate content, and toast-only feedback (no message banners).
 
@@ -109,8 +109,7 @@ fn no_hardcoded_ui_strings() {
 
 #[test]
 fn footer_matches_whitelabel_sentence() {
-    // Note: dioxus links Share to About+anchor (`share_anchor_id`) for smooth
-    // scroll; egui has no scroll anchors, so the footer navigates to the
+    // Note: egui has no scroll anchors, so the footer navigates to the
     // About screen, which hosts the same share section.
     for fragment in [
         "AllRightsReserved",

@@ -39,23 +39,6 @@
             ]
             ++ mobile-targets;
         };
-        wasm-bindgen-cli-0_2_121 = with pkgs;
-          rustPlatform.buildRustPackage rec {
-            pname = "wasm-bindgen-cli";
-            version = "0.2.121";
-            src = pkgs.fetchCrate {
-              pname = "wasm-bindgen-cli";
-              version = "0.2.121";
-              sha256 = "sha256-ZOMgFNOcGkO66Jz/Z83eoIu+DIzo3Z/vq6Z5g6BDY/w=";
-            };
-            cargoLock.lockFile = "${src}/Cargo.lock";
-            nativeBuildInputs = [pkg-config];
-            buildInputs =
-              [openssl]
-              ++ lib.optionals stdenv.hostPlatform.isDarwin [curl];
-            nativeCheckInputs = [nodejs_latest];
-            doCheck = false;
-          };
         wasm-bindgen-cli-0_2_127 = with pkgs;
           rustPlatform.buildRustPackage rec {
             pname = "wasm-bindgen-cli";
@@ -90,56 +73,6 @@
         };
         android-sdk =
           (pkgs.androidenv.composeAndroidPackages android-sdk-args).androidsdk;
-        dioxusCli08 = pkgs.rustPlatform.buildRustPackage (finalAttrs: {
-          pname = "dioxus-cli";
-          version = "0.8.0-alpha.1";
-          src = pkgs.fetchFromGitHub {
-            owner = "DioxusLabs";
-            repo = "dioxus";
-            rev = "v0.8.0-alpha.1";
-            hash = "sha256-Hra9F7nvc3OGTpU5Re1hFgpbOv9QtIFwdJvueGjhj40=";
-          };
-          cargoLock.lockFile = "${finalAttrs.src}/Cargo.lock";
-          buildAndTestSubdir = "packages/cli";
-          buildFeatures = [
-            "no-downloads"
-            "disable-telemetry"
-          ];
-          env = {
-            OPENSSL_NO_VENDOR = 1;
-          };
-          nativeBuildInputs = [
-            pkgs.pkg-config
-            pkgs.cacert
-            pkgs.installShellFiles
-            pkgs.makeWrapper
-          ];
-          buildInputs = [
-            pkgs.openssl
-          ];
-          nativeCheckInputs = [
-            pkgs.rustfmt
-          ];
-          checkFlags = [
-            "--skip=serve::proxy::test"
-            "--skip=test_harnesses::run_harness"
-          ];
-          postInstall = ''
-            installShellCompletion --cmd dx \
-              --bash <($out/bin/dx completions bash) \
-              --fish <($out/bin/dx completions fish) \
-              --zsh <($out/bin/dx completions zsh)
-          '';
-          postFixup = ''
-            wrapProgram $out/bin/dx \
-              --suffix PATH : ${
-              pkgs.lib.makeBinPath [
-                pkgs.esbuild
-                wasm-bindgen-cli-0_2_121
-              ]
-            }
-          '';
-        });
         mkFunctoraEguiWeb = app: icons:
           pkgs.writeShellApplication rec {
             name = "release-web-${app}";
@@ -169,7 +102,7 @@
                 cp assets/index.html "$REL/index.html"
                 cp assets/manifest.webmanifest "$REL/manifest.webmanifest"
                 cp assets/egui.js "$REL/egui.js"
-                cp ../functora-dioxus/assets/sw.js "$REL/sw.js"
+                cp ../functora-egui/assets/web/sw.js "$REL/sw.js"
                 cp "${icons}/android-chrome-192x192.png" "$REL/"
                 cp "${icons}/android-chrome-512x512.png" "$REL/"
                 cp "${icons}/favicon.ico" "$REL/"
@@ -201,7 +134,7 @@
                     cp assets/index.html /tmp/${app}-web/index.html
                     cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
                     cp assets/egui.js /tmp/${app}-web/egui.js
-                    cp ../functora-dioxus/assets/sw.js /tmp/${app}-web/sw.js
+                    cp ../functora-egui/assets/web/sw.js /tmp/${app}-web/sw.js
                     cp "${icons}/android-chrome-192x192.png" /tmp/${app}-web/
                     cp "${icons}/android-chrome-512x512.png" /tmp/${app}-web/
                     cp "${icons}/favicon.ico" /tmp/${app}-web/
@@ -642,13 +575,11 @@
               clippy
               wasmtime
               license-generator
-              dioxusCli08
               tailwindcss_4
               simple-http-server
               strace
               # web
               binaryen
-              wasm-bindgen-cli-0_2_121
               lessc
               clean-css-cli
               # linux
@@ -733,21 +664,13 @@
                     grep -qE '^egui\s*=' "$crate_path/Cargo.toml" 2>/dev/null
                   }
 
-                  # Check if crate is a Dioxus app (for mobile only)
-                  is_dioxus_app() {
-                    local crate_path="$1"
-                    has_binary_targets "$crate_path" && \
-                    grep -qE '^dioxus\s*=' "$crate_path/Cargo.toml" 2>/dev/null
-                  }
-
                   verify_crate() {
                     local crate="$1"
                     shift
                     ${cargo}/bin/cargo fmt "$@" \
-                      && { if [ -f Dioxus.toml ]; then dx fmt "$@"; else true; fi; } \
                       && ${cargo}/bin/cargo clippy --all-features --all-targets "$@" -- -D warnings \
                       && ${cargo}/bin/cargo test --all-features --all-targets "$@" \
-                      && { if is_eframe_web_app "." || is_dioxus_app "."; then for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings && echo "==> $crate [$T]: mobile clippy: All good!" || return 1; done; fi; } \
+                      && { if is_eframe_web_app "."; then for T in ${pkgs.lib.concatStringsSep " " mobile-targets}; do ${cargo}/bin/cargo clippy --target "$T" --all-features --all-targets "$@" -- -D warnings && echo "==> $crate [$T]: mobile clippy: All good!" || return 1; done; fi; } \
                       && { if is_eframe_web_app "." || is_egui_library "."; then ${cargo}/bin/cargo clippy --target wasm32-unknown-unknown --all-features --all-targets "$@" -- -D warnings && echo "==> $crate [wasm32-unknown-unknown]: clippy: All good!" || return 1; fi; }
                   }
                   if [ -f Cargo.toml ]; then
@@ -794,7 +717,6 @@
       in {
         devShells.default = pkgs.mkShell shell;
         packages = {
-          dioxus-cli-08 = dioxusCli08;
           cryptonote = mkEguiDesktop "cryptonote";
           functora-egui-demo = mkEguiDesktop "functora-egui-demo";
           default = self.packages.${system}.cryptonote;

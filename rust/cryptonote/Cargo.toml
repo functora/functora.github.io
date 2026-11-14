@@ -9,6 +9,7 @@ categories = ["cryptography", "gui"]
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote"
 documentation = "https://docs.rs/cryptonote"
 authors = ["Functora <functora@proton.me>"]
+exclude = ["tests/cross_crate_desktop_tests.rs", "tests/cross_crate_parity_tests.rs"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -23,9 +24,9 @@ eframe = { version = "0.37.0", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.37.0"
-functora-egui = { path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
-functora-core = { path = "../functora-core" }
-functora-tagged = { path = "../functora-tagged" }
+functora-egui = { version = "0.3.1", path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
+functora-core = { version = "0.3.1", path = "../functora-core" }
+functora-tagged = { version = "0.2.10", path = "../functora-tagged" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.22"
@@ -75,7 +76,7 @@ mime_types = "application/x-cryptonote;"
 developer = "Functora"
 
 [build-dependencies]
-functora-egui = { path = "../functora-egui", features = ["build"] }
+functora-egui = { version = "0.3.1", path = "../functora-egui", features = ["build"] }
 
 [patch.crates-io]
 egui-winit = { path = "../egui-winit" }

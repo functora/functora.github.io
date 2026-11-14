@@ -6,6 +6,8 @@ use crate::web::config::{WebConfig, load_config};
 use askama::Template;
 use std::path::{Path, PathBuf};
 
+const EGUI_JS: &str = include_str!("../assets/web/egui.js");
+
 #[derive(Debug)]
 pub enum Error {
     Template {
@@ -91,6 +93,11 @@ fn rerun_if_changed(path: impl AsRef<Path>) {
     println!("cargo:rerun-if-changed={}", path.as_ref().display());
 }
 
+fn output_root() -> Option<PathBuf> {
+    let root = std::env::current_dir().ok()?;
+    (!root.join("Cargo.toml.orig").exists()).then_some(root)
+}
+
 fn emit_rerun_if_changed(egui_root: &Path) {
     rerun_if_changed("Cargo.toml");
     [
@@ -120,10 +127,11 @@ fn emit_rerun_if_changed(egui_root: &Path) {
     ]
     .into_iter()
     .map(|rel| egui_root.join(rel))
+    .filter(|path| path.exists())
     .for_each(rerun_if_changed);
 }
 
-fn write_android(android_cfg: &AndroidConfig) -> Result<(), Error> {
+fn write_android(android_cfg: &AndroidConfig, root: &Path) -> Result<(), Error> {
     let settings = render(
         &crate::android::templates::SettingsGradle {
             app_name: &android_cfg.app_name,
@@ -170,32 +178,40 @@ fn write_android(android_cfg: &AndroidConfig) -> Result<(), Error> {
     let styles = render(&crate::android::templates::Styles, "android styles.xml")?;
     let waker = render(&crate::android::templates::Waker, "android Waker")?;
 
-    write_file("android/build.gradle", &root_build)?;
-    write_file("android/settings.gradle", &settings)?;
-    write_file("android/gradle.properties", &gradle_props)?;
-    write_file("android/app/src/main/res/values/styles.xml", &styles)?;
-    write_file("android/app/build.gradle", &app_build)?;
-    write_file("android/app/src/main/AndroidManifest.xml", &manifest)?;
-    remove_dir_all_if_exists(Path::new("android/app/src/main/java"))?;
-    let java_dir = PathBuf::from(format!(
-        "android/app/src/main/java/{}",
-        android_cfg.namespace.replace('.', "/")
-    ));
+    write_file(root.join("android/build.gradle"), &root_build)?;
+    write_file(root.join("android/settings.gradle"), &settings)?;
+    write_file(root.join("android/gradle.properties"), &gradle_props)?;
+    write_file(
+        root.join("android/app/src/main/res/values/styles.xml"),
+        &styles,
+    )?;
+    write_file(root.join("android/app/build.gradle"), &app_build)?;
+    write_file(
+        root.join("android/app/src/main/AndroidManifest.xml"),
+        &manifest,
+    )?;
+    remove_dir_all_if_exists(&root.join("android/app/src/main/java"))?;
+    let java_dir = root
+        .join("android/app/src/main/java")
+        .join(android_cfg.namespace.replace('.', "/"));
     write_file(java_dir.join("MainActivity.java"), &java)?;
-    write_file("android/app/src/main/java/com/functora/Waker.java", &waker)?;
+    write_file(
+        root.join("android/app/src/main/java/com/functora/Waker.java"),
+        &waker,
+    )?;
     if android_cfg.camera {
-        remove_dir_all_if_exists(Path::new("android/app/src/main/java/functora"))?;
+        remove_dir_all_if_exists(&root.join("android/app/src/main/java/functora"))?;
     }
-    let _icons = copy_launcher_icons(Path::new("android"), Path::new("assets/favicon"))?;
-    ensure_android_gitignore()?;
+    let _icons = copy_launcher_icons(&root.join("android"), &root.join("assets/favicon"))?;
+    ensure_android_gitignore(root)?;
     Ok(())
 }
 
-fn ensure_android_gitignore() -> Result<(), Error> {
-    let path = Path::new(".gitignore");
+fn ensure_android_gitignore(root: &Path) -> Result<(), Error> {
+    let path = root.join(".gitignore");
     let line = "android/";
     let contents = if path.exists() {
-        let existing = std::fs::read_to_string(path).map_err(|source| Error::Io {
+        let existing = std::fs::read_to_string(&path).map_err(|source| Error::Io {
             context: "read existing gitignore",
             source,
         })?;
@@ -214,7 +230,7 @@ fn ensure_android_gitignore() -> Result<(), Error> {
     Ok(())
 }
 
-fn write_desktop(desktop_cfg: &DesktopConfig) -> Result<(), Error> {
+fn write_desktop(desktop_cfg: &DesktopConfig, root: &Path) -> Result<(), Error> {
     let desktop_entry = render(
         &crate::desktop::templates::LinuxDesktop {
             title: &desktop_cfg.title,
@@ -243,22 +259,25 @@ fn write_desktop(desktop_cfg: &DesktopConfig) -> Result<(), Error> {
         "desktop metainfo",
     )?;
     write_file(
-        format!("desktop/linux/{}.desktop", desktop_cfg.app_id),
+        root.join(format!("desktop/linux/{}.desktop", desktop_cfg.app_id)),
         &desktop_entry,
     )?;
     write_file(
-        format!("desktop/metainfo/{}.metainfo.xml", desktop_cfg.app_id),
+        root.join(format!(
+            "desktop/metainfo/{}.metainfo.xml",
+            desktop_cfg.app_id
+        )),
         &metainfo,
     )?;
     let _icons = copy_desktop_icons(
-        Path::new("desktop"),
-        Path::new("assets"),
+        &root.join("desktop"),
+        &root.join("assets"),
         &desktop_cfg.app_id,
     )?;
     Ok(())
 }
 
-fn write_web(web_cfg: &WebConfig, egui_root: &Path) -> Result<(), Error> {
+fn write_web(web_cfg: &WebConfig, root: &Path) -> Result<(), Error> {
     let index = render(
         &crate::web::templates::IndexHtml {
             title: &web_cfg.title,
@@ -276,13 +295,9 @@ fn write_web(web_cfg: &WebConfig, egui_root: &Path) -> Result<(), Error> {
         },
         "web manifest",
     )?;
-    write_file("assets/index.html", &index)?;
-    write_file("assets/manifest.webmanifest", &manifest_web)?;
-    let _bytes_copied = std::fs::copy(egui_root.join("assets/web/egui.js"), "assets/egui.js")
-        .map_err(|source| Error::Io {
-            context: "copy egui.js web asset",
-            source,
-        })?;
+    write_file(root.join("assets/index.html"), &index)?;
+    write_file(root.join("assets/manifest.webmanifest"), &manifest_web)?;
+    write_file(root.join("assets/egui.js"), EGUI_JS)?;
     Ok(())
 }
 
@@ -291,10 +306,12 @@ pub fn run(manifest: &str, egui_root: &Path) -> Result<BuildConfigs, Error> {
     let android_cfg = load_android_config(manifest);
     let web_cfg = load_config(manifest);
     let desktop_cfg = load_desktop_config(manifest);
-    write_android(&android_cfg)?;
-    write_desktop(&desktop_cfg)?;
-    if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default() == "wasm32" {
-        write_web(&web_cfg, egui_root)?;
+    if let Some(root) = output_root() {
+        write_android(&android_cfg, &root)?;
+        write_desktop(&desktop_cfg, &root)?;
+        if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default() == "wasm32" {
+            write_web(&web_cfg, &root)?;
+        }
     }
     Ok(BuildConfigs {
         android: android_cfg,

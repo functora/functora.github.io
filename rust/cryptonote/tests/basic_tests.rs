@@ -101,7 +101,7 @@ fn cipher_choice_roundtrip() {
 fn temporary_state_default() {
     let state = TemporaryState::default();
     assert_eq!(state.note, "");
-    assert_eq!(state.password, "");
+    assert_eq!(state.password.as_str(), "");
     assert_eq!(state.cipher, CipherChoice::Aes256Gcm);
     assert_eq!(state.attachments, Vec::<functora_egui::files::Attachment>::new());
     assert_eq!(state.screen, Screen::Home);

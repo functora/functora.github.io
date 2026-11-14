@@ -2,7 +2,9 @@ use crate::Error;
 use crate::crypto::{CipherType, Kdf, STREAM_CHUNK, STREAM_TAG, StreamParts, stream_spans};
 use crate::progress::{Job, yield_to_paint};
 use crate::worker::Reporter;
-use crate::zip::{CancelToken, ZIP_CHUNK, check_cancel, zip_entries};
+use crate::zip::{
+    CancelToken, MAX_ARCHIVE_ENTRY_SIZE, ZIP_CHUNK, check_cancel, check_entry_size, zip_entries,
+};
 use serde::{Deserialize, Serialize};
 use std::io::{Read, Seek, Write};
 use std::path::PathBuf;
@@ -62,7 +64,7 @@ impl<S> PackageStages<S> {
     }
 }
 
-fn stored_opts() -> zip::write::FileOptions<'static, ()> {
+fn stored_opts() -> zip::write::FileOptions<'static, 'static, ()> {
     zip::write::FileOptions::default().compression_method(CompressionMethod::Stored)
 }
 
@@ -189,13 +191,18 @@ fn read_entry<R: Read + Seek>(
     archive: &mut zip::ZipArchive<R>,
     name: &str,
 ) -> Result<Vec<u8>, Error> {
-    let mut file = archive.by_name(name)?;
-    let capacity = usize::try_from(file.size()).map_err(|e| Error::Convert {
-        context: "entry size too large",
-        source: e,
-    })?;
+    let file = archive.by_name(name)?;
+    check_entry_size(name, file.size())?;
+    let capacity =
+        usize::try_from(file.size().min(ZIP_CHUNK as u64)).map_err(|e| Error::Convert {
+            context: "zip entry capacity exceeds usize range",
+            source: e,
+        })?;
     let mut data = Vec::with_capacity(capacity);
-    let _ = file.read_to_end(&mut data)?;
+    let read = file
+        .take(MAX_ARCHIVE_ENTRY_SIZE + 1)
+        .read_to_end(&mut data)?;
+    check_entry_size(name, read as u64)?;
     Ok(data)
 }
 
@@ -246,6 +253,7 @@ where
     let parts = StreamParts::recover(
         params.password,
         params.cipher,
+        params.meta.kdf,
         &params.meta.salt,
         &params.meta.nonce,
         &aad(params.prefix, params.cipher, params.meta.kdf),
@@ -281,6 +289,9 @@ where
     let (meta, payload) = read_package(&source)?;
     match meta.cipher {
         Some(cipher) => {
+            if password.is_empty() {
+                return Err(Error::PasswordRequired);
+            }
             unseal_report(
                 UnsealParams {
                     meta: &meta,

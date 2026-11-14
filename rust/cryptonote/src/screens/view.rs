@@ -1,6 +1,6 @@
 use crate::app::{CryptonoteApp, OpStart};
 use crate::error::AppError;
-use crate::hooks::{build_external, share_error};
+use crate::hooks::{build_external, share_error, share_warning};
 use crate::messages::Msg;
 use crate::progress::Stage;
 use crate::route::Screen;
@@ -113,6 +113,11 @@ impl CryptonoteApp {
             .inner
             .clicked()
             {
+                self.toast.add(
+                    Msg::ClipboardPlaintextWarning.render(lang),
+                    ToastVariant::Warning,
+                    toast_time,
+                );
                 let text = self.temporary.note.clone();
                 self.clipboard_write_rx = Some(functora_egui::spawn_async(async move {
                     functora_egui::clipboard::write(text).await?;
@@ -129,16 +134,21 @@ impl CryptonoteApp {
             {
                 if let Some(err) = share_error(self.temporary.cipher.into(), &self.temporary.password) {
                     self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
-                } else if !matches!(self.temporary.external, External::Nothing) {
-                    self.navigate(Screen::Share);
-                } else if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
-                    let share_note = self.temporary.note.clone();
-                    let password = self.temporary.password.clone();
-                    let cipher = self.temporary.cipher.into();
-                    let attachments = self.temporary.attachments.clone();
-                    self.generate_rx = Some(functora_egui::spawn_async(async move {
-                        build_external(&share_note, &password, cipher, &attachments, cancel, progress).await
-                    }));
+                } else {
+                    if let Some(warning) = share_warning(self.temporary.cipher.into(), &self.temporary.password) {
+                        self.toast.add(warning.render(lang), ToastVariant::Warning, toast_time);
+                    }
+                    if !matches!(self.temporary.external, External::Nothing) {
+                        self.navigate(Screen::Share);
+                    } else if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Encrypt) {
+                        let share_note = self.temporary.note.clone();
+                        let password = self.temporary.password.clone();
+                        let cipher = self.temporary.cipher.into();
+                        let attachments = self.temporary.attachments.clone();
+                        self.generate_rx = Some(functora_egui::spawn_async(async move {
+                            build_external(&share_note, &password, cipher, &attachments, cancel, progress).await
+                        }));
+                    }
                 }
             }
             if has_attachments
@@ -150,7 +160,20 @@ impl CryptonoteApp {
                 .inner
                 .clicked()
             {
-                let files = self.temporary.attachments.clone();
+                self.toast.add(
+                    Msg::UnencryptedExportWarning.render(lang),
+                    ToastVariant::Warning,
+                    toast_time,
+                );
+                let files = self
+                    .temporary
+                    .attachments
+                    .iter()
+                    .map(|att| crate::archive::Attachment {
+                        name: crate::archive::sanitise_attachment_name(&att.name),
+                        data: std::sync::Arc::clone(&att.data),
+                    })
+                    .collect::<Vec<_>>();
                 if let Some(OpStart { cancel, progress, .. }) = self.begin_op(Stage::Zip) {
                     self.download_rx = Some(functora_egui::spawn_async(async move {
                         let zipped = functora_egui::zip::create_zip_async(&files, progress, Stage::Zip, cancel).await?;

@@ -439,7 +439,7 @@ impl CryptonoteApp {
                     self.temporary.note = opened.note;
                     self.temporary.attachments = opened.attachments;
                     if opened.screen == Screen::Open {
-                        self.temporary.password.clear();
+                        self.temporary.password = zeroize::Zeroizing::new(String::new());
                     }
                     self.navigate(opened.screen);
                 }

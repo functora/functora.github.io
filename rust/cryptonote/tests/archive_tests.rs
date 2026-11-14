@@ -33,7 +33,7 @@ fn assert_files(files: &[Attachment]) {
     assert_eq!(files.len(), 2);
     assert_eq!(files[0].name, "a.txt");
     assert_eq!(files[0].data.to_vec(), b"alpha".to_vec());
-    assert_eq!(files[1].name, "nested/b.bin");
+    assert_eq!(files[1].name, "b.bin");
     assert_eq!(files[1].data.to_vec(), vec![1u8, 2u8, 3u8]);
 }
 
@@ -69,7 +69,7 @@ fn decrypt_encrypted_archive_without_note_preserves_attachments() {
     assert_eq!(opened.screen, Screen::Open);
     let mut app = CryptonoteApp::default();
     app.temporary.external = opened.external;
-    app.temporary.password = "pw".to_owned();
+    app.temporary.password = "pw".to_owned().into();
     app.decrypt_current(0.0);
     let toasts_before = app.toast.next_id();
     for _ in 0..1000 {

@@ -82,7 +82,7 @@ functora-egui = { version = "0.3.1", path = "../functora-egui", features = ["bui
 egui-winit = { path = "../egui-winit" }
 
 [dev-dependencies]
-zip = { version = "2", default-features = false, features = ["deflate"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
 
 # proptest cannot build for wasm32, so property tests are host-only.
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]

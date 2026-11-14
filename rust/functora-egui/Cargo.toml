@@ -194,12 +194,13 @@ desktop = [
     "dep:eframe",
 ]
 build = ["dep:askama", "dep:toml"]
-images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif", "egui_extras/webp", "egui_extras/svg", "egui_extras/file", "egui_extras/http"]
+images = ["dep:image", "dep:egui_extras", "egui_extras/image", "egui_extras/gif", "egui_extras/webp", "egui_extras/svg"]
+images-remote = ["images", "egui_extras/file", "egui_extras/http"]
 qr = ["functora-core/qr"]
 camera = ["files", "qr", "dep:image"]
-markdown = [
-    "dep:data-url",
-    "dep:egui_commonmark",
+markdown = ["dep:data-url", "dep:egui_commonmark"]
+markdown-fetch = [
+    "markdown",
     "egui_commonmark/load-images",
     "egui_commonmark/svg",
     "egui_commonmark/fetch",

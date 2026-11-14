@@ -31,11 +31,11 @@ fn json_props(err: &Error) -> (serde_json::error::Category, usize, usize) {
 }
 
 #[cfg(feature = "zip")]
-fn zip_msg(err: &Error) -> &'static str {
+fn zip_msg(err: &Error) -> &str {
     match err {
         Error::Archive(e) => match e.0.as_ref() {
-            zip::result::ZipError::InvalidArchive(s)
-            | zip::result::ZipError::UnsupportedArchive(s) => s,
+            zip::result::ZipError::InvalidArchive(s) => s.as_ref(),
+            zip::result::ZipError::UnsupportedArchive(s) => s,
             _ => "",
         },
         _ => "",
@@ -138,12 +138,14 @@ fn json_errors_are_unequal_to_other_variants() {
 #[test]
 #[cfg(feature = "zip")]
 fn zip_errors_are_equal_only_when_sharing_an_instance() {
-    let e = Arc::new(zip::result::ZipError::InvalidArchive("boom"));
+    let e = Arc::new(zip::result::ZipError::InvalidArchive(
+        std::borrow::Cow::Borrowed("boom"),
+    ));
     let a = Error::Archive(ZipErr(e.clone()));
     let b = Error::Archive(ZipErr(e));
     assert_eq!(a, b);
     let c = Error::Archive(ZipErr(Arc::new(zip::result::ZipError::InvalidArchive(
-        "boom",
+        std::borrow::Cow::Borrowed("boom"),
     ))));
     assert_ne!(a, c);
 }
@@ -151,8 +153,12 @@ fn zip_errors_are_equal_only_when_sharing_an_instance() {
 #[test]
 #[cfg(feature = "zip")]
 fn zip_errors_preserve_payload_and_io_kind() {
-    let a = Error::Archive(ZipErr::from(zip::result::ZipError::InvalidArchive("one")));
-    let b = Error::Archive(ZipErr::from(zip::result::ZipError::InvalidArchive("two")));
+    let a = Error::Archive(ZipErr::from(zip::result::ZipError::InvalidArchive(
+        std::borrow::Cow::Borrowed("one"),
+    )));
+    let b = Error::Archive(ZipErr::from(zip::result::ZipError::InvalidArchive(
+        std::borrow::Cow::Borrowed("two"),
+    )));
     let c = Error::Archive(ZipErr::from(zip::result::ZipError::Io(io_err(
         std::io::ErrorKind::NotFound,
         "a",

@@ -42,7 +42,7 @@ fn reset_restores_temporary_defaults() {
     let mut app = dirty_app();
     app.reset(0.0);
     assert_eq!(app.temporary.note, "");
-    assert_eq!(app.temporary.password, "");
+    assert_eq!(app.temporary.password.as_str(), "");
     assert_eq!(app.temporary.url_input, "");
     assert_eq!(
         app.temporary.attachments,

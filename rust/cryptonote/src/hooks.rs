@@ -13,9 +13,29 @@ use std::sync::Arc;
 use std::sync::atomic::AtomicBool;
 use zeroize::Zeroizing;
 
+/// Passwords shorter than this are still accepted, but the share flow warns
+/// that a short password is cheap to guess against a public ciphertext.
+pub const WEAK_PASSWORD_MIN_LEN: usize = 12;
+
 #[must_use]
 pub fn share_error(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
     (cipher.is_some() && password.is_empty()).then_some(Msg::Base(functora_egui::messages::Msg::PasswordRequired))
+}
+
+#[must_use]
+pub fn is_weak_password(password: &str) -> bool {
+    password.chars().count() < WEAK_PASSWORD_MIN_LEN
+}
+
+/// Non-blocking advisories shown before a note leaves the device. Neither
+/// warning stops the share: the user keeps full control of the note.
+#[must_use]
+pub fn share_warning(cipher: Option<CipherType>, password: &str) -> Option<Msg> {
+    match cipher {
+        None => Some(Msg::PlainShareWarning),
+        Some(_) if is_weak_password(password) => Some(Msg::WeakPasswordWarning),
+        Some(_) => None,
+    }
 }
 
 pub fn add_attachment(current: &mut Vec<Attachment>, att: Attachment) {

@@ -8,6 +8,9 @@ use zip::CompressionMethod;
 
 pub const ATTACHMENTS_PREFIX: &str = "attachments/";
 pub(crate) const ZIP_CHUNK: usize = 2 * 1024 * 1024;
+pub const MAX_ARCHIVE_ENTRIES: usize = 4096;
+pub const MAX_ARCHIVE_ENTRY_SIZE: u64 = 256 * 1024 * 1024;
+pub const MAX_ARCHIVE_TOTAL_SIZE: u64 = 512 * 1024 * 1024;
 
 pub type CancelToken = Arc<AtomicBool>;
 
@@ -18,7 +21,36 @@ pub(crate) fn check_cancel(cancel: Option<&CancelToken>) -> Result<(), Error> {
     Ok(())
 }
 
-fn opts() -> zip::write::FileOptions<'static, ()> {
+pub(crate) fn check_entry_count(count: usize) -> Result<(), Error> {
+    (count <= MAX_ARCHIVE_ENTRIES)
+        .then_some(())
+        .ok_or(Error::TooManyEntries {
+            count,
+            limit: MAX_ARCHIVE_ENTRIES,
+        })
+}
+
+pub(crate) fn check_entry_size(name: &str, size: u64) -> Result<(), Error> {
+    (size <= MAX_ARCHIVE_ENTRY_SIZE)
+        .then_some(())
+        .ok_or_else(|| Error::FileTooLarge {
+            name: name.to_string(),
+            size,
+            limit: MAX_ARCHIVE_ENTRY_SIZE,
+        })
+}
+
+pub(crate) fn check_total_size(size: u64) -> Result<(), Error> {
+    (size <= MAX_ARCHIVE_TOTAL_SIZE)
+        .then_some(())
+        .ok_or_else(|| Error::FileTooLarge {
+            name: "archive".to_string(),
+            size,
+            limit: MAX_ARCHIVE_TOTAL_SIZE,
+        })
+}
+
+fn opts() -> zip::write::FileOptions<'static, 'static, ()> {
     zip::write::FileOptions::default()
         .compression_method(CompressionMethod::Deflated)
         .compression_level(Some(1))
@@ -85,31 +117,39 @@ where
     S: Copy + Send + Sync + 'static,
 {
     let mut archive = zip::ZipArchive::new(Cursor::new(inner))?;
+    check_entry_count(archive.len())?;
     let total = (0..archive.len())
         .map(|i| archive.by_index(i).map(|f| f.size()))
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()
         .sum::<u64>();
+    check_total_size(total)?;
     let mut entries = Vec::new();
     let mut done = 0u64;
     let mut chunk = vec![0u8; ZIP_CHUNK];
     for i in 0..archive.len() {
         let (name, data) = {
             let mut file = archive.by_index(i)?;
-            let name = file.name().to_string();
-            let capacity = usize::try_from(file.size()).map_err(|e| Error::Convert {
-                context: "zip entry size exceeds usize range",
-                source: e,
-            })?;
+            let name = file.name()?.into_owned();
+            check_entry_size(&name, file.size())?;
+            let capacity =
+                usize::try_from(file.size().min(ZIP_CHUNK as u64)).map_err(|e| Error::Convert {
+                    context: "zip entry capacity exceeds usize range",
+                    source: e,
+                })?;
             let mut data = Vec::with_capacity(capacity);
+            let mut entry_read = 0u64;
             loop {
                 check_cancel(cancel)?;
                 let read = file.read(&mut chunk)?;
                 if read == 0 {
                     break;
                 }
-                data.extend_from_slice(&chunk[..read]);
+                entry_read += read as u64;
                 done += read as u64;
+                check_entry_size(&name, entry_read)?;
+                check_total_size(done)?;
+                data.extend_from_slice(&chunk[..read]);
                 report(Job {
                     stage,
                     done,

@@ -75,7 +75,7 @@ impl StreamParts {
     pub fn derive(password: &str, cipher: CipherType, aad: &[u8]) -> Result<Self, Error> {
         let salt = random_vec(SALT_SIZE)?;
         let nonce = random_vec(STREAM_NONCE_SIZE)?;
-        let key = Zeroizing::new(derive_key(password, &salt, Kdf::Argon2id)?);
+        let key = derive_key(password, &salt, Kdf::Argon2id)?;
         Ok(Self {
             cipher,
             key,
@@ -88,6 +88,7 @@ impl StreamParts {
     pub fn recover(
         password: &str,
         cipher: CipherType,
+        kdf: Kdf,
         salt: &[u8],
         nonce: &[u8],
         aad: &[u8],
@@ -95,7 +96,7 @@ impl StreamParts {
         (salt.len() == SALT_SIZE && nonce.len() == STREAM_NONCE_SIZE)
             .then_some(())
             .ok_or_else(|| Error::InvalidFormat("stream salt or nonce has invalid size".into()))?;
-        let key = Zeroizing::new(derive_key(password, salt, Kdf::Argon2id)?);
+        let key = derive_key(password, salt, kdf)?;
         Ok(Self {
             cipher,
             key,
@@ -207,7 +208,7 @@ pub(crate) fn stream_spans(
     len: usize,
     step: usize,
 ) -> impl Iterator<Item = Result<(u32, ChunkKind, usize, usize), Error>> {
-    (0..len)
+    (0..len.max(1))
         .step_by(step)
         .enumerate()
         .map(move |(position, offset)| {
@@ -248,7 +249,14 @@ pub fn stream_decrypt_symmetric(
     password: &str,
     aad: &[u8],
 ) -> Result<Vec<u8>, Error> {
-    let parts = StreamParts::recover(password, data.cipher, &data.salt, &data.nonce, aad)?;
+    let parts = StreamParts::recover(
+        password,
+        data.cipher,
+        data.kdf,
+        &data.salt,
+        &data.nonce,
+        aad,
+    )?;
     stream_spans(data.ciphertext.len(), STREAM_CHUNK + STREAM_TAG)
         .map(|span| {
             let (position, kind, offset, end) = span?;
@@ -258,38 +266,25 @@ pub fn stream_decrypt_symmetric(
         .map(|chunks| chunks.into_iter().flatten().collect())
 }
 
-#[cfg(debug_assertions)]
-fn env_cost(name: &str, default: u32) -> u32 {
-    std::env::var(name)
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(default)
-}
-
-#[cfg(not(debug_assertions))]
-fn env_cost(_name: &str, default: u32) -> u32 {
-    default
-}
-
 fn kdf_params() -> Result<Params, Error> {
     Params::new(
-        env_cost("FUNCTORA_KDF_M_COST_KIB", ARGON2_M_COST_KIB),
-        env_cost("FUNCTORA_KDF_T_COST", ARGON2_T_COST),
+        ARGON2_M_COST_KIB,
+        ARGON2_T_COST,
         ARGON2_P_COST,
         Some(KEY_SIZE),
     )?
     .pipe(Ok)
 }
 
-pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Vec<u8>, Error> {
-    let mut key = vec![0u8; KEY_SIZE];
+pub fn derive_key(password: &str, salt: &[u8], kdf: Kdf) -> Result<Zeroizing<Vec<u8>>, Error> {
+    let mut key = Zeroizing::new(vec![0u8; KEY_SIZE]);
     match kdf {
         Kdf::Argon2id => {
             let params = kdf_params()?;
             Argon2::new(Argon2Algo, Argon2V, params).hash_password_into(
                 password.as_bytes(),
                 salt,
-                &mut key,
+                key.as_mut_slice(),
             )?;
         }
     }
@@ -309,7 +304,7 @@ pub fn encrypt_symmetric(
     aad: &[u8],
 ) -> Result<EncryptedNote, Error> {
     let salt = random_vec(SALT_SIZE)?;
-    let key = Zeroizing::new(derive_key(password, &salt, Kdf::Argon2id)?);
+    let key = derive_key(password, &salt, Kdf::Argon2id)?;
     let nonce = random_vec(NONCE_SIZE)?;
 
     let ciphertext = match cipher {
@@ -358,7 +353,7 @@ pub fn decrypt_symmetric(
     aad: &[u8],
 ) -> Result<Vec<u8>, Error> {
     validate_note(data)?;
-    let key = Zeroizing::new(derive_key(password, &data.salt, data.kdf)?);
+    let key = derive_key(password, &data.salt, data.kdf)?;
 
     match data.cipher {
         CipherType::ChaCha20Poly1305 => {

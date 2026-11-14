@@ -69,10 +69,8 @@ impl CryptonoteApp {
             External::Note(note) => {
                 if let NoteData::CipherText(enc) = note.data {
                     self.decrypt_rx = Some(functora_egui::spawn_async(async move {
-                        let password_clone = password.clone();
-                        let enc_clone = enc.clone();
                         let res: Result<(String, Vec<crate::archive::Attachment>), AppError> = (|| {
-                            let decrypted = crate::crypto::decrypt_symmetric(&enc_clone, &password_clone)?;
+                            let decrypted = crate::crypto::decrypt_symmetric(&enc, &password)?;
                             Ok((String::from_utf8(decrypted)?, Vec::new()))
                         })(
                         );

@@ -148,7 +148,7 @@ impl crate::state::ShowcaseApp {
     /// Derives stream parts, seals one chunk and recovers it with a second
     /// `StreamParts` built from the same salt and nonce.
     pub fn stream_parts_roundtrip(password: &str, plaintext: &str) -> Result<String, String> {
-        use functora_egui::crypto::{ChunkKind, CipherType, StreamParts};
+        use functora_egui::crypto::{ChunkKind, CipherType, Kdf, StreamParts};
         let parts = StreamParts::derive(password, CipherType::ChaCha20Poly1305, STREAM_AAD)
             .map_err(|e| e.to_string())?;
         let sealed = parts
@@ -157,6 +157,7 @@ impl crate::state::ShowcaseApp {
         let recovered = StreamParts::recover(
             password,
             CipherType::ChaCha20Poly1305,
+            Kdf::Argon2id,
             parts.salt(),
             parts.nonce(),
             STREAM_AAD,

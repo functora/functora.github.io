@@ -572,6 +572,8 @@
               rustToolchain
               rust-analyzer
               cargo-tarpaulin
+              cargo-audit
+              cargo-deny
               clippy
               wasmtime
               license-generator
@@ -702,6 +704,40 @@
                 text = ''
                   cargo tarpaulin --all-features --engine llvm "$@" \
                     && echo "==> Coverage done!"
+                '';
+              })
+              (pkgs.writeShellApplication {
+                name = "audit";
+                text = ''
+                  audit_crate() {
+                    local crate="$1"
+                    shift
+                    ${pkgs.cargo-audit}/bin/cargo-audit audit --file Cargo.lock "$@" \
+                      && ${pkgs.cargo-deny}/bin/cargo-deny check "$@" \
+                      && echo "==> $crate: no known vulnerabilities"
+                  }
+                  if [ -f Cargo.toml ] && [ -f Cargo.lock ]; then
+                    audit_crate "$(basename "$PWD")" "$@" && echo "==> All good!"
+                  else
+                    FOUND=0
+                    for P in */; do
+                      P="''${P%/}"
+                      [ -f "$P/Cargo.lock" ] || continue
+                      FOUND=1
+                      (
+                        cd "$P"
+                        audit_crate "$P" "$@" && echo "==> $P: All good!"
+                      ) || {
+                        echo "==> $P: FAILED"
+                        exit 1
+                      }
+                    done
+                    if [ "$FOUND" -eq 0 ]; then
+                      echo "==> No crate with a Cargo.lock found in this directory!"
+                      exit 1
+                    fi
+                    echo "==> All crates audited!"
+                  fi
                 '';
               })
               (pkgs.writeShellApplication {

@@ -10,8 +10,10 @@
 //! - `html-markdown`, `thumbnail`, `qr`: re-exported functora-core APIs
 //! - `web`, `android`, `build`: platform runners, templates and codegen
 //! - `images`: image loaders and bundled sample fixtures
+//! - `images-remote`: opt-in `file://` and `http(s)://` image loaders
 //! - `camera`: camera capture APIs (module itself is gated on `platform`)
 //! - `markdown`: markdown rendering (`markdown_view`, data-URL loader)
+//! - `markdown-fetch`: opt-in remote image loading inside rendered markdown
 
 #[cfg(any(feature = "android", feature = "build"))]
 pub mod android;

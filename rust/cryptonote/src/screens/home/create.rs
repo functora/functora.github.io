@@ -1,5 +1,5 @@
 use crate::app::{CryptonoteApp, OpStart};
-use crate::hooks::share_error;
+use crate::hooks::{share_error, share_warning};
 use crate::messages::Msg;
 use crate::progress::Stage;
 use crate::route::Screen;
@@ -59,6 +59,9 @@ impl CryptonoteApp {
                 if let Some(err) = share_error(self.temporary.cipher.into(), &self.temporary.password) {
                     self.toast.add(err.render(lang), ToastVariant::Error, toast_time);
                 } else {
+                    if let Some(warning) = share_warning(self.temporary.cipher.into(), &self.temporary.password) {
+                        self.toast.add(warning.render(lang), ToastVariant::Warning, toast_time);
+                    }
                     let note = self.temporary.note.clone();
                     let password = self.temporary.password.clone();
                     let cipher = self.temporary.cipher.into();

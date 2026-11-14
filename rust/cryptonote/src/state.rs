@@ -1,6 +1,7 @@
 use crate::crypto::{CipherType, ExternalArchive};
 use crate::encoding::NoteData;
 use crate::progress::{Job, Stage};
+use zeroize::Zeroizing;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct AttachmentIdx(pub usize);
@@ -85,10 +86,10 @@ impl External {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct TemporaryState {
     pub note: String,
-    pub password: String,
+    pub password: Zeroizing<String>,
     pub cipher: CipherChoice,
     pub attachments: Vec<functora_egui::files::Attachment>,
     pub screen: crate::route::Screen,
@@ -99,11 +100,37 @@ pub struct TemporaryState {
     pub attachment: Option<AttachmentIdx>,
 }
 
+/// The note body, the password and the attachment contents are secrets, so
+/// they never reach a log or a panic message through the derived `Debug`
+/// implementation. Only the attachment names and sizes stay visible.
+impl std::fmt::Debug for TemporaryState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let attachments = self
+            .attachments
+            .iter()
+            .map(|attachment| (attachment.name.as_str(), attachment.data.len()))
+            .collect::<Vec<_>>();
+
+        f.debug_struct("TemporaryState")
+            .field("note", &"[redacted]")
+            .field("password", &"[redacted]")
+            .field("cipher", &self.cipher)
+            .field("attachments", &attachments)
+            .field("screen", &self.screen)
+            .field("action", &self.action)
+            .field("url_input", &self.url_input)
+            .field("external", &self.external)
+            .field("progress", &self.progress)
+            .field("attachment", &self.attachment)
+            .finish()
+    }
+}
+
 impl Default for TemporaryState {
     fn default() -> Self {
         Self {
             note: String::new(),
-            password: String::new(),
+            password: Zeroizing::new(String::new()),
             cipher: CipherChoice::Aes256Gcm,
             attachments: Vec::new(),
             screen: crate::route::Screen::default(),

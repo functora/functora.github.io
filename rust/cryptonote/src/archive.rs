@@ -12,17 +12,39 @@ pub use functora_egui::files::Attachment;
 
 pub const NOTE_ENTRY: &str = "note.txt";
 
+/// Reduce an untrusted entry name to a safe, single-component file name.
+/// Archive entries and picked file names may carry directory separators or
+/// `..` components; keeping only the last path component and dropping
+/// leading dots makes the name safe to show and to write to disk.
+#[must_use]
+pub fn sanitise_attachment_name(name: &str) -> String {
+    let base = name
+        .rsplit(['/', '\\'])
+        .next()
+        .unwrap_or(name)
+        .trim()
+        .trim_start_matches('.')
+        .trim();
+    let cleaned: String = base.chars().filter(|c| !c.is_control()).collect();
+    if cleaned.is_empty() {
+        "attachment".to_string()
+    } else {
+        cleaned
+    }
+}
+
 fn stages() -> PackageStages<Stage> {
     PackageStages::new(Stage::Zip, Stage::Encrypt, Stage::Decrypt)
 }
 
 fn entries_of(note: &str, attachments: &[Attachment]) -> Vec<(String, Arc<[u8]>)> {
     let mut entries = vec![(NOTE_ENTRY.to_string(), Arc::from(note.as_bytes().to_vec()))];
-    entries.extend(
-        attachments
-            .iter()
-            .map(|a| (format!("{ATTACHMENTS_PREFIX}{}", a.name), Arc::clone(&a.data))),
-    );
+    entries.extend(attachments.iter().map(|a| {
+        (
+            format!("{ATTACHMENTS_PREFIX}{}", sanitise_attachment_name(&a.name)),
+            Arc::clone(&a.data),
+        )
+    }));
     entries
 }
 
@@ -122,7 +144,7 @@ where
             note = String::from_utf8(data)?;
         } else {
             files.push(Attachment {
-                name: name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(&name).to_string(),
+                name: sanitise_attachment_name(name.strip_prefix(ATTACHMENTS_PREFIX).unwrap_or(&name)),
                 data: data.into(),
             });
         }

@@ -138,6 +138,10 @@ pub enum Error {
     Worker(WorkerStopped),
     #[error("File too large ({name}: {size} bytes, limit {limit} bytes)")]
     FileTooLarge { name: String, size: u64, limit: u64 },
+    #[error("Archive has too many entries ({count}, limit {limit})")]
+    TooManyEntries { count: usize, limit: usize },
+    #[error("A password is required to open this encrypted archive")]
+    PasswordRequired,
     #[error("Operation cancelled")]
     Cancelled,
     #[error("Required object unavailable: {0}")]
@@ -340,6 +344,12 @@ impl I18N for Error {
             Self::FileTooLarge { name, size, limit } => {
                 format!("File too large ({name}: {size} bytes, limit {limit} bytes)")
             }
+            Self::TooManyEntries { count, limit } => {
+                format!("Archive has too many entries ({count}, limit {limit})")
+            }
+            Self::PasswordRequired => {
+                "A password is required to open this encrypted archive".into()
+            }
             Self::Cancelled => "Operation cancelled".into(),
             Self::Missing(m) => format!("Required object unavailable: {m}"),
             Self::CapabilityDisabled(c) => format!("{c} is unavailable: web feature disabled"),
@@ -397,6 +407,12 @@ impl I18N for Error {
             Self::FileTooLarge { name, size, limit } => {
                 format!("Archivo demasiado grande ({name}: {size} bytes, límite {limit} bytes)")
             }
+            Self::TooManyEntries { count, limit } => {
+                format!("El archivo tiene demasiadas entradas ({count}, límite {limit})")
+            }
+            Self::PasswordRequired => {
+                "Se requiere una contraseña para abrir este archivo cifrado".into()
+            }
             Self::Cancelled => "Operación cancelada".into(),
             Self::Missing(m) => format!("Objeto requerido no disponible: {m}"),
             Self::CapabilityDisabled(c) => {
@@ -451,6 +467,12 @@ impl I18N for Error {
             Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),
             Self::FileTooLarge { name, size, limit } => {
                 format!("Файл слишком большой ({name}: {size} байт, лимит {limit} байт)")
+            }
+            Self::TooManyEntries { count, limit } => {
+                format!("В архиве слишком много записей ({count}, лимит {limit})")
+            }
+            Self::PasswordRequired => {
+                "Для открытия этого зашифрованного архива требуется пароль".into()
             }
             Self::Cancelled => "Операция отменена".into(),
             Self::Missing(m) => format!("Требуемый объект недоступен: {m}"),

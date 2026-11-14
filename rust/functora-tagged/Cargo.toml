@@ -24,7 +24,7 @@ serde = ["dep:serde"]
 [dev-dependencies]
 diesel = { version = "2.3.14", features = ["sqlite"] }
 functora = { version = "0.2.0", path = "../functora" }
-libsqlite3-sys = { version = "0.35.0", features = ["bundled"] }
+libsqlite3-sys = { version = "0.39.0", features = ["bundled"] }
 num-traits = "0.2.19"
 rust_decimal = { version = "1.36.0", features = ["maths"] }
 rust_decimal_macros = "1.36.0"

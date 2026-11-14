@@ -1,6 +1,6 @@
 # Cryptonote
 
-Cryptonote is a cross-platform, fully offline application for creating, storing, and sharing encrypted notes. It is completely serverless and runs entirely on your device or in your web browser - no internet connection or external services are required.
+Cryptonote is a cross-platform application for creating, storing, and sharing encrypted notes. It has no backend and no account: all cryptography runs on your device or in your browser, and nothing is stored on a server.
 
 With Cryptonote, you can:
 
@@ -8,17 +8,24 @@ With Cryptonote, you can:
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code
-- Attach files to your note and pack everything into a secure offline archive (.cryptonote)
+- Attach files to your note and pack everything into an offline archive (.cryptonote)
 
 Note content - whether ciphertext or plaintext - is embedded directly in the URL itself, making sharing as simple as sending a link or displaying a QR code. Notes with attachments are packaged into an archive file that you download and share separately.
 
-Cryptonote follows modern cryptographic best practices:
+Cryptonote uses modern cryptographic primitives:
 
-- Strong password-based key derivation with Argon2id
-- Authenticated encryption for confidentiality, integrity, and authenticity
-- No data ever leaves your device unless you explicitly choose to share it
+- Password-based key derivation with Argon2id
+- Authenticated encryption for confidentiality and integrity against tampering
+- Nothing is stored on a server, and no data leaves your device unless you explicitly choose to share it
 
-Secure, private, and truly offline - your notes remain yours alone.
+Limits worth knowing:
+
+- Cryptonote does not prove authorship. Authenticated encryption detects tampering, not a forged author.
+- A shared URL still travels through mail, chat, or a server. In the web build the note payload rides in the URL query string, so the host server sees it. Plain mode puts the note text in the clear.
+- A shared link reveals the ciphertext, so a weak password can be cracked offline. Cryptonote warns about short passwords but never blocks the share.
+- Copying text to the clipboard and exporting an unencrypted archive expose the note to other software on the device.
+
+The full threat model, the guarantees Cryptonote makes, and the security audit that produced them are described in [SECURITY.md](SECURITY.md).
 
 The Cryptonote interface is fully internationalized and currently supports English, Spanish, and Russian.
 

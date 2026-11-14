@@ -43,6 +43,10 @@ fn msg_all() -> Vec<Msg> {
         Msg::PreviewUnavailable,
         Msg::FileNotFound,
         Msg::Saved("note.txt".to_owned()),
+        Msg::WeakPasswordWarning,
+        Msg::PlainShareWarning,
+        Msg::ClipboardPlaintextWarning,
+        Msg::UnencryptedExportWarning,
     ]
 }
 

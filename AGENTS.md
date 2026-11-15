@@ -293,6 +293,9 @@ semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 - To get the Rust test coverage report, use:
   `cargo tarpaulin --all-features --engine llvm -o Lcov`
 - The coverage report is written to `lcov.info`.
+- To audit the dependency tree, use:
+  `nix develop -c cargo-audit audit --file Cargo.lock` and `nix develop -c cargo-deny check`
+  If the flake exposes an application that runs both, use that instead.
 - Do not consider the task complete until the implementation passes the relevant checks.
 - Do not weaken or bypass any validation to make the implementation pass.
 
@@ -305,6 +308,152 @@ semicolon_if_nothing_returned = { level = "allow", priority = 1 }
 - Before finishing, verify that only files relevant to the task were changed.
 - Verify that no unintended public behavior, configuration, API, serialization format, module boundary, or project setting was modified.
 - The resulting code must be formatted, warning-free, panic-free, resource-safe, and fully tested.
+
+---
+
+## Security (Dependency Auditing, Threat Modeling, Secure Coding)
+
+These rules apply to every crate in the repository and are written so that
+they transfer unchanged to any other repository. When the project already
+has a security policy, a threat model, or its own auditing pipeline, follow
+that as well: the rules below are the floor, not the ceiling.
+
+### Generic Rust Security Tooling
+
+The dependency tree is part of the security boundary. Audit it with the
+generic Rust security tooling that the flake provides, so the checks are
+reproducible on any machine and never depend on a globally installed tool.
+
+- **`cargo-audit`** finds known vulnerabilities in the resolved dependency
+  graph using the RustSec advisory database. Run it as
+  `cargo-audit audit --file Cargo.lock` from the directory that holds the
+  lockfile.
+- **`cargo-deny`** checks the license policy, the duplicate-version policy,
+  the wildcard policy and the source policy. It reads a `deny.toml` next to
+  the manifest; another location is selected with
+  `cargo deny check --config <path>`. Run it as `cargo-deny check`.
+- **`cargo tree` / `cargo tree -i <crate>`** explain why a dependency is in
+  the graph. Use it before adding, removing or upgrading a dependency.
+- **`cargo deny check licenses`** fails on a license that is not on the
+  allowlist. Adding a dependency with a new license means adding it to the
+  policy deliberately, with a reason.
+
+**Running the tools.** Nix is the single source of truth for the development
+environment (see the Nix / Flake Infrastructure section). The auditing tools
+come from the flake, never from a global install, so the versions and the
+advisory database are the pinned ones:
+
+```
+nix develop -c cargo-audit audit --file Cargo.lock
+nix develop -c cargo-deny check
+```
+
+Run them from the directory that holds the manifest, or point them at it:
+`cargo-deny` accepts `--manifest-path` and `cargo-audit` takes the lockfile
+through `--file`, so a workspace can be audited from any subdirectory. The
+`cargo audit` wrapper looks for a binary in `~/.cargo/bin` and fails inside
+the dev shell; call the `cargo-audit` binary directly.
+
+If the flake already exposes an application that runs both tools over every
+crate, use that application - `nix develop -c <app>` or `nix run .#<app>` -
+instead of repeating the commands by hand. Add such an application when the
+repository has none and the audit would otherwise be repeated for every
+crate.
+
+**Rules for dependencies.**
+
+- Never install an auditing tool globally. If a tool is missing, add it to
+  the flake and expose it through the dev shell or a flake application.
+- A vulnerability advisory is a hard failure. Upgrade the dependency; never
+  add an `ignore` entry for a real vulnerability. An `ignore` entry needs a
+  written justification and a tracking issue.
+- An *unmaintained* advisory is not a vulnerability. If the policy tolerates
+  them they are reported but do not break the build. Record them where the
+  repository tracks accepted risk, so the decision stays visible.
+- A yanked version is a hard failure.
+- Lockfiles are committed. A workspace has one lockfile at the root;
+  separate publishable crates may each carry their own. Update every
+  lockfile the change affects, in the same change, and never let two of
+  them disagree about the same dependency.
+- When a dependency is upgraded, read its changelog for behavior changes, not
+  just its advisory page. A major-version bump changes the API and needs the
+  call sites and the tests updated with it.
+- Prefer a feature-gated dependency over a heavier one. A capability that
+  reaches untrusted input - a network fetch, a file loader, a sanitizer
+  bypass - belongs behind an opt-in Cargo feature that the targets that do
+  not need it do not enable.
+
+### Security Findings and Best Practices
+
+The patterns below are generic. They apply to any crate in the repository,
+whatever it stores, transports or renders.
+
+- **Never let untrusted input decide an allocation size.** A declared length
+  in an archive, a file header, a compressed stream, or a network frame is
+  attacker controlled. Bound it, cap it, and never pre-allocate from it.
+  Read into a bounded buffer and verify the real number of bytes afterwards.
+- **Bound every parser.** Cap the number of entries, the size of one entry
+  and the total size of a document. A parser without limits is a denial of
+  service with a file extension.
+- **Reduce a path to one safe component before it reaches the file system.**
+  Strip directory separators, drop `..`, drop leading dots, and reject
+  control characters. A name from an archive, an upload or a remote listing
+  is untrusted input.
+- **An empty ciphertext is a decryption failure.** Every ciphertext carries
+  an authentication tag, and the tag must be verified even when the payload
+  is empty. A chunk loop that iterates over a zero-length payload skips the
+  tag and authenticates a truncated message.
+- **Refuse an empty password or key for protected content.** An empty key
+  is a valid key, so it decrypts. It must be rejected before the KDF runs.
+- **Honour the recorded algorithm.** When metadata names a KDF, a cipher or
+  a codec, use that one. Silently substituting a default breaks the
+  contract between the writer and the reader, and can silently downgrade the
+  protection of data that was already stored.
+- **Zeroize secret material.** Use `zeroize::Zeroizing` for passwords, keys
+  and other buffers that outlive their scope. A plain `Vec<u8>` leaves the
+  key in freed heap memory.
+- **Keep secrets out of `Debug`.** A derived `Debug` prints every field,
+  including the password, the plaintext body and the payload bytes. Write a
+  manual `Debug` that redacts them, and keep the non-secret metadata -
+  names, sizes, versions - visible for diagnostics.
+- **Do not let the environment weaken the cryptography.** A KDF cost, a
+  cipher, or a verification budget that an environment variable can lower
+  turns published data into a cheap offline target. Keep the parameters as
+  compile-time constants.
+- **Do not put a secret in a URL, a filename, a log line, or an error
+  message.** URLs end up in history, referrers and screenshots; filenames end
+  up in directory listings.
+- **Authenticate the metadata, not only the payload.** The cipher choice and
+  the KDF must be bound as AEAD associated data, and the application or
+  format prefix must be bound too, so a message cannot be replayed into
+  another context.
+- **Use a fresh nonce and a fresh salt per message.** Never derive either
+  from the plaintext, the password or a counter the reader cannot verify.
+- **Treat a sanitizer as a last layer, not the only one.** Keep the
+  sanitizing library current, and do not feed it raw remote content.
+- **Keep outbound network access opt-in.** A markdown or image renderer that
+  can fetch a remote URL turns user content into a tracking pixel. Gate the
+  fetching features behind Cargo features the application does not enable.
+- **Do not overstate the security of the product.** "Authenticated
+  encryption" means confidentiality and integrity, not authorship. A
+  password-based scheme has no forward secrecy. A shared link reveals the
+  ciphertext, so the password can be attacked offline. A plain mode is
+  encoding, not encryption. Write these limits down, in the README, in the
+  in-app text and in the `SECURITY.md`, in every language the application
+  ships.
+- **Document the threat model in the crate.** Every user-facing crate keeps
+  a `SECURITY.md` with its assets, its trust boundaries, its adversaries,
+  its guarantees, its explicit non-goals and the status of every finding.
+  Render the same document in the app when the crate has a UI, so the user
+  reads the same text the maintainers do.
+
+### Reporting a Vulnerability
+
+Report a suspected vulnerability privately, through the channel the project
+publishes for it - usually the address or security form in the crate's
+`SECURITY.md` or in the repository's `SECURITY.md`. Never open a public
+issue for a working exploit, and never publish a proof of concept before a
+fix is released.
 
 ---
 

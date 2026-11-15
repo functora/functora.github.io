@@ -767,6 +767,13 @@ in {
           name = "gomplate";
           text = ''${pkgs.gomplate}/bin/gomplate "$@"'';
         })
+        (mkBubble {
+          inherit pkgs;
+          name = "bar";
+          text = "${pkgs.beyond-all-reason}/bin/beyond-all-reason --ozone-platform=wayland";
+          home = "bar";
+          network = true;
+        })
       ];
       programs.git = {
         enable = true;

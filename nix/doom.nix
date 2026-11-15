@@ -217,6 +217,15 @@
         liquid = ltp701;
       }
       // mkDoom {
+        tag = "maria";
+        mod = ../bak/doom/DBP_76.wad;
+        music = "";
+        total = ../bak/doom/DB-MariaNoJigoku.pk3;
+        liquid = ltp701;
+        nashgore = ../bak/doom/nashgore.pk3;
+        flashlight = "";
+      }
+      // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";
         cfg = ../cfg/doom-qcde.cfg;

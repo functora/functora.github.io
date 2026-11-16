@@ -5,6 +5,7 @@
 
 use cryptonote::crypto::CipherType;
 use cryptonote::encoding::{NoteData, build_url, decode_note, extract_note_param};
+use functora_tagged::InfallibleInto;
 
 const BASE_URL: &str = "https://functora.github.io/apps/cryptonote/0.2.0/?screen=open";
 const PLAINTEXT: &str = "the quick brown fox jumps over the lazy dog";
@@ -157,5 +158,52 @@ fn the_debug_output_never_carries_a_secret() {
     assert!(
         rendered.contains("passport.pdf"),
         "the attachment name is not a secret and stays visible: {rendered}"
+    );
+}
+
+#[test]
+fn the_debug_output_never_carries_a_plain_external_note() {
+    let url =
+        build_url(BASE_URL, &NoteData::PlainText(PLAINTEXT.to_owned())).unwrap_or_else(|e| panic!("build_url: {e:?}"));
+    let state = cryptonote::state::TemporaryState {
+        external: cryptonote::External::Note(cryptonote::ExternalNote {
+            data: NoteData::PlainText(PLAINTEXT.to_owned()),
+            url,
+        }),
+        ..Default::default()
+    };
+
+    let rendered = format!("{state:?}");
+
+    assert!(
+        !rendered.contains(PLAINTEXT),
+        "the note body must never reach the Debug output: {rendered}"
+    );
+    assert!(
+        !rendered.contains(&base64_of(PLAINTEXT)),
+        "the encoded note body must never reach the Debug output: {rendered}"
+    );
+}
+
+#[test]
+fn the_debug_output_never_carries_the_archive_bytes() {
+    let state = cryptonote::state::TemporaryState {
+        external: cryptonote::External::Archive(
+            cryptonote::crypto::ExternalArchive::new(PLAINTEXT.as_bytes().to_vec()).infallible(),
+        ),
+        ..Default::default()
+    };
+
+    let rendered = format!("{state:?}");
+
+    let archive_bytes = PLAINTEXT
+        .as_bytes()
+        .iter()
+        .map(u8::to_string)
+        .collect::<Vec<_>>()
+        .join(", ");
+    assert!(
+        !rendered.contains(&archive_bytes),
+        "the archive bytes must never reach the Debug output: {rendered}"
     );
 }

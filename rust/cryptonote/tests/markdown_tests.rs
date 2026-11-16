@@ -102,3 +102,41 @@ fn every_table_row_of_the_policies_has_the_same_number_of_cells() {
         }
     }
 }
+
+fn heading_levels(policy: &str) -> Vec<usize> {
+    policy
+        .lines()
+        .filter_map(|line| {
+            let level = line.chars().take_while(|character| *character == '#').count();
+            (level > 0 && line[level..].starts_with(' ')).then_some(level)
+        })
+        .collect()
+}
+
+#[test]
+fn the_shipped_policies_keep_the_same_structure() {
+    let expected = heading_levels(POLICY_EN);
+
+    for policy in [POLICY_ES, POLICY_RU] {
+        assert_eq!(
+            heading_levels(policy),
+            expected,
+            "the policy must keep the same headings and levels as the English one"
+        );
+    }
+}
+
+#[test]
+fn the_policies_keep_no_closed_findings_table() {
+    let forbidden = ["severity", "status", "severidad", "estado", "серьёзност", "статус"];
+
+    for policy in [POLICY_EN, POLICY_ES, POLICY_RU] {
+        for line in table_lines(policy) {
+            let lowered = line.to_lowercase();
+            assert!(
+                !forbidden.iter().any(|column| lowered.contains(column)),
+                "the policy must not keep a findings table column: {line:?}"
+            );
+        }
+    }
+}

@@ -443,9 +443,13 @@ whatever it stores, transports or renders.
   ships.
 - **Document the threat model in the crate.** Every user-facing crate keeps
   a `SECURITY.md` with its assets, its trust boundaries, its adversaries,
-  its guarantees, its explicit non-goals and the status of every finding.
-  Render the same document in the app when the crate has a UI, so the user
-  reads the same text the maintainers do.
+  its guarantees, its explicit non-goals and the status of every finding
+  that still applies. A fixed finding does not stay in the policy: the code
+  and its regression tests are the evidence of the guarantee, and the git
+  history is the record of the finding. A finding you accepted instead of
+  fixing stays, and the explicit non-goals say so. Render the same document
+  in the app when the crate has a UI, so the user reads the same text the
+  maintainers do.
 
 ### Reporting a Vulnerability
 

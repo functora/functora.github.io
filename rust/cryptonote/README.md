@@ -25,7 +25,7 @@ Limits worth knowing:
 - A shared link reveals the ciphertext, so a weak password can be cracked offline. Cryptonote warns about short passwords but never blocks the share.
 - Copying text to the clipboard and exporting an unencrypted archive expose the note to other software on the device.
 
-The full threat model, the guarantees Cryptonote makes, and the security audit that produced them are described in [SECURITY.md](SECURITY.md), with translations in [SECURITY.es.md](SECURITY.es.md) and [SECURITY.ru.md](SECURITY.ru.md). The same document is readable in the app, on the **Security** screen, which the about text links to.
+The full threat model and the guarantees Cryptonote makes are described in [SECURITY.md](SECURITY.md), with translations in [SECURITY.es.md](SECURITY.es.md) and [SECURITY.ru.md](SECURITY.ru.md). The same document is readable in the app, on the **Security** screen, which the about text links to.
 
 The Cryptonote interface is fully internationalized and currently supports English, Spanish, and Russian.
 

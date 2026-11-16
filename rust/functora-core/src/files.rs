@@ -39,10 +39,22 @@ impl<K: Eq + Hash + Clone, V> FifoMemo<K, V> {
 static PREVIEW_MEMO: LazyLock<Mutex<FifoMemo<(String, u64), Preview>>> =
     LazyLock::new(|| Mutex::new(FifoMemo::new()));
 
-#[derive(Debug, Clone, PartialEq, Default)]
+#[derive(Clone, PartialEq, Default)]
 pub struct Attachment {
     pub name: String,
     pub data: Arc<[u8]>,
+}
+
+/// The file contents are the user's data, so they never reach a log or a
+/// panic message through the derived `Debug` implementation. The name and
+/// the size stay visible.
+impl std::fmt::Debug for Attachment {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Attachment")
+            .field("name", &self.name)
+            .field("data_len", &self.data.len())
+            .finish()
+    }
 }
 
 #[must_use]
@@ -108,7 +120,7 @@ pub fn is_text(mime: &str) -> bool {
         )
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub enum Preview {
     Image(String),
     Video(String),
@@ -118,6 +130,25 @@ pub enum Preview {
     Text(String),
     Download,
     Missing,
+}
+
+/// A preview carries the file contents, so they never reach a log or a
+/// panic message through the derived `Debug` implementation. The variant and
+/// the size stay visible.
+impl std::fmt::Debug for Preview {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let (name, len) = match self {
+            Self::Image(content) => ("Image", content.len()),
+            Self::Video(content) => ("Video", content.len()),
+            Self::Audio(content) => ("Audio", content.len()),
+            Self::Pdf(content) => ("Pdf", content.len()),
+            Self::Markdown(content) => ("Markdown", content.len()),
+            Self::Text(content) => ("Text", content.len()),
+            Self::Download => return f.write_str("Download"),
+            Self::Missing => return f.write_str("Missing"),
+        };
+        f.debug_struct(name).field("len", &len).finish()
+    }
 }
 
 #[must_use]

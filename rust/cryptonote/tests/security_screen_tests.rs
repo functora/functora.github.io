@@ -262,6 +262,37 @@ fn the_security_screen_is_internationalized() {
 }
 
 #[test]
+fn the_security_screen_shows_the_accepted_dependency_warnings() {
+    let expectations = [
+        (Language::Eng, "Known accepted dependency warnings", "basic-toml"),
+        (
+            Language::Spa,
+            "Dependencias con avisos conocidos y aceptados",
+            "basic-toml",
+        ),
+        (
+            Language::Rus,
+            "Известные и принятые предупреждения о зависимостях",
+            "basic-toml",
+        ),
+    ];
+
+    for (lang, heading, warning) in expectations {
+        let (mut app, mut driver) = open_security_screen(lang);
+        let output = driver.run_sized(&mut app, POLICY_VIEWPORT, vec![]);
+        let rendered = rendered_text(&output);
+        assert!(
+            rendered.contains(heading),
+            "the Security screen in {lang:?} must render {heading:?}"
+        );
+        assert!(
+            rendered.contains(warning),
+            "the Security screen in {lang:?} must render the accepted warning about {warning:?}"
+        );
+    }
+}
+
+#[test]
 fn the_security_screen_does_not_overflow_a_narrow_screen() {
     let (mut app, mut driver) = open_security_screen(Language::Eng);
     let output = driver.run_sized(&mut app, PHONE_VIEWPORT, vec![]);

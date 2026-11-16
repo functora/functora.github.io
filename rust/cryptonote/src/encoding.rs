@@ -3,10 +3,26 @@ use crate::error::AppError;
 use serde::{Deserialize, Serialize};
 use tap::prelude::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 pub enum NoteData {
     PlainText(String),
     CipherText(EncryptedNote),
+}
+
+/// The note body is a secret in plain mode, so it never reaches a log or a
+/// panic message through the derived `Debug` implementation. The ciphertext
+/// is public by design, but only its size is worth showing.
+impl std::fmt::Debug for NoteData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PlainText(_) => f.write_str("PlainText(\"[redacted]\")"),
+            Self::CipherText(note) => f
+                .debug_struct("CipherText")
+                .field("cipher", &note.cipher)
+                .field("ciphertext_len", &note.ciphertext.len())
+                .finish(),
+        }
+    }
 }
 
 pub fn encode_note(note: &NoteData) -> Result<String, AppError> {

@@ -74,6 +74,11 @@ impacto que observaste. Puedes esperar una confirmación en una semana.
 - **Metadatos autenticados.** El cifrado, la KDF y el prefijo de la aplicación
   se vinculan como datos asociados del AEAD, y los metadatos del archivo
   registran la KDF que se usó realmente.
+- **Los metadatos no pueden elegir la rama.** Cada carga útil de un archivo
+  empieza con un marco de 16 bytes que indica la rama en la que se escribió. El
+  marco se vincula como datos asociados del AEAD en la rama cifrada, y los
+  metadatos que no coinciden con el marco se rechazan en lugar de cambiar de
+  rama.
 - **Un texto cifrado vacío es un fallo de descifrado.** Todo texto cifrado,
   incluido el texto en claro vacío, lleva una etiqueta de autenticación que
   debe verificarse.
@@ -140,38 +145,20 @@ errores.
 | Longitud del nonce | 12 bytes, aleatorio por nota |
 | Bloque del flujo | 64 KiB |
 | Etiqueta del flujo | 16 bytes |
+| Marco de la carga útil | 16 bytes, indica la rama |
 | Límites de los archivos | 4096 entradas, 256 MiB por entrada, 512 MiB en total |
 
-## Hallazgos de la auditoría y estado
+### Formato del archivo
 
-La auditoría cubrió `cryptonote`, la pila criptográfica compartida
-(`functora-core`) y la pila de interfaz compartida (`functora-egui`). Cada
-corrección de la lista viene con una prueba de regresión en el directorio
-`tests/` del crate.
+Un archivo `.cryptonote` contiene dos entradas: `metadata.json` y
+`payload.cpt`. La carga útil empieza con un marco de 16 bytes que indica la
+rama en la que se escribió: `cryptonote-plain` o `cryptonote-encry`. El marco
+forma parte de los datos asociados del AEAD de la rama cifrada, así que el
+texto cifrado se autentica junto con él, y un `metadata.json` editado no puede
+mover un archivo a la otra rama. Los archivos escritos antes de que existiera
+el marco no se pueden leer con esta versión.
 
-| Hallazgo | Gravedad | Ubicación | Estado |
-| --- | --- | --- | --- |
-| 1. Se aceptaba una contraseña de menos de 12 caracteres sin ningún aviso. | Alta | `cryptonote/src/hooks.rs` | Corregido: aviso no bloqueante |
-| 2. El coste de Argon2id se podía bajar con `FUNCTORA_KDF_M_COST_KIB` / `FUNCTORA_KDF_T_COST` en compilaciones de depuración, convirtiendo un texto cifrado público en un objetivo barato de descifrado sin conexión. | Alta | `functora-core/src/crypto.rs` | Corregido: el coste es una constante de tiempo de compilación |
-| 3. La contraseña se guardaba en un `String` normal, nunca se ponía a cero y el cuerpo de la nota, la contraseña y el contenido de los adjuntos eran alcanzables desde la implementación derivada de `Debug`. | Media-Alta | `cryptonote/src/state.rs` | Corregido: `Zeroizing<String>` y un `Debug` que oculta datos |
-| 4. Un texto cifrado de longitud cero producía un texto en claro vacío sin ninguna verificación AEAD, así que una nota truncada se autenticaba como una nota vacía. | Media | `functora-core/src/crypto.rs` | Corregido: el texto en claro vacío se sella y se verifica como cualquier otro |
-| 5. `Vec::with_capacity(file.size())` confiaba en el tamaño declarado de la entrada, así que un archivo manipulado podía pedir una reserva arbitraria de memoria. | Media | `functora-core/src/package.rs`, `functora-core/src/zip.rs` | Corregido: límites por entrada y totales, sin reservar memoria a partir de tamaños no confiables |
-| 6. Los metadatos del archivo no están autenticados y eligen la rama cifrada o la de texto plano. Un archivo cifrado se abría con una contraseña vacía porque la contraseña vacía era una clave válida. | Media | `functora-core/src/package.rs` | Corregido: un archivo cifrado rechaza una contraseña vacía |
-| 7. Copiar la nota descifrada al portapapeles y exportar `cryptonote-unlocked.zip` dejaban el texto en claro sin ningún aviso. | Media | `cryptonote/src/screens/view.rs` | Corregido: avisos no bloqueantes |
-| 8. `egui_commonmark` se compilaba con `load-images`, `svg` y `fetch`, así que mostrar una nota podía lanzar peticiones de red salientes con URLs de imágenes controladas por el atacante. | Media | `functora-egui/Cargo.toml` | Corregido: las funciones de descarga son opcionales (`markdown-fetch`) y Cryptonote no las activa |
-| 9. `egui_extras` se compilaba con los cargadores `file` y `http`, que podían leer archivos locales o descargar URLs remotas desde el contenido de una nota. | Media | `functora-egui/Cargo.toml` | Corregido: movidas a la función opcional `images-remote` |
-| 10. La dependencia `zip` 2.4.2 arrastraba cuatro avisos, entre ellos un escape crítico por enlaces simbólicos en `ZipArchive::extract` (RUSTSEC-2026-0369). | Media | `Cargo.lock` | Corregido: actualizado a `zip` 9.5.1 |
-| 11. El saneador `ammonia` 4.1.4 arrastraba cuatro avisos de XSS, entre ellos XSS por mutación a través de SVG y MathML incrustados (RUSTSEC-2026-0533). | Media | `functora-core/Cargo.toml` | Corregido: actualizado a `ammonia` 4.2.5 |
-| 12. El analizador `pulldown-cmark` 0.13.4 podía provocar un crecimiento exponencial o cuadrático de eventos con enlaces wiki anidados (RUSTSEC-2026-0414, RUSTSEC-2026-0433). | Alta | `functora-core/Cargo.toml` | Corregido: actualizado a `pulldown-cmark` 0.13.6 |
-| 13. La dependencia `rustls` 0.23.43 arrastraba cuatro avisos en la ruta que usa el cargador de imágenes remotas. | Media | `Cargo.lock` | Corregido: actualizado a `rustls` 0.23.46 |
-| 14. Los nombres de los adjuntos tomados de un archivo se usaban tal cual, así que un archivo manipulado podía incluir componentes de ruta `../`. | Baja | `cryptonote/src/archive.rs` | Corregido: los nombres se reducen a un único componente seguro |
-| 15. `StreamParts::recover` siempre derivaba la clave con Argon2id e ignoraba la KDF registrada en los metadatos. | Baja | `functora-core/src/crypto.rs` | Corregido: se respeta la KDF registrada |
-| 16. `derive_key` devolvía un `Vec<u8>` normal, así que la clave derivada se quedaba en memoria liberada. | Baja | `functora-core/src/crypto.rs` | Corregido: el tipo de retorno es `Zeroizing<Vec<u8>>` |
-| 17. La compilación no tenía ningún escáner de vulnerabilidades de dependencias, así que un aviso nuevo en el árbol no se habría detectado. | Baja | `rust/flake.nix` | Corregido: `cargo-audit` y `cargo-deny` están en el entorno de desarrollo, `rust/deny.toml` contiene la política y `nix develop -c audit` vigila todo el espacio de trabajo |
-| 18. El README y la pantalla Acerca de la aplicación afirmaban que la aplicación era "totalmente sin conexión" y que el cifrado autenticado aportaba "autenticidad". Ambas afirmaciones son inexactas. | Documentación | `cryptonote/README.md`, `cryptonote/src/messages.rs` | Corregido: corregido en inglés, español y ruso |
-| 19. Sin autenticidad del emisor y sin secreto hacia adelante. | Diseño | - | Aceptado: documentado arriba como exclusión |
-
-### Dependencias con avisos conocidos y aceptados
+## Dependencias con avisos conocidos y aceptados
 
 `cargo audit` informa de un pequeño número de avisos *sin mantenimiento* para
 dependencias transitivas sin una ruta de actualización segura: `basic-toml`
@@ -180,7 +167,7 @@ dependencias transitivas sin una ruta de actualización segura: `basic-toml`
 Linux). Ninguno es una vulnerabilidad, y ninguno forma parte del camino
 binario de Cryptonote que gestiona el contenido de las notas.
 
-## Cómo reproducir la auditoría
+## Verificación
 
 Desde el directorio `rust/`:
 
@@ -189,15 +176,23 @@ nix develop -c audit
 ```
 
 Eso ejecuta `cargo audit` y `cargo deny check` sobre todos los crates que
-tienen un `Cargo.lock`, usando la política de `rust/deny.toml`. Las pruebas de
-regresión de cada hallazgo están en el directorio `tests/` del crate que le
-corresponde:
+tienen un `Cargo.lock`, usando la política de `rust/deny.toml`. Las garantías
+de arriba están cubiertas por las pruebas de regresión del directorio `tests/`
+del crate al que pertenecen:
 
 - `functora-core/tests/security_tests.rs` y `functora-core/tests/kdf_policy_tests.rs`
-- `cryptonote/tests/security_crypto_tests.rs`
-- `cryptonote/tests/security_archive_tests.rs`
-- `cryptonote/tests/security_warning_tests.rs`
-- `cryptonote/tests/security_screen_tests.rs`
+  cubren la derivación de la clave, el texto cifrado y el formato del archivo.
+- `functora-core/tests/files_tests.rs` cubre la ocultación del contenido de
+  los archivos.
+- `cryptonote/tests/security_crypto_tests.rs` cubre el contenido de la URL
+  compartida y de la carga útil del archivo.
+- `cryptonote/tests/security_archive_tests.rs` cubre la rama del archivo y los
+  nombres de los adjuntos.
+- `cryptonote/tests/security_warning_tests.rs` cubre los avisos de contraseña,
+  portapapeles y exportación.
+- `cryptonote/tests/security_screen_tests.rs` cubre la pantalla de seguridad.
+- `cryptonote/tests/markdown_tests.rs` mantiene sincronizados los tres
+  documentos de política.
 
 ## Alcance de este documento
 

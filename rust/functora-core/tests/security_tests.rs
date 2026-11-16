@@ -5,8 +5,9 @@ use functora_core::crypto::{
     CipherType, EncryptedNote, Kdf, derive_key, stream_decrypt_symmetric, stream_encrypt_symmetric,
 };
 use functora_core::package::{
-    ArchiveMetadata, ArchiveSource, METADATA_ENTRY, PAYLOAD_ENTRY, PackageStages,
-    extract_package_report, package_report, read_metadata,
+    ArchiveMetadata, ArchiveSource, ENCRYPTED_PAYLOAD_FRAME, METADATA_ENTRY, PAYLOAD_ENTRY,
+    PLAIN_PAYLOAD_FRAME, PackageStages, PayloadBranch, extract_package_report, package_report,
+    read_header, read_metadata,
 };
 use functora_core::progress::Stage;
 use functora_core::zip::{
@@ -112,6 +113,26 @@ fn encrypted_metadata() -> ArchiveMetadata {
     }
 }
 
+fn plain_metadata() -> ArchiveMetadata {
+    ArchiveMetadata {
+        cipher: None,
+        kdf: Kdf::Argon2id,
+        nonce: Vec::new(),
+        salt: Vec::new(),
+    }
+}
+
+fn metadata_bytes(meta: &ArchiveMetadata) -> Vec<u8> {
+    serde_json::to_vec(meta).unwrap_or_else(|e| panic!("json: {e:?}"))
+}
+
+fn archive_with(meta: &ArchiveMetadata, payload: &[u8]) -> Vec<u8> {
+    zip_bytes(&[
+        (METADATA_ENTRY.to_string(), metadata_bytes(meta)),
+        (PAYLOAD_ENTRY.to_string(), payload.to_vec()),
+    ])
+}
+
 #[test]
 fn stream_decrypt_rejects_an_empty_ciphertext() {
     let mut note = sealed_note();
@@ -160,11 +181,7 @@ fn stream_encrypt_roundtrips_an_empty_plaintext() {
 
 #[test]
 fn package_decrypt_rejects_an_empty_payload() {
-    let meta = serde_json::to_vec(&encrypted_metadata()).unwrap_or_else(|e| panic!("json: {e:?}"));
-    let archive = zip_bytes(&[
-        (METADATA_ENTRY.to_string(), meta),
-        (PAYLOAD_ENTRY.to_string(), Vec::new()),
-    ]);
+    let archive = archive_with(&encrypted_metadata(), ENCRYPTED_PAYLOAD_FRAME);
     let mut report = reporter();
     let result = block_on(extract_package_report(
         ArchiveSource::Bytes(archive),
@@ -177,6 +194,163 @@ fn package_decrypt_rejects_an_empty_payload() {
     assert!(
         matches!(result, Err(Error::Decrypt(_))),
         "an empty payload must not unseal, got {result:?}"
+    );
+}
+
+#[test]
+fn extract_package_rejects_a_metadata_that_drops_the_cipher() {
+    let payload = [ENCRYPTED_PAYLOAD_FRAME, b"ciphertext".as_slice()].concat();
+    let archive = archive_with(&plain_metadata(), &payload);
+    let mut report = reporter();
+    let result = block_on(extract_package_report(
+        ArchiveSource::Bytes(archive),
+        "",
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ));
+    assert!(
+        matches!(result, Err(Error::InvalidFormat(_))),
+        "a metadata file that drops the cipher must not move an encrypted archive into the plain branch, got {result:?}"
+    );
+}
+
+#[test]
+fn extract_package_rejects_a_metadata_that_adds_a_cipher() {
+    let payload = [PLAIN_PAYLOAD_FRAME, b"plain body".as_slice()].concat();
+    let archive = archive_with(&encrypted_metadata(), &payload);
+    let mut report = reporter();
+    let result = block_on(extract_package_report(
+        ArchiveSource::Bytes(archive),
+        "pw",
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ));
+    assert!(
+        matches!(result, Err(Error::InvalidFormat(_))),
+        "a metadata file that adds a cipher must not move a plain archive into the encrypted branch, got {result:?}"
+    );
+}
+
+#[test]
+fn extract_package_rejects_a_payload_without_a_branch_frame() {
+    let archive = archive_with(
+        &plain_metadata(),
+        b"a payload that carries no branch frame at all",
+    );
+    let mut report = reporter();
+    let result = block_on(extract_package_report(
+        ArchiveSource::Bytes(archive),
+        "",
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ));
+    assert!(
+        matches!(result, Err(Error::InvalidFormat(_))),
+        "a payload without a branch frame must be refused, got {result:?}"
+    );
+}
+
+#[test]
+fn extract_package_rejects_a_truncated_payload() {
+    let archive = archive_with(&plain_metadata(), b"short");
+    let mut report = reporter();
+    let result = block_on(extract_package_report(
+        ArchiveSource::Bytes(archive),
+        "",
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ));
+    assert!(
+        result.is_err(),
+        "a payload that is shorter than the branch frame must be refused, got {result:?}"
+    );
+}
+
+#[test]
+fn package_roundtrips_a_plain_archive() {
+    let entries = vec![("note.txt".to_string(), Arc::from(b"plain body".to_vec()))];
+    let mut report = reporter();
+    let archive = block_on(package_report(
+        entries,
+        "",
+        None,
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ))
+    .unwrap_or_else(|e| panic!("package: {e:?}"));
+    let mut extract_report = reporter();
+    let result = block_on(extract_package_report(
+        ArchiveSource::Bytes(archive),
+        "",
+        PREFIX,
+        stages(),
+        &mut extract_report,
+        None,
+    ));
+    assert!(
+        result.is_ok(),
+        "a plain archive must still open, got {result:?}"
+    );
+}
+
+#[test]
+fn read_header_reports_the_branch_of_an_encrypted_archive() {
+    let entries = vec![("note.txt".to_string(), Arc::from(b"secret".to_vec()))];
+    let mut report = reporter();
+    let archive = block_on(package_report(
+        entries,
+        "pw",
+        Some(CipherType::Aes256Gcm),
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ))
+    .unwrap_or_else(|e| panic!("package: {e:?}"));
+    let header =
+        read_header(&ArchiveSource::Bytes(archive)).unwrap_or_else(|e| panic!("header: {e:?}"));
+    assert_eq!(header.branch, PayloadBranch::Encrypted);
+    assert_eq!(header.metadata.cipher, Some(CipherType::Aes256Gcm));
+}
+
+#[test]
+fn read_header_reports_the_branch_of_a_plain_archive() {
+    let entries = vec![("note.txt".to_string(), Arc::from(b"plain".to_vec()))];
+    let mut report = reporter();
+    let archive = block_on(package_report(
+        entries,
+        "",
+        None,
+        PREFIX,
+        stages(),
+        &mut report,
+        None,
+    ))
+    .unwrap_or_else(|e| panic!("package: {e:?}"));
+    let header =
+        read_header(&ArchiveSource::Bytes(archive)).unwrap_or_else(|e| panic!("header: {e:?}"));
+    assert_eq!(header.branch, PayloadBranch::Plain);
+    assert_eq!(header.metadata.cipher, None);
+}
+
+#[test]
+fn read_header_rejects_a_metadata_that_does_not_match_the_payload() {
+    let payload = [ENCRYPTED_PAYLOAD_FRAME, b"ciphertext".as_slice()].concat();
+    let archive = archive_with(&plain_metadata(), &payload);
+    let result = read_header(&ArchiveSource::Bytes(archive));
+    assert!(
+        matches!(result, Err(Error::InvalidFormat(_))),
+        "a metadata file that does not match the payload branch must be refused, got {result:?}"
     );
 }
 
@@ -211,16 +385,13 @@ fn extract_package_refuses_an_empty_password() {
 
 #[test]
 fn package_rejects_an_oversized_declared_entry() {
-    let meta = serde_json::to_vec(&ArchiveMetadata {
-        cipher: None,
-        kdf: Kdf::Argon2id,
-        nonce: Vec::new(),
-        salt: Vec::new(),
-    })
-    .unwrap_or_else(|e| panic!("json: {e:?}"));
+    let meta = metadata_bytes(&plain_metadata());
     let mut archive = zip_bytes(&[
         (METADATA_ENTRY.to_string(), meta.clone()),
-        (PAYLOAD_ENTRY.to_string(), b"small".to_vec()),
+        (
+            PAYLOAD_ENTRY.to_string(),
+            [PLAIN_PAYLOAD_FRAME, b"small".as_slice()].concat(),
+        ),
     ]);
     patch_declared_sizes(
         &mut archive,
@@ -243,7 +414,7 @@ fn package_rejects_an_oversized_declared_entry() {
 
 #[test]
 fn package_rejects_an_oversized_metadata_entry() {
-    let meta = serde_json::to_vec(&encrypted_metadata()).unwrap_or_else(|e| panic!("json: {e:?}"));
+    let meta = metadata_bytes(&encrypted_metadata());
     let mut archive = zip_bytes(&[(METADATA_ENTRY.to_string(), meta)]);
     patch_declared_sizes(&mut archive, &[MAX_ARCHIVE_ENTRY_SIZE + 1]);
     let result = read_metadata(&ArchiveSource::Bytes(archive));

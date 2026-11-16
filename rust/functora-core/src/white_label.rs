@@ -196,7 +196,7 @@ impl AppAttrs {
                     let host = loc.host().ok()?;
                     let pathname = loc.pathname().ok()?;
                     let path = pathname.trim_end_matches('/');
-                    Some(format!("{}//{}{}", protocol, host, path))
+                    Some(format!("{protocol}//{host}{path}"))
                 })
                 .unwrap_or_else(|| self.app_url())
         }

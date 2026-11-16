@@ -11,6 +11,49 @@ fn attachment_defaults() {
 }
 
 #[test]
+fn attachment_debug_never_carries_the_file_contents() {
+    let att = Attachment {
+        name: "passport.pdf".to_owned(),
+        data: std::sync::Arc::from(b"the attachment bytes".to_vec()),
+    };
+
+    let rendered = format!("{att:?}");
+
+    assert!(
+        !rendered.contains("the attachment bytes"),
+        "the file contents must never reach the Debug output: {rendered}"
+    );
+    let bytes = att
+        .data
+        .iter()
+        .map(u8::to_string)
+        .collect::<Vec<_>>()
+        .join(", ");
+    assert!(
+        !rendered.contains(&bytes),
+        "the file contents must never reach the Debug output: {rendered}"
+    );
+    assert!(
+        rendered.contains("passport.pdf"),
+        "the file name is not a secret and stays visible: {rendered}"
+    );
+}
+
+#[test]
+fn preview_debug_never_carries_the_file_contents() {
+    let rendered = format!("{:?}", preview("a.txt", b"the attachment text"));
+
+    assert!(
+        !rendered.contains("the attachment text"),
+        "the file contents must never reach the Debug output: {rendered}"
+    );
+    assert!(
+        rendered.contains("Text"),
+        "the preview kind is not a secret and stays visible: {rendered}"
+    );
+}
+
+#[test]
 fn format_size_bytes() {
     assert_eq!(format_size(0), "0 B");
     assert_eq!(format_size(1023), "1023 B");

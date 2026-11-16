@@ -6,7 +6,10 @@ use std::sync::atomic::AtomicBool;
 use std::sync::{Arc, Mutex};
 use tap::prelude::*;
 
-pub use functora_core::package::{ArchiveMetadata, ArchiveSource, PackageStages};
+pub use functora_core::package::{
+    ArchiveHeader, ArchiveMetadata, ArchiveSource, ENCRYPTED_PAYLOAD_FRAME, PLAIN_PAYLOAD_FRAME, PackageStages,
+    PayloadBranch,
+};
 pub use functora_core::zip::ATTACHMENTS_PREFIX;
 pub use functora_egui::files::Attachment;
 
@@ -92,6 +95,13 @@ pub async fn create_archive_package_async(
 
 pub fn read_archive_metadata(source: &ArchiveSource) -> Result<ArchiveMetadata, AppError> {
     functora_core::package::read_metadata(source)?.pipe(Ok)
+}
+
+/// The metadata of an archive together with the branch its payload was
+/// written in. The branch comes from the payload frame, and the metadata has
+/// to agree with it.
+pub fn read_archive_header(source: &ArchiveSource) -> Result<ArchiveHeader, AppError> {
+    functora_core::package::read_header(source)?.pipe(Ok)
 }
 
 pub async fn extract_archive_package_async(

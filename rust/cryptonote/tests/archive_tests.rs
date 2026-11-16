@@ -259,7 +259,7 @@ fn missing_note_entry_defaults_to_empty_text() {
             .start_file("payload.cpt", zip::write::SimpleFileOptions::default())
             .unwrap_or_else(|err| panic!("payload entry: {err}"));
         writer
-            .write_all(&inner)
+            .write_all(&[cryptonote::PLAIN_PAYLOAD_FRAME, inner.as_slice()].concat())
             .unwrap_or_else(|err| panic!("payload bytes: {err}"));
         writer
             .finish()

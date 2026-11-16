@@ -1,4 +1,4 @@
-use crate::archive::{ArchiveSource, Attachment};
+use crate::archive::{ArchiveSource, Attachment, PayloadBranch};
 use crate::crypto::CipherType;
 use crate::encoding::{NoteData, build_url, decode_note, extract_note_param, generate_qr_code};
 use crate::error::AppError;
@@ -56,26 +56,29 @@ pub async fn load_archive_async(
     progress: impl FnMut(Option<Job<Stage>>) + Send + 'static,
 ) -> Result<OpenedArchive, AppError> {
     use crate::state::OpenedArchive;
-    let meta = crate::archive::read_archive_metadata(&source)?;
-    if meta.cipher.is_some() {
-        let bytes = match source {
-            ArchiveSource::Bytes(bytes) => bytes,
-            ArchiveSource::Path(path) => std::fs::read(&path)?,
-        };
-        Ok(OpenedArchive {
-            screen: Screen::Open,
-            external: External::Archive(crate::crypto::ExternalArchive::new(bytes).infallible()),
-            note: String::new(),
-            attachments: Vec::new(),
-        })
-    } else {
-        let (text, files) = crate::archive::extract_archive_package_async(source, "", cancel, progress).await?;
-        Ok(OpenedArchive {
-            screen: Screen::View,
-            external: External::Nothing,
-            note: text,
-            attachments: files,
-        })
+    let header = crate::archive::read_archive_header(&source)?;
+    match header.branch {
+        PayloadBranch::Encrypted => {
+            let bytes = match source {
+                ArchiveSource::Bytes(bytes) => bytes,
+                ArchiveSource::Path(path) => std::fs::read(&path)?,
+            };
+            Ok(OpenedArchive {
+                screen: Screen::Open,
+                external: External::Archive(crate::crypto::ExternalArchive::new(bytes).infallible()),
+                note: String::new(),
+                attachments: Vec::new(),
+            })
+        }
+        PayloadBranch::Plain => {
+            let (text, files) = crate::archive::extract_archive_package_async(source, "", cancel, progress).await?;
+            Ok(OpenedArchive {
+                screen: Screen::View,
+                external: External::Nothing,
+                note: text,
+                attachments: files,
+            })
+        }
     }
 }
 

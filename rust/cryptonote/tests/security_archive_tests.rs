@@ -13,8 +13,11 @@ use cryptonote::ArchiveSource;
 use cryptonote::crypto::CipherType;
 #[cfg(not(target_arch = "wasm32"))]
 use cryptonote::{
-    create_archive_package_async, extract_archive_package_async, load_archive_async, sanitise_attachment_name,
+    AppError, PLAIN_PAYLOAD_FRAME, create_archive_package_async, extract_archive_package_async, load_archive_async,
+    sanitise_attachment_name,
 };
+#[cfg(not(target_arch = "wasm32"))]
+use functora_core::Error as CoreError;
 #[cfg(not(target_arch = "wasm32"))]
 use std::io::{Read, Write};
 #[cfg(not(target_arch = "wasm32"))]
@@ -63,6 +66,11 @@ fn with_plain_metadata(payload: &[u8]) -> Vec<u8> {
     ])
 }
 
+#[cfg(not(target_arch = "wasm32"))]
+fn with_plain_payload(body: &[u8]) -> Vec<u8> {
+    with_plain_metadata(&[PLAIN_PAYLOAD_FRAME, body].concat())
+}
+
 #[test]
 fn encrypted_archive_never_contains_the_note_or_the_password() {
     let archive = encrypted_archive();
@@ -86,8 +94,26 @@ fn plain_metadata_over_an_encrypted_payload_is_refused() {
 
     let opened = run_async(load_archive_async(ArchiveSource::Bytes(forged), cancel(), |_| {}));
     assert!(
-        opened.is_err(),
-        "an archive that claims to be plain but carries an encrypted payload must not open"
+        matches!(opened, Err(AppError::FunctoraEgui(CoreError::InvalidFormat(_)))),
+        "an archive that claims to be plain but carries an encrypted payload must not open, got {opened:?}"
+    );
+}
+
+#[test]
+fn encrypted_metadata_over_a_plain_payload_is_refused() {
+    let inner = zip_with_entries(&[("note.txt", NOTE.as_bytes())]);
+    let package = zip_with_entries(&[
+        (
+            "metadata.json",
+            br#"{"cipher":"Aes256Gcm","kdf":"Argon2id","nonce":[0,0,0,0,0,0,0],"salt":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]}"#,
+        ),
+        ("payload.cpt", &[PLAIN_PAYLOAD_FRAME, inner.as_slice()].concat()),
+    ]);
+
+    let opened = run_async(load_archive_async(ArchiveSource::Bytes(package), cancel(), |_| {}));
+    assert!(
+        matches!(opened, Err(AppError::FunctoraEgui(CoreError::InvalidFormat(_)))),
+        "an archive that claims to be encrypted but carries a plain payload must not open, got {opened:?}"
     );
 }
 
@@ -142,7 +168,7 @@ fn traversal_attachment_names_are_sanitised_when_reading_an_archive() {
         ("note.txt", NOTE.as_bytes()),
         ("attachments/../../escape.txt", b"escaped"),
     ]);
-    let package = with_plain_metadata(&inner);
+    let package = with_plain_payload(&inner);
     let (note, files) = run_async(extract_archive_package_async(
         ArchiveSource::Bytes(package),
         "",

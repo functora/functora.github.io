@@ -54,18 +54,41 @@ impl From<CipherChoice> for Option<CipherType> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct ExternalNote {
     pub data: NoteData,
     pub url: String,
 }
 
-#[derive(Debug, Clone, Default)]
+/// The URL carries the note payload, and in plain mode that payload is the
+/// note body, so neither the body nor the URL may reach a log.
+impl std::fmt::Debug for ExternalNote {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ExternalNote")
+            .field("data", &self.data)
+            .field("url", &"[redacted]")
+            .finish()
+    }
+}
+
+#[derive(Clone, Default)]
 pub enum External {
     #[default]
     Nothing,
     Note(ExternalNote),
     Archive(ExternalArchive),
+}
+
+/// An archive carries the note body in plain mode, so only its size may
+/// reach a log.
+impl std::fmt::Debug for External {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Nothing => f.write_str("Nothing"),
+            Self::Note(note) => f.debug_tuple("Note").field(note).finish(),
+            Self::Archive(archive) => f.debug_struct("Archive").field("bytes", &archive.rep().len()).finish(),
+        }
+    }
 }
 
 impl External {
@@ -152,10 +175,30 @@ impl TemporaryState {
 /// A fully loaded `.cryptonote` archive, computed off the UI thread and
 /// applied to `TemporaryState` by the poll arm. Keeps file IO and zip/crypto
 /// work out of the frame loop.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct OpenedArchive {
     pub screen: crate::route::Screen,
     pub external: External,
     pub note: String,
     pub attachments: Vec<functora_egui::files::Attachment>,
+}
+
+/// The note body and the attachment contents are secrets, so they never
+/// reach a log or a panic message through the derived `Debug`
+/// implementation. Only the attachment names and sizes stay visible.
+impl std::fmt::Debug for OpenedArchive {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let attachments = self
+            .attachments
+            .iter()
+            .map(|attachment| (attachment.name.as_str(), attachment.data.len()))
+            .collect::<Vec<_>>();
+
+        f.debug_struct("OpenedArchive")
+            .field("screen", &self.screen)
+            .field("external", &self.external)
+            .field("note", &"[redacted]")
+            .field("attachments", &attachments)
+            .finish()
+    }
 }

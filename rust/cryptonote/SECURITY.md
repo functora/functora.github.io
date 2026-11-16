@@ -69,6 +69,10 @@ expect an acknowledgement within a week.
 - **Authenticated metadata.** The cipher, the KDF, and the application prefix
   are bound as AEAD associated data, and the archive metadata records the KDF
   that was actually used.
+- **The metadata cannot choose the branch.** Every archive payload starts with
+  a 16-byte frame that names the branch it was written in. The frame is bound
+  as AEAD associated data in the encrypted branch, and metadata that disagrees
+  with the frame is refused instead of switching the branch.
 - **An empty ciphertext is a decryption failure.** Every ciphertext, including
   the empty plaintext, carries an authentication tag that must verify.
 - **Bounded archive parsing.** At most 4096 entries, 256 MiB per entry, and
@@ -127,37 +131,20 @@ not bugs.
 | Nonce length | 12 bytes, random per note |
 | Stream chunk | 64 KiB |
 | Stream tag | 16 bytes |
+| Archive payload frame | 16 bytes, names the branch |
 | Archive budgets | 4096 entries, 256 MiB per entry, 512 MiB total |
 
-## Audit findings and status
+### Archive format
 
-The audit covered `cryptonote`, the shared crypto stack (`functora-core`), and
-the shared UI stack (`functora-egui`). Every fix below ships with a
-regression test in the crate's `tests/` directory.
+A `.cryptonote` archive holds two entries: `metadata.json` and `payload.cpt`.
+The payload opens with a 16-byte frame that names the branch it was written
+in: `cryptonote-plain` or `cryptonote-encry`. The frame is part of the AEAD
+associated data of the encrypted branch, so the ciphertext is authenticated
+together with it, and an edited `metadata.json` cannot move an archive into
+the other branch. Archives written before the frame was introduced are not
+readable by this version.
 
-| Finding | Severity | Location | Status |
-| --- | --- | --- | --- |
-| 1. A password shorter than 12 characters was accepted with no advisory at all. | High | `cryptonote/src/hooks.rs` | Fixed - non-blocking warning |
-| 2. The Argon2id cost could be lowered through `FUNCTORA_KDF_M_COST_KIB` / `FUNCTORA_KDF_T_COST` in debug builds, turning a public ciphertext into a cheap offline target. | High | `functora-core/src/crypto.rs` | Fixed - the cost is a compile-time constant |
-| 3. The password was held in a plain `String`, was never zeroized, and the note body, the password and the attachment contents were all reachable through the derived `Debug` implementation. | Medium-High | `cryptonote/src/state.rs` | Fixed - `Zeroizing<String>` and a redacting `Debug` |
-| 4. A zero-length ciphertext produced an empty plaintext without any AEAD verification, so a truncated note authenticated as an empty note. | Medium | `functora-core/src/crypto.rs` | Fixed - the empty plaintext is sealed and verified like any other |
-| 5. `Vec::with_capacity(file.size())` trusted the declared entry size, so a crafted archive could request an arbitrary allocation. | Medium | `functora-core/src/package.rs`, `functora-core/src/zip.rs` | Fixed - per-entry and total budgets, no pre-allocation from untrusted sizes |
-| 6. The archive metadata is unauthenticated and selects the encrypted or plain branch. An encrypted archive opened with an empty password because the empty password was a valid key. | Medium | `functora-core/src/package.rs` | Fixed - an encrypted archive refuses an empty password |
-| 7. Copying the decrypted note to the clipboard and exporting `cryptonote-unlocked.zip` exposed the plaintext with no notice. | Medium | `cryptonote/src/screens/view.rs` | Fixed - non-blocking warnings |
-| 8. `egui_commonmark` was built with `load-images`, `svg`, and `fetch`, so rendering a note could issue outbound network requests for attacker-controlled image URLs. | Medium | `functora-egui/Cargo.toml` | Fixed - the fetch features are opt-in (`markdown-fetch`) and Cryptonote does not enable them |
-| 9. `egui_extras` was built with the `file` and `http` loaders, which could read local files or fetch remote URLs from note content. | Medium | `functora-egui/Cargo.toml` | Fixed - moved to the opt-in `images-remote` feature |
-| 10. The `zip` 2.4.2 dependency carried four advisories, including a critical symlink escape in `ZipArchive::extract` (RUSTSEC-2026-0369). | Medium | `Cargo.lock` | Fixed - upgraded to `zip` 9.5.1 |
-| 11. The `ammonia` 4.1.4 sanitizer carried four XSS advisories, including mutation XSS through embedded SVG and MathML (RUSTSEC-2026-0533). | Medium | `functora-core/Cargo.toml` | Fixed - upgraded to `ammonia` 4.2.5 |
-| 12. The `pulldown-cmark` 0.13.4 parser could be driven into exponential or quadratic event growth by nested wikilinks (RUSTSEC-2026-0414, RUSTSEC-2026-0433). | High | `functora-core/Cargo.toml` | Fixed - upgraded to `pulldown-cmark` 0.13.6 |
-| 13. The `rustls` 0.23.43 dependency carried four advisories on the path used by the remote image loader. | Medium | `Cargo.lock` | Fixed - upgraded to `rustls` 0.23.46 |
-| 14. Attachment names taken from an archive were used as-is, so a crafted archive could carry `../` path components. | Low | `cryptonote/src/archive.rs` | Fixed - names are reduced to a safe single component |
-| 15. `StreamParts::recover` always derived the key with Argon2id and ignored the KDF recorded in the metadata. | Low | `functora-core/src/crypto.rs` | Fixed - the recorded KDF is honoured |
-| 16. `derive_key` returned a plain `Vec<u8>`, so the derived key stayed in freed heap memory. | Low | `functora-core/src/crypto.rs` | Fixed - the return type is `Zeroizing<Vec<u8>>` |
-| 17. The build had no dependency vulnerability scanner, so a new advisory in the tree would not be noticed. | Low | `rust/flake.nix` | Fixed - `cargo-audit` and `cargo-deny` are in the dev shell, `rust/deny.toml` holds the policy, and `nix develop -c audit` gates the whole workspace |
-| 18. The README and the in-app About screen claimed the app was "fully offline" and that authenticated encryption provided "authenticity". Both are inaccurate. | Documentation | `cryptonote/README.md`, `cryptonote/src/messages.rs` | Fixed - corrected in English, Spanish, and Russian |
-| 19. No sender authenticity and no forward secrecy. | Design | - | Accepted - documented as non-goals above |
-
-### Known accepted dependency warnings
+## Known accepted dependency warnings
 
 `cargo audit` reports a small number of *unmaintained* advisories for
 transitive dependencies with no safe upgrade path: `basic-toml` (through
@@ -166,7 +153,7 @@ and `zvariant_derive` (through the Linux desktop portal stack). None of them
 is a vulnerability, and none of them ships in the Cryptonote binary path that
 handles note content.
 
-## Reproducing the audit
+## Verification
 
 From the `rust/` directory:
 
@@ -175,14 +162,23 @@ nix develop -c audit
 ```
 
 That runs `cargo audit` and `cargo deny check` over every crate that has a
-`Cargo.lock`, using the policy in `rust/deny.toml`. The regression tests for
-each finding live in the `tests/` directory of the crate that owns it:
+`Cargo.lock`, using the policy in `rust/deny.toml`. The guarantees above are
+covered by the regression tests in the `tests/` directory of the crate that
+owns them:
 
 - `functora-core/tests/security_tests.rs` and `functora-core/tests/kdf_policy_tests.rs`
-- `cryptonote/tests/security_crypto_tests.rs`
-- `cryptonote/tests/security_archive_tests.rs`
-- `cryptonote/tests/security_warning_tests.rs`
-- `cryptonote/tests/security_screen_tests.rs`
+  cover the key derivation, the ciphertext and the archive format.
+- `functora-core/tests/files_tests.rs` covers the redaction of the file
+  contents.
+- `cryptonote/tests/security_crypto_tests.rs` covers the contents of the
+  shared URL and of the archive payload.
+- `cryptonote/tests/security_archive_tests.rs` covers the archive branch and
+  the attachment names.
+- `cryptonote/tests/security_warning_tests.rs` covers the password, the
+  clipboard and the export advisories.
+- `cryptonote/tests/security_screen_tests.rs` covers the Security screen.
+- `cryptonote/tests/markdown_tests.rs` keeps the three policy documents in
+  sync.
 
 ## Scope of this document
 

@@ -29,6 +29,9 @@ pub enum Msg {
     ActionOpen,
     ActionScan,
     AboutText,
+    AboutSecurityPrefix,
+    AboutSecuritySuffix,
+    Security,
     AttachFiles,
     RemoveFile,
     ArchiveReady,
@@ -57,7 +60,7 @@ impl I18N for Msg {
             Self::Shared => "Shared!".into(),
             Self::SharedNoteText => "A note sent via Cryptonote".into(),
             Self::ShareAppDesc => {
-                "Cryptonote is a cross-platform, serverless app for encrypted offline notes. Try it:".into()
+                "Cryptonote is a cross-platform app for encrypted notes. Try it:".into()
             }
             Self::EncryptedNote => "Encrypted".into(),
             Self::EncryptedNoteDesc => {
@@ -92,17 +95,19 @@ Cryptonote uses modern cryptographic primitives:
 
 - Password-based key derivation with Argon2id
 - Authenticated encryption for confidentiality and integrity against tampering
-- Nothing is stored on a server, and no data leaves your device unless you explicitly choose to share it
+- Nothing is stored anywhere, and no data leaves your device unless you explicitly choose to share it
 
 What Cryptonote does not do:
 
 - It does not prove who wrote a note. Authenticated encryption detects tampering, not a forged author.
-- It is not anonymous. A shared URL or QR code still travels through mail, chat, or a server.
-- The web build loads from a web server, and the note payload travels in the URL query string, so that server sees it. Plain mode puts the note text in the clear.
+- It is not anonymous. A shared URL or QR code still travels through mail, chat, or wherever you send it.
+- The note travels inside the link itself. Plain mode puts the note text in the clear, so everyone who gets the link can read it.
+- In the web build the note rides in the URL of the address bar, so the browser history and anything else that handles URLs can see it too.
 - A shared link reveals the ciphertext, so a weak password can be cracked offline. Use a long passphrase.
-- Copying text to the clipboard and exporting an unencrypted archive expose the note to other software on the device.
-
-See SECURITY.md for the full threat model.".into(),
+- Copying text to the clipboard and exporting an unencrypted archive expose the note to other software on the device.".into(),
+            Self::AboutSecurityPrefix => "See the ".into(),
+            Self::AboutSecuritySuffix => " screen for the full threat model.".into(),
+            Self::Security => "Security".into(),
             Self::AttachFiles => "Attach files".into(),
             Self::RemoveFile => "Remove".into(),
             Self::ArchiveReady => {
@@ -119,7 +124,7 @@ See SECURITY.md for the full threat model.".into(),
                 "This password is short. Anyone who gets the encrypted note can try every password offline, so use a long one.".into()
             }
             Self::PlainShareWarning => {
-                "This note is not encrypted. The link carries the text in the clear and reaches the server that hosts the page.".into()
+                "This note is not encrypted. Everyone who gets the link can read the text.".into()
             }
             Self::ClipboardPlaintextWarning => {
                 "Copied the decrypted text to the clipboard. Other applications can read it.".into()
@@ -143,7 +148,7 @@ See SECURITY.md for the full threat model.".into(),
             Self::Shared => "¡Compartido!".into(),
             Self::SharedNoteText => "Nota enviada vía Cryptonote".into(),
             Self::ShareAppDesc => {
-                "Cryptonote es una aplicación multiplataforma y sin servidores para notas cifradas sin conexión. Pruébala:".into()
+                "Cryptonote es una aplicación multiplataforma para notas cifradas. Pruébala:".into()
             }
             Self::EncryptedNote => "Nota cifrada".into(),
             Self::EncryptedNoteDesc => {
@@ -162,7 +167,7 @@ See SECURITY.md for the full threat model.".into(),
             Self::ActionOpen => "Abrir nota".into(),
             Self::ActionScan => "Escanear nota".into(),
             Self::Error(e) => e.render_spa(),
-            Self::AboutText => r"Cryptonote es una aplicación multiplataforma para crear, almacenar y compartir notas cifradas. No tiene servidor ni cuenta: toda la criptografía se ejecuta en tu dispositivo o en tu navegador.
+            Self::AboutText => r"Cryptonote es una aplicación multiplataforma para crear, almacenar y compartir notas cifradas. No tiene cuenta ni servicios externos: toda la criptografía se ejecuta en tu dispositivo o en tu navegador.
 
 Con Cryptonote, puedes:
 
@@ -178,17 +183,19 @@ Cryptonote usa primitivas criptográficas modernas:
 
 - Derivación de claves basada en contraseña con Argon2id
 - Cifrado autenticado para confidencialidad e integridad frente a manipulaciones
-- No se guarda nada en un servidor, y ningún dato sale de tu dispositivo a menos que elijas explícitamente compartirlo
+- No se guarda nada en ninguna parte, y ningún dato sale de tu dispositivo a menos que elijas explícitamente compartirlo
 
 Lo que Cryptonote no hace:
 
 - No demuestra quién escribió una nota. El cifrado autenticado detecta manipulaciones, no un autor falsificado.
-- No es anónimo. Una URL o un código QR compartido sigue viajando por correo, chat o un servidor.
-- La versión web se carga desde un servidor web, y el contenido viaja en la cadena de consulta de la URL, así que ese servidor lo ve. El modo sin cifrar pone el texto de la nota en claro.
+- No es anónimo. Una URL o un código QR compartido sigue viajando por correo, chat o donde tú lo envíes.
+- La nota viaja dentro del enlace. El modo sin cifrar pone el texto de la nota en claro, así que cualquiera que reciba el enlace puede leerlo.
+- En la versión web la nota viaja en la URL de la barra de direcciones, así que el historial del navegador y cualquier otro sitio que gestione URLs también pueden verla.
 - Un enlace compartido revela el texto cifrado, así que una contraseña débil se puede descifrar sin conexión. Usa una frase larga.
-- Copiar texto al portapapeles y exportar un archivo sin cifrar exponen la nota a otro software del dispositivo.
-
-Consulta SECURITY.md para el modelo de amenazas completo.".into(),
+- Copiar texto al portapapeles y exportar un archivo sin cifrar exponen la nota a otro software del dispositivo.".into(),
+            Self::AboutSecurityPrefix => "Consulta la pantalla de ".into(),
+            Self::AboutSecuritySuffix => " para el modelo de amenazas completo.".into(),
+            Self::Security => "Seguridad".into(),
             Self::AttachFiles => "Adjuntar archivos".into(),
             Self::RemoveFile => "Eliminar".into(),
             Self::ArchiveReady => {
@@ -207,7 +214,7 @@ Consulta SECURITY.md para el modelo de amenazas completo.".into(),
                 "Esta contraseña es corta. Cualquiera que obtenga la nota cifrada puede probar todas las contraseñas sin conexión, así que usa una larga.".into()
             }
             Self::PlainShareWarning => {
-                "Esta nota no está cifrada. El enlace lleva el texto en claro y llega al servidor que aloja la página.".into()
+                "Esta nota no está cifrada. Cualquiera que reciba el enlace puede leer el texto.".into()
             }
             Self::ClipboardPlaintextWarning => {
                 "Se copió el texto descifrado al portapapeles. Otras aplicaciones pueden leerlo.".into()
@@ -231,7 +238,7 @@ Consulta SECURITY.md para el modelo de amenazas completo.".into(),
             Self::Shared => "Отправлено!".into(),
             Self::SharedNoteText => "Заметка, отправленная через Cryptonote".into(),
             Self::ShareAppDesc => {
-                "Cryptonote - кроссплатформенное бессерверное приложение для зашифрованных офлайн-заметок. Попробуйте:".into()
+                "Cryptonote - кроссплатформенное приложение для зашифрованных заметок. Попробуйте:".into()
             }
             Self::EncryptedNote => "Зашифровано".into(),
             Self::EncryptedNoteDesc => {
@@ -250,7 +257,7 @@ Consulta SECURITY.md para el modelo de amenazas completo.".into(),
             Self::ActionOpen => "Открыть заметку".into(),
             Self::ActionScan => "Сканировать заметку".into(),
             Self::Error(e) => e.render_rus(),
-            Self::AboutText => r"Cryptonote - кроссплатформенное приложение для создания, хранения и обмена зашифрованными заметками. У него нет сервера и нет учётной записи: вся криптография выполняется на вашем устройстве или в браузере.
+            Self::AboutText => r"Cryptonote - кроссплатформенное приложение для создания, хранения и обмена зашифрованными заметками. У него нет учётной записи и внешних сервисов: вся криптография выполняется на вашем устройстве или в браузере.
 
 С Cryptonote вы можете:
 
@@ -266,17 +273,19 @@ Cryptonote использует современные криптографич�
 
 - Деривация ключей из пароля на основе Argon2id
 - Аутентифицированное шифрование обеспечивает конфиденциальность и целостность при проверке на подмену
-- На сервере ничего не хранится, и никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
+- Нигде ничего не хранится, и никакие данные не покидают ваше устройство, пока вы явно не решите ими поделиться
 
 Чего Cryptonote не делает:
 
 - Не доказывает, кто написал заметку. Аутентифицированное шифрование обнаруживает подмену, а не поддельного автора.
-- Не обеспечивает анонимность. Ссылка или QR-код всё равно проходят через почту, чат или сервер.
-- Веб-версия загружается с веб-сервера, а содержимое заметки передаётся в строке запроса URL, поэтому сервер его видит. Режим без шифрования передаёт текст заметки открытым.
+- Не обеспечивает анонимность. Ссылка или QR-код всё равно проходят через почту, чат или куда угодно, куда вы их отправите.
+- Заметка едет внутри ссылки. В режиме без шифрования текст заметки передаётся открытым, поэтому любой, кто получит ссылку, сможет его прочитать.
+- В веб-версии заметка едет в URL из адресной строки, поэтому её видят и история браузера, и всё, что работает с URL.
 - Общая ссылка раскрывает зашифрованный текст, поэтому слабый пароль можно подобрать без подключения к сети. Используйте длинную парольную фразу.
-- Копирование текста в буфер обмена и экспорт незашифрованного архива открывают заметку другому программному обеспечению на устройстве.
-
-Полная модель угроз описана в SECURITY.md.".into(),
+- Копирование текста в буфер обмена и экспорт незашифрованного архива открывают заметку другому программному обеспечению на устройстве.".into(),
+            Self::AboutSecurityPrefix => "Полная модель угроз описана на экране «".into(),
+            Self::AboutSecuritySuffix => "».".into(),
+            Self::Security => "Безопасность".into(),
             Self::AttachFiles => "Прикрепить файлы".into(),
             Self::RemoveFile => "Удалить".into(),
             Self::ArchiveReady => {
@@ -295,7 +304,7 @@ Cryptonote использует современные криптографич�
                 "Этот пароль короткий. Любой, кто получит зашифрованную заметку, может перебрать пароли без подключения к сети, поэтому используйте длинный.".into()
             }
             Self::PlainShareWarning => {
-                "Эта заметка не зашифрована. Ссылка содержит открытый текст и попадает на сервер, на котором размещена страница.".into()
+                "Эта заметка не зашифрована. Любой, кто получит ссылку, сможет прочитать текст.".into()
             }
             Self::ClipboardPlaintextWarning => {
                 "Расшифрованный текст скопирован в буфер обмена. Другие приложения могут его прочитать.".into()

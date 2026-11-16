@@ -548,7 +548,8 @@ impl CryptonoteApp {
             Some(Screen::Privacy) => self.navigate(Screen::Privacy),
             Some(Screen::Donate) => self.navigate(Screen::Donate),
             Some(Screen::About) => self.navigate(Screen::About),
-            Some(Screen::Home | Screen::Open | Screen::View | Screen::Share | Screen::File) | None => {}
+            Some(Screen::Home | Screen::Open | Screen::View | Screen::Share | Screen::Security | Screen::File)
+            | None => {}
         }
     }
 
@@ -659,6 +660,7 @@ impl eframe::App for CryptonoteApp {
                 Screen::Share => self.screen_share(content_ui),
                 Screen::File => self.screen_file(content_ui),
                 Screen::About => self.screen_about(content_ui),
+                Screen::Security => self.screen_security(content_ui),
                 Screen::Donate => self.screen_donate(content_ui),
                 Screen::License => self.screen_license(content_ui),
                 Screen::Privacy => self.screen_privacy(content_ui),

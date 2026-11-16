@@ -16,6 +16,7 @@ pub enum Screen {
     View,
     Share,
     About,
+    Security,
     Donate,
     License,
     Privacy,
@@ -30,6 +31,7 @@ impl RouteMetadata for Screen {
             Self::View => Msg::ViewButton.render(lang).into(),
             Self::Share => Msg::Share.render(lang).into(),
             Self::About => BaseMsg::About.render(lang).into(),
+            Self::Security => Msg::Security.render(lang).into(),
             Self::Donate => BaseMsg::Donate.render(lang).into(),
             Self::License => BaseMsg::License.render(lang).into(),
             Self::Privacy => BaseMsg::PrivacyPolicyTitle.render(lang).into(),
@@ -41,9 +43,14 @@ impl RouteMetadata for Screen {
         match self {
             Self::Home => None,
             Self::File => Some(Self::View),
-            Self::Open | Self::View | Self::Share | Self::About | Self::Donate | Self::License | Self::Privacy => {
-                Some(Self::Home)
-            }
+            Self::Open
+            | Self::View
+            | Self::Share
+            | Self::About
+            | Self::Security
+            | Self::Donate
+            | Self::License
+            | Self::Privacy => Some(Self::Home),
         }
     }
 
@@ -55,6 +62,7 @@ impl RouteMetadata for Screen {
                 Self::Share,
                 Self::File,
                 Self::About,
+                Self::Security,
                 Self::Donate,
                 Self::License,
                 Self::Privacy,
@@ -63,6 +71,7 @@ impl RouteMetadata for Screen {
             | Self::View
             | Self::Share
             | Self::About
+            | Self::Security
             | Self::Donate
             | Self::License
             | Self::Privacy

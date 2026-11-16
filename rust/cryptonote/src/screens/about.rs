@@ -1,16 +1,20 @@
+use std::str::FromStr;
+
 use crate::app::CryptonoteApp;
 use crate::messages::Msg;
 use crate::route::Screen;
 use crate::storage::APP_ATTRS;
-use functora_egui::i18n::I18N;
+use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
-use functora_egui::{Button, ButtonVariant, Flex, TextareaPasteClear};
+use functora_egui::{Button, ButtonVariant, Flex, ShadcnThemeExt, TextareaPasteClear};
 
 impl CryptonoteApp {
     pub(crate) fn screen_about(&mut self, ui: &mut egui::Ui) {
         let lang = self.lang();
         let note = Msg::AboutText.render(lang);
         _ = functora_egui::markdown_view::show(ui, &mut self.md_cache, &note);
+        let () = ui.add_space(12.0);
+        self.security_link(ui, lang);
         let () = ui.add_space(12.0);
         _ = functora_egui::Hypertext::new()
             .text(BaseMsg::AboutAndroidBeta1.render(lang))
@@ -147,6 +151,16 @@ impl CryptonoteApp {
                 ctx.open_url(egui::OpenUrl::new_tab(APP_ATTRS.author_url()));
             }
             if f.add(
+                Button::new(Msg::Security.render(lang))
+                    .icon(functora_egui::LucideIcon::ShieldCheck)
+                    .variant(ButtonVariant::Outline),
+            )
+            .inner
+            .clicked()
+            {
+                self.navigate(Screen::Security);
+            }
+            if f.add(
                 Button::new(BaseMsg::Donate.render(lang))
                     .icon(functora_egui::LucideIcon::Heart)
                     .variant(ButtonVariant::Outline),
@@ -157,5 +171,26 @@ impl CryptonoteApp {
                 self.navigate(Screen::Donate);
             }
         });
+    }
+
+    /// Renders the threat-model sentence with only the word "Security" as a
+    /// link, styled like the other links of the screen.
+    fn security_link(&mut self, ui: &mut egui::Ui, lang: Language) {
+        let theme = ui.ctx().shadcn_theme();
+        let body_size = ui
+            .style()
+            .text_styles
+            .get(&egui::TextStyle::Body)
+            .map_or(13.0, |font| font.size);
+        let (_, action) = functora_egui::Hypertext::new()
+            .text(Msg::AboutSecurityPrefix.render(lang))
+            .action(Msg::Security.render(lang), "security".to_string())
+            .text(Msg::AboutSecuritySuffix.render(lang))
+            .size(body_size)
+            .text_color(theme.foreground)
+            .show_action(ui);
+        if action.as_deref().and_then(|id| Screen::from_str(id).ok()) == Some(Screen::Security) {
+            self.navigate(Screen::Security);
+        }
     }
 }

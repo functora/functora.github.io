@@ -1,6 +1,6 @@
 # Cryptonote
 
-Cryptonote is a cross-platform application for creating, storing, and sharing encrypted notes. It has no backend and no account: all cryptography runs on your device or in your browser, and nothing is stored on a server.
+Cryptonote is a cross-platform application for creating, storing, and sharing encrypted notes. It has no backend and no account: all cryptography runs on your device or in your browser, and nothing is stored anywhere.
 
 With Cryptonote, you can:
 
@@ -16,16 +16,16 @@ Cryptonote uses modern cryptographic primitives:
 
 - Password-based key derivation with Argon2id
 - Authenticated encryption for confidentiality and integrity against tampering
-- Nothing is stored on a server, and no data leaves your device unless you explicitly choose to share it
+- Nothing is stored anywhere, and no data leaves your device unless you explicitly choose to share it
 
 Limits worth knowing:
 
 - Cryptonote does not prove authorship. Authenticated encryption detects tampering, not a forged author.
-- A shared URL still travels through mail, chat, or a server. In the web build the note payload rides in the URL query string, so the host server sees it. Plain mode puts the note text in the clear.
+- A shared link is the note: everyone it reaches can open it. In the web build the note rides inside the URL, so the browser address, the history and anything else that handles URLs can see it. Plain mode puts the note text in the clear, so everyone who gets the link reads it directly.
 - A shared link reveals the ciphertext, so a weak password can be cracked offline. Cryptonote warns about short passwords but never blocks the share.
 - Copying text to the clipboard and exporting an unencrypted archive expose the note to other software on the device.
 
-The full threat model, the guarantees Cryptonote makes, and the security audit that produced them are described in [SECURITY.md](SECURITY.md).
+The full threat model, the guarantees Cryptonote makes, and the security audit that produced them are described in [SECURITY.md](SECURITY.md), with translations in [SECURITY.es.md](SECURITY.es.md) and [SECURITY.ru.md](SECURITY.ru.md). The same document is readable in the app, on the **Security** screen, which the about text links to.
 
 The Cryptonote interface is fully internationalized and currently supports English, Spanish, and Russian.
 
@@ -35,7 +35,7 @@ This crate is built on [egui](https://github.com/emilk/egui) with [functora-egui
 
 - **Widgets**: shadcn/ui-inspired `functora-egui` components (`Button`, `Input`, `Textarea`, `Select`, `Card`, `Alert`, `Progress`, `QrScanner`, etc.) with light/dark theming and responsive mobile/desktop layouts
 - **Routing**: `Screen` enum implements `Routable` + `RouteMetadata` with `AppRouter<Screen, ()>` and `NavHistory`, breadcrumbs, and deep-link handling
-- **Screens**: `Home` (create/open/scan), `Open` (decrypt), `View` (rendered note + attachments), `Share` (QR + URL or archive download), `File` (preview), `About`/`Donate`/`License`/`Privacy`
+- **Screens**: `Home` (create/open/scan), `Open` (decrypt), `View` (rendered note + attachments), `Share` (QR + URL or archive download), `File` (preview), `About`/`Security`/`Donate`/`License`/`Privacy`
 - **Platform**: `functora-egui` abstractions for `clipboard`, `share`, `download`, `files` (pick/cancel/progress), `storage` (persistent theme/language), `deep_link`, `camera`/`qr`, `progress`/`worker`
 
 ## Running

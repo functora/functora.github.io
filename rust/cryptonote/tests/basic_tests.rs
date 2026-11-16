@@ -14,6 +14,7 @@ fn screen_roundtrip() {
         Screen::View,
         Screen::Share,
         Screen::About,
+        Screen::Security,
         Screen::Donate,
         Screen::License,
         Screen::Privacy,
@@ -45,6 +46,7 @@ fn route_metadata_children() {
     assert!(children.contains(&Screen::Share));
     assert!(children.contains(&Screen::File));
     assert!(children.contains(&Screen::About));
+    assert!(children.contains(&Screen::Security));
 }
 
 #[test]
@@ -55,6 +57,7 @@ fn route_label() {
     assert_eq!(Screen::Share.label(Language::Eng).as_ref(), "Share");
     assert_eq!(Screen::File.label(Language::Eng).as_ref(), "File");
     assert_eq!(Screen::About.label(Language::Eng).as_ref(), "About");
+    assert_eq!(Screen::Security.label(Language::Eng).as_ref(), "Security");
     assert_eq!(Screen::Donate.label(Language::Eng).as_ref(), "Donate");
     assert_eq!(Screen::License.label(Language::Eng).as_ref(), "License");
     assert_eq!(Screen::Privacy.label(Language::Eng).as_ref(), "Privacy Policy");
@@ -64,6 +67,7 @@ fn route_label() {
         Screen::View,
         Screen::Share,
         Screen::About,
+        Screen::Security,
         Screen::Donate,
         Screen::License,
         Screen::Privacy,

@@ -259,6 +259,7 @@
                 (./. + "/${app}/desktop/.gitignore")
                 ./cryptonote/desktop/.gitignore
                 ./functora-egui-demo/desktop/.gitignore
+                (pkgs.lib.fileset.fileFilter (file: file.type == "regular" && pkgs.lib.hasPrefix "SECURITY" file.name && file.hasExt "md") (./. + "/${app}"))
                 ./functora-egui/Cargo.toml
                 ./functora-egui/src
                 ./functora-egui/templates

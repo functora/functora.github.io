@@ -226,6 +226,12 @@
         flashlight = "";
       }
       // mkDoom {
+        tag = "cod";
+        total = mkCod ../bak/doom/DBP_77.wad;
+        liquid = ltp701;
+        nashgore = ../bak/doom/nashgore.pk3;
+      }
+      // mkDoom {
         tag = "qcde";
         pkg = "${qz}/bin/q-zandronum";
         cfg = ../cfg/doom-qcde.cfg;

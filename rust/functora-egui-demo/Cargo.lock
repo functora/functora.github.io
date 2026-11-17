@@ -1660,7 +1660,7 @@ dependencies = [
 
 [[package]]
 name = "functora-egui-demo"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "android-activity",
  "base64 0.22.1",

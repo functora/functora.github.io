@@ -1,10 +1,12 @@
 [package]
 name = "functora-cfg"
 license = "MIT"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
+authors = ["Functora <functora@proton.me>"]
 keywords = ["config", "configuration", "settings", "env", "environment"]
 categories = ["config"]
+homepage = "https://github.com/functora/functora.github.io/tree/master/rust/functora-cfg"
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-cfg"
 documentation = "https://docs.rs/functora-cfg"
 description = "A Rust library that merges configuration values from multiple sources into a single typed value."
@@ -12,7 +14,7 @@ description = "A Rust library that merges configuration values from multiple sou
 [dependencies]
 clap = "4.5.50"
 config = "0.15.18"
-functora = { version = "0.2.0", path = "../functora" }
+functora = { version = "0.2.1", path = "../functora" }
 serde = { version = "1.0.228", features = ["derive"] }
 tap = "1.0.1"
 toml = "0.9.8"

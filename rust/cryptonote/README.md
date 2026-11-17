@@ -50,6 +50,16 @@ cargo build --target wasm32-unknown-unknown
 release-desktop-cryptonote
 # AppImages need FUSE (e.g. libfuse2 on Debian/Ubuntu);
 # without FUSE, run the AppImage with --appimage-extract-and-run
-# desktop Linux via nix (from rust/, default flake output)
-nix run .#cryptonote
 ```
+
+## Nix distribution
+
+```sh
+# Local repository flake (run from rust/)
+nix run .#cryptonote
+
+# Remote flake
+nix run github:functora/functora.github.io?dir=rust#cryptonote
+```
+
+**Strongly recommended:** run Cryptonote in a fully offline [Nixpak](https://github.com/nixpak/nixpak) sandbox using the repository's [`bubble.nix`](https://github.com/functora/functora.github.io/blob/master/nix/bubble.nix) pattern to restrict filesystem access and isolate execution.

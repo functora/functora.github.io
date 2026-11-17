@@ -6,15 +6,11 @@
 
 ## Quick start
 
-`functora-egui` is not published to crates.io yet, so depend on the path in
-this repository (or point `git` at the same path):
+`functora-egui` is available on crates.io:
 
 ```toml
 [dependencies]
-functora-egui = { path = "rust/functora-egui" }
-
-# Or from git:
-# functora-egui = { git = "https://github.com/functora/functora.github.io", path = "rust/functora-egui" }
+functora-egui = "0.4.0"
 ```
 
 ```rust
@@ -108,6 +104,8 @@ theming and responsive mobile behavior. Run it locally:
 cd functora-egui-demo
 cargo run
 ```
+
+`functora-egui` is a library crate and does not install a desktop application. For the demo's Linux distribution options, see its [README](https://github.com/functora/functora.github.io/blob/master/rust/functora-egui-demo/README.md).
 
 ## License
 

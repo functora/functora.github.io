@@ -1,10 +1,12 @@
 [package]
 name = "functora-core"
 license = "MIT"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2024"
+authors = ["Functora <functora@proton.me>"]
 keywords = ["crypto", "archive", "encoding", "i18n", "utility"]
 categories = ["cryptography", "compression", "encoding", "internationalization", "rust-patterns"]
+homepage = "https://github.com/functora/functora.github.io/tree/master/rust/functora-core"
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-core"
 documentation = "https://docs.rs/functora-core"
 description = "Pure Rust core logic: crypto, archives, encoding, i18n, and utilities."

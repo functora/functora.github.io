@@ -1,10 +1,12 @@
 [package]
 name = "functora-tagged"
 license = "MIT"
-version = "0.2.10"
+version = "0.2.11"
 edition = "2024"
+authors = ["Functora <functora@proton.me>"]
 keywords = ["derive", "tagged", "newtype", "refinement"]
 categories = ["data-structures", "rust-patterns"]
+homepage = "https://github.com/functora/functora.github.io/tree/master/rust/functora-tagged"
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-tagged"
 documentation = "https://docs.rs/functora-tagged"
 description = "Lightweight, macro-free newtypes with refinement and derived traits."
@@ -23,7 +25,7 @@ serde = ["dep:serde"]
 
 [dev-dependencies]
 diesel = { version = "2.3.14", features = ["sqlite"] }
-functora = { version = "0.2.0", path = "../functora" }
+functora = { version = "0.2.1", path = "../functora" }
 libsqlite3-sys = { version = "0.39.0", features = ["bundled"] }
 num-traits = "0.2.19"
 rust_decimal = { version = "1.36.0", features = ["maths"] }

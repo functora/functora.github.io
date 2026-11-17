@@ -244,7 +244,7 @@ version = "0.2.1"
 
 [[package]]
 name = "functora-tagged"
-version = "0.2.10"
+version = "0.2.11"
 dependencies = [
  "derive_more",
  "diesel",

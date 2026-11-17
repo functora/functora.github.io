@@ -1,5 +1,5 @@
 {
-  description = "Rust Dev Shell";
+  description = "Functora Rust development environment and desktop applications";
 
   inputs = {
     stable.url = "github:nixos/nixpkgs?ref=nixos-26.05";
@@ -241,45 +241,15 @@
               exec ${rustToolchain}/bin/cargo run --release -- "$@"
             '';
           };
-        mkEguiDesktop = app: let
-          manifest = builtins.fromTOML (builtins.readFile (./. + "/${app}/Cargo.toml"));
+        sourceRoot = self.outPath;
+        mkDesktopPackage = app: let
+          manifest = builtins.fromTOML (builtins.readFile (sourceRoot + "/${app}/Cargo.toml"));
         in
           pkgs.rustPlatform.buildRustPackage {
             pname = app;
             version = manifest.package.version;
-            src = pkgs.lib.fileset.toSource {
-              root = ./.;
-              fileset = pkgs.lib.fileset.unions [
-                (./. + "/${app}/Cargo.toml")
-                (./. + "/${app}/Cargo.lock")
-                (./. + "/${app}/build.rs")
-                (./. + "/${app}/src")
-                (./. + "/${app}/tests")
-                (./. + "/${app}/assets")
-                (./. + "/${app}/desktop/.gitignore")
-                ./cryptonote/desktop/.gitignore
-                ./functora-egui-demo/desktop/.gitignore
-                (pkgs.lib.fileset.fileFilter (file: file.type == "regular" && pkgs.lib.hasPrefix "SECURITY" file.name && file.hasExt "md") (./. + "/${app}"))
-                ./functora-egui/Cargo.toml
-                ./functora-egui/src
-                ./functora-egui/templates
-                ./functora-egui/assets
-                ./functora-core/Cargo.toml
-                ./functora-core/build.rs
-                ./functora-core/src
-                ./functora/Cargo.toml
-                ./functora/README.md
-                ./functora/src
-                ./functora-tagged/Cargo.toml
-                ./functora-tagged/README.md
-                ./functora-tagged/src
-                ./egui-winit/Cargo.toml
-                ./egui-winit/src
-                ./functora-egui-winit/Cargo.toml
-                ./functora-egui-winit/src
-              ];
-            };
-            cargoLock.lockFile = ./. + "/${app}/Cargo.lock";
+            src = sourceRoot;
+            cargoLock.lockFile = sourceRoot + "/${app}/Cargo.lock";
             cargoRoot = app;
             buildAndTestSubdir = app;
             nativeBuildInputs = with pkgs; [
@@ -334,6 +304,10 @@
               platforms = platforms.linux;
             };
           };
+        desktopPackages = {
+          cryptonote = mkDesktopPackage "cryptonote";
+          functora-egui-demo = mkDesktopPackage "functora-egui-demo";
+        };
         mkFunctoraEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
@@ -753,10 +727,24 @@
         };
       in {
         devShells.default = pkgs.mkShell shell;
-        packages = {
-          cryptonote = mkEguiDesktop "cryptonote";
-          functora-egui-demo = mkEguiDesktop "functora-egui-demo";
+        packages = desktopPackages // {
           default = self.packages.${system}.cryptonote;
+        };
+        apps = {
+          cryptonote = {
+            type = "app";
+            program = "${desktopPackages.cryptonote}/bin/cryptonote";
+            meta.description = "Cryptonote desktop application";
+          };
+          functora-egui-demo = {
+            type = "app";
+            program = "${desktopPackages.functora-egui-demo}/bin/functora-egui-demo";
+            meta.description = "Functora Egui Demo desktop application";
+          };
+        };
+        checks = {
+          cryptonote = desktopPackages.cryptonote;
+          functora-egui-demo = desktopPackages.functora-egui-demo;
         };
       }
     );

@@ -1,11 +1,13 @@
 [package]
 name = "functora-egui"
-version = "0.3.1"
+version = "0.4.0"
 edition = "2024"
+authors = ["Functora <functora@proton.me>"]
 description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 70+ more components with light/dark theming"
 license = "MIT"
 keywords = ["egui", "ui", "widgets", "shadcn", "gui"]
 categories = ["gui", "rendering"]
+homepage = "https://github.com/functora/functora.github.io/tree/master/rust/functora-egui"
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/functora-egui"
 documentation = "https://docs.rs/functora-egui"
 
@@ -15,7 +17,7 @@ egui_extras = { version = "0.37.0", default-features = false, optional = true }
 egui_flex = "0.9"
 log = "0.4"
 num-traits = "0.2"
-functora-core = { version = "0.3.1", path = "../functora-core", default-features = false }
+functora-core = { version = "0.4.0", path = "../functora-core", default-features = false }
  serde = { version = "1.0", features = ["derive"] }
  serde_json = "1.0"
  base64 = "0.22"

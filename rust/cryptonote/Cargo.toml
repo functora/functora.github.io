@@ -6,6 +6,7 @@ description = "Cryptonote is a cross-platform app for encrypted notes."
 license = "MIT"
 keywords = ["egui", "crypto", "notes", "encryption", "offline"]
 categories = ["cryptography", "gui"]
+homepage = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote"
 repository = "https://github.com/functora/functora.github.io/tree/master/rust/cryptonote"
 documentation = "https://docs.rs/cryptonote"
 authors = ["Functora <functora@proton.me>"]
@@ -24,9 +25,9 @@ eframe = { version = "0.37.0", default-features = false, features = [
     "android-game-activity",
 ] }
 egui = "0.37.0"
-functora-egui = { version = "0.3.1", path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
-functora-core = { version = "0.3.1", path = "../functora-core" }
-functora-tagged = { version = "0.2.10", path = "../functora-tagged" }
+functora-egui = { version = "0.4.0", path = "../functora-egui", features = ["web", "android", "desktop", "qr", "camera", "images", "markdown"] }
+functora-core = { version = "0.4.0", path = "../functora-core" }
+functora-tagged = { version = "0.2.11", path = "../functora-tagged" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 base64 = "0.22"
@@ -76,7 +77,7 @@ mime_types = "application/x-cryptonote;"
 developer = "Functora"
 
 [build-dependencies]
-functora-egui = { version = "0.3.1", path = "../functora-egui", features = ["build"] }
+functora-egui = { version = "0.4.0", path = "../functora-egui", features = ["build"] }
 
 [patch.crates-io]
 egui-winit = { path = "../egui-winit" }

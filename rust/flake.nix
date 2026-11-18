@@ -6,6 +6,10 @@
     unstable.url = "github:nixos/nixpkgs?ref=nixpkgs-unstable";
     rust-overlay.url = "github:oxalica/rust-overlay";
     flake-utils.url = "github:numtide/flake-utils";
+    nix-bundlers = {
+      url = "github:NixOS/bundlers";
+      inputs.nixpkgs.follows = "stable";
+    };
   };
 
   outputs = {
@@ -14,6 +18,7 @@
     unstable,
     rust-overlay,
     flake-utils,
+    nix-bundlers,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -56,14 +61,30 @@
             nativeCheckInputs = [nodejs_latest];
             doCheck = false;
           };
-        appimage-runtime-x86_64 = pkgs.fetchurl {
-          url = "https://github.com/AppImage/type2-runtime/releases/download/20251108/runtime-x86_64";
-          hash = "sha256-L8qLRDySUQ8Ug6iD9gBhrQm0a5eLJjHIB82HOkfsJg0=";
-        };
         gtk3-schemas = pkgs.runCommand "gtk3-schemas" { } ''
           mkdir -p "$out/glib-2.0/schemas"
           cp -r ${pkgs.gtk3}/share/gsettings-schemas/*/glib-2.0/schemas/. "$out/glib-2.0/schemas/"
         '';
+        mkNixBundle = installable:
+          let
+            program =
+              if installable.type == "app" then
+                installable.program
+              else
+                pkgs.lib.getExe installable;
+            app = builtins.unsafeDiscardStringContext (builtins.baseNameOf program);
+            target =
+              if pkgs.lib.hasAttr app desktopBundleRuntimes then
+                desktopBundleRuntimes.${app}
+              else
+                {
+                  type = "derivation";
+                  outPath = builtins.dirOf (builtins.dirOf program);
+                  pname = app;
+                  meta.mainProgram = app;
+                };
+          in
+          nix-bundlers.bundlers.${system}.toArx target;
         android-sdk-args = {
           platformVersions = ["34" "35"];
           buildToolsVersions = ["34.0.0" "35.0.0"];
@@ -171,65 +192,48 @@
               PYEOF
             '';
           };
-        mkFunctoraEguiDesktop = app: icons:
-          pkgs.writeShellApplication rec {
+        mkFunctoraEguiDesktop = app:
+          let
+            manifest = builtins.fromTOML (builtins.readFile (sourceRoot + "/${app}/Cargo.toml"));
+          in
+          pkgs.writeShellApplication {
             name = "release-desktop-${app}";
-            runtimeInputs = with pkgs; [coreutils gnugrep gnused squashfsTools patchelf linuxdeploy desktop-file-utils appstream];
+            runtimeInputs = with pkgs; [coreutils nixVersions.nix_2_34];
             text = ''
-              (
-                cd "${app}"
-                VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
-                OUT="../target/desktop-release"
-                IMG="$OUT/${app}-v$VSN-x86_64.AppImage"
-                if [ -f "$IMG" ]
-                then
-                  echo "$IMG does already exist!"
-                  exit 1
-                else
-                  mkdir -p "$OUT"
-                fi
-                ${rustToolchain}/bin/cargo build --release
-                DESKTOP="$(echo desktop/linux/*.desktop)"
-                APPID="$(basename "$DESKTOP" .desktop)"
-                desktop-file-validate "$DESKTOP"
-                appstreamcli validate --no-net desktop/metainfo/*.metainfo.xml
-                rm -rf "$OUT/AppDir"
-                mkdir -p "$OUT/AppDir/usr/bin" "$OUT/AppDir/usr/share/metainfo" \
-                  "$OUT/AppDir/usr/share/glib-2.0/schemas" "$OUT/AppDir/usr/share/icons"
-                cp "../target/release/${app}" "$OUT/AppDir/usr/bin/${app}"
-                cp "$DESKTOP" "$OUT/AppDir/$APPID.desktop"
-                cp "${icons}/android-chrome-512x512.png" "$OUT/AppDir/$APPID.png"
-                cp "$OUT/AppDir/$APPID.png" "$OUT/AppDir/.DirIcon"
-                cp desktop/metainfo/*.metainfo.xml "$OUT/AppDir/usr/share/metainfo/$APPID.metainfo.xml"
-                cp -R desktop/icons/hicolor "$OUT/AppDir/usr/share/icons/"
-                cp -r "${gtk3-schemas}/glib-2.0/schemas/." "$OUT/AppDir/usr/share/glib-2.0/schemas/"
-                cp -R "${pkgs.adwaita-icon-theme}/share/icons/Adwaita" "$OUT/AppDir/usr/share/icons/"
-                APPDIR="$PWD/$OUT/AppDir"
-                linuxdeploy --appdir "$APPDIR" \
-                  -d "$APPDIR/$APPID.desktop" \
-                  -i "$APPDIR/$APPID.png" \
-                  -e "$APPDIR/usr/bin/${app}"
-                printf '%s\n' \
-                  "#!/bin/sh" \
-                  "HERE=\"\$(dirname \"\$(readlink -f \"\$0\")\")\"" \
-                  "export GSETTINGS_SCHEMA_DIR=\"\$HERE/usr/share/glib-2.0/schemas\"" \
-                  "export XDG_DATA_DIRS=\"\$HERE/usr/share:/usr/local/share:/usr/share\"" \
-                  "export LD_LIBRARY_PATH=\"\$HERE/usr/lib:\$LD_LIBRARY_PATH\"" \
-                  "exec \"\$HERE/usr/bin/${app}\" \"\$@\"" \
-                  > "$APPDIR/AppRun"
-                chmod +x "$APPDIR/AppRun"
-                mksquashfs "$OUT/AppDir" "$OUT/payload.squashfs" -root-owned -noappend -comp zstd
-                cat "${appimage-runtime-x86_64}" "$OUT/payload.squashfs" > "$IMG"
-                chmod +x "$IMG"
-                rm -f "$OUT/payload.squashfs"
-                [ -x "$IMG" ] || {
-                  echo "AppImage was not produced!"
-                  exit 1
-                }
-                echo "READY: ${app}/$IMG"
-                echo "Run it with: $IMG"
-                echo "Note: running AppImages requires FUSE (e.g. libfuse2 on Debian/Ubuntu); without FUSE use: $IMG --appimage-extract-and-run"
-              )
+              if [ ! -f flake.nix ]; then
+                echo "Run release-desktop-${app} from the rust/ flake directory." >&2
+                exit 1
+              fi
+
+              OUT="''${1:-target/desktop-release}"
+              ARTIFACT="$OUT/${app}-v${manifest.package.version}-${system}.arx"
+              BUNDLE="$OUT/.${app}-v${manifest.package.version}-${system}.arx"
+
+              if [ -e "$ARTIFACT" ] || [ -L "$ARTIFACT" ]; then
+                echo "$ARTIFACT already exists!" >&2
+                exit 1
+              fi
+              if [ -e "$BUNDLE" ] || [ -L "$BUNDLE" ]; then
+                echo "$BUNDLE already exists!" >&2
+                exit 1
+              fi
+
+              mkdir -p "$OUT"
+              trap 'rm -f -- "$BUNDLE"' EXIT
+              nix --extra-experimental-features "nix-command flakes" bundle \
+                --no-write-lock-file \
+                --bundler .# \
+                --out-link "$BUNDLE" \
+                ".#${app}"
+              cp --dereference --preserve=mode "$BUNDLE" "$ARTIFACT"
+              chmod +x "$ARTIFACT"
+              trap - EXIT
+              rm -f -- "$BUNDLE"
+              test -x "$ARTIFACT"
+
+              echo "READY: $ARTIFACT"
+              echo "Run it with: $ARTIFACT"
+              echo "ARX bundles require Linux unprivileged user namespaces."
             '';
           };
         srFunctoraEguiDesktop = app:
@@ -308,6 +312,124 @@
           cryptonote = mkDesktopPackage "cryptonote";
           functora-egui-demo = mkDesktopPackage "functora-egui-demo";
         };
+        mkDesktopBundleRuntime = app: package:
+          let
+            mesa = pkgs.mesa;
+          in
+          pkgs.runCommand "${app}-bundle-runtime" {
+            nativeBuildInputs = [pkgs.makeWrapper];
+            propagatedBuildInputs = [mesa];
+            passthru = {
+              pname = app;
+              version = package.version;
+            };
+            meta.mainProgram = app;
+          } ''
+            mkdir -p "$out/bin" "$out/share/glvnd/glx_vendor.d"
+            cat > "$out/share/glvnd/glx_vendor.d/50_mesa.json" <<EOF
+            {
+              "file_format_version": "1.0.0",
+              "ICD": {
+                "library_path": "${mesa}/lib/libGLX_mesa.so.0"
+              }
+            }
+            EOF
+            makeWrapper ${package}/bin/${app} "$out/bin/${app}" \
+              --prefix LD_LIBRARY_PATH : "${mesa}/lib" \
+              --set __EGL_VENDOR_LIBRARY_FILENAMES "${mesa}/share/glvnd/egl_vendor.d/50_mesa.json" \
+              --set __GLX_VENDOR_LIBRARY_FILENAMES "$out/share/glvnd/glx_vendor.d/50_mesa.json" \
+              --set LIBGL_DRIVERS_PATH "${mesa}/lib/dri"
+            chmod +x "$out/bin/${app}"
+            touch "$out"
+          '';
+        desktopBundleRuntimes = pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          cryptonote = mkDesktopBundleRuntime "cryptonote" desktopPackages.cryptonote;
+          functora-egui-demo = mkDesktopBundleRuntime "functora-egui-demo" desktopPackages.functora-egui-demo;
+        };
+        desktopApps = {
+          cryptonote = {
+            type = "app";
+            program = "${desktopPackages.cryptonote}/bin/cryptonote";
+            meta.description = "Cryptonote desktop application";
+          };
+          functora-egui-demo = {
+            type = "app";
+            program = "${desktopPackages.functora-egui-demo}/bin/functora-egui-demo";
+            meta.description = "Functora Egui Demo desktop application";
+          };
+        };
+        desktopBundles = pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          cryptonote = mkNixBundle desktopApps.cryptonote;
+          functora-egui-demo = mkNixBundle desktopApps.functora-egui-demo;
+        };
+        desktopBundleCheck = app: bundle: runtime:
+          let
+            mesa = pkgs.mesa;
+          in
+          pkgs.runCommand "${app}-bundle-check" {
+            nativeBuildInputs = [
+              pkgs.bzip2
+              pkgs.coreutils
+              pkgs.findutils
+              pkgs.gnugrep
+              pkgs.gnused
+              pkgs.gnutar
+              pkgs.jq
+            ];
+          } ''
+            test -s "${bundle}"
+            test -x "${bundle}"
+            test "$(head -n 1 "${bundle}")" = "#!/bin/sh"
+
+            extraction="$TMPDIR/arx-check"
+            mkdir -p "$extraction"
+            cd "$extraction"
+            "${bundle}" --extract
+
+            store="$extraction/dat/nix/store"
+            test -d "$store"
+
+            egl_manifest="$extraction/dat${mesa}/share/glvnd/egl_vendor.d/50_mesa.json"
+            glx_manifest="$extraction/dat${runtime}/share/glvnd/glx_vendor.d/50_mesa.json"
+            test -f "$egl_manifest" || {
+              echo "Missing bundled EGL vendor manifest: $egl_manifest" >&2
+              exit 1
+            }
+            test -f "$glx_manifest" || {
+              echo "Missing bundled GLX vendor manifest: $glx_manifest" >&2
+              exit 1
+            }
+
+            egl_library="$(jq -er '.ICD.library_path' "$egl_manifest")"
+            glx_library="$(jq -er '.ICD.library_path' "$glx_manifest")"
+            test "$egl_library" = "${mesa}/lib/libEGL_mesa.so.0"
+            test "$glx_library" = "${mesa}/lib/libGLX_mesa.so.0"
+            test -e "$extraction/dat$egl_library"
+            test -e "$extraction/dat$glx_library"
+
+            dri_dir="$extraction/dat${mesa}/lib/dri"
+            test -d "$dri_dir" || {
+              echo "Missing bundled Mesa DRI drivers: $dri_dir" >&2
+              exit 1
+            }
+            test -n "$(find "$dri_dir" -maxdepth 1 \( -type f -o -type l \) -name '*_dri.so' -print -quit)" || {
+              echo "No bundled Mesa DRI drivers found in $dri_dir" >&2
+              exit 1
+            }
+
+            wrapper="$(find "$store" -path "*/bin/${app}" -type f -exec grep -l '__EGL_VENDOR_LIBRARY_FILENAMES' {} \; -quit)"
+            test -n "$wrapper" || {
+              echo "Missing Mesa-aware bundle wrapper for $app" >&2
+              exit 1
+            }
+
+            grep -F '__EGL_VENDOR_LIBRARY_FILENAMES' "$wrapper" | grep -F "${mesa}/share/glvnd/egl_vendor.d/50_mesa.json"
+            grep -F '__GLX_VENDOR_LIBRARY_FILENAMES' "$wrapper" | grep -F "${runtime}/share/glvnd/glx_vendor.d/50_mesa.json"
+            grep -F 'LIBGL_DRIVERS_PATH' "$wrapper" | grep -F "${mesa}/lib/dri"
+            grep -F 'LD_LIBRARY_PATH' "$wrapper" | grep -F "${mesa}/lib"
+
+            touch "$out"
+          '';
         mkFunctoraEguiAab = app: icons: let
           abis = {
             "aarch64-linux-android" = "arm64-v8a";
@@ -583,7 +705,6 @@
               curl
               wget
               zlib
-              fuse
               file
               gcc
               # android
@@ -606,12 +727,10 @@
               # apps
               (mkFunctoraEguiWeb "cryptonote" "assets/favicon")
               (srFunctoraEguiWeb "cryptonote" "assets/favicon")
-              (mkFunctoraEguiDesktop "cryptonote" "assets/favicon")
               (srFunctoraEguiDesktop "cryptonote")
               (mkApk "cryptonote" "./cryptonote/android/app/build/outputs/bundle/release" releaseAabCryptonote)
               (mkFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiWeb "functora-egui-demo" "assets/favicon")
-              (mkFunctoraEguiDesktop "functora-egui-demo" "assets/favicon")
               (srFunctoraEguiDesktop "functora-egui-demo")
               (mkApk "functora-egui-demo" "./functora-egui-demo/android/app/build/outputs/bundle/release" releaseAabFunctoraEguiDemo)
               (pkgs.writeShellApplication {
@@ -722,29 +841,32 @@
                 '';
               })
             ]
+            ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [
+              (mkFunctoraEguiDesktop "cryptonote")
+              (mkFunctoraEguiDesktop "functora-egui-demo")
+            ]
             ++ [releaseAabCryptonote]
             ++ [releaseAabFunctoraEguiDemo];
         };
       in {
         devShells.default = pkgs.mkShell shell;
         packages = desktopPackages // {
-          default = self.packages.${system}.cryptonote;
+          default = desktopPackages.cryptonote;
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          cryptonote-bundle = desktopBundles.cryptonote;
+          functora-egui-demo-bundle = desktopBundles.functora-egui-demo;
         };
-        apps = {
-          cryptonote = {
-            type = "app";
-            program = "${desktopPackages.cryptonote}/bin/cryptonote";
-            meta.description = "Cryptonote desktop application";
-          };
-          functora-egui-demo = {
-            type = "app";
-            program = "${desktopPackages.functora-egui-demo}/bin/functora-egui-demo";
-            meta.description = "Functora Egui Demo desktop application";
-          };
+        apps = desktopApps;
+        bundlers = pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          default = mkNixBundle;
+          toArx = mkNixBundle;
         };
         checks = {
           cryptonote = desktopPackages.cryptonote;
           functora-egui-demo = desktopPackages.functora-egui-demo;
+        } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
+          cryptonote-bundle = desktopBundleCheck "cryptonote" desktopBundles.cryptonote desktopBundleRuntimes.cryptonote;
+          functora-egui-demo-bundle = desktopBundleCheck "functora-egui-demo" desktopBundles.functora-egui-demo desktopBundleRuntimes.functora-egui-demo;
         };
       }
     );

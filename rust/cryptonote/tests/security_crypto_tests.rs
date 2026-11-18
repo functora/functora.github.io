@@ -7,7 +7,7 @@ use cryptonote::crypto::CipherType;
 use cryptonote::encoding::{NoteData, build_url, decode_note, extract_note_param};
 use functora_tagged::InfallibleInto;
 
-const BASE_URL: &str = "https://functora.github.io/apps/cryptonote/0.2.0/?screen=open";
+const BASE_URL: &str = "https://functora.github.io/apps/cryptonote/0.2.1/?screen=open";
 const PLAINTEXT: &str = "the quick brown fox jumps over the lazy dog";
 const PASSWORD: &str = "correct horse battery staple";
 

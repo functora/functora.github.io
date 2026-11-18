@@ -1,6 +1,6 @@
 [package]
 name = "functora-egui"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 authors = ["Functora <functora@proton.me>"]
 description = "shadcn/ui-inspired widget library for egui - buttons, inputs, selects, dialogs, and 70+ more components with light/dark theming"

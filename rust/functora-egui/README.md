@@ -10,7 +10,7 @@
 
 ```toml
 [dependencies]
-functora-egui = "0.4.0"
+functora-egui = "0.4.1"
 ```
 
 ```rust

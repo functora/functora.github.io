@@ -1,8 +1,22 @@
+## Agent Boundary: Local Code and Documents Only
+
+- **The agent may edit local source code, documentation, tests, configuration, and local build artifacts when requested. It must never mutate remote state.**
+- **The agent must never publish, upload, deploy, release, submit, register, or otherwise expose anything to any external system.** This includes crates.io, every other package registry, Git repositories and forge APIs, container registries, artifact stores, cloud services, app stores, CI/CD systems, and any similar destination.
+- **Never invoke an upload-capable command, even if it is expected to fail, is being used to test credentials, or is exposed through a script or Nix app.** Forbidden examples include `cargo publish` without `--dry-run`, `cargo yank`, `npm publish`, `twine upload`, `gem push`, `docker push`, `oras push`, `nix flake publish`, `gh release create`, and equivalent commands from other tools.
+- Never use a registry or repository API with a write operation, including `POST`, `PUT`, `PATCH`, `DELETE`, or equivalent actions. This includes creating or changing issues, pull requests, reviews, comments, discussions, wiki pages, releases, tags, branches, packages, repository settings, and other remote resources.
+- Never upload release artifacts to GitHub Releases, Git LFS, package registries, Google Play, Apple App Store, artifact buckets, or any other remote destination.
+- Never run `cargo login`, `npm login`, or any other command that creates or changes registry credentials. Never pass credentials to a command that can write remote state.
+- Read-only remote inspection is allowed only when it is necessary to understand the task or verify prepared release state. It must not create or update any remote resource.
+- When asked to release or publish, prepare the release locally: update versions and documentation, synchronize lockfiles, build and test artifacts, run non-mutating package or dry-run checks, verify the final diff, and provide the exact commands the user can run manually. Stop before every remote write.
+- Words such as "continue", "finish", "prepare for release", "verify publishing", or "test publishing" never authorize a publication or any other remote mutation. Only the human user performs remote publication.
+- If a command's remote behavior is uncertain, assume that it may publish and do not run it. Inspect local scripts and flake applications before invoking release-related commands.
+
 ## Git
 
-- **Git history and working tree are strictly read-only.**
+- **Git history, refs, index, remotes, and the user's existing work are strictly read-only.**
+- The agent may create or edit local files as requested, but must never discard, overwrite, or rewrite unrelated user work.
 - **NEVER commit, amend, push, or create pull requests.** The user reviews all changes and commits them manually. Leave the working tree dirty for review.
-- **NEVER mutate history or the working tree.** Do not run `git commit`, `git amend`/`--amend`, `git push`, `git pull`, `git reset`, `git checkout`/`switch`/`restore`, `git branch`/`tag`, `git stash`, `git merge`/`rebase`/`cherry-pick`/`revert`, or any other command that creates, rewrites, or discards commits, branches, or files.
+- **NEVER mutate Git history, refs, the index, remotes, or the user's work.** Do not run `git commit`, `git amend`/`--amend`, `git push`, `git pull`, `git fetch`, `git add`, `git reset`, `git checkout`/`switch`/`restore`, `git branch`/`tag`, `git stash`, `git merge`/`rebase`/`cherry-pick`/`revert`, `git remote add`/`remove`/`set-url`, or any other command that creates, rewrites, transfers, or discards commits, branches, refs, index entries, remotes, or files.
 - Only read-only inspection is allowed: `git status`, `git diff`, `git log`, `git show`, `git ls-files`, `git diff --stat`, etc. Use these to review the current state and verify only intended files were changed.
 
 ## Coding Guidelines

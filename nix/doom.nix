@@ -227,9 +227,11 @@
       }
       // mkDoom {
         tag = "cod";
-        total = mkCod ../bak/doom/DBP_77.wad;
+        dec = "";
+        total = mkCod ../bak/doom/DBP68_RC1.4.wad;
+        music = ../bak/doom/synth.pk3;
         liquid = ltp701;
-        nashgore = ../bak/doom/nashgore.pk3;
+        relite = ../bak/doom/relite_0.5a.pk3;
       }
       // mkDoom {
         tag = "qcde";

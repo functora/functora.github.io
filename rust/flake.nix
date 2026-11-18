@@ -86,8 +86,8 @@
           in
           nix-bundlers.bundlers.${system}.toArx target;
         android-sdk-args = {
-          platformVersions = ["34" "35"];
-          buildToolsVersions = ["34.0.0" "35.0.0"];
+          platformVersions = ["34" "35" "36"];
+          buildToolsVersions = ["34.0.0" "35.0.0" "36.0.0"];
           abiVersions = ["armeabi-v7a" "arm64-v8a" "x86" "x86_64"];
           systemImageTypes = ["default" "google_apis_playstore"];
           includeNDK = true;
@@ -474,7 +474,7 @@
           '';
           bundleCmd = ''
             export ANDROID_HOME="${android-sdk}/libexec/android-sdk"
-            export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
+            export GRADLE_OPTS="-Djava.net.preferIPv4Stack=true -Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/36.0.0/aapt2"
             (cd android && gradle bundleRelease)
             OUT="android/app/build/outputs/bundle/release"
             cp "$OUT/app-release.aab" "$OUT/${app}-v$VSN.aab"
@@ -571,7 +571,7 @@
               VSN="$(cd "${app}" && grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
               DIR="''${1:-${aabDir}}"
 
-              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2"
+              export BUNDLETOOL_AAPT2_PATH="${android-sdk}/libexec/android-sdk/build-tools/36.0.0/aapt2"
               export JAVA_TOOL_OPTIONS="-Daapt2Path=$BUNDLETOOL_AAPT2_PATH"
               export BUNDLETOOL_AAPT2="$BUNDLETOOL_AAPT2_PATH"
 
@@ -629,7 +629,7 @@
           ANDROID_SDK_ROOT = ANDROID_HOME;
           NDK_HOME = "${ANDROID_HOME}/ndk-bundle";
           ANDROID_NDK_HOME = NDK_HOME;
-          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/35.0.0/aapt2";
+          GRADLE_OPTS = "-Dorg.gradle.project.android.aapt2FromMavenOverride=${android-sdk}/libexec/android-sdk/build-tools/36.0.0/aapt2";
           CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android28-clang";
           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang";
           CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER = "${android-sdk}/libexec/android-sdk/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang";

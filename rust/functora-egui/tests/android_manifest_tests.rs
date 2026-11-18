@@ -167,6 +167,43 @@ fn rendered_manifest_permissions_are_exactly_expected() {
 }
 
 #[test]
+fn rendered_manifest_declares_camera_features_as_optional() {
+    let mut cfg = config(None);
+    cfg.camera = true;
+    let manifest = render(&cfg);
+    let features: Vec<&str> = manifest
+        .lines()
+        .map(str::trim)
+        .filter(|line| line.starts_with("<uses-feature"))
+        .collect();
+    assert_eq!(features.len(), 3, "{manifest}");
+    for name in [
+        "android.hardware.camera",
+        "android.hardware.camera.autofocus",
+        "android.hardware.camera.any",
+    ] {
+        assert!(
+            features.iter().any(|feature| {
+                feature.contains(&format!(r#"android:name="{name}""#))
+                    && feature.contains(r#"android:required="false""#)
+            }),
+            "camera feature must be optional: {name}: {manifest}"
+        );
+    }
+}
+
+#[test]
+fn rendered_manifest_omits_camera_declarations_when_camera_is_disabled() {
+    let cfg = config(None);
+    let manifest = render(&cfg);
+    assert!(
+        !manifest.contains("android.permission.CAMERA"),
+        "{manifest}"
+    );
+    assert!(!manifest.contains("android.hardware.camera"), "{manifest}");
+}
+
+#[test]
 fn default_config_is_offline() {
     let cfg = config(None);
     assert!(!cfg.internet);

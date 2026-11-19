@@ -4,14 +4,12 @@
   inputs = {
     stable.url = "github:nixos/nixpkgs?ref=nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
-    opencode-nix.url = "github:dominicnunez/opencode-nix";
   };
 
   outputs = {
     self,
     stable,
     flake-utils,
-    opencode-nix,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
@@ -55,9 +53,6 @@
             hakyll-build
             hakyll-watch
             hakyll-release
-            opencode-nix.packages.${system}.default
-            chromium
-            qutebrowser
           ];
         };
       in {

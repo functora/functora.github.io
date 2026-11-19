@@ -13,6 +13,7 @@
   qute = import ./qute.nix {inherit pkgs;};
   lockCmd = "${pkgs.swaylock}/bin/swaylock --color=000000";
   mkBubble = import ./bubble.nix;
+  cryptonote = (builtins.getFlake (toString ../rust)).packages.${pkgs.stdenv.hostPlatform.system}.cryptonote;
   blocked-hosts =
     builtins.concatStringsSep "\n"
     (builtins.map (x: "127.0.0.1 ${x} www.${x} www2.${x} web.${x} rus.${x} news.${x}")
@@ -773,6 +774,12 @@ in {
           text = "${pkgs.beyond-all-reason}/bin/beyond-all-reason --ozone-platform=wayland";
           home = "bar";
           network = true;
+        })
+        (mkBubble {
+          inherit pkgs;
+          name = "cryptonote";
+          text = ''${cryptonote}/bin/cryptonote "$@"'';
+          home = "cryptonote";
         })
       ];
       programs.git = {

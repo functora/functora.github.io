@@ -42,7 +42,7 @@ nix --extra-experimental-features "nix-command flakes" bundle \
   .#functora-egui-demo
 
 # Copy the standalone artifact for distribution
-cp -L functora-egui-demo functora-egui-demo-v0.2.1-x86_64-linux.arx
+cp -L functora-egui-demo functora-egui-demo-v0.2.2-x86_64-linux.arx
 
 # Or build the bundle derivation directly
 nix build .#functora-egui-demo-bundle

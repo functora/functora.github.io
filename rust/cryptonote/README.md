@@ -69,7 +69,7 @@ nix --extra-experimental-features "nix-command flakes" bundle \
   .#cryptonote
 
 # Copy the standalone artifact for distribution
-cp -L cryptonote cryptonote-v0.2.1-x86_64-linux.arx
+cp -L cryptonote cryptonote-v0.2.2-x86_64-linux.arx
 
 # Or build the bundle derivation directly
 nix build .#cryptonote-bundle

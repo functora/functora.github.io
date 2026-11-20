@@ -181,6 +181,7 @@ pub(crate) fn show_textarea_paste_clear(
 
     let mut child_ui = ui.new_child(
         egui::UiBuilder::new()
+            .id_salt(base_id.with("content"))
             .max_rect(content_rect)
             .layout(egui::Layout::top_down(egui::Align::LEFT)),
     );

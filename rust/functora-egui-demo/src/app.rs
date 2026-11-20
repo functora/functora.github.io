@@ -1,6 +1,7 @@
 use crate::catalog::{
-    CATEGORIES, CategoryId, ComponentId, FooterSuffix, SearchCommandPlaceholder, SearchLabel,
-    category_header, palette_entries, section_button,
+    CATEGORIES, CategoryId, ComponentId, DONATE_ACTION, FooterSuffix, LIBRARY_CRATES_URL,
+    LIBRARY_SOURCE_URL, SearchCommandPlaceholder, SearchLabel, category_header, palette_entries,
+    section_button,
 };
 use crate::dock::ScreenDock;
 use crate::route::AppRoute;
@@ -8,6 +9,7 @@ use crate::state::APP_SCOPE;
 use crate::state::ShowcaseApp;
 use functora_egui::i18n::{I18N, Language};
 use functora_egui::messages::Msg as BaseMsg;
+use functora_egui::route::RouteMetadata;
 use functora_egui::state::PersistentState;
 use functora_egui::{
     AlertDialog, AlertDialogResult, Button, ButtonVariant, CommandValue, ComponentSize, Dialog,
@@ -71,13 +73,13 @@ impl ShowcaseApp {
         }
     }
 
-    pub fn navigate_to(&mut self, target: Option<ComponentId>) {
-        self.selected = target;
-        let route = match target {
-            Some(id) => AppRoute::Component(id),
-            None => AppRoute::Overview,
-        };
+    pub fn navigate_route(&mut self, route: AppRoute) {
+        self.selected = route.component();
         self.router.navigate(route);
+    }
+
+    pub fn navigate_to(&mut self, target: Option<ComponentId>) {
+        self.navigate_route(target.map_or(AppRoute::Overview, AppRoute::Component));
     }
 
     fn sync_from_router(&mut self) {
@@ -87,21 +89,39 @@ impl ShowcaseApp {
         }
     }
 
-    pub fn show_app_footer(ui: &mut egui::Ui, lang: Language) {
+    pub fn show_app_footer(ui: &mut egui::Ui, lang: Language) -> Option<String> {
         let suffix = FooterSuffix.render(lang);
+        let action = std::cell::Cell::new(None);
         let _ = Footer::new().show(ui, |inner| {
-            let _ = Hypertext::new()
+            let (_, clicked) = Hypertext::new()
                 .text(format!("© {} ", functora_egui::FUNCTORA_CORE_YEAR))
                 .link("Functora", "https://functora.github.io/")
                 .text(suffix)
+                .text(" ")
+                .link(BaseMsg::SourceCodeButton.render(lang), LIBRARY_SOURCE_URL)
+                .text(". ")
+                .link("crates.io", LIBRARY_CRATES_URL)
+                .text(". ")
+                .action(BaseMsg::Donate.render(lang), DONATE_ACTION.to_owned())
                 .text(format!(
-                    " {} {}.",
-                    functora_egui::messages::Msg::VersionLabel.render(lang),
+                    ". {} {}.",
+                    BaseMsg::VersionLabel.render(lang),
                     Self::DEMO_ATTRS.vsn
                 ))
                 .centered()
-                .show(inner);
+                .show_action(inner);
+            action.set(clicked);
         });
+        action.take()
+    }
+
+    /// The screen a footer action id opens.
+    #[must_use]
+    pub fn route_for_action(action: &str) -> Option<AppRoute> {
+        match action {
+            DONATE_ACTION => Some(AppRoute::Donate),
+            _ => None,
+        }
     }
 
     fn render_overlays(&mut self, ctx: &egui::Context) {
@@ -211,115 +231,120 @@ impl ShowcaseApp {
     }
 
     pub fn render_component(&mut self, ui: &mut egui::Ui, lang: Language) -> ScreenDock {
-        _ = Typography::h3(self.selected.map_or("Overview", |id| id.name())).show(ui);
+        let route = self.router.current().clone();
+        _ = Typography::h3(route.label(lang)).show(ui);
         ui.add_space(4.0);
-        match self.selected {
-            None => self.demo_overview(ui, lang),
-            Some(ComponentId::Button) => self.demo_button(ui),
-            Some(ComponentId::ButtonGroup) => self.demo_button_group(ui),
-            Some(ComponentId::Checkbox) => self.demo_checkbox(ui),
-            Some(ComponentId::Switch) => self.demo_switch(ui),
-            Some(ComponentId::Radio) => self.demo_radio(ui),
-            Some(ComponentId::RadioGroup) => self.demo_radio_group(ui),
-            Some(ComponentId::Toggle) => self.demo_toggle(ui),
-            Some(ComponentId::ToggleGroup) => self.demo_toggle_group(ui),
-            Some(ComponentId::Slider) => self.demo_slider(ui),
-            Some(ComponentId::Input) => self.demo_input(ui),
-            Some(ComponentId::NumberInput) => self.demo_number_input(ui),
-            Some(ComponentId::InputGroup) => self.demo_input_group(ui),
-            Some(ComponentId::InputPasteClear) => self.demo_input_paste_clear(ui),
-            Some(ComponentId::TextareaPasteClear) => self.demo_textarea_paste_clear(ui),
-            Some(ComponentId::Textarea) => self.demo_textarea(ui),
-            Some(ComponentId::Select) => self.demo_select(ui),
-            Some(ComponentId::SelectValue) => self.demo_select_value(ui),
-            Some(ComponentId::Combobox) => self.demo_combobox(ui),
-            Some(ComponentId::InputOtp) => self.demo_input_otp(ui),
-            Some(ComponentId::DatePicker) => self.demo_date_picker(ui),
-            Some(ComponentId::ColorSwatch) => self.demo_color_swatch(ui),
-            Some(ComponentId::Flex) => self.demo_flex(ui),
-            Some(ComponentId::AspectRatio) => Self::demo_aspect_ratio(ui),
-            Some(ComponentId::Card) => Self::demo_card(ui),
-            Some(ComponentId::Collapsible) => self.demo_collapsible(ui),
-            Some(ComponentId::Resizable) => self.demo_resizable(ui),
-            Some(ComponentId::ScrollArea) => Self::demo_scroll_area(ui),
-            Some(ComponentId::Separator) => Self::demo_separator(ui),
-            Some(ComponentId::StatusBar) => Self::demo_status_bar(ui),
-            Some(ComponentId::Tabs) => self.demo_tabs(ui),
-            Some(ComponentId::IconTabs) => self.demo_icon_tabs(ui),
-            Some(ComponentId::Toolbar) => self.demo_toolbar(ui),
-            Some(ComponentId::Accordion) => self.demo_accordion(ui),
-            Some(ComponentId::Navbar) => self.demo_navbar(ui),
-            Some(ComponentId::Footer) => Self::demo_footer(ui),
-            Some(ComponentId::Dialog) => self.demo_dialog(ui),
-            Some(ComponentId::AlertDialog) => self.demo_alert_dialog(ui),
-            Some(ComponentId::Sheet) => self.demo_sheet(ui),
-            Some(ComponentId::Popover) => Self::demo_popover(ui),
-            Some(ComponentId::HoverCard) => Self::demo_hover_card(ui),
-            Some(ComponentId::Tooltip) => Self::demo_tooltip(ui),
-            Some(ComponentId::ContextMenu) => self.demo_context_menu(ui),
-            Some(ComponentId::DropdownMenu) => self.demo_dropdown_menu(ui),
-            Some(ComponentId::Command) => self.demo_command(ui),
-            Some(ComponentId::Menubar) => self.demo_menubar(ui),
-            Some(ComponentId::NavigationMenu) => self.demo_navigation_menu(ui),
-            Some(ComponentId::BlockingOverlay) => self.demo_blocking_overlay(ui),
-            Some(ComponentId::Alert) => Self::demo_alert(ui),
-            Some(ComponentId::Badge) => Self::demo_badge(ui),
-            Some(ComponentId::Progress) => self.demo_progress(ui),
-            Some(ComponentId::Skeleton) => Self::demo_skeleton(ui),
-            Some(ComponentId::Spinner) => Self::demo_spinner(ui),
-            Some(ComponentId::Toast) => self.demo_toast(ui),
-            Some(ComponentId::Empty) => Self::demo_empty(ui),
-            Some(ComponentId::Avatar) => Self::demo_avatar(ui),
-            Some(ComponentId::Breadcrumb) => self.demo_breadcrumb(ui),
-            Some(ComponentId::Calendar) => self.demo_calendar(ui),
-            Some(ComponentId::Carousel) => self.demo_carousel(ui),
-            Some(ComponentId::Pagination) => self.demo_pagination(ui),
-            Some(ComponentId::Sidebar) => Self::demo_sidebar(ui),
-            Some(ComponentId::Table) => Self::demo_table(ui),
-            Some(ComponentId::AreaChart) => Self::demo_area_chart(ui),
-            Some(ComponentId::Typography) => Self::demo_typography(ui),
-            Some(ComponentId::Label) => self.demo_label(ui),
-            Some(ComponentId::Kbd) => Self::demo_kbd(ui),
-            Some(ComponentId::Item) => self.demo_item(ui),
-            Some(ComponentId::Icons) => self.demo_icons(ui),
-            Some(ComponentId::Image) => self.demo_image(ui),
-            Some(ComponentId::Hyperlink) => Self::demo_hyperlink(ui),
-            Some(ComponentId::Hypertext) => self.demo_hypertext(ui),
-            Some(ComponentId::CodeSnippet) => Self::demo_code_snippet(ui),
-            Some(ComponentId::FieldGroup) => self.demo_field_group(ui),
-            Some(ComponentId::FieldSet) => self.demo_field_set(ui),
-            Some(ComponentId::FieldLegend) => Self::demo_field_legend(ui),
-            Some(ComponentId::FieldDescription) => self.demo_field_description(ui),
-            Some(ComponentId::PropertyGrid) => self.demo_property_grid(ui),
-            Some(ComponentId::PropertyRow) => self.demo_property_row(ui),
-            Some(ComponentId::Breakpoint) => Self::demo_breakpoint(ui),
-            Some(ComponentId::Spacing) => Self::demo_spacing(ui),
-            Some(ComponentId::FlexWrap) => Self::demo_flex_wrap(ui),
-            Some(ComponentId::TouchTarget) => self.demo_touch_target(ui),
-            Some(ComponentId::Storage) => self.demo_storage(ui),
-            Some(ComponentId::Clipboard) => self.demo_clipboard(ui),
-            Some(ComponentId::Share) => self.demo_share(ui),
-            Some(ComponentId::DeepLink) => self.demo_deep_link(ui),
-            Some(ComponentId::Files) => self.demo_files(ui),
-            Some(ComponentId::Download) => self.demo_download(ui),
-            Some(ComponentId::Nav) => self.demo_nav(ui),
-            Some(ComponentId::ProgressWorker) => self.demo_progress_worker(ui),
-            Some(ComponentId::Pwa) => self.demo_pwa(ui),
-            Some(ComponentId::Encoding) => self.demo_encoding(ui),
-            Some(ComponentId::InFlight) => self.demo_in_flight(ui),
-            Some(ComponentId::Camera) => self.demo_camera(ui),
-            Some(ComponentId::QrScanner) => self.demo_qr_scanner(ui),
-            Some(ComponentId::QrImage) => self.demo_qr_image(ui),
-            Some(ComponentId::Thumbnail) => self.demo_thumbnail(ui),
-            Some(ComponentId::Zip) => self.demo_zip(ui),
-            Some(ComponentId::Crypto) => self.demo_crypto(ui),
-            Some(ComponentId::Worker) => self.demo_worker(ui),
-            Some(ComponentId::PlatformInfo) => self.demo_platform_info(ui),
-            Some(ComponentId::Messages) => self.demo_messages(ui),
-            Some(ComponentId::Markdown) => self.demo_markdown(ui),
-            Some(ComponentId::Package) => self.demo_package(ui),
-            Some(ComponentId::WhiteLabel) => self.demo_white_label(ui),
-            Some(ComponentId::Utilities) => self.demo_utilities(ui),
+        match route {
+            AppRoute::Overview => self.demo_overview(ui, lang),
+            AppRoute::Donate => self.demo_donate(ui, lang),
+            AppRoute::Component(_) => match self.selected {
+                None => self.demo_overview(ui, lang),
+                Some(ComponentId::Button) => self.demo_button(ui),
+                Some(ComponentId::ButtonGroup) => self.demo_button_group(ui),
+                Some(ComponentId::Checkbox) => self.demo_checkbox(ui),
+                Some(ComponentId::Switch) => self.demo_switch(ui),
+                Some(ComponentId::Radio) => self.demo_radio(ui),
+                Some(ComponentId::RadioGroup) => self.demo_radio_group(ui),
+                Some(ComponentId::Toggle) => self.demo_toggle(ui),
+                Some(ComponentId::ToggleGroup) => self.demo_toggle_group(ui),
+                Some(ComponentId::Slider) => self.demo_slider(ui),
+                Some(ComponentId::Input) => self.demo_input(ui),
+                Some(ComponentId::NumberInput) => self.demo_number_input(ui),
+                Some(ComponentId::InputGroup) => self.demo_input_group(ui),
+                Some(ComponentId::InputPasteClear) => self.demo_input_paste_clear(ui),
+                Some(ComponentId::TextareaPasteClear) => self.demo_textarea_paste_clear(ui),
+                Some(ComponentId::Textarea) => self.demo_textarea(ui),
+                Some(ComponentId::Select) => self.demo_select(ui),
+                Some(ComponentId::SelectValue) => self.demo_select_value(ui),
+                Some(ComponentId::Combobox) => self.demo_combobox(ui),
+                Some(ComponentId::InputOtp) => self.demo_input_otp(ui),
+                Some(ComponentId::DatePicker) => self.demo_date_picker(ui),
+                Some(ComponentId::ColorSwatch) => self.demo_color_swatch(ui),
+                Some(ComponentId::Flex) => self.demo_flex(ui),
+                Some(ComponentId::AspectRatio) => Self::demo_aspect_ratio(ui),
+                Some(ComponentId::Card) => Self::demo_card(ui),
+                Some(ComponentId::Collapsible) => self.demo_collapsible(ui),
+                Some(ComponentId::Resizable) => self.demo_resizable(ui),
+                Some(ComponentId::ScrollArea) => Self::demo_scroll_area(ui),
+                Some(ComponentId::Separator) => Self::demo_separator(ui),
+                Some(ComponentId::StatusBar) => Self::demo_status_bar(ui),
+                Some(ComponentId::Tabs) => self.demo_tabs(ui),
+                Some(ComponentId::IconTabs) => self.demo_icon_tabs(ui),
+                Some(ComponentId::Toolbar) => self.demo_toolbar(ui),
+                Some(ComponentId::Accordion) => self.demo_accordion(ui),
+                Some(ComponentId::Navbar) => self.demo_navbar(ui),
+                Some(ComponentId::Footer) => Self::demo_footer(ui),
+                Some(ComponentId::Dialog) => self.demo_dialog(ui),
+                Some(ComponentId::AlertDialog) => self.demo_alert_dialog(ui),
+                Some(ComponentId::Sheet) => self.demo_sheet(ui),
+                Some(ComponentId::Popover) => Self::demo_popover(ui),
+                Some(ComponentId::HoverCard) => Self::demo_hover_card(ui),
+                Some(ComponentId::Tooltip) => Self::demo_tooltip(ui),
+                Some(ComponentId::ContextMenu) => self.demo_context_menu(ui),
+                Some(ComponentId::DropdownMenu) => self.demo_dropdown_menu(ui),
+                Some(ComponentId::Command) => self.demo_command(ui),
+                Some(ComponentId::Menubar) => self.demo_menubar(ui),
+                Some(ComponentId::NavigationMenu) => self.demo_navigation_menu(ui),
+                Some(ComponentId::BlockingOverlay) => self.demo_blocking_overlay(ui),
+                Some(ComponentId::Alert) => Self::demo_alert(ui),
+                Some(ComponentId::Badge) => Self::demo_badge(ui),
+                Some(ComponentId::Progress) => self.demo_progress(ui),
+                Some(ComponentId::Skeleton) => Self::demo_skeleton(ui),
+                Some(ComponentId::Spinner) => Self::demo_spinner(ui),
+                Some(ComponentId::Toast) => self.demo_toast(ui),
+                Some(ComponentId::Empty) => Self::demo_empty(ui),
+                Some(ComponentId::Avatar) => Self::demo_avatar(ui),
+                Some(ComponentId::Breadcrumb) => self.demo_breadcrumb(ui),
+                Some(ComponentId::Calendar) => self.demo_calendar(ui),
+                Some(ComponentId::Carousel) => self.demo_carousel(ui),
+                Some(ComponentId::Pagination) => self.demo_pagination(ui),
+                Some(ComponentId::Sidebar) => Self::demo_sidebar(ui),
+                Some(ComponentId::Table) => Self::demo_table(ui),
+                Some(ComponentId::AreaChart) => Self::demo_area_chart(ui),
+                Some(ComponentId::Typography) => Self::demo_typography(ui),
+                Some(ComponentId::Label) => self.demo_label(ui),
+                Some(ComponentId::Kbd) => Self::demo_kbd(ui),
+                Some(ComponentId::Item) => self.demo_item(ui),
+                Some(ComponentId::Icons) => self.demo_icons(ui),
+                Some(ComponentId::Image) => self.demo_image(ui),
+                Some(ComponentId::Hyperlink) => Self::demo_hyperlink(ui),
+                Some(ComponentId::Hypertext) => self.demo_hypertext(ui),
+                Some(ComponentId::CodeSnippet) => Self::demo_code_snippet(ui),
+                Some(ComponentId::FieldGroup) => self.demo_field_group(ui),
+                Some(ComponentId::FieldSet) => self.demo_field_set(ui),
+                Some(ComponentId::FieldLegend) => Self::demo_field_legend(ui),
+                Some(ComponentId::FieldDescription) => self.demo_field_description(ui),
+                Some(ComponentId::PropertyGrid) => self.demo_property_grid(ui),
+                Some(ComponentId::PropertyRow) => self.demo_property_row(ui),
+                Some(ComponentId::Breakpoint) => Self::demo_breakpoint(ui),
+                Some(ComponentId::Spacing) => Self::demo_spacing(ui),
+                Some(ComponentId::FlexWrap) => Self::demo_flex_wrap(ui),
+                Some(ComponentId::TouchTarget) => self.demo_touch_target(ui),
+                Some(ComponentId::Storage) => self.demo_storage(ui),
+                Some(ComponentId::Clipboard) => self.demo_clipboard(ui),
+                Some(ComponentId::Share) => self.demo_share(ui),
+                Some(ComponentId::DeepLink) => self.demo_deep_link(ui),
+                Some(ComponentId::Files) => self.demo_files(ui),
+                Some(ComponentId::Download) => self.demo_download(ui),
+                Some(ComponentId::Nav) => self.demo_nav(ui),
+                Some(ComponentId::ProgressWorker) => self.demo_progress_worker(ui),
+                Some(ComponentId::Pwa) => self.demo_pwa(ui),
+                Some(ComponentId::Encoding) => self.demo_encoding(ui),
+                Some(ComponentId::InFlight) => self.demo_in_flight(ui),
+                Some(ComponentId::Camera) => self.demo_camera(ui),
+                Some(ComponentId::QrScanner) => self.demo_qr_scanner(ui),
+                Some(ComponentId::QrImage) => self.demo_qr_image(ui),
+                Some(ComponentId::Thumbnail) => self.demo_thumbnail(ui),
+                Some(ComponentId::Zip) => self.demo_zip(ui),
+                Some(ComponentId::Crypto) => self.demo_crypto(ui),
+                Some(ComponentId::Worker) => self.demo_worker(ui),
+                Some(ComponentId::PlatformInfo) => self.demo_platform_info(ui),
+                Some(ComponentId::Messages) => self.demo_messages(ui),
+                Some(ComponentId::Markdown) => self.demo_markdown(ui),
+                Some(ComponentId::Package) => self.demo_package(ui),
+                Some(ComponentId::WhiteLabel) => self.demo_white_label(ui),
+                Some(ComponentId::Utilities) => self.demo_utilities(ui),
+            },
         }
         ui.add_space(16.0);
         self.show_screen_dock(ui, lang)
@@ -343,8 +368,9 @@ impl eframe::App for ShowcaseApp {
         let history = self.router.history().clone();
         let needs_reset = std::cell::Cell::new(false);
         let needs_search = std::cell::Cell::new(false);
+        let pending_route = std::cell::Cell::new(None::<AppRoute>);
         let pending_nav = std::cell::Cell::new(None::<PendingNav>);
-        let selected_snapshot = self.selected;
+        let route_snapshot = route.clone();
         let lang_cell = std::cell::Cell::new(self.persistent.language);
         let quit_label = functora_egui::white_label::QUIT_AVAILABLE
             .then(|| BaseMsg::Quit.render(lang_cell.get()));
@@ -365,14 +391,14 @@ impl eframe::App for ShowcaseApp {
                     for def in *items {
                         let (is_selected, pending) = match def.id {
                             None => (
-                                selected_snapshot.is_none()
+                                route_snapshot == AppRoute::Overview
                                     && pending_ref
                                         .get()
                                         .is_none_or(|next| next == PendingNav::Overview),
                                 PendingNav::Overview,
                             ),
                             Some(id) => (
-                                Some(id) == selected_snapshot
+                                route_snapshot == AppRoute::Component(id)
                                     && pending_ref
                                         .get()
                                         .is_none_or(|next| next == PendingNav::Component(id)),
@@ -426,8 +452,13 @@ impl eframe::App for ShowcaseApp {
         .breadcrumb(&route, &history)
         .footer({
             let lang_ref = &lang_cell;
+            let route_ref = &pending_route;
             move |footer_ui| {
-                Self::show_app_footer(footer_ui, lang_ref.get());
+                if let Some(action) = Self::show_app_footer(footer_ui, lang_ref.get())
+                    && let Some(target_route) = Self::route_for_action(&action)
+                {
+                    route_ref.set(Some(target_route));
+                }
             }
         })
         .show(ui, |content_ui| {
@@ -446,6 +477,12 @@ impl eframe::App for ShowcaseApp {
                 PendingNav::Overview => self.navigate_to(None),
                 PendingNav::Component(id) => self.navigate_to(Some(id)),
             }
+            ctx.request_repaint();
+        }
+        if let Some(target) = pending_route.take()
+            && *self.router.current() != target
+        {
+            self.navigate_route(target);
             ctx.request_repaint();
         }
         if prev_persistent != self.persistent {

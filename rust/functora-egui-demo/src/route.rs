@@ -1,4 +1,5 @@
 use functora_egui::i18n::{I18N, Language};
+use functora_egui::messages::Msg as BaseMsg;
 use functora_egui::route::{RouteKind, RouteMetadata};
 use std::borrow::Cow;
 
@@ -8,6 +9,7 @@ use crate::catalog::{CATEGORIES, CategoryId, ComponentId};
 pub enum AppRoute {
     #[default]
     Overview,
+    Donate,
     Component(ComponentId),
 }
 
@@ -15,6 +17,7 @@ impl std::fmt::Display for AppRoute {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Overview => write!(f, "overview"),
+            Self::Donate => write!(f, "donate"),
             Self::Component(id) => write!(f, "{}", id.slug()),
         }
     }
@@ -25,6 +28,8 @@ impl std::str::FromStr for AppRoute {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.eq_ignore_ascii_case("overview") {
             Ok(Self::Overview)
+        } else if s.eq_ignore_ascii_case("donate") {
+            Ok(Self::Donate)
         } else if let Some(id) = ComponentId::from_slug(s) {
             Ok(Self::Component(id))
         } else {
@@ -37,13 +42,14 @@ impl RouteMetadata for AppRoute {
     fn label(&self, lang: Language) -> Cow<'static, str> {
         match self {
             Self::Overview => CategoryId::Overview.render(lang).into(),
+            Self::Donate => BaseMsg::Donate.render(lang).into(),
             Self::Component(id) => id.name().into(),
         }
     }
 
     fn parent(&self) -> Option<Self> {
         match self {
-            Self::Component(_) => Some(Self::Overview),
+            Self::Component(_) | Self::Donate => Some(Self::Overview),
             Self::Overview => None,
         }
     }
@@ -51,7 +57,7 @@ impl RouteMetadata for AppRoute {
     fn children(&self) -> Vec<Self> {
         match self {
             Self::Overview => ComponentId::ALL.map(Self::Component).to_vec(),
-            Self::Component(_) => vec![],
+            Self::Donate | Self::Component(_) => vec![],
         }
     }
 
@@ -64,7 +70,7 @@ impl AppRoute {
     #[must_use]
     pub fn component(&self) -> Option<ComponentId> {
         match self {
-            Self::Overview => None,
+            Self::Overview | Self::Donate => None,
             Self::Component(id) => Some(*id),
         }
     }

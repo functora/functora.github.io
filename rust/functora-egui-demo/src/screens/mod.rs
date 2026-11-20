@@ -1,5 +1,6 @@
 mod data;
 mod display;
+mod donate;
 mod feedback;
 mod forms;
 mod inputs;

@@ -605,6 +605,16 @@ impl I18N for OverviewBody {
     }
 }
 
+/// Action id the footer uses to open the donate screen.
+pub const DONATE_ACTION: &str = "donate";
+
+/// Source repository of the library the demo showcases.
+pub const LIBRARY_SOURCE_URL: &str =
+    "https://github.com/functora/functora.github.io/tree/master/rust/functora-egui";
+
+/// crates.io page of the library the demo showcases.
+pub const LIBRARY_CRATES_URL: &str = "https://crates.io/crates/functora-egui";
+
 pub struct SearchLabel;
 impl I18N for SearchLabel {
     fn render_eng(&self) -> String {

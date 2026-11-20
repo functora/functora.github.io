@@ -119,7 +119,7 @@ fn label_text_stays_within_available_width() {
 
 #[test]
 fn typography_wraps_a_long_word_inside_a_plain_row() {
-    let url = "https://functora.github.io/apps/demo/?page=about&lang=en".to_owned();
+    let url = "https://functora.github.io/apps/functora-egui-demo/?page=about&lang=en".to_owned();
     let mut app = Harness::new(Vec2::new(360.0, 640.0));
     let mut left = 0.0;
     let mut body = |ui: &mut egui::Ui| {

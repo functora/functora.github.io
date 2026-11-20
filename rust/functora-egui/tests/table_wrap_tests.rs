@@ -8,7 +8,8 @@ use common::{Harness, all_texts};
 use egui::{Rect, Vec2};
 
 const SCREEN: Vec2 = Vec2::new(320.0, 640.0);
-const LONG_WORD: &str = "https://functora.github.io/apps/demo/?page=about&lang=en&theme=dark";
+const LONG_WORD: &str =
+    "https://functora.github.io/apps/functora-egui-demo/?page=about&lang=en&theme=dark";
 
 fn long_word_rects(texts: &[(Rect, String)]) -> Vec<(Rect, String)> {
     texts

@@ -53,7 +53,7 @@ functora_egui::ShadcnThemeExt::set_shadcn_theme(&ctx, dark);
 ## Responsive design
 
 Mobile-first adaptive UI out of the box, mirroring the conventions of
-[functora-css](https://github.com/functora/functora-css): below 800px the
+[functora-css](https://functora.github.io/functora-css.html): below 800px the
 layout switches to a touch-optimized mobile scale, and content is capped at
 1440px on wide screens.
 

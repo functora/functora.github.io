@@ -77,7 +77,7 @@ impl I18N for CategoryId {
             Self::Data => "Datos",
             Self::Display => "Visualización",
             Self::Forms => "Formularios",
-            Self::Responsive => "Responsivo",
+            Self::Responsive => "Adaptable",
             Self::Platform => "Plataforma",
         }
         .into()
@@ -88,7 +88,7 @@ impl I18N for CategoryId {
             Self::Overview => "Обзор",
             Self::Inputs => "Ввод",
             Self::Layout => "Макет",
-            Self::Overlays => "Наложения",
+            Self::Overlays => "Оверлеи",
             Self::Feedback => "Обратная связь",
             Self::Data => "Данные",
             Self::Display => "Отображение",
@@ -592,14 +592,14 @@ impl I18N for OverviewBody {
 
     fn render_spa(&self) -> String {
         format!(
-            "Presentación interactiva de {} widgets para egui inspirados en shadcn/ui con temas claro/oscuro e iconos Lucide 1600+. Navega por la barra lateral o presiona Ctrl+K.",
+            "Presentación interactiva de {} widgets para egui inspirados en shadcn/ui, con temas claro y oscuro y más de 1600 iconos Lucide. Navega por la barra lateral o presiona Ctrl+K.",
             component_count()
         )
     }
 
     fn render_rus(&self) -> String {
         format!(
-            "Интерактивная демонстрация {} виджетов для egui в стиле shadcn/ui с темами светлая/тёмная и 1600+ иконок Lucide. Откройте боковую панель или нажмите Ctrl+K.",
+            "Интерактивная демонстрация {} виджетов для egui в стиле shadcn/ui со светлой и тёмной темами и более чем 1600 иконками Lucide. Перемещайтесь по разделам через боковую панель или нажмите Ctrl+K.",
             component_count()
         )
     }

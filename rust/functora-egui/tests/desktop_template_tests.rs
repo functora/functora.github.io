@@ -50,7 +50,7 @@ fn metainfo(developer: &str) -> String {
         description: "Encrypted offline notes with Markdown support and QR sharing.",
         version: "0.1.10",
         date: "2026-10-08",
-        homepage: "https://functora.github.io/cryptonote",
+        homepage: "https://functora.github.io/apps/cryptonote",
         developer,
         developer_id: "io.functora.cryptonote",
     }
@@ -67,7 +67,7 @@ fn metainfo_embeds_app_id_and_version() {
         "<summary>Encrypted notes</summary>",
         "<release version=\"0.1.10\" date=\"2026-10-08\" />",
         "<launchable type=\"desktop-id\">io.functora.cryptonote.desktop</launchable>",
-        "<url type=\"homepage\">https://functora.github.io/cryptonote</url>",
+        "<url type=\"homepage\">https://functora.github.io/apps/cryptonote</url>",
         "<developer id=\"io.functora.cryptonote\"><name>Functora</name></developer>",
         "<content_rating type=\"oars-1.1\">",
         "<p>Encrypted offline notes with Markdown support and QR sharing.</p>",

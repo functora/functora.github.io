@@ -415,7 +415,7 @@ Si tienes alguna pregunta sobre privacidad al usar la Aplicación, o tienes preg
         Language::Rus => format!(
             r"## Политика конфиденциальности
 
-Esta политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному {provider} (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».
+Эта политика конфиденциальности применяется к приложению (далее именуемому «Приложение») для мобильных устройств, созданному {provider} (далее именуемому «Поставщик услуг») в качестве бесплатной услуги. Эта услуга предназначена для использования «КАК ЕСТЬ».
 
 ## Какую информацию получает Приложение и как она используется?
 
@@ -472,11 +472,11 @@ pub fn default_privacy_text(attrs: &AppAttrs, lang: Language) -> String {
 pub fn default_donate_greeting(attrs: &AppAttrs, lang: Language) -> String {
     match lang {
         Language::Eng => format!(
-            "Hello, User! I'm {}, the creator of this software.",
+            "Hello, user! I'm {}, the creator of this software.",
             attrs.org
         ),
         Language::Spa => format!(
-            "¡Hola, Usuario! Soy {}, el creador de este software.",
+            "¡Hola, usuario! Soy {}, el creador de este software.",
             attrs.org
         ),
         Language::Rus => format!(
@@ -496,11 +496,11 @@ pub fn default_donate_intro(attrs: &AppAttrs, lang: Language) -> String {
             attrs.org
         ),
         Language::Spa => format!(
-            "Si estás disfrutando este software, una donación sería muy apreciada. Atentamente, {}.",
+            "Si te gusta este software, agradecería mucho una donación. Atentamente, {}.",
             attrs.org
         ),
         Language::Rus => format!(
-            "Если это программное обеспечение вам нравится, я буду очень признателен за пожертвование. С уважением, {}.",
+            "Если вам нравится это программное обеспечение, буду очень признателен за пожертвование. С уважением, {}.",
             attrs.org
         ),
         _ => default_donate_intro(attrs, Language::Eng),
@@ -517,8 +517,13 @@ pub fn default_about_text(attrs: &AppAttrs, lang: Language) -> String {
     let beta = attrs.beta_url();
     let play = attrs.google_play_url();
     let apk = attrs.apk_url();
+    let (links_title, source_label, author_label, beta_label) = match lang {
+        Language::Spa => ("Enlaces", "Código fuente", "Autor", "Beta"),
+        Language::Rus => ("Ссылки", "Исходный код", "Автор", "Бета"),
+        _ => ("Links", "Source code", "Author", "Beta"),
+    };
     let links = format!(
-        "\n\n## Links\n\n- [Source code]({source})\n- [Author]({author})\n- [Beta]({beta})\n- [Google Play]({play})\n- [APK]({apk})"
+        "\n\n## {links_title}\n\n- [{source_label}]({source})\n- [{author_label}]({author})\n- [{beta_label}]({beta})\n- [Google Play]({play})\n- [APK]({apk})"
     );
     match lang {
         Language::Eng => {
@@ -527,8 +532,8 @@ pub fn default_about_text(attrs: &AppAttrs, lang: Language) -> String {
 
 With {app}, you can:
 
-- Use the application on desktop, mobile and web
-- Explore the features and settings
+- Use it on desktop, mobile, and web
+- Explore its features and settings
 
 The application follows modern best practices:
 
@@ -544,13 +549,13 @@ Secure, private, and yours alone."
 
 Con {app}, puedes:
 
-- Usar la aplicación en escritorio, móvil y web
-- Explorar las funciones y configuraciones
+- Usarla en escritorio, móvil y web
+- Explorar sus funciones y ajustes
 
 La aplicación sigue las mejores prácticas modernas:
 
 - Segura por diseño
-- Ningún dato sale de tu dispositivo a menos que elijas explícitamente compartirlo
+- Ningún dato sale de tu dispositivo a menos que elijas compartirlo explícitamente
 
 Segura, privada y solo tuya."
             ) + &links
@@ -561,10 +566,10 @@ Segura, privada y solo tuya."
 
 С {app} вы можете:
 
-- Использовать приложение на компьютере, мобильном устройстве и в вебе
-- Изучить функции и настройки
+- Использовать приложение на компьютере, мобильном устройстве и в веб-версии
+- Изучать функции и настройки
 
-Приложение следует современным практикам:
+Приложение следует современным лучшим практикам:
 
 - Безопасно по дизайну
 - Никакие данные не покидают ваше устройство, если вы явно не решите ими поделиться

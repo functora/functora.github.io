@@ -196,7 +196,7 @@ impl Default for PlatformState {
             share_text: "Check out functora-egui".to_owned(),
             share_url: "https://functora.github.io".to_owned(),
             share_rx: None,
-            deep_link_input: "https://functora.github.io/apps/demo/?page=about&lang=en".to_owned(),
+            deep_link_input: "https://functora.github.io/apps/functora-egui-demo/?page=about&lang=en".to_owned(),
             deep_link_current: String::new(),
             picked: Vec::new(),
             pick_rx: None,

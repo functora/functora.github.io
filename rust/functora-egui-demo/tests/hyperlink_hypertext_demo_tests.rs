@@ -31,7 +31,9 @@ fn hyperlink_demo_renders_links_and_snippet() {
         "hyperlink demo must render its link labels: {text}"
     );
     assert!(
-        text.contains("https://github.com/functora/functora-egui"),
+        text.contains(
+            "https://github.com/functora/functora.github.io/tree/master/rust/functora-egui"
+        ),
         "hyperlink demo must show snippet URLs: {text}"
     );
     assert!(

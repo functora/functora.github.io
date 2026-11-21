@@ -14,7 +14,7 @@ The crate provides:
 
 ```toml
 [dependencies]
-functora-core = "0.4.0"
+functora-core = "0.4.1"
 ```
 
 ## Security

@@ -207,7 +207,7 @@ fn default_donate_texts_expose_the_author_mention() {
     let greeting_mention = ATTRS
         .split_author_mention(&greeting)
         .unwrap_or_else(|| panic!("greeting must mention the author"));
-    assert_eq!(greeting_mention.before, "Hello, User! I'm ");
+    assert_eq!(greeting_mention.before, "Hello, user! I'm ");
     assert_eq!(greeting_mention.name, FUNCTORA_ORG);
     assert_eq!(greeting_mention.after, ", the creator of this software.");
 

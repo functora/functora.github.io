@@ -193,6 +193,7 @@ pub(crate) fn show_input_paste_clear(
 
     let mut child_ui = ui.new_child(
         egui::UiBuilder::new()
+            .id_salt(base_id.with("content"))
             .max_rect(input_rect)
             .layout(egui::Layout::left_to_right(egui::Align::Center)),
     );

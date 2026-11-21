@@ -286,15 +286,31 @@ fn platform_failures_render_precise_messages() {
     );
     assert_eq!(
         Error::Missing(Missing::DataDir).render_spa(),
-        "Objeto requerido no disponible: data directory"
+        "Objeto requerido no disponible: directorio de datos"
     );
     assert_eq!(
         Error::Missing(Missing::AndroidApp).render_rus(),
-        "Требуемый объект недоступен: Android application"
+        "Требуемый объект недоступен: приложение Android"
     );
     assert_eq!(
         Error::CapabilityDisabled(Capability::Save).render_eng(),
-        "save is unavailable: web feature disabled"
+        "Saving is unavailable: web feature disabled"
+    );
+    assert_eq!(
+        Error::CapabilityDisabled(Capability::Clipboard).render_spa(),
+        "Portapapeles no está disponible: función web deshabilitada"
+    );
+    assert_eq!(
+        Error::CapabilityDisabled(Capability::Share).render_rus(),
+        "Возможность «Общий доступ» недоступна: веб-функция отключена"
+    );
+    assert_eq!(
+        Error::Clipboard(ClipboardError::Busy).render_spa(),
+        "Error del portapapeles: ocupado"
+    );
+    assert_eq!(
+        Error::Clipboard(ClipboardError::ConversionFailed).render_rus(),
+        "Ошибка буфера обмена: ошибка преобразования"
     );
     assert_eq!(
         Error::Clipboard(ClipboardError::Unknown("detail".to_string())).render_eng(),

@@ -4,7 +4,7 @@ Cryptonote is a cross-platform application for creating, storing, and sharing en
 
 With Cryptonote, you can:
 
-- Write a note in Markdown or HTML
+- Write a note in Markdown
 - Optionally encrypt it using strong, well-established algorithms (e.g., AES-GCM or ChaCha20-Poly1305)
 - Or leave it unencrypted
 - Share the note instantly via a URL or a scannable QR code
@@ -69,7 +69,7 @@ nix --extra-experimental-features "nix-command flakes" bundle \
   .#cryptonote
 
 # Copy the standalone artifact for distribution
-cp -L cryptonote cryptonote-v0.2.1-x86_64-linux.arx
+cp -L cryptonote cryptonote-v0.2.2-x86_64-linux.arx
 
 # Or build the bundle derivation directly
 nix build .#cryptonote-bundle

@@ -79,7 +79,7 @@ impl From<jni::errors::Error> for JniError {
 
 #[derive(Debug, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    #[error("IO error: {0}")]
+    #[error("I/O error: {0}")]
     IO(IoError),
     #[cfg(target_os = "android")]
     #[error("JNI error: {0}")]
@@ -201,6 +201,65 @@ pub enum Missing {
     DataDir,
 }
 
+impl I18N for Missing {
+    fn render_eng(&self) -> String {
+        match self {
+            Self::Window => "window".into(),
+            Self::Document => "document".into(),
+            Self::Body => "document body".into(),
+            Self::VideoElement => "video element".into(),
+            Self::Canvas => "canvas".into(),
+            Self::Context2d => "2D context".into(),
+            Self::LocalStorage => "localStorage".into(),
+            Self::Anchor => "anchor element".into(),
+            Self::Input => "input element".into(),
+            Self::FileEntry => "file entry".into(),
+            Self::ClipboardText => "clipboard text".into(),
+            Self::DesktopSession => "desktop session".into(),
+            Self::AndroidApp => "Android application".into(),
+            Self::DataDir => "data directory".into(),
+        }
+    }
+
+    fn render_spa(&self) -> String {
+        match self {
+            Self::Window => "ventana".into(),
+            Self::Document => "documento".into(),
+            Self::Body => "cuerpo del documento".into(),
+            Self::VideoElement => "elemento de video".into(),
+            Self::Canvas => "lienzo".into(),
+            Self::Context2d => "contexto 2D".into(),
+            Self::LocalStorage => "localStorage".into(),
+            Self::Anchor => "elemento de enlace".into(),
+            Self::Input => "campo de entrada".into(),
+            Self::FileEntry => "entrada de archivo".into(),
+            Self::ClipboardText => "texto del portapapeles".into(),
+            Self::DesktopSession => "sesión de escritorio".into(),
+            Self::AndroidApp => "aplicación de Android".into(),
+            Self::DataDir => "directorio de datos".into(),
+        }
+    }
+
+    fn render_rus(&self) -> String {
+        match self {
+            Self::Window => "окно".into(),
+            Self::Document => "документ".into(),
+            Self::Body => "тело документа".into(),
+            Self::VideoElement => "элемент видео".into(),
+            Self::Canvas => "холст".into(),
+            Self::Context2d => "контекст 2D".into(),
+            Self::LocalStorage => "localStorage".into(),
+            Self::Anchor => "элемент ссылки".into(),
+            Self::Input => "элемент ввода".into(),
+            Self::FileEntry => "запись файла".into(),
+            Self::ClipboardText => "текст в буфере обмена".into(),
+            Self::DesktopSession => "сеанс рабочего стола".into(),
+            Self::AndroidApp => "приложение Android".into(),
+            Self::DataDir => "каталог данных".into(),
+        }
+    }
+}
+
 /// A capability that the current build does not enable.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 pub enum Capability {
@@ -210,6 +269,32 @@ pub enum Capability {
     Share,
     #[error("save")]
     Save,
+}
+
+impl I18N for Capability {
+    fn render_eng(&self) -> String {
+        match self {
+            Self::Clipboard => "Clipboard".into(),
+            Self::Share => "Sharing".into(),
+            Self::Save => "Saving".into(),
+        }
+    }
+
+    fn render_spa(&self) -> String {
+        match self {
+            Self::Clipboard => "Portapapeles".into(),
+            Self::Share => "Compartir".into(),
+            Self::Save => "Guardar".into(),
+        }
+    }
+
+    fn render_rus(&self) -> String {
+        match self {
+            Self::Clipboard => "Буфер обмена".into(),
+            Self::Share => "Общий доступ".into(),
+            Self::Save => "Сохранение".into(),
+        }
+    }
 }
 
 /// A clipboard that exists but refused the operation.
@@ -225,6 +310,38 @@ pub enum ClipboardError {
     ConversionFailed,
     #[error("{0}")]
     Unknown(String),
+}
+
+impl I18N for ClipboardError {
+    fn render_eng(&self) -> String {
+        match self {
+            Self::Unavailable => "unavailable".into(),
+            Self::Busy => "busy".into(),
+            Self::ContentUnavailable => "content unavailable".into(),
+            Self::ConversionFailed => "conversion failed".into(),
+            Self::Unknown(detail) => detail.clone(),
+        }
+    }
+
+    fn render_spa(&self) -> String {
+        match self {
+            Self::Unavailable => "no disponible".into(),
+            Self::Busy => "ocupado".into(),
+            Self::ContentUnavailable => "contenido no disponible".into(),
+            Self::ConversionFailed => "error de conversión".into(),
+            Self::Unknown(detail) => detail.clone(),
+        }
+    }
+
+    fn render_rus(&self) -> String {
+        match self {
+            Self::Unavailable => "недоступен".into(),
+            Self::Busy => "занят".into(),
+            Self::ContentUnavailable => "содержимое недоступно".into(),
+            Self::ConversionFailed => "ошибка преобразования".into(),
+            Self::Unknown(detail) => detail.clone(),
+        }
+    }
 }
 
 /// A JavaScript value rejected by a Web API call, kept alive so that its
@@ -310,7 +427,7 @@ impl From<zip::result::ZipError> for Error {
 impl I18N for Error {
     fn render_eng(&self) -> String {
         match self {
-            Self::IO(e) => format!("IO error: {e}"),
+            Self::IO(e) => format!("I/O error: {e}"),
             Self::Json(e) => format!("JSON parsing error: {e}"),
             Self::Base64(e) => format!("Base64 decoding error: {e}"),
             #[cfg(feature = "qr")]
@@ -340,7 +457,7 @@ impl I18N for Error {
             Self::NotJsonObject(e) => format!("Expected JSON object, got: {e}"),
             #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Archive error: {e}"),
-            Self::Worker(e) => format!("Background task error: {e}"),
+            Self::Worker(_) => "Background task stopped unexpectedly".into(),
             Self::FileTooLarge { name, size, limit } => {
                 format!("File too large ({name}: {size} bytes, limit {limit} bytes)")
             }
@@ -351,9 +468,13 @@ impl I18N for Error {
                 "A password is required to open this encrypted archive".into()
             }
             Self::Cancelled => "Operation cancelled".into(),
-            Self::Missing(m) => format!("Required object unavailable: {m}"),
-            Self::CapabilityDisabled(c) => format!("{c} is unavailable: web feature disabled"),
-            Self::Clipboard(e) => format!("Clipboard error: {e}"),
+            Self::Missing(m) => {
+                format!("Required object unavailable: {}", m.render_eng())
+            }
+            Self::CapabilityDisabled(c) => {
+                format!("{} is unavailable: web feature disabled", c.render_eng())
+            }
+            Self::Clipboard(e) => format!("Clipboard error: {}", e.render_eng()),
             #[cfg(target_arch = "wasm32")]
             Self::Js(e) => format!("JavaScript operation failed: {e}"),
             Self::FilePickerTimedOut => "File picker timed out".into(),
@@ -382,28 +503,26 @@ impl I18N for Error {
                 "Se perdió la conexión con el navegador; inténtalo de nuevo".into()
             }
             #[cfg(feature = "crypto")]
-            Self::Cipher(e) => format!("Error de inicialización de cifrado: {e}"),
+            Self::Cipher(e) => format!("Error al inicializar el cifrado: {e}"),
             #[cfg(feature = "crypto")]
-            Self::KeyDerive(e) => format!("Error de derivación de clave: {e}"),
+            Self::KeyDerive(e) => format!("Error al derivar la clave: {e}"),
             #[cfg(feature = "crypto")]
-            Self::Getrandom(e) => format!("Error de generación de números aleatorios: {e}"),
+            Self::Getrandom(e) => format!("Error al generar números aleatorios: {e}"),
             #[cfg(feature = "crypto")]
-            Self::Encrypt(e) => format!("Falló el cifrado: {e}"),
+            Self::Encrypt(e) => format!("No se pudo cifrar: {e}"),
             #[cfg(feature = "crypto")]
-            Self::Decrypt(e) => format!("Falló el descifrado: {e}"),
-            Self::InvalidFormat(e) => format!("Formato de carga útil cifrada no válido: {e}"),
+            Self::Decrypt(e) => format!("No se pudo descifrar: {e}"),
+            Self::InvalidFormat(e) => format!("Formato de datos cifrados no válido: {e}"),
             Self::Convert { context, source } => {
                 format!("Error de conversión numérica ({context}): {source}")
             }
             Self::CameraNotAvailable(e) => format!("La cámara no está disponible: {e}"),
-            Self::CameraPermissionDenied(e) => format!("Permiso de cámara denegado: {e}"),
+            Self::CameraPermissionDenied(e) => format!("Se denegó el permiso de cámara: {e}"),
             Self::CameraStalled => "La cámara dejó de responder; inténtalo de nuevo".into(),
             Self::NotJsonObject(e) => format!("Se esperaba un objeto JSON, se obtuvo: {e}"),
             #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Error de archivo: {e}"),
-            Self::Worker(e) => {
-                format!("La tarea en segundo plano se detuvo inesperadamente (error: {e})")
-            }
+            Self::Worker(_) => "La tarea en segundo plano se detuvo inesperadamente".into(),
             Self::FileTooLarge { name, size, limit } => {
                 format!("Archivo demasiado grande ({name}: {size} bytes, límite {limit} bytes)")
             }
@@ -414,21 +533,30 @@ impl I18N for Error {
                 "Se requiere una contraseña para abrir este archivo cifrado".into()
             }
             Self::Cancelled => "Operación cancelada".into(),
-            Self::Missing(m) => format!("Objeto requerido no disponible: {m}"),
-            Self::CapabilityDisabled(c) => {
-                format!("{c} no está disponible: función web deshabilitada")
+            Self::Missing(m) => {
+                format!("Objeto requerido no disponible: {}", m.render_spa())
             }
-            Self::Clipboard(e) => format!("Error de portapapeles: {e}"),
+            Self::CapabilityDisabled(c) => {
+                format!(
+                    "{} no está disponible: función web deshabilitada",
+                    c.render_spa()
+                )
+            }
+            Self::Clipboard(e) => format!("Error del portapapeles: {}", e.render_spa()),
             #[cfg(target_arch = "wasm32")]
             Self::Js(e) => format!("La operación JavaScript falló: {e}"),
-            Self::FilePickerTimedOut => "El selector de archivos agotó el tiempo de espera".into(),
+            Self::FilePickerTimedOut => {
+                "Se agotó el tiempo de espera del selector de archivos".into()
+            }
             Self::FilePickerFailed => "El selector de archivos falló".into(),
             Self::SaveCancelled => "Se canceló el guardado".into(),
-            Self::OpenUrlFailed { url } => format!("xdg-open falló al abrir {url}"),
-            Self::OpenUrlTimedOut { url } => format!("xdg-open agotó el tiempo para {url}"),
+            Self::OpenUrlFailed { url } => format!("xdg-open no pudo abrir {url}"),
+            Self::OpenUrlTimedOut { url } => {
+                format!("xdg-open agotó el tiempo de espera para {url}")
+            }
             #[cfg(target_os = "android")]
             Self::JNI(e) => format!("Error JNI: {e}"),
-            Self::ShareFailed(e) => format!("Falló al compartir: {e}"),
+            Self::ShareFailed(e) => format!("No se pudo compartir: {e}"),
         }
     }
 
@@ -447,7 +575,7 @@ impl I18N for Error {
             #[cfg(feature = "crypto")]
             Self::Cipher(e) => format!("Ошибка инициализации шифра: {e}"),
             #[cfg(feature = "crypto")]
-            Self::KeyDerive(e) => format!("Ошибка вывода ключа: {e}"),
+            Self::KeyDerive(e) => format!("Ошибка формирования ключа: {e}"),
             #[cfg(feature = "crypto")]
             Self::Getrandom(e) => format!("Ошибка генерации случайных чисел: {e}"),
             #[cfg(feature = "crypto")]
@@ -456,15 +584,15 @@ impl I18N for Error {
             Self::Decrypt(e) => format!("Ошибка расшифровки: {e}"),
             Self::InvalidFormat(e) => format!("Неверный формат зашифрованных данных: {e}"),
             Self::Convert { context, source } => {
-                format!("Ошибка численного преобразования ({context}): {source}")
+                format!("Ошибка числового преобразования ({context}): {source}")
             }
             Self::CameraNotAvailable(e) => format!("Камера недоступна: {e}"),
-            Self::CameraPermissionDenied(e) => format!("Разрешение на камеру отклонено: {e}"),
+            Self::CameraPermissionDenied(e) => format!("Доступ к камере запрещён: {e}"),
             Self::CameraStalled => "Поток с камеры остановился; попробуйте ещё раз".into(),
             Self::NotJsonObject(e) => format!("Ожидался JSON-объект, получено: {e}"),
             #[cfg(feature = "zip")]
             Self::Archive(e) => format!("Ошибка архива: {e}"),
-            Self::Worker(e) => format!("Ошибка фоновой задачи: {e}"),
+            Self::Worker(_) => "Фоновая задача неожиданно остановилась".into(),
             Self::FileTooLarge { name, size, limit } => {
                 format!("Файл слишком большой ({name}: {size} байт, лимит {limit} байт)")
             }
@@ -475,9 +603,16 @@ impl I18N for Error {
                 "Для открытия этого зашифрованного архива требуется пароль".into()
             }
             Self::Cancelled => "Операция отменена".into(),
-            Self::Missing(m) => format!("Требуемый объект недоступен: {m}"),
-            Self::CapabilityDisabled(c) => format!("{c} недоступна: веб-функция отключена"),
-            Self::Clipboard(e) => format!("Ошибка буфера обмена: {e}"),
+            Self::Missing(m) => {
+                format!("Требуемый объект недоступен: {}", m.render_rus())
+            }
+            Self::CapabilityDisabled(c) => {
+                format!(
+                    "Возможность «{}» недоступна: веб-функция отключена",
+                    c.render_rus()
+                )
+            }
+            Self::Clipboard(e) => format!("Ошибка буфера обмена: {}", e.render_rus()),
             #[cfg(target_arch = "wasm32")]
             Self::Js(e) => format!("Операция JavaScript не выполнена: {e}"),
             Self::FilePickerTimedOut => "Выбор файла: время ожидания истекло".into(),

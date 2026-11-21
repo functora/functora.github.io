@@ -195,7 +195,7 @@ fn default_donate_greeting_links_the_author_mention() {
     let mut app = App::new();
     let _ = app.step(vec![], &mut body);
     let frame = app.step(vec![], &mut body);
-    let (pos, galley) = galley_with(&frame, "Hello, User!");
+    let (pos, galley) = galley_with(&frame, "Hello, user!");
     let link = pos + glyph_center(&galley, "functora", false);
     let clicked = click_at(&mut app, link, &mut body);
     assert_eq!(opened_urls(&clicked), vec![AUTHOR_URL.to_string()]);

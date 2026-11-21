@@ -9,6 +9,7 @@ The demo covers:
 - **Data display**: tables, pagination, avatars, area charts, calendars, carousels and code snippets
 - **Overlays**: dialogs, alert dialogs, drawers, popovers, tooltips, context menus, toasts and blocking overlays
 - **Platform**: clipboard, file picking, camera capture, QR scanning, downloads, markdown rendering, thumbnails, archives and encryption
+- **Donations**: a white-label donate screen with crypto QR codes; the home page and footer both link the library sources, its crates.io page and the donate screen
 
 ## Running
 
@@ -41,7 +42,7 @@ nix --extra-experimental-features "nix-command flakes" bundle \
   .#functora-egui-demo
 
 # Copy the standalone artifact for distribution
-cp -L functora-egui-demo functora-egui-demo-v0.2.1-x86_64-linux.arx
+cp -L functora-egui-demo functora-egui-demo-v0.2.2-x86_64-linux.arx
 
 # Or build the bundle derivation directly
 nix build .#functora-egui-demo-bundle

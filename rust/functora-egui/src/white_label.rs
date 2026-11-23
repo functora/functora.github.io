@@ -17,6 +17,7 @@ use crate::route::RouteMetadata;
 use crate::tokens::button_variant::ButtonVariant;
 use crate::tokens::component_size::ComponentSize;
 use crate::widgets::button::widget::Button;
+#[cfg(all(feature = "qr", feature = "clipboard"))]
 use crate::widgets::card::widget::Card;
 use crate::widgets::hypertext::widget::Hypertext;
 

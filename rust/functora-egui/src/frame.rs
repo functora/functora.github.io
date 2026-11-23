@@ -143,6 +143,7 @@ pub const RESPONSIVE_PREVIEW_FALLBACK_ASPECT: f32 = 4.0 / 3.0;
 ///
 /// The box keeps its aspect ratio, so a preview asked for at a fixed size
 /// shrinks on a narrow screen instead of overflowing its container.
+#[cfg(feature = "platform")]
 #[must_use]
 pub(crate) fn cap_preview_size(desired: egui::Vec2, available_width: f32) -> egui::Vec2 {
     let width = crate::cast::cap_to_available(desired.x, available_width);

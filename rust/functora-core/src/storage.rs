@@ -76,6 +76,20 @@ pub fn write_json_object<P: AsRef<Path>>(path: P, json: &Value) -> Result<(), Er
     Ok(write(path.as_ref(), s)?)
 }
 
+pub fn remove_key<P: AsRef<Path>>(path: P, key: &str) -> Result<(), Error> {
+    let _guard = storage_lock();
+    let file_path = path.as_ref();
+    ensure_file(file_path)?;
+    let mut json: Value = from_str(&read_to_string(file_path)?)?;
+    if let Some(object) = json.as_object_mut() {
+        drop(object.remove(key));
+        write(file_path, to_string_pretty(&json)?)?;
+        Ok(())
+    } else {
+        Err(Error::NotJsonObject(json))
+    }
+}
+
 pub fn get_json_value<P: AsRef<Path>>(path: P, key: &str) -> Result<Option<Value>, Error> {
     let _guard = storage_lock();
     let json: Value = from_str(&read_to_string(path.as_ref())?)?;

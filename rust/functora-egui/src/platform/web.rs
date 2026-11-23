@@ -198,9 +198,16 @@ fn mime_for(name: &str) -> &str {
 
 #[must_use]
 pub fn storage_get(key: &str) -> Option<String> {
-    web_sys::window()
-        .and_then(|w| w.local_storage().ok()?)
-        .and_then(|s| s.get_item(key).ok()?)
+    storage_try_get(key).ok().flatten()
+}
+
+pub fn storage_try_get(key: &str) -> Result<Option<String>, Error> {
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
+    let storage = window
+        .local_storage()
+        .map_err(Error::from)?
+        .ok_or_else(|| Error::Missing(Missing::LocalStorage))?;
+    storage.get_item(key).map_err(Error::from)
 }
 
 pub fn storage_set(key: &str, value: &str) -> Result<(), Error> {
@@ -210,6 +217,16 @@ pub fn storage_set(key: &str, value: &str) -> Result<(), Error> {
         .map_err(Error::from)?
         .ok_or_else(|| Error::Missing(Missing::LocalStorage))?;
     storage.set_item(key, value).map_err(Error::from)?;
+    Ok(())
+}
+
+pub fn storage_remove(key: &str) -> Result<(), Error> {
+    let window = web_sys::window().ok_or_else(|| Error::Missing(Missing::Window))?;
+    let storage = window
+        .local_storage()
+        .map_err(Error::from)?
+        .ok_or_else(|| Error::Missing(Missing::LocalStorage))?;
+    storage.remove_item(key).map_err(Error::from)?;
     Ok(())
 }
 

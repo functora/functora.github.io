@@ -20,6 +20,44 @@
   agentsMd = ../AGENTS.md;
 
   #
+  # opencode-continue plugin (OpenCode V2 API). Continues a failed session by
+  # injecting the synthetic prompt "continue". Built deterministically from
+  # local source; @opencode/plugin is provided by the OpenCode host runtime and
+  # must not be vendored.
+  #
+  continuePluginVersion = "1.0.0";
+
+  continuePluginSrc = lib.cleanSourceWith {
+    src = ../pub/opencode-continue;
+    filter = path: _type: let
+      name = baseNameOf (toString path);
+    in
+      name != "dist" && name != "node_modules" && name != "result";
+  };
+
+  continuePlugin = pkgs.stdenv.mkDerivation {
+    name = "opencode-continue-${continuePluginVersion}";
+    src = continuePluginSrc;
+    nativeBuildInputs = [pkgs.typescript pkgs.nodejs];
+    doCheck = true;
+
+    buildPhase = ''
+      ${pkgs.typescript}/bin/tsc -p tsconfig.json
+    '';
+
+    checkPhase = ''
+      ${pkgs.nodejs}/bin/node --test tests/*.test.mjs
+    '';
+
+    installPhase = ''
+      mkdir -p $out/dist
+      cp -r dist/* $out/dist
+      cp package.json $out/package.json
+      printf 'export { default } from "./dist/index.js"\n' > $out/index.js
+    '';
+  };
+
+  #
   # opencode-ntfy plugin (OpenCode V2 API). A maintained wrapper plugin that
   # matches on session.execution.succeeded|failed|interrupted +
   # permission.asked + form.created, filters subagents, and delivers via ntfy.sh.
@@ -119,8 +157,8 @@
     };
   });
 
-  ntfyPluginConfigJson = pkgs.writeText "opencode-ntfy.json" (builtins.toJSON {
-    plugins = [ntfyPlugin];
+  opencodePluginConfigJson = pkgs.writeText "opencode-plugins.json" (builtins.toJSON {
+    plugins = lib.optionals ntfyEnabled [ntfyPlugin] ++ [continuePlugin];
   });
 
   opencodePasswordScript = ''
@@ -228,8 +266,9 @@
         else opencodeClient
       )
       #
-      # Notifications
+      # Plugins
       #
+      continuePlugin
       ntfyPlugin
       (writeShellApplication {
         name = "notify-user";
@@ -295,8 +334,8 @@
       hostname = serverHostname;
     }
     + ntfyEgress
-    + lib.optionalString ntfyEnabled ''
-      export OPENCODE_CONFIG="${toString ntfyPluginConfigJson}";
+    + ''
+      export OPENCODE_CONFIG="${toString opencodePluginConfigJson}";
     ''
     + ''
 

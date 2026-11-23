@@ -1,5 +1,5 @@
 pub use functora_core::storage::{
-    find_or_init_key, get_json_value, read_json_object, set_json_value, update_key,
+    find_or_init_key, get_json_value, read_json_object, remove_key, set_json_value, update_key,
     write_json_object,
 };
 
@@ -43,32 +43,64 @@ impl Storage {
 
     #[must_use]
     pub fn load<T: DeserializeOwned>(&self, key: &str) -> Option<T> {
+        self.try_load(key)
+            .inspect_err(|error| tracing::warn!("Storage load error for key {key}: {error}"))
+            .ok()
+            .flatten()
+    }
+
+    pub fn try_load<T: DeserializeOwned>(&self, key: &str) -> Result<Option<T>, Error> {
         #[cfg(target_arch = "wasm32")]
         {
-            web_load(key)
+            web_try_load(key)
         }
         #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
         {
-            android_load(key)
+            android_try_load(key)
         }
         #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
         {
-            desktop_load(self.app, key)
+            desktop_try_load(self.app, key)
         }
     }
 
     pub fn persist<T: Serialize>(&self, key: &str, value: &T) {
+        if let Err(error) = self.try_persist(key, value) {
+            tracing::warn!("Storage persist error for key {key}: {error}");
+        }
+    }
+
+    pub fn try_persist<T: Serialize>(&self, key: &str, value: &T) -> Result<(), Error> {
         #[cfg(target_arch = "wasm32")]
         {
-            web_persist(key, value);
+            crate::platform::web::storage_set(key, &serde_json::to_string(value)?)
         }
         #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
         {
-            android_persist(key, value);
+            let path = crate::platform::android::files_dir()?.join("storage.json");
+            update_key(path, key, value)
         }
         #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
         {
-            desktop_persist(self.app, key, value);
+            let path = storage_file_for(self.app)?;
+            update_key(path, key, value)
+        }
+    }
+
+    pub fn try_remove(&self, key: &str) -> Result<(), Error> {
+        #[cfg(target_arch = "wasm32")]
+        {
+            crate::platform::web::storage_remove(key)
+        }
+        #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
+        {
+            let path = crate::platform::android::files_dir()?.join("storage.json");
+            remove_key(path, key)
+        }
+        #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
+        {
+            let path = storage_file_for(self.app)?;
+            remove_key(path, key)
         }
     }
 
@@ -103,7 +135,7 @@ pub fn files_dir_for(app: &str) -> Result<PathBuf, Error> {
 #[cfg(all(not(target_os = "android"), not(target_arch = "wasm32")))]
 pub fn app_data_dir(app: &str) -> Result<PathBuf, Error> {
     directories::ProjectDirs::from("io", "functora", app)
-        .map(|d| d.data_dir().to_path_buf())
+        .map(|dir| dir.data_dir().to_path_buf())
         .ok_or(Error::Missing(Missing::DataDir))
 }
 
@@ -115,60 +147,41 @@ pub fn storage_file_for(app: &str) -> Result<PathBuf, Error> {
 }
 
 #[cfg(target_arch = "wasm32")]
-fn web_load<T: DeserializeOwned>(key: &str) -> Option<T> {
-    let raw = crate::platform::web::storage_get(key)?;
-    serde_json::from_str(&raw)
-        .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
-        .ok()
-}
-
-#[cfg(target_arch = "wasm32")]
-fn web_persist<T: Serialize>(key: &str, value: &T) {
-    if let Ok(json) = serde_json::to_string(value)
-        && let Err(e) = crate::platform::web::storage_set(key, &json)
-    {
-        tracing::warn!("Storage persist error: {e}");
+fn web_try_load<T: DeserializeOwned>(key: &str) -> Result<Option<T>, Error> {
+    match crate::platform::web::storage_try_get(key)? {
+        Some(raw) => serde_json::from_str(&raw).map(Some).map_err(Error::from),
+        None => Ok(None),
     }
 }
 
 #[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
-fn android_load<T: DeserializeOwned>(key: &str) -> Option<T> {
-    crate::platform::android::files_dir().ok().and_then(|p| {
-        let json = read_json_object(p.join("storage.json")).ok()?;
-        let value = json.get(key)?;
-        serde_json::from_value(value.clone())
-            .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
-            .ok()
-    })
-}
-
-#[cfg(all(not(target_arch = "wasm32"), target_os = "android"))]
-fn android_persist<T: Serialize>(key: &str, value: &T) {
-    if let Ok(path) = crate::platform::android::files_dir().map(|p| p.join("storage.json"))
-        && let Err(e) = update_key(&path, key, value)
-    {
-        tracing::error!("Storage persist error: {e}");
+fn android_try_load<T: DeserializeOwned>(key: &str) -> Result<Option<T>, Error> {
+    let path = crate::platform::android::files_dir()?.join("storage.json");
+    if !path.exists() {
+        return Ok(None);
     }
+    let json = read_json_object(path)?;
+    let Some(value) = json.get(key) else {
+        return Ok(None);
+    };
+    serde_json::from_value(value.clone())
+        .map(Some)
+        .map_err(Error::from)
 }
 
 #[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
-fn desktop_load<T: DeserializeOwned>(app: &str, key: &str) -> Option<T> {
-    storage_file_for(app).ok().and_then(|p| {
-        let json = read_json_object(&p).ok()?;
-        let value = json.get(key)?;
-        serde_json::from_value(value.clone())
-            .inspect_err(|e| tracing::warn!("Storage parse error for key {key}: {e}"))
-            .ok()
-    })
-}
-
-#[cfg(all(not(target_arch = "wasm32"), not(target_os = "android")))]
-fn desktop_persist<T: Serialize>(app: &str, key: &str, value: &T) {
-    if let Ok(path) = storage_file_for(app)
-        && let Err(e) = update_key(&path, key, value)
-    {
-        tracing::error!("Storage persist error: {e}");
+fn desktop_try_load<T: DeserializeOwned>(app: &str, key: &str) -> Result<Option<T>, Error> {
+    let path = storage_file_for(app)?;
+    if !path.exists() {
+        return Ok(None);
     }
+    let json = read_json_object(path)?;
+    let Some(value) = json.get(key) else {
+        return Ok(None);
+    };
+    serde_json::from_value(value.clone())
+        .map(Some)
+        .map_err(Error::from)
 }
 
 #[derive(Debug)]

@@ -227,8 +227,8 @@
       }
       // mkDoom {
         tag = "cod";
-        gfx = ../bak/doom/CodeFX_v1.101.pk3;
-        total = mkCod ../bak/doom/DBP_58.wad;
+        dec = "";
+        total = mkCod ../bak/doom/DBP_75.wad;
         music = ../bak/doom/synth.pk3;
         liquid = ltp701;
         relite = ../bak/doom/relite_0.5a.pk3;

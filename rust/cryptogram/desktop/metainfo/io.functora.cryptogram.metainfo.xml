@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.functora.cryptogram.desktop</id>
+  <metadata_license>MIT</metadata_license>
+  <name>Cryptogram</name>
+  <summary>End-to-end encrypted Telegram Mini App</summary>
+  <description>
+    <p>Cryptogram is an end-to-end encrypted group messenger built with functora-egui and OpenMLS.</p>
+  </description>
+  <launchable type="desktop-id">io.functora.cryptogram.desktop</launchable>
+  <url type="homepage">https://github.com/functora/functora.github.io/tree/master/rust/cryptogram</url>
+  <developer id="io.functora.cryptogram"><name>Functora</name></developer>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="0.1.0" date="1980-01-01" />
+  </releases>
+</component>

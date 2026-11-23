@@ -54,6 +54,7 @@
               sha256 = "sha256-di+qBAdd7pENLiIB9CoZoab+W5xeDoByMREcCGTSzWo=";
             };
             cargoLock.lockFile = "${src}/Cargo.lock";
+            CARGO_HOME = "$TMPDIR/cargo-home";
             nativeBuildInputs = [pkg-config];
             buildInputs =
               [openssl]
@@ -123,6 +124,14 @@
                 cp assets/index.html "$REL/index.html"
                 cp assets/manifest.webmanifest "$REL/manifest.webmanifest"
                 cp assets/egui.js "$REL/egui.js"
+                for FILE in cryptogram.js telegram-web-app.js csp.txt; do
+                  if [ -f "assets/$FILE" ]; then
+                    cp "assets/$FILE" "$REL/"
+                  fi
+                done
+                if [ -f "assets/cryptogram.js" ]; then
+                  printf "export const APP_VERSION = '%s';\n" "$VSN" > "$REL/version.js"
+                fi
                 cp ../functora-egui/assets/web/sw.js "$REL/sw.js"
                 cp "${icons}/android-chrome-192x192.png" "$REL/"
                 cp "${icons}/android-chrome-512x512.png" "$REL/"
@@ -138,6 +147,7 @@
             runtimeInputs = with pkgs; [coreutils psmisc gnused gnugrep gzip python3];
             text = ''
                   cd "${app}"
+                  VSN="$(grep '^version' Cargo.toml | head -1 | sed -E 's/.*"([^"]+)".*/\1/')"
                   LIBNAME="$(echo "${app}" | tr - _)"
                     ${rustToolchain}/bin/cargo build --release --lib --target wasm32-unknown-unknown
                     ${wasm-bindgen-cli-0_2_127}/bin/wasm-bindgen \
@@ -155,6 +165,14 @@
                     cp assets/index.html /tmp/${app}-web/index.html
                     cp assets/manifest.webmanifest /tmp/${app}-web/manifest.webmanifest
                     cp assets/egui.js /tmp/${app}-web/egui.js
+                    for FILE in cryptogram.js telegram-web-app.js csp.txt; do
+                      if [ -f "assets/$FILE" ]; then
+                        cp "assets/$FILE" /tmp/${app}-web/
+                      fi
+                    done
+                    if [ -f "assets/cryptogram.js" ]; then
+                      printf "export const APP_VERSION = '%s';\n" "$VSN" > /tmp/${app}-web/version.js
+                    fi
                     cp ../functora-egui/assets/web/sw.js /tmp/${app}-web/sw.js
                     cp "${icons}/android-chrome-192x192.png" /tmp/${app}-web/
                     cp "${icons}/android-chrome-512x512.png" /tmp/${app}-web/
@@ -246,6 +264,124 @@
             '';
           };
         sourceRoot = self.outPath;
+        cryptogramManifest = builtins.fromTOML (builtins.readFile (sourceRoot + "/cryptogram/Cargo.toml"));
+        cryptogramWasmPackage = pkgs.rustPlatform.buildRustPackage {
+          pname = "cryptogram-wasm";
+          version = cryptogramManifest.package.version;
+          src = sourceRoot;
+          cargo = rustToolchain;
+          rustc = rustToolchain;
+          cargoLock.lockFile = sourceRoot + "/cryptogram/Cargo.lock";
+          cargoRoot = "cryptogram";
+          CARGO_HOME = "$TMPDIR/cargo-home";
+          auditable = false;
+          doCheck = false;
+          nativeBuildInputs = with pkgs; [
+            binaryen
+            lld
+            wasm-bindgen-cli-0_2_127
+          ];
+          buildPhase = ''
+            runHook preBuild
+            pushd cryptogram
+            cargo build --offline --release --lib --target wasm32-unknown-unknown
+            popd
+            runHook postBuild
+          '';
+          installPhase = ''
+            runHook preInstall
+            mkdir -p "$out/pkg"
+            install -m 0644 target/wasm32-unknown-unknown/release/cryptogram.wasm "$out/pkg/cryptogram.wasm"
+            runHook postInstall
+          '';
+          postInstall = ''
+            wasm-bindgen \
+              --target web \
+              --no-typescript \
+              --out-dir "$out/pkg" \
+              "$out/pkg/cryptogram.wasm"
+            wasm-opt -O2 --strip-debug \
+              "$out/pkg/cryptogram_bg.wasm" \
+              -o "$out/pkg/cryptogram_bg.opt.wasm"
+            mv "$out/pkg/cryptogram_bg.opt.wasm" "$out/pkg/cryptogram_bg.wasm"
+            rm "$out/pkg/cryptogram.wasm"
+          '';
+          meta = with pkgs.lib; {
+            description = "Cryptogram WebAssembly package";
+            license = licenses.mit;
+            platforms = platforms.all;
+          };
+        };
+        cryptogramWasmCheck = pkgs.runCommand "cryptogram-wasm-check" {
+          nativeBuildInputs = [ pkgs.binaryen ];
+          dontUnpack = true;
+        } ''
+          test -s "${cryptogramWasmPackage}/pkg/cryptogram.js"
+          test -s "${cryptogramWasmPackage}/pkg/cryptogram_bg.wasm"
+          grep -F "cryptogram_bg.wasm" "${cryptogramWasmPackage}/pkg/cryptogram.js"
+          wasm-opt "${cryptogramWasmPackage}/pkg/cryptogram_bg.wasm" -o "$out"
+        '';
+        relayTestCheck = pkgs.runCommand "cryptogram-relay-test" {
+          nativeBuildInputs = [ pkgs.nodejs_latest ];
+          dontUnpack = true;
+        } ''
+          cd "${sourceRoot}/cryptogram/tgcloud"
+          node --experimental-loader ./tests/loader.mjs --test ./tests/relay.test.mjs
+          touch "$out"
+        '';
+        relayTestHelper = pkgs.writeShellApplication {
+          name = "relay-test";
+          runtimeInputs = with pkgs; [ coreutils nodejs_latest ];
+          text = ''
+            TEST_DIR="''${1:-${sourceRoot}/cryptogram/tgcloud}"
+            if [ ! -f "$TEST_DIR/tests/relay.test.mjs" ]; then
+              echo "Relay test directory not found: $TEST_DIR" >&2
+              exit 1
+            fi
+            cd "$TEST_DIR"
+            node --experimental-loader ./tests/loader.mjs --test ./tests/relay.test.mjs
+          '';
+        };
+        cryptogramWasmCheckHelper = pkgs.writeShellApplication {
+          name = "cryptogram-wasm-check";
+          runtimeInputs = with pkgs; [
+            binaryen
+            coreutils
+            rustToolchain
+            wasm-bindgen-cli-0_2_127
+          ];
+          text = ''
+            CRATE_DIR="''${1:-$PWD}"
+            if [ -f "$CRATE_DIR/cryptogram/Cargo.toml" ]; then
+              CRATE_DIR="$CRATE_DIR/cryptogram"
+            fi
+            if [ ! -f "$CRATE_DIR/Cargo.toml" ]; then
+              echo "Cryptogram crate directory not found: $CRATE_DIR" >&2
+              exit 1
+            fi
+            if [ "$(wasm-bindgen --version)" != "wasm-bindgen 0.2.127" ]; then
+              echo "Unexpected wasm-bindgen version: $(wasm-bindgen --version)" >&2
+              exit 1
+            fi
+            cd "$CRATE_DIR"
+            cargo build --release --lib --target wasm32-unknown-unknown
+            OUTPUT_DIR="$(mktemp -d "''${TMPDIR:-/tmp}/cryptogram-wasm-check.XXXXXX")"
+            trap 'rm -rf "$OUTPUT_DIR"' EXIT
+            wasm-bindgen \
+              --target web \
+              --no-typescript \
+              --out-dir "$OUTPUT_DIR" \
+              target/wasm32-unknown-unknown/release/cryptogram.wasm
+            wasm-opt -O2 --strip-debug \
+              "$OUTPUT_DIR/cryptogram_bg.wasm" \
+              -o "$OUTPUT_DIR/cryptogram_bg.opt.wasm"
+            mv "$OUTPUT_DIR/cryptogram_bg.opt.wasm" "$OUTPUT_DIR/cryptogram_bg.wasm"
+            test -s "$OUTPUT_DIR/cryptogram.js"
+            test -s "$OUTPUT_DIR/cryptogram_bg.wasm"
+            grep -F "cryptogram_bg.wasm" "$OUTPUT_DIR/cryptogram.js"
+            echo "Cryptogram WASM package check passed."
+          '';
+        };
         mkDesktopPackage = app: let
           manifest = builtins.fromTOML (builtins.readFile (sourceRoot + "/${app}/Cargo.toml"));
         in
@@ -725,6 +861,8 @@
               liberation_ttf
               dejavu_fonts
               # apps
+              (mkFunctoraEguiWeb "cryptogram" "assets/favicon")
+              (srFunctoraEguiWeb "cryptogram" "assets/favicon")
               (mkFunctoraEguiWeb "cryptonote" "assets/favicon")
               (srFunctoraEguiWeb "cryptonote" "assets/favicon")
               (srFunctoraEguiDesktop "cryptonote")
@@ -848,20 +986,77 @@
             ++ [releaseAabCryptonote]
             ++ [releaseAabFunctoraEguiDemo];
         };
+        cryptogramShell = pkgs.mkShell {
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
+            libGL
+            wayland
+            libxkbcommon
+            libx11
+            libxcursor
+            libxrandr
+            libxi
+            libxext
+            gtk3
+          ]);
+          packages = with pkgs; [
+            rustToolchain
+            wasm-bindgen-cli-0_2_127
+            cargo-tarpaulin
+            llvmPackages.clang
+            llvmPackages.llvm
+            cargo-audit
+            cargo-deny
+            nodejs_latest
+            binaryen
+            pkg-config
+            libGL
+            wayland
+            libxkbcommon
+            libx11
+            libxcursor
+            libxrandr
+            libxi
+            libxext
+            gtk3
+            gdk-pixbuf
+            cairo
+            pango
+            openssl
+            gcc
+          ];
+        };
       in {
-        devShells.default = pkgs.mkShell shell;
+        devShells = {
+          default = pkgs.mkShell shell;
+          cryptogram = cryptogramShell;
+        };
         packages = desktopPackages // {
           default = desktopPackages.cryptonote;
+          cryptogram-wasm = cryptogramWasmPackage;
+          wasm-bindgen-cli-0_2_127 = wasm-bindgen-cli-0_2_127;
         } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           cryptonote-bundle = desktopBundles.cryptonote;
           functora-egui-demo-bundle = desktopBundles.functora-egui-demo;
         };
-        apps = desktopApps;
+        apps = desktopApps // {
+          cryptogram-wasm-check = {
+            type = "app";
+            program = "${cryptogramWasmCheckHelper}/bin/cryptogram-wasm-check";
+            meta.description = "Build and validate the Cryptogram WASM package";
+          };
+          relay-test = {
+            type = "app";
+            program = "${relayTestHelper}/bin/relay-test";
+            meta.description = "Run the Cryptogram relay contract tests";
+          };
+        };
         bundlers = pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           default = mkNixBundle;
           toArx = mkNixBundle;
         };
         checks = {
+          cryptogram-relay = relayTestCheck;
+          cryptogram-wasm = cryptogramWasmCheck;
           cryptonote = desktopPackages.cryptonote;
           functora-egui-demo = desktopPackages.functora-egui-demo;
         } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

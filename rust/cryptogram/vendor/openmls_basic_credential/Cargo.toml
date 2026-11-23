@@ -1,0 +1,33 @@
+[package]
+name = "openmls_basic_credential"
+version = "0.6.0"
+authors = ["OpenMLS Authors"]
+edition = "2021"
+rust-version = "1.94.0"
+description = "A Basic Credential implementation for OpenMLS"
+license = "MIT"
+documentation = "https://docs.rs/openmls_basic_credential"
+repository = "https://github.com/openmls/openmls/tree/main/basic_credential"
+readme = "README.md"
+
+[dependencies]
+openmls_traits = "0.6.0"
+tls_codec = { version = "0.5", features = ["derive", "serde", "mls"] }
+serde = "1.0"
+
+# Rust Crypto
+ed25519-dalek = { version = "3.0", features = ["rand_core"] }
+p256 = { version = "0.14" }
+p384 = { version = "0.14" }
+ml-dsa = { version = "0.1.0", optional = true }
+rand_core = { version = "0.10" }
+getrandom = { version = "0.4", features = ["sys_rng"] }
+zeroize = "1.8.2"
+
+[features]
+clonable = [] # Make the keys clonable
+test-utils = [] # Only use for tests!
+draft-ietf-mls-pq-ciphersuites = [
+    "openmls_traits/draft-ietf-mls-pq-ciphersuites",
+    "dep:ml-dsa",
+]

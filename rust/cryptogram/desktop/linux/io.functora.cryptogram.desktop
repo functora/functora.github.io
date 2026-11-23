@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.5
+Name=Cryptogram
+Comment=End-to-end encrypted Telegram Mini App
+Exec=cryptogram %F
+Icon=io.functora.cryptogram
+Terminal=false
+Categories=Utility;Security;

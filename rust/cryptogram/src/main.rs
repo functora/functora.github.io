@@ -1,0 +1,11 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+#[cfg(not(any(target_arch = "wasm32", target_os = "android")))]
+fn main() {
+    functora_egui::desktop::run("Cryptogram", env!("CYPTOGRAM_DESKTOP_APP_ID"), |cc| {
+        Ok(Box::new(cryptogram::CryptogramApp::new(cc)) as Box<dyn eframe::App>)
+    });
+}
+
+#[cfg(any(target_arch = "wasm32", target_os = "android"))]
+fn main() {}

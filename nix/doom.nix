@@ -228,10 +228,11 @@
       // mkDoom {
         tag = "cod";
         dec = "";
-        total = mkCod ../bak/doom/DBP_75.wad;
+        total = mkCod ../bak/doom/DBP_62.wad;
         music = ../bak/doom/synth.pk3;
         liquid = ltp701;
-        relite = ../bak/doom/relite_0.5a.pk3;
+        relite = "";
+        flashlight = "";
       }
       // mkDoom {
         tag = "qcde";

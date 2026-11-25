@@ -1,8 +1,11 @@
+import type { AutoContinueMode } from "./runtime.js";
+
 export const OBSERVED_EVENT_TYPES = [
   "session.execution.started",
   "session.execution.succeeded",
   "session.execution.failed",
   "session.execution.interrupted",
+  "session.deleted",
   "permission.asked",
   "permission.replied",
   "form.created",
@@ -40,6 +43,10 @@ export type ObservedEvent =
       readonly data: { readonly sessionID: string };
     }
   | {
+      readonly type: "session.deleted";
+      readonly data: { readonly sessionID: string };
+    }
+  | {
       readonly type: "permission.asked";
       readonly data: { readonly id: string; readonly sessionID: string };
     }
@@ -66,13 +73,17 @@ type CancelledFailureState =
   | { readonly status: "cancelled-before-failure" }
   | { readonly status: "cancelled-after-failure" };
 
+type DisabledFailureState = { readonly status: "disabled" };
+
 type SuppressedFailureState =
   | { readonly status: "pending"; readonly replied: false }
+  | DisabledFailureState
   | CancelledFailureState;
 
 export type FailureState =
   | { readonly status: "none" }
   | { readonly status: "pending"; readonly replied: boolean }
+  | DisabledFailureState
   | CancelledFailureState;
 
 export type SessionControl =
@@ -121,6 +132,23 @@ export function clearSessionControl(
   sessionID: string,
 ): SessionControls {
   return updateControl(state, sessionID);
+}
+
+export function suppressSessionContinuation(
+  state: SessionControls,
+  sessionID: string,
+): SessionControls {
+  const current = state.get(sessionID);
+  if (current?.status !== "waiting") {
+    return state;
+  }
+  return updateControl(state, sessionID, {
+    ...current,
+    failure:
+      current.failure.status === "pending"
+        ? { status: "disabled" }
+        : current.failure,
+  });
 }
 
 export function markContinuationExhausted(
@@ -248,12 +276,67 @@ function resolvePending(
   };
 }
 
+function reduceDisabledFailure(
+  state: SessionControls,
+  sessionID: string,
+): ControlUpdate {
+  const current = state.get(sessionID);
+  if (current?.status === "waiting") {
+    if (current.origin === "continuation") {
+      return {
+        state: updateControl(state, sessionID, {
+          status: "continuation-exhausted",
+        }),
+        action: "stop",
+      };
+    }
+    return {
+      state: updateControl(state, sessionID, {
+        ...current,
+        failure: { status: "disabled" },
+      }),
+      action: "wait",
+    };
+  }
+  if (current?.status === "continuation-pending") {
+    return {
+      state: updateControl(state, sessionID, {
+        status: "continuation-exhausted",
+      }),
+      action: "stop",
+    };
+  }
+  if (current?.status === "failure-suppressed") {
+    return {
+      state: updateControl(state, sessionID, {
+        status: "failure-suppressed",
+        failure:
+          current.failure.status === "cancelled-before-failure"
+            ? { status: "cancelled-after-failure" }
+            : current.failure,
+      }),
+      action: "stop",
+    };
+  }
+  if (current?.status === "continuation-exhausted") {
+    return { state, action: "stop" };
+  }
+  return {
+    state: updateControl(state, sessionID, {
+      status: "failure-suppressed",
+      failure: { status: "disabled" },
+    }),
+    action: "stop",
+  };
+}
+
 export function sessionIDOf(event: ObservedEvent): string {
   switch (event.type) {
     case "session.execution.started":
     case "session.execution.succeeded":
     case "session.execution.failed":
     case "session.execution.interrupted":
+    case "session.deleted":
     case "permission.asked":
     case "permission.replied":
     case "form.replied":
@@ -267,6 +350,7 @@ export function sessionIDOf(event: ObservedEvent): string {
 export function reduceSessionControl(
   state: SessionControls,
   event: ObservedEvent,
+  mode: AutoContinueMode,
 ): ControlUpdate {
   switch (event.type) {
     case "session.execution.started": {
@@ -285,6 +369,9 @@ export function reduceSessionControl(
         action: "stop",
       };
     case "session.execution.failed": {
+      if (mode === "disabled") {
+        return reduceDisabledFailure(state, event.data.sessionID);
+      }
       const current = state.get(event.data.sessionID);
       if (current?.status === "waiting") {
         if (current.pending.size === 0) {
@@ -340,6 +427,11 @@ export function reduceSessionControl(
       };
     }
     case "session.execution.interrupted":
+      return {
+        state: updateControl(state, event.data.sessionID),
+        action: "stop",
+      };
+    case "session.deleted":
       return {
         state: updateControl(state, event.data.sessionID),
         action: "stop",

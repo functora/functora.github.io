@@ -20,12 +20,14 @@
   agentsMd = ../AGENTS.md;
 
   #
-  # opencode-continue plugin (OpenCode V2 API). Continues a failed session by
-  # injecting the synthetic prompt "continue". Built deterministically from
+  # opencode-continue plugin (OpenCode V2 API). Provides a per-session
+  # /auto-continue on|off command and is disabled by default. When enabled, a
+  # failed session continues by injecting the synthetic prompt "continue".
+  # Built deterministically from
   # local source; @opencode/plugin is provided by the OpenCode host runtime and
   # must not be vendored.
   #
-  continuePluginVersion = "1.0.0";
+  continuePluginVersion = "1.1.0";
 
   continuePluginSrc = lib.cleanSourceWith {
     src = ../pub/opencode-continue;

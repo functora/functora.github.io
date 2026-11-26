@@ -70,6 +70,22 @@ nix build .#cryptogram-wasm
 
 `cryptogram-wasm-check` builds with the pinned Rust and `wasm-bindgen` versions, runs `wasm-opt`, and validates the generated package. The `cryptogram-wasm` build output contains the reusable `pkg/` directory.
 
+### Telegram Serverless CLI
+
+The flake pins the official `@tgcloud/cli` package at version `0.2.0` and exposes it as `tgcloud` in both development shells. The command is also available without entering a shell:
+
+```sh
+nix develop .#cryptogram
+tgcloud --version
+tgcloud --help
+```
+
+```sh
+nix run .#tgcloud -- --version
+```
+
+Use this command for `login`, `status`, `diff`, `push`, `migrate`, and `run`. Do not use `npx tgcloud`: without a local scoped-package installation, it resolves the unrelated unscoped `tgcloud` package.
+
 ## Web and Telegram setup
 
 1. Build the WASM library with the pinned Nix toolchain.

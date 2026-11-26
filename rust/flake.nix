@@ -264,6 +264,51 @@
             '';
           };
         sourceRoot = self.outPath;
+        tgcloudCliVersion = "0.2.0";
+        tgcloudCliTarball = pkgs.fetchurl {
+          url = "https://registry.npmjs.org/@tgcloud/cli/-/cli-${tgcloudCliVersion}.tgz";
+          hash = "sha512-YBlmOY8hh+mU0et+yoYcUG1P3aQ6qbffi19JOzn/Du8Ha0nHNGk5ScavwpB1xJ7ubcMV0UdOPGZsfPk8lDt1Ow==";
+        };
+        tgcloudCliSource = pkgs.runCommand "tgcloud-cli-${tgcloudCliVersion}-source" {
+          nativeBuildInputs = [ pkgs.gnutar ];
+        } ''
+          mkdir -p "$out"
+          tar -xzf ${tgcloudCliTarball} --strip-components=1 -C "$out"
+          cp ${./tgcloud-cli-0.2.0-package-lock.json} "$out/package-lock.json"
+        '';
+        tgcloudCli = pkgs.buildNpmPackage {
+          pname = "tgcloud-cli";
+          version = tgcloudCliVersion;
+          src = tgcloudCliSource;
+          npmDepsHash = "sha256-tCCHQtuOf/MUgSXQssaxPk3CtsC8P6M5dMmDqrhA/VU=";
+          dontNpmBuild = true;
+          nodejs = pkgs.nodejs_latest;
+          meta = {
+            description = "Command-line interface for Telegram Serverless";
+            homepage = "https://core.telegram.org/bots/serverless";
+            license = pkgs.lib.licenses.mit;
+            mainProgram = "tgcloud";
+          };
+        };
+        tgcloudServerless = pkgs.writeShellApplication {
+          name = "tgcloud";
+          runtimeInputs = [ tgcloudCli ];
+          text = ''
+            exec ${tgcloudCli}/bin/tgcloud "$@"
+          '';
+        };
+        tgcloudCliCheck = pkgs.runCommand "tgcloud-cli-check" {
+          nativeBuildInputs = [ pkgs.gnugrep tgcloudServerless ];
+        } ''
+          test "$(${tgcloudServerless}/bin/tgcloud --version)" = "0.2.0"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "login"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "status"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "diff"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "push"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "migrate"
+          ${tgcloudServerless}/bin/tgcloud --help | grep -F "run"
+          touch "$out"
+        '';
         cryptogramManifest = builtins.fromTOML (builtins.readFile (sourceRoot + "/cryptogram/Cargo.toml"));
         cryptogramWasmPackage = pkgs.rustPlatform.buildRustPackage {
           pname = "cryptogram-wasm";
@@ -860,6 +905,7 @@
               noto-fonts-color-emoji
               liberation_ttf
               dejavu_fonts
+              tgcloudServerless
               # apps
               (mkFunctoraEguiWeb "cryptogram" "assets/favicon")
               (srFunctoraEguiWeb "cryptogram" "assets/favicon")
@@ -1023,6 +1069,7 @@
             pango
             openssl
             gcc
+            tgcloudServerless
           ];
         };
       in {
@@ -1034,6 +1081,8 @@
           default = desktopPackages.cryptonote;
           cryptogram-wasm = cryptogramWasmPackage;
           wasm-bindgen-cli-0_2_127 = wasm-bindgen-cli-0_2_127;
+          tgcloud-cli = tgcloudCli;
+          tgcloud-serverless = tgcloudServerless;
         } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           cryptonote-bundle = desktopBundles.cryptonote;
           functora-egui-demo-bundle = desktopBundles.functora-egui-demo;
@@ -1049,6 +1098,11 @@
             program = "${relayTestHelper}/bin/relay-test";
             meta.description = "Run the Cryptogram relay contract tests";
           };
+          tgcloud = {
+            type = "app";
+            program = "${tgcloudServerless}/bin/tgcloud";
+            meta.description = "Manage Telegram Serverless projects";
+          };
         };
         bundlers = pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           default = mkNixBundle;
@@ -1057,6 +1111,7 @@
         checks = {
           cryptogram-relay = relayTestCheck;
           cryptogram-wasm = cryptogramWasmCheck;
+          tgcloud-cli = tgcloudCliCheck;
           cryptonote = desktopPackages.cryptonote;
           functora-egui-demo = desktopPackages.functora-egui-demo;
         } // pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {

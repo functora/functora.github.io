@@ -245,7 +245,7 @@
 
   mkRuntimeInputs = server:
     with pkgs; [
-      (import ./../pub/vi/nix/default.nix {ai = true;})
+      (import ./../pub/vi/nix/default.nix {})
       fontconfig
       busybox
       bash
@@ -292,6 +292,7 @@
       #
       # Scripting
       #
+      uv
       nodejs
       python3Minimal
       #

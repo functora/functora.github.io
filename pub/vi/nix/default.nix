@@ -7,7 +7,6 @@ let
   }) {};
 in
   {
-    ai ? false,
     formatter ? "ormolu",
     vimBackground ? "light",
     vimColorScheme ? "PaperColor", # "edge",
@@ -69,50 +68,40 @@ in
             ''
             + (getAttr formatter formatter-registry);
           packages.vim-functora = with pkgs.vimPlugins; {
-            start =
-              [
-                #
-                # Interface
-                #
-                ack-vim
-                ctrlp-vim
-                vim-fugitive
-                vim-gitgutter
-                lightline-vim
-                papercolor-theme
-                vim-better-whitespace
-                catppuccin-nvim
-                everforest
-                edge
-                #
-                # Programming
-                #
-                haskell-vim
-                vim-nix
-                psc-ide-vim
-                purescript-vim
-                neoformat
-                vim-commentary
-                render-markdown-nvim
-                rust-vim
-                coc-snippets
-                unst.vimPlugins.coc-rust-analyzer
-                #
-                # Productivity
-                #
-                coc-nvim
-                sideways-vim
-                vim-LanguageTool
-              ]
-              ++ (
-                if ai
-                then [
-                  unst.vimPlugins.minuet-ai-nvim
-                  unst.vimPlugins.codecompanion-nvim
-                  unst.vimPlugins.codecompanion-spinner-nvim
-                ]
-                else []
-              );
+            start = [
+              #
+              # Interface
+              #
+              ack-vim
+              ctrlp-vim
+              vim-fugitive
+              vim-gitgutter
+              lightline-vim
+              papercolor-theme
+              vim-better-whitespace
+              catppuccin-nvim
+              everforest
+              edge
+              #
+              # Programming
+              #
+              haskell-vim
+              vim-nix
+              psc-ide-vim
+              purescript-vim
+              neoformat
+              vim-commentary
+              render-markdown-nvim
+              rust-vim
+              coc-snippets
+              unst.vimPlugins.coc-rust-analyzer
+              #
+              # Productivity
+              #
+              coc-nvim
+              sideways-vim
+              vim-LanguageTool
+            ];
             opt = [
             ];
           };

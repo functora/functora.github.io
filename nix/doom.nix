@@ -228,7 +228,7 @@
       // mkDoom {
         tag = "cod";
         dec = "";
-        total = mkCod ../bak/doom/DBP_62.wad;
+        total = mkCod ../bak/doom/DBP_74.wad;
         music = ../bak/doom/synth.pk3;
         liquid = ltp701;
         relite = "";

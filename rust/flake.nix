@@ -392,6 +392,7 @@
           runtimeInputs = with pkgs; [
             binaryen
             coreutils
+            gcc
             rustToolchain
             wasm-bindgen-cli-0_2_127
           ];
@@ -409,14 +410,14 @@
               exit 1
             fi
             cd "$CRATE_DIR"
-            cargo build --release --lib --target wasm32-unknown-unknown
             OUTPUT_DIR="$(mktemp -d "''${TMPDIR:-/tmp}/cryptogram-wasm-check.XXXXXX")"
             trap 'rm -rf "$OUTPUT_DIR"' EXIT
+            cargo build --release --lib --target wasm32-unknown-unknown --target-dir "$OUTPUT_DIR/target"
             wasm-bindgen \
               --target web \
               --no-typescript \
               --out-dir "$OUTPUT_DIR" \
-              target/wasm32-unknown-unknown/release/cryptogram.wasm
+              "$OUTPUT_DIR/target/wasm32-unknown-unknown/release/cryptogram.wasm"
             wasm-opt -O2 --strip-debug \
               "$OUTPUT_DIR/cryptogram_bg.wasm" \
               -o "$OUTPUT_DIR/cryptogram_bg.opt.wasm"
@@ -852,7 +853,6 @@
               cargo-tarpaulin
               cargo-audit
               cargo-deny
-              clippy
               wasmtime
               license-generator
               tailwindcss_4
@@ -860,6 +860,8 @@
               strace
               # web
               binaryen
+              wasm-bindgen-cli-0_2_127
+              nodejs_latest
               lessc
               clean-css-cli
               # linux
@@ -891,6 +893,7 @@
               # android
               aapt
               llvmPackages.lld
+              llvmPackages.llvm
               llvmPackages.clang-unwrapped
               android-sdk
               glibc
@@ -1032,51 +1035,8 @@
             ++ [releaseAabCryptonote]
             ++ [releaseAabFunctoraEguiDemo];
         };
-        cryptogramShell = pkgs.mkShell {
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
-            libGL
-            wayland
-            libxkbcommon
-            libx11
-            libxcursor
-            libxrandr
-            libxi
-            libxext
-            gtk3
-          ]);
-          packages = with pkgs; [
-            rustToolchain
-            wasm-bindgen-cli-0_2_127
-            cargo-tarpaulin
-            llvmPackages.clang
-            llvmPackages.llvm
-            cargo-audit
-            cargo-deny
-            nodejs_latest
-            binaryen
-            pkg-config
-            libGL
-            wayland
-            libxkbcommon
-            libx11
-            libxcursor
-            libxrandr
-            libxi
-            libxext
-            gtk3
-            gdk-pixbuf
-            cairo
-            pango
-            openssl
-            gcc
-            tgcloudServerless
-          ];
-        };
       in {
-        devShells = {
-          default = pkgs.mkShell shell;
-          cryptogram = cryptogramShell;
-        };
+        devShells.default = pkgs.mkShell shell;
         packages = desktopPackages // {
           default = desktopPackages.cryptonote;
           cryptogram-wasm = cryptogramWasmPackage;

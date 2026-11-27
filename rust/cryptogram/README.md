@@ -37,11 +37,11 @@ credential encodings. The vendored crates retain the upstream MIT license. See
 
 ## Local development
 
-The repository's `rust/flake.nix` is the source of truth for the toolchain. Enter the Cryptogram development shell before running Cargo commands:
+The repository's `rust/flake.nix` is the source of truth for the toolchain. Enter the development shell before running Cargo commands:
 
 ```sh
 cd rust
-nix develop .#cryptogram
+nix develop
 cd cryptogram
 ```
 
@@ -72,10 +72,10 @@ nix build .#cryptogram-wasm
 
 ### Telegram Serverless CLI
 
-The flake pins the official `@tgcloud/cli` package at version `0.2.0` and exposes it as `tgcloud` in both development shells. The command is also available without entering a shell:
+The flake pins the official `@tgcloud/cli` package at version `0.2.0` and exposes it as `tgcloud` in the development shell. The command is also available without entering a shell:
 
 ```sh
-nix develop .#cryptogram
+nix develop
 tgcloud --version
 tgcloud --help
 ```

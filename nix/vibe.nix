@@ -19,6 +19,11 @@
   unst = import ./nixpkgs-unstable.nix;
   agentsMd = ../AGENTS.md;
   nixLd = pkgs.nix-ld;
+  gpuRoBinds = [
+    "/sys/class/drm"
+    "/sys/class/kfd/kfd"
+    "/sys/devices/virtual/kfd/kfd"
+  ];
   nixLdLibraryPath = lib.makeLibraryPath [
     pkgs.glibc
     pkgs.stdenv.cc.cc.lib
@@ -429,6 +434,7 @@
       path = ["bubblewrap" "bind" "ro"];
       update = prev:
         prev
+        ++ gpuRoBinds
         ++ mkRoBinds sloth
         ++ [
           "/bin/sh"

@@ -18,6 +18,14 @@
 }: let
   unst = import ./nixpkgs-unstable.nix;
   agentsMd = ../AGENTS.md;
+  nixLd = pkgs.nix-ld;
+  nixLdLibraryPath = lib.makeLibraryPath [
+    pkgs.glibc
+    pkgs.stdenv.cc.cc.lib
+    pkgs.zlib
+    pkgs.openssl
+    pkgs.libffi
+  ];
 
   #
   # opencode-continue plugin (OpenCode V2 API). Provides a per-session
@@ -295,6 +303,7 @@
       uv
       nodejs
       python3Minimal
+      nixLd
       #
       # Formatter
       #
@@ -427,6 +436,7 @@
           "/run/current-system/sw/bin/bash"
           "/run/current-system/sw/bin/less"
           ["${pkgs.bash}/bin/bash" "/bin/bash"]
+          ["${nixLd}/libexec/nix-ld" "/lib64/ld-linux-x86-64.so.2"]
           (sloth.concat' sloth.homeDir "/.bashrc")
           (sloth.concat' sloth.homeDir "/.bash_profile")
           (sloth.concat' sloth.homeDir "/${secretsRelativePath}")
@@ -477,6 +487,8 @@
           VIBE_INSTANCE_ID = sloth.instanceId;
           NIX_CONFIG = "experimental-features = nix-command flakes";
           NIXPKGS_ALLOW_UNFREE = "1";
+          NIX_LD = pkgs.stdenv.cc.bintools.dynamicLinker;
+          NIX_LD_LIBRARY_PATH = nixLdLibraryPath;
           ANDROID_USER_HOME = "~/.android";
           GRADLE_USER_HOME = "~/.gradle";
         };
